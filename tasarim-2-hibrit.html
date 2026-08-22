@@ -47,11 +47,11 @@ header .kapsa{display:flex;align-items:center;gap:24px;padding:20px}
 .btn-dolu{background:var(--lacivert);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600}
 
 nav.menu{background:var(--yuzey);border-bottom:1px solid var(--cizgi);position:sticky;top:0;z-index:30}
-nav .kapsa{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
-nav .kapsa::-webkit-scrollbar{display:none}
-nav a{padding:13px 14px;font-size:14.5px;font-weight:500;color:var(--gri);white-space:nowrap;border-bottom:2px solid transparent}
-nav a:hover{color:var(--murekkep)}
-nav a.aktif{color:var(--murekkep);font-weight:600;border-bottom-color:var(--kirmizi)}
+nav.menu .kapsa{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.menu .kapsa::-webkit-scrollbar{display:none}
+nav.menu a{padding:13px 14px;font-size:14.5px;font-weight:500;color:var(--gri);white-space:nowrap;border-bottom:2px solid transparent}
+nav.menu a:hover{color:var(--murekkep)}
+nav.menu a.aktif{color:var(--murekkep);font-weight:600;border-bottom-color:var(--kirmizi)}
 
 .canli{background:var(--murekkep);color:#fff}
 .canli .kapsa{display:flex;align-items:center;gap:16px;padding:11px 20px;flex-wrap:wrap}
@@ -139,7 +139,7 @@ footer ul{list-style:none;line-height:2.1}
 .alt{border-top:1px solid var(--cizgi);margin-top:26px;padding-top:16px;font-size:12.5px;color:var(--gri-acik);display:block}
 
 /* ---- fotograf yerlesimi ---- */
-nav .kapsa{overflow:visible;flex-wrap:wrap;gap:0}
+nav.menu .kapsa{overflow:visible;flex-wrap:wrap;gap:0}
 .foto img{width:100%;height:100%;object-fit:cover;display:block}
 .foto-alt{font-size:12.5px;color:var(--gri-acik);margin-top:8px;line-height:1.45}
 .foto-yazi{position:absolute;inset:auto 0 0 0;padding:16px 18px;background:var(--gradyan);color:var(--beyaz)}
@@ -279,7 +279,7 @@ footer a:hover{color:var(--murekkep)}
   .uclu{grid-template-columns:1fr 1fr}
   footer .kapsa{grid-template-columns:1fr 1fr}
   .hamburger{display:block}
-  nav .kapsa{padding-top:6px;padding-bottom:6px}
+  nav.menu .kapsa{padding-top:6px;padding-bottom:6px}
   .menu-liste{display:none;flex-direction:column;align-items:stretch;width:100%;padding-bottom:10px}
   .menu-liste.acik{display:flex}
   .menu-oge>a,.menu-ac{width:100%;justify-content:space-between;border-bottom:1px solid var(--cizgi)}
