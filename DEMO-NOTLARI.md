@@ -197,6 +197,35 @@ Haber başlıkları 18-21 Ağustos 2026 Bursa gündeminden derlenip yeniden yaz�
 
 ---
 
+## 4b. Yapay zekâ editör
+
+Haber masası aracı prototipi. Bir haber adresi verilir; araç kaynağı indirir,
+yapılandırılmış olgu çıkarımı yapar ve yayın alanları doldurulmuş bir **taslak**
+üretir. Kaynağın metni kopyalanmaz — haber kaynak gösterilerek yeniden yazılır.
+
+| Parça | Ne |
+|---|---|
+| `arac/ayiklayici.py` | JSON-LD → OpenGraph → paragraf sezgisi sırasıyla ayıklar. Yalnızca standart kütüphane. |
+| `arac/haber_taslak.py` | Şema, sistem yönergesi ve komut satırı. `claude-opus-5`, yapılandırılmış çıktı. |
+| `yapay-zeka-editor.html` | Kaynak ve taslağı yan yana gösteren, alanları düzenlenebilir arayüz. |
+| `arac/cikti/*.json` | Sunum örnekleri (üç gerçek haber). |
+
+**Sunumda:** `yapay-zeka-editor.html` sayfasını açın, "Hazır örnek" düğmelerinden
+birine basın. Akış canlandırması çalışır, kaynak paneli gerçek ayıklanmış veriyi
+gösterir, taslak alanları dolar. "Önizleme" düğmesi haberin sitede nasıl
+görüneceğini gösterir.
+
+**Canlı çekim:** Tarayıcı rastgele bir siteyi çekemez (CORS). Komut satırından
+`python arac/haber_taslak.py "<adres>"` çalıştırıp çıkan JSON'u sayfaya sürükleyin.
+Ayrıntı: `arac/README.md`.
+
+**Örneklerin durumu:** Üç örneğin *kaynak ayıklaması* gerçek çalıştırmadan geldi.
+*Taslak* kısımları, ortamda API anahtarı bulunmadığı için aracın sistem yönergesi
+ve şemasına birebir uyularak elle hazırlandı; anahtar tanımlanınca araç aynı
+şekli canlı üretir.
+
+---
+
 ## 5. Bilinen eksikler
 
 | Eksik | Not |

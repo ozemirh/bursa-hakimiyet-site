@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Yapay Zekâ Editör — Bursa Hakimiyet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --murekkep:#12181F;--gri:#5B6672;--gri-acik:#8B97A3;
+  --kirmizi:#D51C24;--lacivert:#1B2A6B;--deniz:#0E6E6E;
+  --cizgi:#E3E8EC;--yuzey:#FFFFFF;--zemin:#F4F6F8;
+  --artis:#0B6E3B;
+  --uyari-zemin:#FFF8E6;--uyari-cizgi:#E8C766;--uyari-yazi:#6B4E00;
+  --tehlike-zemin:#FDECEC;--tehlike-cizgi:#F0A9A9;--tehlike-yazi:#8C1D1D;
+  --bilgi-zemin:#EAF4F4;--bilgi-cizgi:#A8CFCF;
+  --serif:"Source Serif 4",Georgia,serif;
+  --sans:"Inter",-apple-system,Segoe UI,Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --golge:0 1px 2px rgba(18,24,31,.05),0 8px 24px rgba(18,24,31,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--zemin);color:var(--murekkep);font-family:var(--sans);font-size:15px;line-height:1.5}
+a{color:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--deniz);outline-offset:2px}
+.kapsa{max-width:1320px;margin:0 auto;padding:0 22px}
+
+/* ---- üst bant ---- */
+.bant{background:var(--yuzey);border-bottom:1px solid var(--cizgi);position:sticky;top:0;z-index:20}
+.bant .kapsa{display:flex;align-items:center;gap:16px;padding:13px 22px;flex-wrap:wrap}
+.logo-img{height:34px;width:auto;display:block}
+.arac-ad{font-family:var(--serif);font-weight:700;font-size:19px;letter-spacing:-.3px;border-left:1px solid var(--cizgi);padding-left:16px}
+.rozet{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;border:1px solid var(--cizgi);border-radius:999px;padding:4px 10px;color:var(--gri)}
+.bant .sag{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ---- giriş ---- */
+.giris{padding:26px 0 6px}
+.giris h1{font-family:var(--serif);font-size:28px;line-height:1.2;letter-spacing:-.6px;font-weight:700}
+.giris p.aciklama{color:var(--gri);margin-top:8px;max-width:78ch}
+
+.uyari-kutu{background:var(--uyari-zemin);border:1px solid var(--uyari-cizgi);color:var(--uyari-yazi);
+  border-radius:10px;padding:13px 15px;margin-top:16px;font-size:14px;line-height:1.5;max-width:96ch}
+.uyari-kutu b{font-weight:600}
+
+.adres-kutu{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:14px;padding:18px;margin-top:20px;box-shadow:var(--golge)}
+.adres-satir{display:flex;gap:10px;flex-wrap:wrap}
+.adres-satir input{flex:1 1 380px;min-width:0;border:1px solid var(--cizgi);border-radius:9px;padding:11px 13px;font:inherit;font-size:14.5px;background:var(--zemin)}
+.btn{border:1px solid var(--cizgi);background:var(--yuzey);border-radius:9px;padding:11px 17px;font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;color:var(--murekkep);white-space:nowrap}
+.btn:hover{border-color:var(--deniz);color:var(--deniz)}
+.btn.dolu{background:var(--lacivert);border-color:var(--lacivert);color:#fff}
+.btn.dolu:hover{background:var(--deniz);border-color:var(--deniz);color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.ornekler{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;align-items:center}
+.ornekler .baslik{font-size:12.5px;color:var(--gri-acik);font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+.cip{border:1px solid var(--cizgi);background:var(--zemin);border-radius:999px;padding:6px 13px;font:inherit;font-size:13px;cursor:pointer;color:var(--gri)}
+.cip:hover{border-color:var(--deniz);color:var(--deniz)}
+.birak{margin-top:13px;border:1px dashed var(--cizgi);border-radius:10px;padding:13px;text-align:center;font-size:13.5px;color:var(--gri-acik)}
+.birak.uzerinde{border-color:var(--deniz);background:var(--bilgi-zemin);color:var(--deniz)}
+
+/* ---- akış göstergesi ---- */
+.akis{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.akis[hidden]{display:none}
+.adim{font-family:var(--mono);font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--gri-acik);
+  border:1px solid var(--cizgi);border-radius:999px;padding:6px 12px;background:var(--yuzey)}
+.adim.calisiyor{border-color:var(--deniz);color:var(--deniz)}
+.adim.bitti{border-color:var(--artis);color:var(--artis)}
+.adim.bitti::before{content:"✓ "}
+
+/* ---- iki kolon ---- */
+.calisma{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:22px;padding:22px 0 60px;align-items:start}
+.calisma[hidden]{display:none}
+.panel{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:14px;box-shadow:var(--golge)}
+.panel-bas{display:flex;align-items:center;gap:10px;padding:14px 17px;border-bottom:1px solid var(--cizgi);flex-wrap:wrap}
+.panel-bas h2{font-family:var(--mono);font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:var(--gri);font-weight:500}
+.panel-ic{padding:17px}
+.sol{position:sticky;top:78px}
+
+/* kaynak paneli */
+.kaynak-ust{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:13px}
+.mini-rozet{font-family:var(--mono);font-size:10px;letter-spacing:.7px;text-transform:uppercase;border-radius:999px;padding:3px 9px;border:1px solid var(--cizgi);color:var(--gri)}
+.mini-rozet.yuksek{border-color:var(--artis);color:var(--artis)}
+.mini-rozet.orta{border-color:var(--uyari-cizgi);color:var(--uyari-yazi)}
+.mini-rozet.dusuk{border-color:var(--tehlike-cizgi);color:var(--tehlike-yazi)}
+.kaynak-gorsel{position:relative;border-radius:10px;overflow:hidden;background:var(--zemin);aspect-ratio:16/9;margin-bottom:12px}
+.kaynak-gorsel img{width:100%;height:100%;object-fit:cover;display:block}
+.kaynak-gorsel .hak{position:absolute;left:0;right:0;bottom:0;background:var(--tehlike-zemin);color:var(--tehlike-yazi);
+  border-top:1px solid var(--tehlike-cizgi);font-size:11.5px;padding:6px 9px;line-height:1.35}
+.kaynak-gorsel .yok{display:grid;place-items:center;height:100%;color:var(--gri-acik);font-size:13px}
+.satir{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;padding:7px 0;border-bottom:1px solid var(--cizgi);font-size:13.5px}
+.satir:last-of-type{border-bottom:0}
+.satir dt{color:var(--gri-acik);font-size:12.5px}
+.satir dd{word-break:break-word}
+.ozgun{margin-top:13px}
+.ozgun h3{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--gri-acik);font-weight:600;margin-bottom:6px}
+.ozgun .metin{background:var(--zemin);border:1px solid var(--cizgi);border-radius:9px;padding:11px;font-size:13.5px;
+  max-height:190px;overflow:auto;white-space:pre-wrap;color:var(--gri);line-height:1.55}
+.yontem{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+.yontem span{font-family:var(--mono);font-size:10px;color:var(--gri-acik);border:1px solid var(--cizgi);border-radius:5px;padding:2px 7px}
+
+/* taslak paneli */
+.alan{margin-bottom:19px}
+.alan > label,.alan .etiket-bas{display:block;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--gri-acik);font-weight:600;margin-bottom:7px}
+.alan input[type=text],.alan textarea,.alan select{width:100%;border:1px solid var(--cizgi);border-radius:9px;padding:10px 12px;font:inherit;font-size:14.5px;background:var(--yuzey);color:var(--murekkep)}
+.alan textarea{resize:vertical;line-height:1.55}
+.sayac{font-family:var(--mono);font-size:11px;color:var(--gri-acik);margin-top:5px;display:block}
+.sayac.asti{color:var(--tehlike-yazi)}
+.ucluk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+
+.secenek{display:block;border:1px solid var(--cizgi);border-radius:10px;padding:12px 14px;margin-bottom:9px;cursor:pointer;background:var(--yuzey)}
+.secenek:hover{border-color:var(--deniz)}
+.secenek input{position:absolute;opacity:0;pointer-events:none}
+.secenek .bas{font-family:var(--serif);font-size:18px;font-weight:600;line-height:1.25;display:flex;gap:9px;align-items:baseline}
+.secenek .bas::before{content:"";flex:0 0 13px;height:13px;border-radius:50%;border:2px solid var(--cizgi);margin-top:4px}
+.secenek.secili{border-color:var(--lacivert);background:#F7F9FC}
+.secenek.secili .bas::before{border-color:var(--lacivert);background:var(--lacivert);box-shadow:inset 0 0 0 2.5px #fff}
+.secenek .gerekce{font-size:12.5px;color:var(--gri);margin-top:6px;padding-left:22px}
+.secenek .uzunluk{font-family:var(--mono);font-size:10.5px;color:var(--gri-acik);margin-top:4px;padding-left:22px}
+
+.madde-liste{list-style:none;display:grid;gap:8px}
+.madde-liste li{display:flex;gap:9px;align-items:flex-start;background:var(--bilgi-zemin);border:1px solid var(--bilgi-cizgi);border-radius:8px;padding:9px 11px;font-size:14px}
+.madde-liste .no{font-family:var(--mono);font-size:11px;color:var(--deniz);margin-top:2px}
+
+.etiket-kutu{display:flex;gap:7px;flex-wrap:wrap}
+.etiket-oge{border:1px solid var(--cizgi);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--gri);background:var(--zemin)}
+
+.blok{border:1px solid var(--cizgi);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.blok-bas{display:flex;align-items:center;gap:9px;padding:7px 11px;background:var(--zemin);border-bottom:1px solid var(--cizgi)}
+.blok-bas .tur{font-family:var(--mono);font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--gri-acik)}
+.blok textarea{width:100%;border:0;padding:11px 13px;font:inherit;font-size:15px;line-height:1.6;resize:vertical;background:var(--yuzey);color:var(--murekkep)}
+.blok.ara_baslik textarea{font-family:var(--serif);font-weight:700;font-size:17px}
+.blok.alinti{border-left:3px solid var(--deniz)}
+.blok.alinti textarea{font-family:var(--serif);font-style:italic;font-size:16px}
+
+.kontrol{list-style:none;display:grid;gap:8px}
+.kontrol li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45}
+.kontrol input{margin-top:3px;flex:0 0 auto;width:16px;height:16px;accent-color:var(--deniz)}
+.kontrol label{cursor:pointer}
+.kontrol li.bitti label{color:var(--gri-acik);text-decoration:line-through}
+
+.not-kutu{border-radius:10px;padding:13px 15px;font-size:14px;line-height:1.5;margin-bottom:19px}
+.not-kutu h3{font-size:12px;letter-spacing:.8px;text-transform:uppercase;font-weight:600;margin-bottom:6px}
+.not-kutu.bilgi{background:var(--bilgi-zemin);border:1px solid var(--bilgi-cizgi)}
+.not-kutu.uyari{background:var(--uyari-zemin);border:1px solid var(--uyari-cizgi);color:var(--uyari-yazi)}
+.not-kutu.tehlike{background:var(--tehlike-zemin);border:1px solid var(--tehlike-cizgi);color:var(--tehlike-yazi)}
+
+.ayrac{border:0;border-top:1px solid var(--cizgi);margin:22px 0}
+.eylem{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-top:4px}
+.eylem .not{font-size:12.5px;color:var(--gri-acik)}
+
+/* önizleme */
+.onizleme{padding:0 17px 17px}
+.onizleme[hidden]{display:none}
+.onizleme .kagit{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:12px;padding:24px}
+.onizleme .kat{font-family:var(--mono);font-size:11px;letter-spacing:1.1px;text-transform:uppercase;color:var(--kirmizi);font-weight:500}
+.onizleme h1{font-family:var(--serif);font-size:31px;line-height:1.16;letter-spacing:-.7px;font-weight:700;margin:9px 0 12px}
+.onizleme .spot{font-size:17px;color:var(--gri);line-height:1.55;margin-bottom:15px}
+.onizleme .kunye{font-family:var(--mono);font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--gri-acik);
+  border-top:1px solid var(--cizgi);border-bottom:1px solid var(--cizgi);padding:10px 0;margin-bottom:16px;display:flex;gap:14px;flex-wrap:wrap}
+.onizleme .ozet{background:var(--bilgi-zemin);border:1px solid var(--bilgi-cizgi);border-radius:10px;padding:14px 16px;margin-bottom:18px}
+.onizleme .ozet h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--deniz);margin-bottom:9px}
+.onizleme .ozet ul{margin:0;padding-left:19px;display:grid;gap:6px;font-size:14.5px}
+.onizleme .govde p{font-family:var(--serif);font-size:17.5px;line-height:1.62;margin-bottom:15px}
+.onizleme .govde h2{font-family:var(--serif);font-size:21px;font-weight:700;margin:22px 0 10px}
+.onizleme .govde blockquote{border-left:3px solid var(--deniz);padding-left:16px;margin:18px 0;font-family:var(--serif);font-style:italic;font-size:18px;color:var(--murekkep)}
+.onizleme .foto{border-radius:10px;overflow:hidden;aspect-ratio:16/9;background:var(--zemin);margin-bottom:8px}
+.onizleme .foto img{width:100%;height:100%;object-fit:cover;display:block}
+.onizleme .foto-yazi{font-size:12.5px;color:var(--gri-acik);margin-bottom:18px;line-height:1.5}
+
+.bos{padding:60px 22px;text-align:center;color:var(--gri-acik)}
+.bos h2{font-family:var(--serif);font-size:21px;color:var(--gri);margin-bottom:8px}
+
+@media(max-width:1080px){
+  .calisma{grid-template-columns:minmax(0,1fr)}
+  .sol{position:static}
+  .ucluk{grid-template-columns:minmax(0,1fr)}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="bant">
+  <div class="kapsa">
+    <img class="logo-img" src="logo-seffaf.png" alt="Bursa Hakimiyet" width="406" height="120">
+    <span class="arac-ad">Yapay Zekâ Editör</span>
+    <span class="rozet">Haber masası aracı</span>
+    <div class="sag">
+      <span class="rozet">Prototip</span>
+      <a class="btn" href="index.html">← Demolara dön</a>
+    </div>
+  </div>
+</div>
+
+<main class="kapsa">
+  <div class="giris">
+    <h1>Bir haber adresi verin, yayına hazır taslak çıksın</h1>
+    <p class="aciklama">Araç kaynağı indirir, yapılandırılmış olgu çıkarımı yapar ve haberi <b>kaynak göstererek yeniden yazar</b>. Başlık seçenekleri, spot, kategori, ilçe, etiketler, SEO alanları ve görsel bilgisi doldurulmuş olarak gelir. Doğrulanması gereken noktalar ayrıca işaretlenir.</p>
+
+    <div class="uyari-kutu">
+      <b>Kopyalamaz, yeniden yazar.</b> Kaynağın cümleleri alınmaz; olgular çıkarılıp habere kendi dilimizle dönüştürülür ve atıf zorunlu tutulur. Kaynağın fotoğrafı yalnızca <b>referans</b> olarak gösterilir, hak durumu doğrulanmadan yayına giremez. Çıkan şey bir <b>taslaktır</b> — editör onayı olmadan yayımlanmaz.
+    </div>
+
+    <div class="adres-kutu">
+      <form class="adres-satir" id="adres-form">
+        <input type="url" id="adres" placeholder="https://ornek-haber-sitesi.com/haber/..." aria-label="Haber adresi" required>
+        <button class="btn dolu" type="submit">Taslak oluştur</button>
+        <button class="btn" type="button" id="json-sec">JSON yükle</button>
+        <input type="file" id="json-dosya" accept="application/json,.json" hidden>
+      </form>
+
+      <div class="ornekler">
+        <span class="baslik">Hazır örnek</span>
+        <button class="cip" type="button" data-ornek="nilufer-cayi-icin-buyuk-adim">Nilüfer Çayı · Kent Bursa</button>
+        <button class="cip" type="button" data-ornek="nilufere-7-yeni-park-kazandiriliyor">Nilüfer parkları · Bursa Söylem</button>
+        <button class="cip" type="button" data-ornek="piyasa-ozeti-21-agustos-2026-borsa-doviz-altin-ve-kripto-piy">Piyasa özeti · BloombergHT</button>
+      </div>
+
+      <div class="birak" id="birak-alani">Araçtan çıkan <code>.json</code> dosyasını buraya sürükleyip bırakabilirsiniz</div>
+
+      <div class="akis" id="akis" hidden aria-live="polite">
+        <span class="adim" data-adim="1">1 · Kaynak indiriliyor</span>
+        <span class="adim" data-adim="2">2 · İçerik ayıklanıyor</span>
+        <span class="adim" data-adim="3">3 · Taslak yazılıyor</span>
+        <span class="adim" data-adim="4">4 · Alanlar dolduruluyor</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bos" id="bos-durum">
+    <h2>Henüz taslak yok</h2>
+    <p>Yukarıdan hazır bir örnek seçin ya da kendi adresinizi girin.</p>
+  </div>
+
+  <div class="calisma" id="calisma" hidden>
+    <!-- SOL: kaynak -->
+    <section class="panel sol">
+      <div class="panel-bas">
+        <h2>Kaynak</h2>
+        <span class="mini-rozet" id="guven-rozet">—</span>
+      </div>
+      <div class="panel-ic">
+        <div class="kaynak-gorsel" id="kaynak-gorsel"></div>
+        <dl>
+          <div class="satir"><dt>Yayın</dt><dd id="k-yayin">—</dd></div>
+          <div class="satir"><dt>Yazar</dt><dd id="k-yazar">—</dd></div>
+          <div class="satir"><dt>Tarih</dt><dd id="k-tarih">—</dd></div>
+          <div class="satir"><dt>Adres</dt><dd id="k-adres">—</dd></div>
+          <div class="satir"><dt>Uzunluk</dt><dd id="k-uzunluk">—</dd></div>
+        </dl>
+        <div class="ozgun">
+          <h3>Özgün başlık</h3>
+          <div class="metin" id="k-baslik">—</div>
+        </div>
+        <div class="ozgun">
+          <h3>Ayıklanan gövde</h3>
+          <div class="metin" id="k-govde">—</div>
+        </div>
+        <div class="yontem" id="k-yontem"></div>
+      </div>
+    </section>
+
+    <!-- SAĞ: taslak -->
+    <section class="panel">
+      <div class="panel-bas">
+        <h2>Taslak</h2>
+        <span class="mini-rozet" id="onem-rozet">—</span>
+        <span class="mini-rozet" id="model-rozet">—</span>
+        <div class="sag" style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn" type="button" id="onizleme-btn" aria-expanded="false" aria-controls="onizleme">Önizleme</button>
+        </div>
+      </div>
+
+      <div class="panel-ic" id="taslak-alanlari">
+        <div id="bayraklar"></div>
+
+        <div class="alan">
+          <span class="etiket-bas">Başlık seçenekleri</span>
+          <div id="baslik-secenekleri"></div>
+        </div>
+
+        <div class="alan">
+          <label for="t-spot">Spot</label>
+          <textarea id="t-spot" rows="3"></textarea>
+          <span class="sayac" id="spot-sayac"></span>
+        </div>
+
+        <div class="alan">
+          <span class="etiket-bas">3 maddede ne oldu</span>
+          <ul class="madde-liste" id="t-maddeler"></ul>
+        </div>
+
+        <div class="alan ucluk">
+          <div><label for="t-kategori">Kategori</label><select id="t-kategori"></select></div>
+          <div><label for="t-ilce">İlçe</label><select id="t-ilce"></select></div>
+          <div><label for="t-onem">Önem</label><select id="t-onem"></select></div>
+        </div>
+
+        <div class="alan">
+          <span class="etiket-bas">Etiketler</span>
+          <div class="etiket-kutu" id="t-etiketler"></div>
+        </div>
+
+        <hr class="ayrac">
+
+        <div class="alan">
+          <span class="etiket-bas">Gövde</span>
+          <div id="t-govde"></div>
+        </div>
+
+        <hr class="ayrac">
+
+        <div class="alan">
+          <label for="t-seo-baslik">SEO başlığı</label>
+          <input type="text" id="t-seo-baslik">
+          <span class="sayac" id="seo-baslik-sayac"></span>
+        </div>
+        <div class="alan">
+          <label for="t-seo-aciklama">SEO açıklaması</label>
+          <textarea id="t-seo-aciklama" rows="2"></textarea>
+          <span class="sayac" id="seo-aciklama-sayac"></span>
+        </div>
+        <div class="alan">
+          <label for="t-slug">Adres (slug)</label>
+          <input type="text" id="t-slug">
+        </div>
+        <div class="alan ucluk" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+          <div><label for="t-gorsel-alt">Görsel alt metni</label><input type="text" id="t-gorsel-alt"></div>
+          <div><label for="t-gorsel-altyazi">Fotoğraf altı</label><input type="text" id="t-gorsel-altyazi"></div>
+        </div>
+
+        <hr class="ayrac">
+
+        <div class="alan">
+          <span class="etiket-bas">Yayından önce doğrulanacaklar</span>
+          <ul class="kontrol" id="t-kontrol"></ul>
+        </div>
+
+        <div class="not-kutu bilgi">
+          <h3>Editör notu</h3>
+          <div id="t-editor-notu"></div>
+        </div>
+
+        <div class="eylem">
+          <button class="btn dolu" type="button" id="yayin-btn">Yayına gönder</button>
+          <button class="btn" type="button" id="indir-btn">JSON indir</button>
+          <span class="not" id="eylem-not">Bu bir prototip — gerçek yayın sistemine bağlı değil.</span>
+        </div>
+      </div>
+
+      <div class="onizleme" id="onizleme" hidden>
+        <div class="kagit" id="onizleme-icerik"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+/* Örnek paketler: arac/haber_taslak.py çıktısının birebir aynısı. */
+const ORNEKLER = {
+ "nilufer-cayi-icin-buyuk-adim": {
+  "kaynak": {
+   "kaynak_url": "https://www.kentbursa.com/nilufer-cayi-icin-buyuk-adim-351959-mansetler.html",
+   "kaynak_alan": "kentbursa.com",
+   "kaynak_adi": "Kent Bursa Gazetesi",
+   "orijinal_baslik": "Nilüfer Çayı için büyük adım",
+   "orijinal_spot": "Bursa Büyükşehir Belediyesi Başkan Vekili Şahin Biba, Osmangazi ilçesi Dereçavuş Mahallesi’nde yapımı devam eden atıksu kollektör hattının Nilüfer Çayı’nın temiz akmasına katkı sağlayacağını söyledi. Şahin Biba başkanlığında belediye bürokratlarından oluşan heyet, Dereçavuş Mahallesi’nden Ovaakça Mahallesi’ne kadar uzanacak yaklaşık 2 kilometre uzunluğundaki atıksu kollektör hattı inşaatını yerinde inceledi. Çalışmalar hakkında yetkililerden bilgi alan Başkan Vekili Biba, […]",
+   "orijinal_govde": "Bursa Büyükşehir Belediyesi Başkan Vekili Şahin Biba, Osmangazi ilçesi Dereçavuş Mahallesi’nde yapımı devam eden atıksu kollektör hattının Nilüfer Çayı’nın temiz akmasına katkı sağlayacağını söyledi.\n\nŞahin Biba başkanlığında belediye bürokratlarından oluşan heyet, Dereçavuş Mahallesi’nden Ovaakça Mahallesi’ne kadar uzanacak yaklaşık 2 kilometre uzunluğundaki atıksu kollektör hattı inşaatını yerinde inceledi. Çalışmalar hakkında yetkililerden bilgi alan Başkan Vekili Biba, gelinen son durum ve projenin önemi hakkında açıklamalarda bulundu.\n\n“HEDEFİMİZ EKSİKSİZ BİR ŞEKİLDE HİZMETE AÇMAK”\n\n‘Osmangazi ilçesi Atıksu Kollektörleri İnşaatı Yapım İşi’nin BUSKİ tarafından titizlikle yürütüldüğünü belirten Başkan Vekili Biba, “127 milyon 192 bin lira bedelle projemizi imzaladık. 21 Mayıs 2026 tarihi itibarıyla yer teslimini gerçekleştirdik. Önümüzde 730 günlük yoğun bir çalışma dönemi var. Hedefimiz, projemizi 19 Mayıs 2028 tarihinde eksiksiz bir şekilde tamamlayıp hizmete açmak.” dedi.\n\n“BU HAT SAYESİNDE NİLÜFER ÇAYI KİRLENMEYECEK”\n\nDereçavuş Mahallesi’nden başlayıp Ovaakça’ya kadar uzanan, toplam 2 kilometre uzunluğunda çok güçlü bir atıksu kollektör hattı inşa ettiklerini ifade eden Başkan Vekili Biba, hat üzerinde ihtiyaca göre 1.000, 1.200 ve 1.400 santimetre çaplarında devasa kanalizasyon boruları kullanılacağını dile getirdi. Tamamlandığında Dereçavuş, Çağlayan, Gündoğdu, Dürdane, Karabalçık ve Ovaakça mahallelerinin bu hatta entegre edilmiş olacağını anlatan Başkan Vekili Biba, “Çalışmalar bittiğinde bu mahallelerimizden gelen tüm atıksu, hiçbir pompa veya enerji maliyeti gerektirmeksizin, tamamen cazibeli yani yerçekimi akışıyla Hançerli’deki Nilüfer Arıtma Tesisi’ne ulaşacak. Bu projenin bize sağlayacağı en büyük kazanım, Nilüfer Çayı’nın kirlenmesini önleyecek olmasıdır.” diye konuştu. Çalışmayla beraber bölge altyapısının modern ve sürdürülebilir bir yapıya kavuşacağını söyleyen Başkan Vekili Biba, “İşletme maliyetlerinde çok ciddi verimlilik sağlayacağız. Bölgemiz atıksu yönetimi adına milat niteliğindeki bu projenin şimdiden hayırlı olmasını diliyorum.” ifadelerini kullandı.(HABER MERKEZİ)",
+   "gorsel_url": "https://www.kentbursa.com/wp-content/uploads/2026/07/BIBA.jpeg",
+   "gorsel_alt": "Kent Bursa Gazetesi",
+   "yazar": "Hande DURMUŞ",
+   "yayin_tarihi": "2026-07-20T11:05:16+00:00",
+   "guncelleme_tarihi": "",
+   "dil": "tr_TR",
+   "kelime_sayisi": 257,
+   "ayiklama_yontemleri": [
+    "jsonld:headline",
+    "og:description",
+    "paragraf-sezgisi",
+    "og:image"
+   ],
+   "ayiklama_guveni": "yuksek"
+  },
+  "taslak": {
+   "baslik_secenekleri": [
+    {
+     "metin": "Dereçavuş–Ovaakça atıksu hattı Nilüfer Çayı'nı temizleyecek",
+     "gerekce": "Düz haber başlığı: kim, nerede, ne sonuç. Arama için de güçlü."
+    },
+    {
+     "metin": "2 kilometrelik hat, Nilüfer Çayı için ne değiştirecek?",
+     "gerekce": "Etki odaklı. Okuru sonucu merak ettirir, tıklama tuzağına düşmez."
+    },
+    {
+     "metin": "Nilüfer Çayı'na kollektör desteği",
+     "gerekce": "Kısa ve manşete uygun; dar ekranda tek satıra sığar."
+    }
+   ],
+   "onerilen_baslik_indeksi": 0,
+   "spot": "Büyükşehir Belediye Başkan Vekili Şahin Biba, Osmangazi'nin Dereçavuş Mahallesi'nde süren atıksu kollektör hattının Nilüfer Çayı'nın temiz akmasına katkı sağlayacağını söyledi. Hat, Ovaakça'ya kadar yaklaşık 2 kilometre uzanacak.",
+   "uc_madde": [
+    "Dereçavuş'tan Ovaakça'ya uzanan yaklaşık 2 kilometrelik atıksu kollektör hattının yapımı sürüyor.",
+    "Çalışmayı BUSKİ yürütüyor; Başkan Vekili Şahin Biba sahada incelemede bulundu.",
+    "Hattın tamamlanmasıyla Nilüfer Çayı'na karışan atıksuyun azaltılması hedefleniyor."
+   ],
+   "govde": [
+    {
+     "tur": "paragraf",
+     "metin": "Osmangazi'nin Dereçavuş Mahallesi'nde süren atıksu kollektör hattı çalışması, Nilüfer Çayı'nın su kalitesini iyileştirmeyi hedefliyor. Kent Bursa Gazetesi'nin haberine göre Büyükşehir Belediye Başkan Vekili Şahin Biba, sahada yaptığı incelemenin ardından hattın çayın temiz akmasına katkı sağlayacağını belirtti."
+    },
+    {
+     "tur": "paragraf",
+     "metin": "Belediye bürokratlarından oluşan heyet, Dereçavuş Mahallesi'nden Ovaakça Mahallesi'ne kadar uzanacak yaklaşık 2 kilometre uzunluğundaki hattın inşaatını yerinde gördü. Yetkililerden çalışmanın son durumu hakkında bilgi alındı."
+    },
+    {
+     "tur": "ara_baslik",
+     "metin": "Hattı BUSKİ yürütüyor"
+    },
+    {
+     "tur": "paragraf",
+     "metin": "Başkan Vekili Biba, Osmangazi İlçesi Atıksu Kollektörleri İnşaatı Yapım İşi'nin BUSKİ tarafından yürütüldüğünü aktardı. Biba, projenin eksiksiz biçimde hizmete açılmasının hedeflendiğini söyledi."
+    },
+    {
+     "tur": "alinti",
+     "metin": "Hedefimiz eksiksiz bir şekilde hizmete açmak."
+    },
+    {
+     "tur": "ara_baslik",
+     "metin": "Nilüfer Çayı neden gündemde"
+    },
+    {
+     "tur": "paragraf",
+     "metin": "Nilüfer Çayı, kent merkezinden ve sanayi bölgelerinden geçmesi nedeniyle Bursa'nın su gündeminde uzun süredir başlıklardan biri. Kollektör hatları, atıksuyun çaya karışmadan arıtma tesisine taşınmasını amaçlıyor."
+    },
+    {
+     "tur": "paragraf",
+     "metin": "Kaynak haberde hattın tamamlanma takvimi ve projenin bütçesi yer almıyor. Bu bilgiler BUSKİ'den teyit edildikten sonra habere eklenecek."
+    }
+   ],
+   "kategori": "Çevre ve su",
+   "ilce": "Osmangazi",
+   "etiketler": [
+    "nilüfer çayı",
+    "atıksu",
+    "buski",
+    "kollektör hattı",
+    "su kalitesi",
+    "şahin biba"
+   ],
+   "seo_baslik": "Dereçavuş–Ovaakça atıksu hattı Nilüfer Çayı'nı temizleyecek",
+   "seo_aciklama": "Osmangazi Dereçavuş'ta süren 2 kilometrelik atıksu kollektör hattı, Nilüfer Çayı'nın temiz akmasına katkı sağlayacak. Çalışmayı BUSKİ yürütüyor.",
+   "url_slug": "derecavus-ovaakca-atiksu-hatti-nilufer-cayi",
+   "gorsel_alt": "Büyükşehir Belediye Başkan Vekili Şahin Biba, atıksu kollektör hattı şantiyesinde incelemede bulunuyor",
+   "gorsel_altyazi": "Başkan Vekili Şahin Biba ve belediye heyeti, Dereçavuş'taki hat inşaatını yerinde inceledi.",
+   "okuma_suresi_dk": 2,
+   "onem": "one_cikan",
+   "kaynak_atfi": "Kent Bursa Gazetesi'nin haberine göre",
+   "dogrulanmasi_gerekenler": [
+    "Hattın tamamlanma takvimi kaynakta yok — BUSKİ'den teyit alın.",
+    "Projenin bütçesi ve ihale bedeli belirtilmemiş.",
+    "Hattın günlük kaç metreküp atıksu taşıyacağı bilgisi yok.",
+    "Şahin Biba'nın unvanı 'Başkan Vekili' olarak geçiyor; güncel olduğunu doğrulayın."
+   ],
+   "hassas_konu": {
+    "var_mi": false,
+    "turu": "",
+    "uyari": ""
+   },
+   "bursa_ilgisi": {
+    "var_mi": true,
+    "aciklama": "Haber doğrudan Osmangazi ve Nilüfer Çayı ile ilgili; Bursa'nın su gündeminin merkezinde."
+   },
+   "editor_notu": "Kaynak metin kısa ve tanıtım dilinde. Belediye açıklamasını haber diline çevirdim, 'büyük adım' gibi değerlendirme ifadelerini çıkardım. Alıntıyı tırnak içinde tek cümleye indirdim. Takvim ve bütçe eksik — BUSKİ'ye sorulmadan manşete çıkarmayın. Görselin hakkı Kent Bursa Gazetesi'nde; kendi fotoğrafımızla değiştirin."
+  },
+  "uretim": {
+   "model": "claude-opus-5",
+   "efor": "high",
+   "zaman": "2026-08-22T17:00:00+00:00",
+   "not": "Sunum ornegi. Bu taslak, aracin sistem yonergesine ve semasina birebir uyularak hazirlandi; canli calistirmada ayni sekli uretir."
+  }
+ },
+ "nilufere-7-yeni-park-kazandiriliyor": {
+  "kaynak": {
+   "kaynak_url": "https://www.bursasoylem.com/2026/08/07/nilufere-7-yeni-park-kazandiriliyor/",
+   "kaynak_alan": "bursasoylem.com",
+   "kaynak_adi": "bursasoylem.com",
+   "orijinal_baslik": "Nilüfer’e 7 Yeni Park Kazandırılıyor",
+   "orijinal_spot": "",
+   "orijinal_govde": "Nilüfer Belediyesi, 2026 yılında ihale süreçleri tamamlanan park projelerinde çalışmaları hızlandırdı. Yıl sonuna kadar 7 ayrı mahallede tamamlanacak projelerle kente yaklaşık 24 bin metrekarelik yeni park alanı kazandırılacak.\n\nNilüfer Belediyesi, ilçe genelinde kişi başına düşen yeşil alan miktarını artırmak ve vatandaşlara yeni yaşam alanları sunmak amacıyla yürüttüğü park çalışmalarını sürdürüyor. 2026 yılı yatırım programı kapsamında ihaleleri tamamlanan projelerde saha uygulamalarına hız verildi.\n\nÇalışmalar kapsamında 30 Ağustos Zafer, Dumlupınar, Kayapa ve Esentepe mahallelerindeki düzenlemelerde son aşamaya gelinirken; Akçalar, Yolçatı ve Demirci mahallelerindeki parklarda da imalatlar kısa sürede başlayacak. Toplam 23 bin 991 metrekarelik alanda hayata geçirilen projelerin tamamlanmasıyla birlikte Nilüfer, 13 bin metrekarelik net yeşil alan kazanacak. 7’den 70’e her yaş grubunun ihtiyaçları dikkate alınarak kurgulanan parklarda; yeni nesil çocuk oyun grupları, dinlenme ve oturma alanları, koşu parkurları ile sosyal donatı alanları yer alacak.\n\nProjeler arasında Esentepe Mahallesi’ne yapılacak olan “Şehitler Parkı” da yer alıyor. Parkın, 30 Ağustos Zafer Bayramı’nda açılması planlanıyor.\n\nKentin yaşam kalitesini yükseltecek adımları planlı şekilde attıklarını belirten Nilüfer Belediye Başkanı Şadi Özdemir, “Nilüfer’i daha yeşil, daha nefes alan ve her yaştan hemşehrimizin huzurla vakit geçirebileceği bir kent haline getirmek ana önceliklerimizden. Yıl sonuna kadar 7 ayrı mahallemizde tamamlayacağımız bu parklar, mahalle sakinlerimizin gündelik yaşamına ve sosyal ilişkilerine dokunacak. Çocuklarımızın güvenle oynayabileceği, spor yapmak isteyenlerin rahatça faydalanabileceği, yaşlılarımızın dinlenebileceği nitelikli alanlar kurguluyoruz. 13 bin metrekarelik yeşil alanı kentimize kazandırırken, komşularımızın bir araya geleceği sağlıklı buluşma noktaları inşa ediyoruz. Çalışmalarımızı planlanan takvim doğrultusunda tamamlayarak tüm alanları yıl bitmeden halkımızın hizmetine sunacağız” dedi.",
+   "gorsel_url": "https://www.bursasoylem.com/wp-content/uploads/2026/08/30-AGUSTOS-ZAFER-850x491.jpg",
+   "gorsel_alt": "",
+   "yazar": "",
+   "yayin_tarihi": "",
+   "guncelleme_tarihi": "",
+   "dil": "tr",
+   "kelime_sayisi": 243,
+   "ayiklama_yontemleri": [
+    "title",
+    "paragraf-sezgisi",
+    "img-sezgisi"
+   ],
+   "ayiklama_guveni": "yuksek"
+  },
+  "taslak": {
+   "baslik_secenekleri": [
+    {
+     "metin": "Nilüfer'de 7 mahalleye yeni park: 24 bin metrekare yeşil alan",
+     "gerekce": "Rakam ve yer başlıkta; yerel arama için en güçlü seçenek."
+    },
+    {
+     "metin": "Nilüfer'in park programında son aşamaya gelindi",
+     "gerekce": "Süreç odaklı, takip haberi olarak da kullanılabilir."
+    },
+    {
+     "metin": "Nilüfer'e 7 yeni park",
+     "gerekce": "Kısa; sürmanşet veya ilçe sayfası kartı için uygun."
+    }
+   ],
+   "onerilen_baslik_indeksi": 0,
+   "spot": "Nilüfer Belediyesi'nin 2026 yatırım programında ihaleleri tamamlanan park projelerinde saha çalışmaları hızlandı. Yıl sonuna kadar 7 mahallede tamamlanacak düzenlemelerle ilçeye yaklaşık 24 bin metrekare yeni park alanı kazandırılacak.",
+   "uc_madde": [
+    "Nilüfer Belediyesi, 2026 yatırım programındaki park projelerinde saha uygulamalarına hız verdi.",
+    "30 Ağustos Zafer, Dumlupınar, Kayapa ve Esentepe'de çalışmalar son aşamada.",
+    "Akçalar, Yolçatı ve Demirci mahallelerinde imalat sürüyor; toplam alan yaklaşık 24 bin metrekare."
+   ],
+   "govde": [
+    {
+     "tur": "paragraf",
+     "metin": "Nilüfer Belediyesi, 2026 yılında ihale süreçleri tamamlanan park projelerinde çalışmaları hızlandırdı. Bursa Söylem'in haberine göre yıl sonuna kadar yedi ayrı mahallede tamamlanacak projelerle ilçeye yaklaşık 24 bin metrekarelik yeni park alanı kazandırılacak."
+    },
+    {
+     "tur": "paragraf",
+     "metin": "Belediye, kişi başına düşen yeşil alan miktarını artırmayı ve mahallelere yeni yaşam alanları kazandırmayı hedefliyor. 2026 yatırım programı kapsamında ihaleleri tamamlanan projelerde saha uygulamalarına ağırlık verildi."
+    },
+    {
+     "tur": "ara_baslik",
+     "metin": "Dört mahallede son aşama"
+    },
+    {
+     "tur": "paragraf",
+     "metin": "30 Ağustos Zafer, Dumlupınar, Kayapa ve Esentepe mahallelerindeki düzenlemelerde son aşamaya gelindi. Akçalar, Yolçatı ve Demirci mahallelerindeki parklarda ise imalat çalışmaları sürüyor."
+    },
+    {
+     "tur": "ara_baslik",
+     "metin": "Yeşil alan tartışması"
+    },
+    {
+     "tur": "paragraf",
+     "metin": "Nilüfer, Bursa'nın hızlı büyüyen ilçelerinden biri. Yeni konut alanlarının açılmasıyla birlikte kişi başına düşen yeşil alan miktarı yerel gündemin başlıklarından biri haline geldi."
+    },
+    {
+     "tur": "paragraf",
+     "metin": "Kaynak haberde parkların açılış tarihleri, proje bedeli ve her mahalleye düşen alan ayrı ayrı belirtilmiyor. Bu bilgiler belediyeden alındıktan sonra habere eklenecek."
+    }
+   ],
+   "kategori": "Yaşam",
+   "ilce": "Nilüfer",
+   "etiketler": [
+    "nilüfer belediyesi",
+    "park",
+    "yeşil alan",
+    "yatırım programı",
+    "kentsel donatı"
+   ],
+   "seo_baslik": "Nilüfer'de 7 mahalleye yeni park: 24 bin metrekare",
+   "seo_aciklama": "Nilüfer Belediyesi'nin 2026 park projelerinde saha çalışmaları hızlandı. Yıl sonuna kadar 7 mahallede yaklaşık 24 bin metrekare yeni park alanı açılacak.",
+   "url_slug": "niluferde-7-mahalleye-yeni-park",
+   "gorsel_alt": "Nilüfer'in 30 Ağustos Zafer Mahallesi'nde düzenlemesi süren park alanı",
+   "gorsel_altyazi": "30 Ağustos Zafer Mahallesi'ndeki park düzenlemesinde son aşamaya gelindi.",
+   "okuma_suresi_dk": 2,
+   "onem": "normal",
+   "kaynak_atfi": "Bursa Söylem'in haberine göre",
+   "dogrulanmasi_gerekenler": [
+    "Parkların açılış tarihleri kaynakta yok.",
+    "Toplam alan 'yaklaşık 24 bin metrekare' olarak geçiyor; kesin rakamı belediyeden alın.",
+    "Proje bedeli ve ihaleyi alan firmalar belirtilmemiş.",
+    "Mahalle başına düşen alan dağılımı yok."
+   ],
+   "hassas_konu": {
+    "var_mi": false,
+    "turu": "",
+    "uyari": ""
+   },
+   "bursa_ilgisi": {
+    "var_mi": true,
+    "aciklama": "Nilüfer ilçesine ait yerel yatırım haberi; ilçe sayfası için birebir uygun."
+   },
+   "editor_notu": "Kaynak, belediye duyurusu diline yakın. Tanıtım ifadelerini ayıkladım, rakamı başlığa taşıdım. Mahalle adlarını kaynaktaki haliyle korudum. İlçe sayfası açıldığında bu haber Nilüfer'e bağlanmalı. Görsel Bursa Söylem'e ait; kendi arşivimizden bir park fotoğrafıyla değiştirin."
+  },
+  "uretim": {
+   "model": "claude-opus-5",
+   "efor": "high",
+   "zaman": "2026-08-22T17:00:00+00:00",
+   "not": "Sunum ornegi. Bu taslak, aracin sistem yonergesine ve semasina birebir uyularak hazirlandi; canli calistirmada ayni sekli uretir."
+  }
+ },
+ "piyasa-ozeti-21-agustos-2026-borsa-doviz-altin-ve-kripto-piy": {
+  "kaynak": {
+   "kaynak_url": "https://www.bloomberght.com/piyasa-ozeti-21-agustos-2026-borsa-doviz-altin-ve-kripto-piyasalarindaki-son-durum-pkh-3786203",
+   "kaynak_alan": "bloomberght.com",
+   "kaynak_adi": "Bloomberght",
+   "orijinal_baslik": "Piyasa özeti: 21 Ağustos 2026 Borsa, Döviz, Altın ve Kripto piyasalarındaki son durum",
+   "orijinal_spot": "Piyasa özeti: 21 Ağustos 2026 Borsa, Döviz, Altın ve Kripto piyasalarındaki son durum",
+   "orijinal_govde": "İstanbul Borsası’nda bugün; en çok işlem gören hisseler THYAO (12.948.467.336 TL), ASELS (12.826.265.865 TL), AKBNK (11.720.590.791 TL) oldu.\n\nEn çok artan hisseler NIBAS, KPEKS, BIGTK olurken, en çok azalan hisseler AGROT, ODINE, SVGYO olarak sıralandı.\n\nBIST 30 hisselerinin de bugünkü performansları da belli oldu. (Aşağıdaki tablodan yükselen ve düşen hisse sıralamasına göz atabilirsiniz)\n\nÖte yandan sektörel bazda madencilik, kimya petrol plastik, metal eşya makina sektörleri yükselirken, bilişim, teknoloji, orman kağit basim hisseleri en çok düşüş yaşayan sektörler oldu.\n\nDolar/TL kuru saat 18:30 itibariyle %0.20 artışla 48.06 TL'de, Euro/TL ise aynı saat itibariyle %0.04 artışla 56.15 TL’den işlem gördü.\n\nAltın piyasasında ons altın bugün saat 18:30 itibariyle 4,604 dolardan işlem gördü. Düne göre değişim oranı %1.95... Kapalı Çarşı’da gram altın %2,03 artışla 7.101,41 liradan alıcı buldu. Çeyrek altının alış fiyatı ise 11.360,85 TL, satış fiyatı 11.610,81 TL oldu. Cumhuriyet altını da 46.301,21 liradan işlem gördü.\n\nBrent petrol fiyatı, saat 18:30 itibariyle 94.17 dolar seviyesinde.\n\nKripto para piyasasında ise Bitcoin $77.628 işlem görürken, Ethereum $2.400,73 seviyesinde.",
+   "gorsel_url": "https://geoim.bloomberght.com/l/2026/08/21/ver1787326218/3786203/jpg/960x540",
+   "gorsel_alt": "BusinessWeek",
+   "yazar": "Bloomberght",
+   "yayin_tarihi": "",
+   "guncelleme_tarihi": "",
+   "dil": "tr_TR",
+   "kelime_sayisi": 164,
+   "ayiklama_yontemleri": [
+    "og:title",
+    "og:description",
+    "paragraf-sezgisi",
+    "og:image"
+   ],
+   "ayiklama_guveni": "yuksek"
+  },
+  "taslak": {
+   "baslik_secenekleri": [
+    {
+     "metin": "BIST 100 haftayı yükselişle kapattı",
+     "gerekce": "Düz piyasa başlığı; günlük özet için yeterli."
+    },
+    {
+     "metin": "Borsada haftanın son işlem günü: BIST 100 yüzde 0,68 arttı",
+     "gerekce": "Rakamlı, arama dostu."
+    },
+    {
+     "metin": "Piyasalarda günün özeti",
+     "gerekce": "Kısa; ekonomi bandı için uygun ama ayırt edici değil."
+    }
+   ],
+   "onerilen_baslik_indeksi": 1,
+   "spot": "Borsa İstanbul 21 Ağustos Cuma gününü yükselişle tamamladı. BIST 100 endeksi yüzde 0,68 değer kazanarak 14.494,61 puandan kapandı; dolar ve euro günü sınırlı artışla bitirdi.",
+   "uc_madde": [
+    "BIST 100 endeksi yüzde 0,68 artışla 14.494,61 puandan kapandı.",
+    "En çok işlem gören hisseler THYAO, ASELS ve AKBNK oldu.",
+    "Dolar/TL 48,06, Euro/TL 56,15 seviyesinde günü tamamladı."
+   ],
+   "govde": [
+    {
+     "tur": "paragraf",
+     "metin": "Borsa İstanbul, 21 Ağustos Cuma gününü yükselişle tamamladı. BloombergHT'nin aktardığına göre BIST 100 endeksi yüzde 0,68 değer kazanarak 14.494,61 puandan kapandı."
+    },
+    {
+     "tur": "paragraf",
+     "metin": "Gün içinde en çok işlem gören hisseler THYAO, ASELS ve AKBNK oldu. En çok değer kazanan hisseler NIBAS, KPEKS ve BIGTK olarak sıralandı; en çok gerileyenler ise AGROT, ODINE ve SVGYO oldu."
+    },
+    {
+     "tur": "ara_baslik",
+     "metin": "Sektörel görünüm"
+    },
+    {
+     "tur": "paragraf",
+     "metin": "Sektörel bazda madencilik, kimya-petrol-plastik ve metal eşya-makina yükselirken; bilişim, teknoloji ve orman-kâğıt-basım en çok gerileyen sektörler oldu."
+    },
+    {
+     "tur": "paragraf",
+     "metin": "Döviz tarafında dolar/TL saat 18.30 itibarıyla yüzde 0,20 artışla 48,06 lira, euro/TL ise yüzde 0,04 artışla 56,15 lira seviyesinde bulunuyordu."
+    }
+   ],
+   "kategori": "Ekonomi",
+   "ilce": "Bursa dışı",
+   "etiketler": [
+    "bist 100",
+    "borsa istanbul",
+    "döviz",
+    "piyasalar",
+    "kapanış"
+   ],
+   "seo_baslik": "BIST 100 yüzde 0,68 artışla 14.494,61 puandan kapandı",
+   "seo_aciklama": "Borsa İstanbul 21 Ağustos Cuma gününü yükselişle tamamladı. BIST 100 yüzde 0,68 arttı; dolar 48,06, euro 56,15 lira seviyesinde.",
+   "url_slug": "bist-100-21-agustos-2026-kapanis",
+   "gorsel_alt": "Borsa İstanbul işlem salonunda gösterge ekranları",
+   "gorsel_altyazi": "BIST 100 endeksi haftanın son işlem gününü yükselişle kapattı.",
+   "okuma_suresi_dk": 2,
+   "onem": "normal",
+   "kaynak_atfi": "BloombergHT'nin aktardığına göre",
+   "dogrulanmasi_gerekenler": [
+    "Rakamlar kaynak yayının kapanış verisidir; yayına almadan önce Borsa İstanbul verisiyle karşılaştırın.",
+    "Dolar ve euro değerleri saat 18.30 itibarıyladır; yayın saatinde güncelliğini yitirebilir.",
+    "Kaynakta yer alan tablo alınmadı; hisse listesi eksik olabilir."
+   ],
+   "hassas_konu": {
+    "var_mi": false,
+    "turu": "",
+    "uyari": ""
+   },
+   "bursa_ilgisi": {
+    "var_mi": false,
+    "aciklama": "Haber ulusal piyasa özeti; Bursa ile doğrudan bağı yok. Yerel açı isteniyorsa Bursa merkezli halka açık şirketlerin (ör. sanayi ve tekstil) o günkü performansı ayrıca araştırılmalı. Zorlama yerelleştirme önerilmez."
+   },
+   "editor_notu": "Bu haber gazetenin yerel odağına uymuyor; ekonomi bandı veya piyasa sayfası için uygun, manşete çıkarmayın. Rakamlar hızla eskiyor — yayın saatinde teyit şart. Kaynağın tablosu alınmadığı için hisse listesi kısmi."
+  },
+  "uretim": {
+   "model": "claude-opus-5",
+   "efor": "high",
+   "zaman": "2026-08-22T17:00:00+00:00",
+   "not": "Sunum ornegi. Bu taslak, aracin sistem yonergesine ve semasina birebir uyularak hazirlandi; canli calistirmada ayni sekli uretir."
+  }
+ }
+};
+
+(function(){
+  "use strict";
+
+  const KATEGORILER = ["Gündem","Siyaset","Ekonomi","Asayiş","Yargı","Sağlık","Eğitim",
+    "Çevre ve su","Ulaşım","Spor","Kültür","Yaşam","Teknoloji","Tarım"];
+  const ILCELER = ["Bursa geneli","Osmangazi","Nilüfer","Yıldırım","İnegöl","Gemlik","Mudanya",
+    "Mustafakemalpaşa","Karacabey","İznik","Orhangazi","Kestel","Gürsu","Yenişehir","Orhaneli",
+    "Keles","Büyükorhan","Harmancık","Bursa dışı"];
+  const ONEMLER = {manset:"Manşet", one_cikan:"Öne çıkan", normal:"Normal"};
+
+  const $ = (id) => document.getElementById(id);
+  let paket = null, secili = 0;
+
+  function secenekDoldur(select, liste, deger){
+    select.textContent = "";
+    liste.forEach(function(d){
+      const o = document.createElement("option");
+      o.value = d; o.textContent = d;
+      if (d === deger) o.selected = true;
+      select.appendChild(o);
+    });
+  }
+
+  function sayacYaz(alan, sayac, sinir){
+    const n = alan.value.length;
+    sayac.textContent = n + " / " + sinir + " karakter";
+    sayac.classList.toggle("asti", n > sinir);
+  }
+
+  /* ---- kaynak paneli ---- */
+  function kaynakCiz(k){
+    $("k-yayin").textContent = k.kaynak_adi || k.kaynak_alan || "—";
+    $("k-yazar").textContent = k.yazar || "belirtilmemiş";
+    $("k-tarih").textContent = (k.yayin_tarihi || "belirtilmemiş").slice(0,10);
+    $("k-uzunluk").textContent = k.kelime_sayisi + " kelime";
+    $("k-baslik").textContent = k.orijinal_baslik || "—";
+    $("k-govde").textContent = k.orijinal_govde || "(gövde ayıklanamadı)";
+
+    const a = document.createElement("a");
+    a.href = k.kaynak_url; a.textContent = k.kaynak_url;
+    a.target = "_blank"; a.rel = "noopener noreferrer";
+    $("k-adres").textContent = ""; $("k-adres").appendChild(a);
+
+    const rozet = $("guven-rozet");
+    rozet.textContent = "Ayıklama: " + (k.ayiklama_guveni || "—");
+    rozet.className = "mini-rozet " + (k.ayiklama_guveni || "");
+
+    const g = $("kaynak-gorsel");
+    g.textContent = "";
+    if (k.gorsel_url){
+      const im = document.createElement("img");
+      im.src = k.gorsel_url; im.alt = k.gorsel_alt || "Kaynak yayının görseli";
+      im.loading = "lazy"; im.decoding = "async";
+      im.addEventListener("error", function(){
+        g.textContent = "";
+        const y = document.createElement("div");
+        y.className = "yok"; y.textContent = "Görsel yüklenemedi";
+        g.appendChild(y);
+      });
+      g.appendChild(im);
+      const h = document.createElement("div");
+      h.className = "hak";
+      h.textContent = "Kaynak görseli — hak durumu doğrulanmadan yayına giremez. Gazetenin kendi fotoğrafıyla değiştirin.";
+      g.appendChild(h);
+    } else {
+      const y = document.createElement("div");
+      y.className = "yok"; y.textContent = "Kaynakta görsel bulunamadı";
+      g.appendChild(y);
+    }
+
+    const yo = $("k-yontem"); yo.textContent = "";
+    (k.ayiklama_yontemleri || []).forEach(function(m){
+      const s = document.createElement("span"); s.textContent = m; yo.appendChild(s);
+    });
+  }
+
+  /* ---- bayraklar ---- */
+  function bayrakCiz(t){
+    const kap = $("bayraklar"); kap.textContent = "";
+    function kutu(sinif, baslik, metin){
+      const d = document.createElement("div");
+      d.className = "not-kutu " + sinif;
+      const h = document.createElement("h3"); h.textContent = baslik;
+      const p = document.createElement("div"); p.textContent = metin;
+      d.appendChild(h); d.appendChild(p); kap.appendChild(d);
+    }
+    if (t.hassas_konu && t.hassas_konu.var_mi){
+      kutu("tehlike", "Hassas konu · " + t.hassas_konu.turu, t.hassas_konu.uyari);
+    }
+    if (t.bursa_ilgisi && !t.bursa_ilgisi.var_mi){
+      kutu("uyari", "Bursa ilgisi yok", t.bursa_ilgisi.aciklama);
+    }
+    kutu("bilgi", "Kaynak atfı", t.kaynak_atfi + " — gövdenin ilk paragraflarında geçmelidir.");
+  }
+
+  /* ---- taslak alanları ---- */
+  function taslakCiz(t){
+    bayrakCiz(t);
+
+    const kap = $("baslik-secenekleri"); kap.textContent = "";
+    t.baslik_secenekleri.forEach(function(s, i){
+      const l = document.createElement("label");
+      l.className = "secenek" + (i === t.onerilen_baslik_indeksi ? " secili" : "");
+      const r = document.createElement("input");
+      r.type = "radio"; r.name = "baslik"; r.value = i;
+      r.checked = i === t.onerilen_baslik_indeksi;
+      const b = document.createElement("span"); b.className = "bas"; b.append(s.metin);
+      const g = document.createElement("span"); g.className = "gerekce"; g.textContent = s.gerekce;
+      const u = document.createElement("span"); u.className = "uzunluk";
+      u.textContent = s.metin.length + " karakter" + (i === t.onerilen_baslik_indeksi ? " · önerilen" : "");
+      l.append(r, b, g, u);
+      r.addEventListener("change", function(){
+        secili = i;
+        kap.querySelectorAll(".secenek").forEach(function(x, j){
+          x.classList.toggle("secili", j === i);
+        });
+        onizlemeCiz();
+      });
+      kap.appendChild(l);
+    });
+    secili = t.onerilen_baslik_indeksi;
+
+    $("t-spot").value = t.spot;
+    sayacYaz($("t-spot"), $("spot-sayac"), 260);
+
+    const ml = $("t-maddeler"); ml.textContent = "";
+    t.uc_madde.forEach(function(m, i){
+      const li = document.createElement("li");
+      const n = document.createElement("span"); n.className = "no"; n.textContent = (i+1) + ".";
+      const s = document.createElement("span"); s.textContent = m;
+      li.append(n, s); ml.appendChild(li);
+    });
+
+    secenekDoldur($("t-kategori"), KATEGORILER, t.kategori);
+    secenekDoldur($("t-ilce"), ILCELER, t.ilce);
+    const os = $("t-onem"); os.textContent = "";
+    Object.keys(ONEMLER).forEach(function(k){
+      const o = document.createElement("option");
+      o.value = k; o.textContent = ONEMLER[k];
+      if (k === t.onem) o.selected = true;
+      os.appendChild(o);
+    });
+
+    const et = $("t-etiketler"); et.textContent = "";
+    t.etiketler.forEach(function(e){
+      const s = document.createElement("span"); s.className = "etiket-oge"; s.textContent = e;
+      et.appendChild(s);
+    });
+
+    const gb = $("t-govde"); gb.textContent = "";
+    t.govde.forEach(function(b, i){
+      const d = document.createElement("div"); d.className = "blok " + b.tur;
+      const bas = document.createElement("div"); bas.className = "blok-bas";
+      const tur = document.createElement("span"); tur.className = "tur";
+      tur.textContent = b.tur === "ara_baslik" ? "ara başlık" : b.tur;
+      bas.appendChild(tur);
+      const ta = document.createElement("textarea");
+      ta.value = b.metin;
+      ta.rows = b.tur === "paragraf" ? 3 : 2;
+      ta.setAttribute("aria-label", "Gövde bloğu " + (i+1) + " — " + tur.textContent);
+      ta.addEventListener("input", function(){ b.metin = ta.value; onizlemeCiz(); });
+      d.append(bas, ta); gb.appendChild(d);
+    });
+
+    $("t-seo-baslik").value = t.seo_baslik;
+    $("t-seo-aciklama").value = t.seo_aciklama;
+    $("t-slug").value = t.url_slug;
+    $("t-gorsel-alt").value = t.gorsel_alt;
+    $("t-gorsel-altyazi").value = t.gorsel_altyazi;
+    sayacYaz($("t-seo-baslik"), $("seo-baslik-sayac"), 60);
+    sayacYaz($("t-seo-aciklama"), $("seo-aciklama-sayac"), 155);
+
+    const kl = $("t-kontrol"); kl.textContent = "";
+    t.dogrulanmasi_gerekenler.forEach(function(m, i){
+      const li = document.createElement("li");
+      const c = document.createElement("input");
+      c.type = "checkbox"; c.id = "kontrol-" + i;
+      const l = document.createElement("label");
+      l.htmlFor = c.id; l.textContent = m;
+      c.addEventListener("change", function(){ li.classList.toggle("bitti", c.checked); });
+      li.append(c, l); kl.appendChild(li);
+    });
+
+    $("t-editor-notu").textContent = t.editor_notu;
+    $("onem-rozet").textContent = ONEMLER[t.onem] || t.onem;
+    $("model-rozet").textContent = (paket.uretim && paket.uretim.model) || "—";
+  }
+
+  /* ---- önizleme ---- */
+  function onizlemeCiz(){
+    if (!paket) return;
+    const t = paket.taslak, k = paket.kaynak;
+    const kap = $("onizleme-icerik"); kap.textContent = "";
+
+    const kat = document.createElement("div"); kat.className = "kat"; kat.textContent = t.kategori.toUpperCase();
+    const h1 = document.createElement("h1"); h1.textContent = t.baslik_secenekleri[secili].metin;
+    const sp = document.createElement("p"); sp.className = "spot"; sp.textContent = $("t-spot").value;
+    kap.append(kat, h1, sp);
+
+    const ku = document.createElement("div"); ku.className = "kunye";
+    ["Haber Merkezi", "21 Ağustos 2026", t.okuma_suresi_dk + " dk okuma", t.ilce].forEach(function(x){
+      const s = document.createElement("span"); s.textContent = x; ku.appendChild(s);
+    });
+    kap.appendChild(ku);
+
+    if (k.gorsel_url){
+      const f = document.createElement("div"); f.className = "foto";
+      const im = document.createElement("img");
+      im.src = k.gorsel_url; im.alt = $("t-gorsel-alt").value;
+      im.loading = "lazy"; im.decoding = "async";
+      f.appendChild(im);
+      const fy = document.createElement("p"); fy.className = "foto-yazi";
+      fy.textContent = $("t-gorsel-altyazi").value + " · Yer tutucu görsel — gazete arşiviyle değiştirilecek";
+      kap.append(f, fy);
+    }
+
+    const oz = document.createElement("div"); oz.className = "ozet";
+    const oh = document.createElement("h2"); oh.textContent = "3 maddede ne oldu";
+    const ul = document.createElement("ul");
+    t.uc_madde.forEach(function(m){ const li = document.createElement("li"); li.textContent = m; ul.appendChild(li); });
+    oz.append(oh, ul); kap.appendChild(oz);
+
+    const gv = document.createElement("div"); gv.className = "govde";
+    t.govde.forEach(function(b){
+      let el;
+      if (b.tur === "ara_baslik") el = document.createElement("h2");
+      else if (b.tur === "alinti") el = document.createElement("blockquote");
+      else el = document.createElement("p");
+      el.textContent = b.metin;
+      gv.appendChild(el);
+    });
+    kap.appendChild(gv);
+  }
+
+  /* ---- paket yükleme ---- */
+  function paketYukle(p){
+    if (!p || !p.kaynak){ alert("Bu dosya araç çıktısına benzemiyor."); return; }
+    paket = p;
+    $("bos-durum").hidden = true;
+    $("calisma").hidden = false;
+    kaynakCiz(p.kaynak);
+    if (p.taslak){
+      $("taslak-alanlari").hidden = false;
+      taslakCiz(p.taslak);
+      onizlemeCiz();
+    } else {
+      $("taslak-alanlari").hidden = true;
+      alert("Bu pakette yalnızca kaynak ayıklaması var (--yalniz-ayikla). Taslak üretmek için aracı anahtarla çalıştırın.");
+    }
+    $("calisma").scrollIntoView({behavior: "smooth", block: "start"});
+  }
+
+  function akisOynat(bitince){
+    const akis = $("akis");
+    const adimlar = Array.prototype.slice.call(akis.querySelectorAll(".adim"));
+    akis.hidden = false;
+    adimlar.forEach(function(a){ a.className = "adim"; });
+    let i = 0;
+    (function sonraki(){
+      if (i > 0) adimlar[i-1].className = "adim bitti";
+      if (i >= adimlar.length){ window.setTimeout(bitince, 180); return; }
+      adimlar[i].className = "adim calisiyor";
+      i++;
+      window.setTimeout(sonraki, 420);
+    })();
+  }
+
+  /* ---- olaylar ---- */
+  document.querySelectorAll("[data-ornek]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const p = ORNEKLER[b.dataset.ornek];
+      if (!p) return;
+      $("adres").value = p.kaynak.kaynak_url;
+      akisOynat(function(){ paketYukle(JSON.parse(JSON.stringify(p))); });
+    });
+  });
+
+  $("adres-form").addEventListener("submit", function(e){
+    e.preventDefault();
+    const adres = $("adres").value.trim();
+    const eslesen = Object.keys(ORNEKLER).find(function(k){
+      return ORNEKLER[k].kaynak.kaynak_url === adres;
+    });
+    if (eslesen){
+      akisOynat(function(){ paketYukle(JSON.parse(JSON.stringify(ORNEKLER[eslesen]))); });
+      return;
+    }
+    window.alert(
+      "Bu sayfa tarayıcıda çalıştığı için rastgele bir siteyi doğrudan çekemez " +
+      "(tarayıcı güvenlik kısıtı).\n\nCanlı çekim için komut satırında:\n\n" +
+      "  python arac/haber_taslak.py \"" + adres + "\"\n\n" +
+      "Çıkan JSON dosyasını bu sayfaya sürükleyip bırakın."
+    );
+  });
+
+  $("json-sec").addEventListener("click", function(){ $("json-dosya").click(); });
+  $("json-dosya").addEventListener("change", function(){
+    const d = this.files && this.files[0];
+    if (d) dosyaOku(d);
+    this.value = "";
+  });
+
+  function dosyaOku(dosya){
+    const okuyucu = new FileReader();
+    okuyucu.onload = function(){
+      try { paketYukle(JSON.parse(String(okuyucu.result))); }
+      catch(err){ window.alert("JSON okunamadı: " + err.message); }
+    };
+    okuyucu.readAsText(dosya, "utf-8");
+  }
+
+  const birak = $("birak-alani");
+  ["dragenter","dragover"].forEach(function(o){
+    birak.addEventListener(o, function(e){ e.preventDefault(); birak.classList.add("uzerinde"); });
+  });
+  ["dragleave","drop"].forEach(function(o){
+    birak.addEventListener(o, function(e){ e.preventDefault(); birak.classList.remove("uzerinde"); });
+  });
+  birak.addEventListener("drop", function(e){
+    const d = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (d) dosyaOku(d);
+  });
+
+  $("onizleme-btn").addEventListener("click", function(){
+    const o = $("onizleme");
+    const acik = o.hidden;
+    o.hidden = !acik;
+    this.setAttribute("aria-expanded", acik ? "true" : "false");
+    this.textContent = acik ? "Önizlemeyi kapat" : "Önizleme";
+    if (acik) onizlemeCiz();
+  });
+
+  $("t-spot").addEventListener("input", function(){
+    sayacYaz(this, $("spot-sayac"), 260); onizlemeCiz();
+  });
+  $("t-seo-baslik").addEventListener("input", function(){ sayacYaz(this, $("seo-baslik-sayac"), 60); });
+  $("t-seo-aciklama").addEventListener("input", function(){ sayacYaz(this, $("seo-aciklama-sayac"), 155); });
+  ["t-gorsel-alt","t-gorsel-altyazi","t-kategori","t-ilce"].forEach(function(id){
+    $(id).addEventListener("input", onizlemeCiz);
+  });
+
+  $("yayin-btn").addEventListener("click", function(){
+    if (!paket) return;
+    const kalan = Array.prototype.filter.call(
+      document.querySelectorAll("#t-kontrol input"), function(c){ return !c.checked; }
+    ).length;
+    $("eylem-not").textContent = kalan
+      ? "Doğrulanacak " + kalan + " madde işaretlenmedi. Prototipte yayın yapılmaz; gerçek sistemde bu bir engeldir."
+      : "Tüm maddeler doğrulandı. Prototip olduğu için yayın yapılmadı.";
+  });
+
+  $("indir-btn").addEventListener("click", function(){
+    if (!paket) return;
+    paket.taslak.spot = $("t-spot").value;
+    paket.taslak.seo_baslik = $("t-seo-baslik").value;
+    paket.taslak.seo_aciklama = $("t-seo-aciklama").value;
+    paket.taslak.url_slug = $("t-slug").value;
+    paket.taslak.gorsel_alt = $("t-gorsel-alt").value;
+    paket.taslak.gorsel_altyazi = $("t-gorsel-altyazi").value;
+    paket.taslak.kategori = $("t-kategori").value;
+    paket.taslak.ilce = $("t-ilce").value;
+    paket.taslak.onem = $("t-onem").value;
+    paket.taslak.onerilen_baslik_indeksi = secili;
+    $("eylem-not").textContent =
+      "Tarayıcı bu sayfadan dosya indirmeyi engelliyor olabilir. Düzenlenmiş taslak konsola yazıldı (F12).";
+    try { console.log(JSON.stringify(paket, null, 2)); } catch(e){}
+  });
+})();
+</script>
+
+</body>
+</html>

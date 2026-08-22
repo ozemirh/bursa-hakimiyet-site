@@ -1,0 +1,115 @@
+{
+  "kaynak": {
+    "kaynak_url": "https://www.bursasoylem.com/2026/08/07/nilufere-7-yeni-park-kazandiriliyor/",
+    "kaynak_alan": "bursasoylem.com",
+    "kaynak_adi": "bursasoylem.com",
+    "orijinal_baslik": "Nilüfer’e 7 Yeni Park Kazandırılıyor",
+    "orijinal_spot": "",
+    "orijinal_govde": "Nilüfer Belediyesi, 2026 yılında ihale süreçleri tamamlanan park projelerinde çalışmaları hızlandırdı. Yıl sonuna kadar 7 ayrı mahallede tamamlanacak projelerle kente yaklaşık 24 bin metrekarelik yeni park alanı kazandırılacak.\n\nNilüfer Belediyesi, ilçe genelinde kişi başına düşen yeşil alan miktarını artırmak ve vatandaşlara yeni yaşam alanları sunmak amacıyla yürüttüğü park çalışmalarını sürdürüyor. 2026 yılı yatırım programı kapsamında ihaleleri tamamlanan projelerde saha uygulamalarına hız verildi.\n\nÇalışmalar kapsamında 30 Ağustos Zafer, Dumlupınar, Kayapa ve Esentepe mahallelerindeki düzenlemelerde son aşamaya gelinirken; Akçalar, Yolçatı ve Demirci mahallelerindeki parklarda da imalatlar kısa sürede başlayacak. Toplam 23 bin 991 metrekarelik alanda hayata geçirilen projelerin tamamlanmasıyla birlikte Nilüfer, 13 bin metrekarelik net yeşil alan kazanacak. 7’den 70’e her yaş grubunun ihtiyaçları dikkate alınarak kurgulanan parklarda; yeni nesil çocuk oyun grupları, dinlenme ve oturma alanları, koşu parkurları ile sosyal donatı alanları yer alacak.\n\nProjeler arasında Esentepe Mahallesi’ne yapılacak olan “Şehitler Parkı” da yer alıyor. Parkın, 30 Ağustos Zafer Bayramı’nda açılması planlanıyor.\n\nKentin yaşam kalitesini yükseltecek adımları planlı şekilde attıklarını belirten Nilüfer Belediye Başkanı Şadi Özdemir, “Nilüfer’i daha yeşil, daha nefes alan ve her yaştan hemşehrimizin huzurla vakit geçirebileceği bir kent haline getirmek ana önceliklerimizden. Yıl sonuna kadar 7 ayrı mahallemizde tamamlayacağımız bu parklar, mahalle sakinlerimizin gündelik yaşamına ve sosyal ilişkilerine dokunacak. Çocuklarımızın güvenle oynayabileceği, spor yapmak isteyenlerin rahatça faydalanabileceği, yaşlılarımızın dinlenebileceği nitelikli alanlar kurguluyoruz. 13 bin metrekarelik yeşil alanı kentimize kazandırırken, komşularımızın bir araya geleceği sağlıklı buluşma noktaları inşa ediyoruz. Çalışmalarımızı planlanan takvim doğrultusunda tamamlayarak tüm alanları yıl bitmeden halkımızın hizmetine sunacağız” dedi.",
+    "gorsel_url": "https://www.bursasoylem.com/wp-content/uploads/2026/08/30-AGUSTOS-ZAFER-850x491.jpg",
+    "gorsel_alt": "",
+    "yazar": "",
+    "yayin_tarihi": "",
+    "guncelleme_tarihi": "",
+    "dil": "tr",
+    "kelime_sayisi": 243,
+    "ayiklama_yontemleri": [
+      "title",
+      "paragraf-sezgisi",
+      "img-sezgisi"
+    ],
+    "ayiklama_guveni": "yuksek"
+  },
+  "taslak": {
+    "baslik_secenekleri": [
+      {
+        "metin": "Nilüfer'de 7 mahalleye yeni park: 24 bin metrekare yeşil alan",
+        "gerekce": "Rakam ve yer başlıkta; yerel arama için en güçlü seçenek."
+      },
+      {
+        "metin": "Nilüfer'in park programında son aşamaya gelindi",
+        "gerekce": "Süreç odaklı, takip haberi olarak da kullanılabilir."
+      },
+      {
+        "metin": "Nilüfer'e 7 yeni park",
+        "gerekce": "Kısa; sürmanşet veya ilçe sayfası kartı için uygun."
+      }
+    ],
+    "onerilen_baslik_indeksi": 0,
+    "spot": "Nilüfer Belediyesi'nin 2026 yatırım programında ihaleleri tamamlanan park projelerinde saha çalışmaları hızlandı. Yıl sonuna kadar 7 mahallede tamamlanacak düzenlemelerle ilçeye yaklaşık 24 bin metrekare yeni park alanı kazandırılacak.",
+    "uc_madde": [
+      "Nilüfer Belediyesi, 2026 yatırım programındaki park projelerinde saha uygulamalarına hız verdi.",
+      "30 Ağustos Zafer, Dumlupınar, Kayapa ve Esentepe'de çalışmalar son aşamada.",
+      "Akçalar, Yolçatı ve Demirci mahallelerinde imalat sürüyor; toplam alan yaklaşık 24 bin metrekare."
+    ],
+    "govde": [
+      {
+        "tur": "paragraf",
+        "metin": "Nilüfer Belediyesi, 2026 yılında ihale süreçleri tamamlanan park projelerinde çalışmaları hızlandırdı. Bursa Söylem'in haberine göre yıl sonuna kadar yedi ayrı mahallede tamamlanacak projelerle ilçeye yaklaşık 24 bin metrekarelik yeni park alanı kazandırılacak."
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Belediye, kişi başına düşen yeşil alan miktarını artırmayı ve mahallelere yeni yaşam alanları kazandırmayı hedefliyor. 2026 yatırım programı kapsamında ihaleleri tamamlanan projelerde saha uygulamalarına ağırlık verildi."
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": "Dört mahallede son aşama"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "30 Ağustos Zafer, Dumlupınar, Kayapa ve Esentepe mahallelerindeki düzenlemelerde son aşamaya gelindi. Akçalar, Yolçatı ve Demirci mahallelerindeki parklarda ise imalat çalışmaları sürüyor."
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": "Yeşil alan tartışması"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Nilüfer, Bursa'nın hızlı büyüyen ilçelerinden biri. Yeni konut alanlarının açılmasıyla birlikte kişi başına düşen yeşil alan miktarı yerel gündemin başlıklarından biri haline geldi."
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Kaynak haberde parkların açılış tarihleri, proje bedeli ve her mahalleye düşen alan ayrı ayrı belirtilmiyor. Bu bilgiler belediyeden alındıktan sonra habere eklenecek."
+      }
+    ],
+    "kategori": "Yaşam",
+    "ilce": "Nilüfer",
+    "etiketler": [
+      "nilüfer belediyesi",
+      "park",
+      "yeşil alan",
+      "yatırım programı",
+      "kentsel donatı"
+    ],
+    "seo_baslik": "Nilüfer'de 7 mahalleye yeni park: 24 bin metrekare",
+    "seo_aciklama": "Nilüfer Belediyesi'nin 2026 park projelerinde saha çalışmaları hızlandı. Yıl sonuna kadar 7 mahallede yaklaşık 24 bin metrekare yeni park alanı açılacak.",
+    "url_slug": "niluferde-7-mahalleye-yeni-park",
+    "gorsel_alt": "Nilüfer'in 30 Ağustos Zafer Mahallesi'nde düzenlemesi süren park alanı",
+    "gorsel_altyazi": "30 Ağustos Zafer Mahallesi'ndeki park düzenlemesinde son aşamaya gelindi.",
+    "okuma_suresi_dk": 2,
+    "onem": "normal",
+    "kaynak_atfi": "Bursa Söylem'in haberine göre",
+    "dogrulanmasi_gerekenler": [
+      "Parkların açılış tarihleri kaynakta yok.",
+      "Toplam alan 'yaklaşık 24 bin metrekare' olarak geçiyor; kesin rakamı belediyeden alın.",
+      "Proje bedeli ve ihaleyi alan firmalar belirtilmemiş.",
+      "Mahalle başına düşen alan dağılımı yok."
+    ],
+    "hassas_konu": {
+      "var_mi": false,
+      "turu": "",
+      "uyari": ""
+    },
+    "bursa_ilgisi": {
+      "var_mi": true,
+      "aciklama": "Nilüfer ilçesine ait yerel yatırım haberi; ilçe sayfası için birebir uygun."
+    },
+    "editor_notu": "Kaynak, belediye duyurusu diline yakın. Tanıtım ifadelerini ayıkladım, rakamı başlığa taşıdım. Mahalle adlarını kaynaktaki haliyle korudum. İlçe sayfası açıldığında bu haber Nilüfer'e bağlanmalı. Görsel Bursa Söylem'e ait; kendi arşivimizden bir park fotoğrafıyla değiştirin."
+  },
+  "uretim": {
+    "model": "claude-opus-5",
+    "efor": "high",
+    "zaman": "2026-08-22T17:00:00+00:00",
+    "not": "Sunum ornegi. Bu taslak, aracin sistem yonergesine ve semasina birebir uyularak hazirlandi; canli calistirmada ayni sekli uretir."
+  }
+}

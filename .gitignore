@@ -5,3 +5,5 @@ _o_*.html
 _olcum*.html
 _dump.html
 _d.html
+__pycache__/
+*.pyc

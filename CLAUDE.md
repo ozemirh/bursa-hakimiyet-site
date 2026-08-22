@@ -18,6 +18,8 @@ Ayrıntılı bilgi: `DEMO-NOTLARI.md`
 | `tasarim-3-haber-detay.html` | Aynı yönün haber detay sayfası |
 | `gorseller/` | Demo fotoğrafları (`genis/` `kart/` `kare/`) + `KAYNAKLAR.md` |
 | `logo-seffaf.png` | Şeffaf zeminli logo (dosyalara base64 gömülü) |
+| `yapay-zeka-editor.html` | Haber masası aracı prototipi — kaynak ayıklama + taslak üretme arayüzü |
+| `arac/` | Aracın Python tarafı: `ayiklayici.py`, `haber_taslak.py`, `cikti/` |
 | `.claude/agents/haber-sayfasi-gelistirici.md` | Bu tasarımlar üzerinde çalışan uzman ajan tanımı |
 
 Her tasarım yönü kendi içinde **anasayfa + haber detay** çiftinden oluşuyor ve ikisi birbirine bağlı. Build adımı, npm paketi, framework yok — dosyalar çift tıkla açılır. Dışarıdan yalnızca Google Fonts gelir; fotoğraflar yereldir.
@@ -49,6 +51,15 @@ Her tasarım yönü kendi içinde **anasayfa + haber detay** çiftinden oluşuyo
 - Başka haber sitelerinden fotoğraf veya başlık kopyalama
 - İçerikteki gerçek haberleri uydurma bilgiyle değiştirme; yeni içerik gerekiyorsa bana sor
 - Web3 / blockchain önerme (proje kapsamından çıkarıldı)
+
+## Yapay zekâ editör aracı
+
+`arac/` klasörü tasarım demolarından **ayrı bir parçadır** ve kendi kuralları vardır:
+
+- Python ile yazılır, `anthropic` SDK'sına bağımlıdır. "Bağımlılıksız tek dosya" kuralı **buraya uygulanmaz**; o kural `tasarim-*.html` dosyaları içindir.
+- Claude çağrıları `claude-opus-5` ile, yapılandırılmış çıktı (`output_config.format`) kullanarak yapılır. Model kimliğini kullanıcı istemeden değiştirme.
+- Editoryal kurallar `haber_taslak.py` içindeki `SISTEM` metnindedir: kopyalama yok, uydurma olgu yok, atıf zorunlu, masumiyet karinesi korunur. **Bu kuralları gevşetme.**
+- `yapay-zeka-editor.html` demo sayfasıdır ve diğer HTML dosyaları gibi bağımlılıksızdır; örnekler dosyaya gömülüdür.
 
 ## Değişiklik isteği geldiğinde
 
