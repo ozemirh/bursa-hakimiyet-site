@@ -1,0 +1,127 @@
+{
+  "kaynak": {
+    "kaynak_url": "https://www.sozcu.com.tr/fiorentina-icardiyi-transfer-listesine-aldi-p351748",
+    "kaynak_alan": "sozcu.com.tr",
+    "kaynak_adi": "Sözcü",
+    "orijinal_baslik": "Icardi 7 yıl sonra geri dönüyor!",
+    "orijinal_spot": "İtalyan basınına göre Fiorentina, Moise Kean'in ayrılığı ihtimaline karşı 33 yaşındaki Arjantinli golcüyü transfer listesine aldı.",
+    "orijinal_govde": "Galatasaray ile yollarını ayıran Mauro Icardi'nin yeni adresi belli oluyor... İtalyan basını, Arjantinli golcünün Fiorentina'nın transfer listesine girdiğini yazdı. İtalyan basınına göre Icardi'yle ilgilenen Lazio, rotasını Sassuolo'dan Andrea Pinamonti'ye çevirdi. Arjantinli golcü için nabız yoklayan Real Betis ise AZ Alkmaar'dan Troy Parrott'u tercih ederek transferden çekildi. FIORENTINA LİSTEYE ALDI Icardi için son olarak Fiorentina seçeneği ortaya çıktı. Como'nun Moise Kean için yaklaşık 40 milyon euroluk teklif hazırlığında olduğu, Fiorentina'nın ise yıldız golcünün ayrılma ihtimaline karşı Icardi'yi gündemine aldığı belirtildi. Fiorentina Sportif Direktörü Fabio Paratici'nin de Icardi'yi uzun süredir takip ettiği aktarıldı. Paratici'nin Juventus'ta görev yaptığı dönemde Arjantinli yıldızı Inter'den transfer etmek için girişimde bulunduğu hatırlatıldı. Icardi'nin de İtalya'ya dönmeye sıcak baktığı öğrenildi. SERIE A'YA DÖNÜŞ Inter'den ayrılmasının üzerinden 7 yıl geçen Icardi, Fiorentina'ya transfer olması halinde Serie A'ya geri dönmüş olacak. Arjantinli yıldız, İtalya kariyerinde çıktığı 219 lig maçında 121 gol kaydetti.",
+    "gorsel_url": "https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/2/icardiaa3684275jpeg-hKhKV0_k106qyXresW7bIQ.jpeg?w=1200&h=900&mode=crop&scale=both",
+    "gorsel_alt": "Icardi'nin yeni adresi şaşırtacak! 7 yıl sonra geri dönüyor",
+    "yazar": "Haber Merkezi",
+    "yayin_tarihi": "2026-08-22T16:33:00+03:00",
+    "guncelleme_tarihi": "2026-08-22T16:49:26+03:00",
+    "dil": "tr",
+    "kelime_sayisi": 142,
+    "ayiklama_yontemleri": [
+      "jsonld:headline",
+      "jsonld:description",
+      "jsonld:articleBody",
+      "jsonld:image"
+    ],
+    "ayiklama_guveni": "orta"
+  },
+  "taslak": {
+    "baslik_secenekleri": [
+      {
+        "metin": "Fiorentina, Icardi'yi transfer listesine aldı",
+        "gerekce": "Düz haber başlığı. İddianın sahibini abartmadan aktarır; kaynak başlığındaki kesinlik iddiasını taşımaz."
+      },
+      {
+        "metin": "Icardi'ye Serie A kapısı: Fiorentina seçeneği",
+        "gerekce": "Etki odaklı. Transferin anlamını öne çıkarır, yine de kesinlik iddia etmez."
+      },
+      {
+        "metin": "Icardi için Fiorentina iddiası",
+        "gerekce": "Kısa; spor bandı ve mobil kart için uygun. 'İddia' sözcüğü haberin doğrulanmamış olduğunu başlıkta belli eder."
+      }
+    ],
+    "onerilen_baslik_indeksi": 0,
+    "spot": "Galatasaray'dan ayrılan Mauro Icardi'nin yeni adresi için Fiorentina seçeneği gündeme geldi. İtalyan basınına göre kulüp, Moise Kean'in ayrılma ihtimaline karşı 33 yaşındaki Arjantinli golcüyü listesine aldı.",
+    "uc_madde": [
+      "İtalyan basını, Galatasaray'dan ayrılan Icardi'nin Fiorentina'nın transfer listesine girdiğini yazdı.",
+      "Fiorentina'nın bu adımı, Moise Kean'in Como'ya gitme ihtimaline karşı bir seçenek olarak aktarıldı.",
+      "Icardi'yle ilgilenen Lazio ve Real Betis başka oyunculara yöneldi; iddiaların kulüplerden resmî teyidi yok."
+    ],
+    "govde": [
+      {
+        "tur": "paragraf",
+        "metin": "Galatasaray ile yolları ayrılan Mauro Icardi'nin yeni kulübü için Fiorentina seçeneği gündeme geldi. Sözcü'nün İtalyan basınından aktardığına göre 33 yaşındaki Arjantinli golcü, Floransa ekibinin transfer listesine girdi."
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Aktarılan bilgiye göre Fiorentina'nın Icardi'yi gündemine almasının nedeni, forvet Moise Kean'in ayrılma ihtimali. Como'nun Kean için yaklaşık 40 milyon euroluk teklif hazırlığında olduğu belirtildi."
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": "Paratici bağlantısı"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Haberde, Fiorentina Sportif Direktörü Fabio Paratici'nin Icardi'yi uzun süredir takip ettiği ifade edildi. Paratici'nin Juventus'ta görev yaptığı dönemde de Arjantinli oyuncuyu Inter'den transfer etmek için girişimde bulunduğu hatırlatıldı."
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Icardi'nin İtalya'ya dönmeye sıcak baktığı öne sürüldü. Oyuncunun ya da kulüplerin konuya ilişkin resmî bir açıklaması bulunmuyor."
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": "Diğer kulüpler yön değiştirdi"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Aynı habere göre Icardi'yle ilgilenen Lazio, rotasını Sassuolo'dan Andrea Pinamonti'ye çevirdi. Arjantinli golcü için nabız yoklayan Real Betis ise AZ Alkmaar'dan Troy Parrott'u tercih ederek transferden çekildi."
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": "İtalya'da 121 gol"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Inter'den ayrılmasının üzerinden yedi yıl geçen Icardi, Fiorentina'ya transfer olması hâlinde Serie A'ya geri dönmüş olacak. Oyuncu İtalya kariyerinde çıktığı 219 lig maçında 121 gol attı."
+      }
+    ],
+    "kategori": "Spor",
+    "ilce": "Bursa dışı",
+    "etiketler": [
+      "mauro icardi",
+      "fiorentina",
+      "serie a",
+      "transfer",
+      "galatasaray",
+      "moise kean"
+    ],
+    "seo_baslik": "Fiorentina, Icardi'yi transfer listesine aldı",
+    "seo_aciklama": "İtalyan basınına göre Fiorentina, Moise Kean'in ayrılma ihtimaline karşı Galatasaray'dan ayrılan Mauro Icardi'yi transfer listesine aldı.",
+    "url_slug": "fiorentina-icardi-transfer-listesi",
+    "gorsel_alt": "Mauro Icardi maç sırasında forma giyerken",
+    "gorsel_altyazi": "Mauro Icardi, Inter'den ayrılmasının ardından Serie A'ya dönebilir.",
+    "okuma_suresi_dk": 2,
+    "onem": "normal",
+    "kaynak_atfi": "Sözcü'nün İtalyan basınından aktardığına göre",
+    "dogrulanmasi_gerekenler": [
+      "Haber tümüyle 'İtalyan basını' kaynaklı; hangi yayın olduğu belirtilmemiş. Orijinal İtalyan kaynağı bulunup habere eklenmeli.",
+      "Fiorentina, Galatasaray veya Icardi'nin temsilcisinden resmî açıklama yok. Teyit alınmadan kesinlik dili kullanılmamalı.",
+      "Como'nun Moise Kean için hazırladığı belirtilen 40 milyon euroluk teklif doğrulanmamış bir rakam.",
+      "Icardi'nin Galatasaray'dan ayrılış tarihi ve şekli (sözleşme feshi mi, süre bitimi mi) kaynakta yok.",
+      "219 maç / 121 gol istatistiği kaynaktan alındı; yayından önce bağımsız bir istatistik sitesiyle karşılaştırın.",
+      "Lazio–Pinamonti ve Betis–Parrott transferlerinin gerçekleşip gerçekleşmediği ayrıca teyit edilmeli."
+    ],
+    "hassas_konu": {
+      "var_mi": true,
+      "turu": "Doğrulanmamış transfer iddiası",
+      "uyari": "Haberin tamamı ikinci elden, kaynağı adı verilmeyen bir basın iddiasına dayanıyor. Kişi hakkında kesinlik iddia eden başlık ve gövde dili kullanmayın; 'iddia edildi', 'öne sürüldü', 'belirtildi' kalıplarını koruyun. Kulüplerden teyit gelmeden manşete taşımayın."
+    },
+    "bursa_ilgisi": {
+      "var_mi": false,
+      "aciklama": "Haberin Bursa ile doğrudan bağı yok; ulusal/uluslararası bir futbol transferi iddiası. Spor sayfasında derleme olarak kullanılabilir, manşete uygun değil. Yerel açı isteniyorsa Bursaspor'un transfer gündemi ayrı bir haber olarak ele alınmalı; bu haberi zorla yerelleştirmeyin."
+    },
+    "editor_notu": "Kaynak başlığı ('Icardi 7 yıl sonra geri dönüyor!') transferi olmuş gibi sunuyor; oysa gövde tümüyle 'İtalyan basınına göre' kaydıyla yazılmış. Başlığı iddiayı olduğu gibi aktaran hâline çevirdim, ünlemi ve kesinlik dilini kaldırdım. Gövdede her iddiaya kaynak kaydı ekledim ve 'resmî açıklama yok' cümlesini koydum. Bursa bağı yok — spor bandı için uygun, manşet için değil. Görselin hakkı Sözcü/AA'da; ajans aboneliğimiz kapsamında değilse kendi arşivimizden bir görselle değiştirin ya da görselsiz yayımlayın."
+  },
+  "uretim": {
+    "model": "claude-opus-5",
+    "efor": "high",
+    "zaman": "2026-08-22T18:05:00+00:00",
+    "not": "Sunum ornegi. Ortamda API anahtari bulunmadigi icin taslak, aracin sistem yonergesi ve semasina birebir uyularak hazirlandi."
+  }
+}
