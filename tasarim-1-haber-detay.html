@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
+  --artis:#0B7A3B;
   --lacivert:#1B2A6B; --lacivert-koyu:#111B47; --kirmizi:#E4222B; --kirmizi-koyu:#B8161E;
   --murekkep:#14181D; --gri:#606A75; --cizgi:#DFE3E8; --zemin:#EEF1F4; --kagit:#FFFFFF;
   --display:"Roboto Condensed","Arial Narrow",Arial,sans-serif;
@@ -203,6 +204,19 @@ footer h4{font-family:var(--display);color:#fff;font-size:15px;margin-bottom:9px
 footer ul{list-style:none;line-height:2}
 footer .alt{border-top:1px solid #24316B;margin-top:22px;padding-top:14px;font-size:12px}
 
+.doviz{background:var(--kagit);border-bottom:1px solid var(--cizgi)}
+.doviz .kapsa{display:flex;align-items:center;overflow-x:auto;scrollbar-width:none}
+.doviz .kapsa::-webkit-scrollbar{display:none}
+.doviz .etiket{font-family:var(--display);font-weight:700;color:var(--lacivert);font-size:12.5px;letter-spacing:.5px;padding:8px 11px 8px 0;white-space:nowrap}
+.doviz dl{display:flex;align-items:center;margin:0}
+.doviz dl>div{display:flex;align-items:baseline;gap:6px;padding:8px 13px;border-right:1px dotted var(--cizgi);white-space:nowrap}
+.doviz dt{font-size:12.5px;color:var(--gri)}
+.doviz dd{margin:0;font-family:var(--display);font-weight:700;font-size:13.5px;color:var(--murekkep)}
+.doviz .fark{font-family:var(--govde);font-weight:400;font-size:11.5px}
+.doviz .artis{color:var(--artis)}
+.doviz .dusus{color:var(--kirmizi)}
+.doviz .zaman{margin-left:auto;padding:8px 0 8px 14px;font-size:11.5px;color:var(--gri);white-space:nowrap}
+
 @media(max-width:1000px){
   .izgara,.sutunlar{grid-template-columns:minmax(0,1fr)}
   .yazarlar{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -349,6 +363,19 @@ footer .alt{border-top:1px solid #24316B;margin-top:22px;padding-top:14px;font-s
     <a href="#">Yenişehir</a><a href="#">Orhaneli</a><a href="#">Keles</a><a href="#">Büyükorhan</a><a href="#">Harmancık</a>
   </div>
 </div>
+
+<section class="doviz" aria-label="Döviz ve altın kurları">
+  <div class="kapsa">
+    <span class="etiket">PİYASA</span>
+    <dl>
+      <div><dt>Dolar</dt><dd>48,07 ₺ <span class="fark artis" aria-label="yüzde 0,23 yükseldi">▲ %0,23</span></dd></div>
+      <div><dt>Euro</dt><dd>56,23 ₺ <span class="fark artis" aria-label="yüzde 0,39 yükseldi">▲ %0,39</span></dd></div>
+      <div><dt>Sterlin</dt><dd>65,64 ₺ <span class="fark artis" aria-label="yüzde 0,45 yükseldi">▲ %0,45</span></dd></div>
+      <div><dt>Gram altın</dt><dd>7.115,37 ₺</dd></div>
+    </dl>
+    <span class="zaman">21 Ağustos 2026 kapanış</span>
+  </div>
+</section>
 
 <div class="sondakika">
   <div class="kapsa">

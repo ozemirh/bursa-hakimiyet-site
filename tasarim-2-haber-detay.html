@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
+  --artis:#0B6E3B;
   --murekkep:#12181F;--gri:#5B6672;--gri-acik:#8B97A3;
   --kirmizi:#D51C24;--lacivert:#1B2A6B;--deniz:#0E6E6E;
   --cizgi:#E3E8EC;--yuzey:#FFFFFF;--zemin:#F4F6F8;
@@ -272,6 +273,19 @@ footer a:hover{color:var(--murekkep)}
 .paylas-btn{border:1px solid var(--cizgi);background:var(--yuzey);border-radius:999px;padding:7px 14px;font:inherit;font-size:13.5px;color:var(--murekkep);cursor:pointer}
 .paylas-btn:hover{border-color:var(--deniz);color:var(--deniz)}
 .editor-not{background:var(--zemin);border:1px solid var(--cizgi);border-radius:10px;padding:13px 15px;font-size:13px;color:var(--gri);line-height:1.55;margin-top:26px}
+
+.doviz{background:var(--yuzey);border-bottom:1px solid var(--cizgi)}
+.doviz .kapsa{display:flex;align-items:center;gap:24px;padding-top:10px;padding-bottom:10px;overflow-x:auto;scrollbar-width:none}
+.doviz .kapsa::-webkit-scrollbar{display:none}
+.doviz .basli{font-size:11.5px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;color:var(--gri-acik);white-space:nowrap}
+.doviz dl{display:flex;align-items:center;gap:24px;margin:0}
+.doviz dl>div{display:flex;align-items:baseline;gap:7px;white-space:nowrap}
+.doviz dt{font-size:13px;color:var(--gri)}
+.doviz dd{margin:0;font-size:14px;font-weight:600;color:var(--murekkep)}
+.doviz .fark{font-size:12px;font-weight:500}
+.doviz .artis{color:var(--artis)}
+.doviz .dusus{color:var(--kirmizi)}
+.doviz .zaman{margin-left:auto;font-size:11.5px;color:var(--gri-acik);white-space:nowrap}
 
 @media(max-width:980px){
   .izgara,.detay-izgara{grid-template-columns:1fr}
@@ -575,6 +589,19 @@ footer a:hover{color:var(--murekkep)}
     </ul>
   </div>
 </nav>
+
+<section class="doviz" aria-label="Döviz ve altın kurları">
+  <div class="kapsa">
+    <span class="basli">Piyasa</span>
+    <dl>
+      <div><dt>Dolar</dt><dd>48,07 ₺ <span class="fark artis" aria-label="yüzde 0,23 yükseldi">▲ %0,23</span></dd></div>
+      <div><dt>Euro</dt><dd>56,23 ₺ <span class="fark artis" aria-label="yüzde 0,39 yükseldi">▲ %0,39</span></dd></div>
+      <div><dt>Sterlin</dt><dd>65,64 ₺ <span class="fark artis" aria-label="yüzde 0,45 yükseldi">▲ %0,45</span></dd></div>
+      <div><dt>Gram altın</dt><dd>7.115,37 ₺</dd></div>
+    </dl>
+    <span class="zaman">21 Ağustos 2026 kapanış</span>
+  </div>
+</section>
 
 <main>
   <div class="kapsa">

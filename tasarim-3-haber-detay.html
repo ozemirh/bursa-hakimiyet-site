@@ -280,6 +280,15 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
   html{scroll-behavior:auto}.ilce-serit{scroll-behavior:auto}
   body,.menu-bas .ok{transition:none}}
 
+.doviz{background:var(--kagit);border-bottom:1px solid var(--cizgi)}
+.doviz .kapsa{display:flex;align-items:center;gap:26px;padding-top:10px;padding-bottom:10px;overflow-x:auto;scrollbar-width:none}
+.doviz .kapsa::-webkit-scrollbar{display:none}
+.doviz dl{display:flex;align-items:center;gap:26px;margin:0}
+.doviz dl>div{display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.doviz dt{font-family:var(--mono);font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--gri)}
+.doviz dd{margin:0;font-family:var(--mono);font-size:12.5px;font-weight:500;color:var(--murekkep)}
+.doviz .tarih{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--gri);white-space:nowrap}
+
 @media(max-width:1120px){
   .ana{grid-template-columns:minmax(0,1fr) 290px;gap:38px}
   .detay-ana{grid-template-columns:200px minmax(0,1fr);gap:38px}
@@ -554,6 +563,18 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
     <a href="#">17 ilçe</a><a href="#">Künye</a>
   </div>
 </div>
+
+<section class="doviz" aria-label="Döviz ve altın kurları">
+  <div class="kapsa">
+    <dl>
+      <div><dt>USD/TRY</dt><dd>48,07 <span class="artis" aria-label="yüzde 0,23 yükseldi">▲ 0,23%</span></dd></div>
+      <div><dt>EUR/TRY</dt><dd>56,23 <span class="artis" aria-label="yüzde 0,39 yükseldi">▲ 0,39%</span></dd></div>
+      <div><dt>GBP/TRY</dt><dd>65,64 <span class="artis" aria-label="yüzde 0,45 yükseldi">▲ 0,45%</span></dd></div>
+      <div><dt>Gram altın</dt><dd>7.115,37</dd></div>
+    </dl>
+    <span class="tarih">21.08.2026 kapanış</span>
+  </div>
+</section>
 
 <div class="ilerleme" id="ilerleme" aria-hidden="true"></div>
 

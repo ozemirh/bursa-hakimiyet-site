@@ -84,6 +84,10 @@ Her dosya aynı sırayla kurulu:
 --serif  Source Serif 4          --sans  Inter
 ```
 
+**Döviz bandı.** Üç tasarımda da `.doviz` sınıfıyla, her yönün kendi diline göre: Tasarım 1'de İLÇELER şeridini yansılayan yoğun şerit, Tasarım 2'de menü altında ferah satır, Tasarım 3'te mono tipografik çizgi. Artış/azalış renkleri Tasarım 1 ve 2'de yeni `--artis` değişkeninden, Tasarım 3'te mevcut `.artis` / `.dusus` sınıflarından geliyor.
+
+> Dikkat: Tasarım 3'te `.zaman` zaten zaman çizelgesinin sınıfı ve `border-left` taşıyor. Döviz bandındaki tarih bu yüzden `.tarih` sınıfını kullanıyor — `.zaman` demeyin.
+
 **Tasarım 3** — `html[data-tema="koyu"]` altında tüm değişkenler yeniden tanımlı
 ```
 --yesil #0B3D2E      --yesil-parlak #127A57   --kirmizi #D51C24
@@ -186,6 +190,7 @@ Haber başlıkları 18-21 Ağustos 2026 Bursa gündeminden derlenip yeniden yaz�
 | Google Fonts dışa bağımlı | İnternetsiz açılınca yedek fontlara düşer, düzen bozulmaz |
 | Arama sayfa içiyle sınırlı | Yazdıkça o sayfadaki başlıkları süzüyor; gerçek arşiv araması arka uç ister |
 | Menü içerikleri örnek | Açılır alt menüler çalışıyor, ama içindeki linkler `#` — hedef sayfalar henüz yok |
+| Döviz bandı statik | Değerler **gerçek**: 21 Ağustos 2026 ECB referans kurları (USD 48,07 · EUR 56,23 · GBP 65,64) ve o günkü USD/TRY ile hesaplanmış gram altın. Ama sayfaya gömülü, kendiliğinden güncellenmez — canlıda bir kur servisine bağlanması gerekir. BIST 100 yok, güvenilir ücretsiz kaynak bulunamadı |
 | "Arşive sor" arka planı yok | Tasarım 3'teki kutu görsel; gerçek arama altyapısı gerektirir |
 
 ---
