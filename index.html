@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Bursa Hakimiyet — Tasarım Demoları</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --murekkep:#12181F;--gri:#5B6672;--gri-acik:#8B97A3;
+  --lacivert:#1B2A6B;--kirmizi:#D51C24;--deniz:#0E6E6E;
+  --cizgi:#E3E8EC;--yuzey:#FFFFFF;--zemin:#F4F6F8;
+  --uyari-zemin:#FFF8E6;--uyari-cizgi:#E8C766;--uyari-yazi:#6B4E00;
+  --sans:"Inter",-apple-system,Segoe UI,Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--zemin);color:var(--murekkep);font-family:var(--sans);font-size:16px;line-height:1.55}
+a{color:inherit}
+a:focus-visible,button:focus-visible{outline:2px solid var(--deniz);outline-offset:3px}
+.kapsa{max-width:1060px;margin:0 auto;padding:0 22px}
+
+.bant{background:var(--yuzey);border-bottom:3px solid var(--kirmizi)}
+.bant .kapsa{display:flex;align-items:center;gap:18px;padding:20px 22px;flex-wrap:wrap}
+.logo-img{height:46px;width:auto;display:block}
+.bant .etiket{font-size:13px;color:var(--gri);border-left:1px solid var(--cizgi);padding-left:18px}
+
+.bas{padding:44px 0 8px}
+.bas h1{font-size:clamp(26px,3.6vw,38px);line-height:1.12;letter-spacing:-.8px;font-weight:700;max-width:20ch}
+.bas p{color:var(--gri);margin-top:14px;max-width:62ch;font-size:17px}
+
+.uyari{background:var(--uyari-zemin);border:1px solid var(--uyari-cizgi);color:var(--uyari-yazi);
+  border-radius:10px;padding:14px 16px;margin:26px 0 0;font-size:14.5px;line-height:1.5;max-width:72ch}
+.uyari b{font-weight:600}
+
+.yonler{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding:34px 0 10px}
+.yon{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:14px;padding:22px;display:flex;flex-direction:column}
+.yon .no{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gri-acik);font-weight:600}
+.yon h2{font-size:22px;letter-spacing:-.5px;margin-top:6px;font-weight:700}
+.yon .ozet{color:var(--gri);font-size:15px;margin-top:10px;flex:1}
+.yon .seritler{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.yon .rozet{font-size:11.5px;letter-spacing:.4px;border:1px solid var(--cizgi);border-radius:999px;padding:4px 10px;color:var(--gri)}
+.yon .baglar{display:grid;gap:8px;margin-top:18px}
+.yon .bag{display:block;text-align:center;text-decoration:none;font-weight:600;font-size:14.5px;
+  border-radius:9px;padding:10px 12px;border:1px solid var(--cizgi);color:var(--murekkep);background:var(--zemin)}
+.yon .bag.ana{background:var(--lacivert);border-color:var(--lacivert);color:#fff}
+.yon .bag:hover{border-color:var(--deniz);color:var(--deniz)}
+.yon .bag.ana:hover{background:var(--deniz);border-color:var(--deniz);color:#fff}
+.yon.y1{border-top:4px solid var(--lacivert)}
+.yon.y2{border-top:4px solid var(--deniz)}
+.yon.y3{border-top:4px solid #0B3D2E}
+
+.notlar{padding:34px 0 60px}
+.notlar h3{font-size:15px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gri);font-weight:600;margin-bottom:14px}
+.notlar ul{list-style:none;display:grid;gap:10px;max-width:74ch}
+.notlar li{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:10px;padding:13px 15px;font-size:14.5px;color:var(--gri)}
+.notlar li b{color:var(--murekkep);font-weight:600}
+
+footer{border-top:1px solid var(--cizgi);background:var(--yuzey)}
+footer .kapsa{padding:22px;font-size:13px;color:var(--gri-acik)}
+
+@media(max-width:860px){ .yonler{grid-template-columns:minmax(0,1fr)} .bas{padding-top:30px} }
+</style>
+</head>
+<body>
+
+<div class="bant">
+  <div class="kapsa">
+    <img class="logo-img" src="logo-seffaf.png" alt="Bursa Hakimiyet" width="406" height="120">
+    <span class="etiket">Tasarım demoları · İç değerlendirme</span>
+  </div>
+</div>
+
+<main class="kapsa">
+  <div class="bas">
+    <h1>Üç tasarım yönü, karar için yan yana</h1>
+    <p>Her yön kendi anasayfası ve haber detay sayfasıyla birlikte hazır. Sayfalar birbirine bağlı — manşete tıklayınca detay sayfası açılır. Menüler, arama ve filtreler çalışır durumdadır.</p>
+
+    <div class="uyari">
+      <b>Bu bir tasarım prototipidir, yayın değildir.</b> Sayfalardaki haber metinleri sunum amacıyla hazırlanmış demo içeriktir ve gazetenin yayınlanmış haberleri değildir. Fotoğraflar telifsiz arşivlerden alınmış yer tutuculardır, gazetenin çekimleri değildir; kaynak ve lisans listesi depodaki <code>gorseller/KAYNAKLAR.md</code> dosyasındadır. Yazar isimleri, nöbetçi eczane, namaz vakitleri, resmî ilanlar ve telefon numarası örnek verilerdir.
+    </div>
+  </div>
+
+  <div class="yonler">
+    <section class="yon y1">
+      <span class="no">Yön 1</span>
+      <h2>Klasik</h2>
+      <p class="ozet">Ulusal haber sitelerinin yoğun bilgi mimarisi. Kayan son dakika şeridi, çok kolonlu manşet bloğu, geniş reklam envanteri.</p>
+      <div class="seritler">
+        <span class="rozet">Tanıdıklık yüksek</span>
+        <span class="rozet">Reklam alanı geniş</span>
+        <span class="rozet">Risk düşük</span>
+      </div>
+      <div class="baglar">
+        <a class="bag ana" href="tasarim-1-klasik.html">Anasayfa</a>
+        <a class="bag" href="tasarim-1-haber-detay.html">Haber detay</a>
+      </div>
+    </section>
+
+    <section class="yon y2">
+      <span class="no">Yön 2</span>
+      <h2>Hibrit</h2>
+      <p class="ozet">Klasik iskelet, modern tipografi. Serif başlık, kart yapısı, daha çok boşluk. İlçe filtresi ve “3 maddede ne oldu” kutusu imza öğeleri.</p>
+      <div class="seritler">
+        <span class="rozet">Önerilen yön</span>
+        <span class="rozet">Farklılaşma orta</span>
+        <span class="rozet">Risk düşük</span>
+      </div>
+      <div class="baglar">
+        <a class="bag ana" href="tasarim-2-hibrit.html">Anasayfa</a>
+        <a class="bag" href="tasarim-2-haber-detay.html">Haber detay</a>
+      </div>
+    </section>
+
+    <section class="yon y3">
+      <span class="no">Yön 3</span>
+      <h2>Modern</h2>
+      <p class="ozet">Tipografi öncelikli, editoryal çizgi. Başlığın kendisi hero, açık/koyu tema, mono zaman damgaları, kenar notları.</p>
+      <div class="seritler">
+        <span class="rozet">Farklılaşma yüksek</span>
+        <span class="rozet">Reklam alanı dar</span>
+        <span class="rozet">Risk orta</span>
+      </div>
+      <div class="baglar">
+        <a class="bag ana" href="tasarim-3-modern.html">Anasayfa</a>
+        <a class="bag" href="tasarim-3-haber-detay.html">Haber detay</a>
+      </div>
+    </section>
+  </div>
+
+  <div class="notlar">
+    <h3>Bakarken</h3>
+    <ul>
+      <li><b>Dar ekranı da deneyin.</b> Tarayıcı penceresini daraltın; üç yön de mobilde farklı davranır. Altı sayfa da 380px'e kadar yatay taşmasız ölçüldü.</li>
+      <li><b>Yön 3'te tema düğmesi.</b> Sağ üstteki ◐ düğmesi açık/koyu tema arasında geçer, tercih tarayıcıda saklanır.</li>
+      <li><b>Etkileşimleri deneyin.</b> Menülerdeki açılır başlıklar, arama kutusu ve Yön 2'deki ilçe çipleri gerçekten çalışır.</li>
+      <li><b>Henüz olmayanlar.</b> Kategori, ilçe ve yazar sayfaları yön seçildikten sonra çıkarılacak. Menü içindeki bağlantıların bir kısmı bu yüzden boştur.</li>
+    </ul>
+  </div>
+</main>
+
+<footer>
+  <div class="kapsa">Bursa Hakimiyet — tasarım demoları · İç değerlendirme için hazırlanmıştır</div>
+</footer>
+
+</body>
+</html>
