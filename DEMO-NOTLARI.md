@@ -84,6 +84,23 @@ Her dosya aynı sırayla kurulu:
 --serif  Source Serif 4          --sans  Inter
 ```
 
+**Döviz bandı verisi** — 21 Ağustos 2026, sekiz kalem:
+
+| Kalem | Değer | Kaynak |
+|---|---|---|
+| Dolar | 48,07 ₺ ▲%0,23 | ECB referans kuru, 21.08.2026 |
+| Euro | 56,23 ₺ ▲%0,39 | ECB referans kuru |
+| Sterlin | 65,64 ₺ ▲%0,45 | ECB üzerinden çapraz |
+| Altın (gram) | 7.115,37 ₺ | Spot ons × o günkü USD/TRY |
+| Gümüş (gram) | 106,80 ₺ | Spot ons × o günkü USD/TRY |
+| BIST 100 | 14.494,61 ▲%0,68 | 21.08.2026 kapanışı |
+| Bitcoin | 77.265 $ | Spot |
+| Faiz | %37,00 | TCMB politika faizi (1 hafta repo) |
+
+Değişim yüzdeleri bir önceki iş gününe göre hesaplandı. Değerli maden ve kripto fiyatları 22 Ağustos spot değerleridir, diğerleri 21 Ağustos kapanışıdır.
+
+**Bandın doluluğu.** Sekiz kalem, 1280px ve üzerinde bandı tam dolduracak (%100) şekilde ayarlandı; tarih sağ uçta tam görünür. Daha dar ekranlarda şerit yatay kaydırılır — İLÇELER şeridiyle aynı davranış. **Kalem eklerseniz doluluğu yeniden ölçün**, yoksa tarih kenarda kesilir.
+
 **Döviz bandı.** Üç tasarımda da `.doviz` sınıfıyla, her yönün kendi diline göre: Tasarım 1'de İLÇELER şeridini yansılayan yoğun şerit, Tasarım 2'de menü altında ferah satır, Tasarım 3'te mono tipografik çizgi. Artış/azalış renkleri Tasarım 1 ve 2'de yeni `--artis` değişkeninden, Tasarım 3'te mevcut `.artis` / `.dusus` sınıflarından geliyor.
 
 > Dikkat: Tasarım 3'te `.zaman` zaten zaman çizelgesinin sınıfı ve `border-left` taşıyor. Döviz bandındaki tarih bu yüzden `.tarih` sınıfını kullanıyor — `.zaman` demeyin.
@@ -190,7 +207,7 @@ Haber başlıkları 18-21 Ağustos 2026 Bursa gündeminden derlenip yeniden yaz�
 | Google Fonts dışa bağımlı | İnternetsiz açılınca yedek fontlara düşer, düzen bozulmaz |
 | Arama sayfa içiyle sınırlı | Yazdıkça o sayfadaki başlıkları süzüyor; gerçek arşiv araması arka uç ister |
 | Menü içerikleri örnek | Açılır alt menüler çalışıyor, ama içindeki linkler `#` — hedef sayfalar henüz yok |
-| Döviz bandı statik | Değerler **gerçek**: 21 Ağustos 2026 ECB referans kurları (USD 48,07 · EUR 56,23 · GBP 65,64) ve o günkü USD/TRY ile hesaplanmış gram altın. Ama sayfaya gömülü, kendiliğinden güncellenmez — canlıda bir kur servisine bağlanması gerekir. BIST 100 yok, güvenilir ücretsiz kaynak bulunamadı |
+| Döviz bandı statik | Sekiz kalemin tamamı **gerçek veri** (aşağıdaki tabloya bakın), ama sayfaya gömülü ve kendiliğinden güncellenmez. Canlıda bir piyasa servisine bağlanması gerekir; `.doviz` bileşeninin yapısı buna hazır, yalnızca `<dd>` içerikleri beslenecek |
 | "Arşive sor" arka planı yok | Tasarım 3'teki kutu görsel; gerçek arama altyapısı gerektirir |
 
 ---
