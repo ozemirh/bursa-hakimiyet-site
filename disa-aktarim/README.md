@@ -31,6 +31,13 @@ cd bursa-hakimiyet-site
 .\disa-aktarim\calistir.ps1
 ```
 
+Betik "bu sistemde komut dosyası çalıştırılması devre dışı" hatası verirse
+(yeni kurulmuş Windows'ta olağan), ilkeyi kalıcı değiştirmeden:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\disa-aktarim\calistir.ps1
+```
+
 Varsayılan çıktı kökü `D:\bursa-hakimiyet-arsiv`. Başka bir sürücü için:
 
 ```powershell
