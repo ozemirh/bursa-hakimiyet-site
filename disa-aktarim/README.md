@@ -58,8 +58,41 @@ Ctrl+C ile güvenle durdurulur. Tekrar çalıştırınca kaldığı yerden devam
 indirilmiş haberler `veri/<YIL-AY>/<id>.json` dosyasının varlığına bakılarak
 atlanır. İlerleme `ilerleme.json` dosyasından okunur.
 
-Mevcut ilerlemeyi taşımak isterseniz arşiv klasörünü zip'leyip yeni makinede
-aynı köke açın; taranmış haberler tekrar indirilmez.
+---
+
+## Yarım kalan taramayı başka makineye devretme
+
+Taramanın bir kısmı bir makinede yapıldıysa, o ilerlemeyi taşıyıp kaldığı
+yerden devam edebilirsiniz. **Eski makinede:**
+
+```powershell
+.\disa-aktarim\paketle.ps1
+```
+
+Arşivi masaüstünde tek bir `.tar.gz` dosyasına toplar ve yanına SHA256 damgası
+yazar. 92 bin küçük dosyayı USB'ye tek tek kopyalamak saatler sürer; tek paket
+saniyeler.
+
+> Paketlemeden önce taramayı durdurun — çalışırken paketlenirse yarım yazılmış
+> dosyalar pakete girebilir. Betik açık bir Python süreci görürse uyarır.
+
+**Yeni makinede:**
+
+```powershell
+tar -xzf bursa-arsiv-devir.tar.gz -C D:\
+.\disa-aktarim\calistir.ps1
+```
+
+İlk turda `atlanan` sayısı devredilen haber sayısına eşit olmalı ve
+`tamamlanan` sıfırdan başlamalı. Eşitse devir tamamdır. Başka bir sürücüye
+açtıysanız `-Kok` ile yolu verin.
+
+Damgayı doğrulamak için (USB aktarımı sessizce bozulabilir):
+
+```powershell
+(Get-FileHash bursa-arsiv-devir.tar.gz -Algorithm SHA256).Hash
+Get-Content bursa-arsiv-devir.tar.gz.sha256
+```
 
 ---
 
