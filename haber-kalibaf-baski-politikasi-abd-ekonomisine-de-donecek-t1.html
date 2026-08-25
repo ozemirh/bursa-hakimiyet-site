@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bursa Hakimiyet — Tasarım 1: Klasik</title>
+<title>Kalibaf: Baskı politikası ABD ekonomisine de dönecek — Bursa Hakimiyet</title>
+<meta name="description" content="İran Meclis Başkanı Muhammed Bakır Kalibaf, sosyal medya paylaşımında ABD'nin fiyatları kontrol altına alma adımlarını hedef aldı. Washington'ın yeni bir mali yaptırım paketini yarın açıklaması bekleniyor.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -95,8 +97,6 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--kirmizi);outline-of
 .rozet-k{display:inline-block;background:var(--kirmizi);font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:1px;padding:3px 9px;margin-bottom:9px}
 .manset h1{font-family:var(--display);font-size:36px;line-height:1.06;font-weight:900;letter-spacing:-.4px}
 .manset p{font-size:14.5px;color:#DDE4EC;margin-top:8px;max-width:62ch}
-.manset .dinle-bag{display:inline-flex;align-items:center;gap:7px;margin-top:12px;border:1px solid rgba(255,255,255,.55);font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:1px;padding:6px 12px}
-.manset .dinle-bag:hover{background:var(--kirmizi);border-color:var(--kirmizi)}
 
 .dortlu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
 .kart{background:#fff;border:1px solid var(--cizgi)}
@@ -166,7 +166,7 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--kirmizi);outline-of
 
 .surmanset{display:flex;align-items:center;gap:11px;background:var(--kagit);border:1px solid var(--cizgi);border-left:5px solid var(--kirmizi);padding:9px 12px;margin-bottom:12px}
 .surmanset .etiket{font-family:var(--display);font-weight:900;font-size:12px;letter-spacing:1.2px;color:var(--kirmizi);flex:none}
-.surmanset p{font-family:var(--display);font-weight:700;font-size:17px;line-height:1.16}
+.surmanset h2{font-family:var(--display);font-weight:700;font-size:17px;line-height:1.16}
 .surmanset .zaman{margin-left:auto;font-size:11.5px;color:var(--gri);flex:none}
 .alt-manset{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
 .yatay{display:grid;grid-template-columns:136px minmax(0,1fr);background:var(--kagit);border:1px solid var(--cizgi)}
@@ -253,191 +253,52 @@ footer .alt{border-top:1px solid #24316B;margin-top:22px;padding-top:14px;font-s
   .yazar{border-right:0;border-bottom:1px solid var(--cizgi)}
   .reklam.tepe{height:100px}
 }
+
+/* --- haber detay --- */
+.kirinti{font-size:12.5px;color:var(--gri);background:var(--kagit);border:1px solid var(--cizgi);padding:8px 12px;margin-bottom:14px}
+.kirinti ol{list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.kirinti li::after{content:"\203A";margin-left:6px;color:var(--cizgi)}
+.kirinti li:last-child::after{content:""}
+.kirinti a:hover{color:var(--kirmizi)}
+.kirinti [aria-current="page"]{color:var(--murekkep);font-weight:500}
+.detay{background:var(--kagit);border:1px solid var(--cizgi);padding:20px 22px 24px}
+.detay .rozet-k{color:var(--kagit)}
+.detay h1{font-family:var(--display);font-size:34px;line-height:1.09;font-weight:900;letter-spacing:-.3px;margin:9px 0 12px}
+.detay .spot{font-size:16.5px;line-height:1.5;border-left:4px solid var(--kirmizi);padding-left:12px;margin-bottom:14px}
+.detay-kunye{display:flex;flex-wrap:wrap;gap:7px 14px;align-items:center;border-top:1px solid var(--cizgi);border-bottom:1px solid var(--cizgi);padding:9px 0;font-size:12.5px;color:var(--gri);margin-bottom:16px}
+.detay-kunye .yazan{font-family:var(--display);font-weight:700;color:var(--lacivert);font-size:14.5px;letter-spacing:.3px}
+.arac{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.arac button,.arac a{border:1px solid var(--cizgi);background:var(--yumusak);font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.5px;padding:5px 9px;cursor:pointer;color:var(--lacivert)}
+.arac button:hover,.arac a:hover{background:var(--lacivert);color:var(--kagit);border-color:var(--lacivert)}
+.ana-gorsel{height:420px}
+.foto-alt{font-size:12.5px;color:var(--gri);border-bottom:1px solid var(--cizgi);padding:8px 0 10px;margin-bottom:16px}
+.metin{font-size:16px;line-height:1.72}
+.metin[data-boyut="kucuk"]{font-size:14.5px;line-height:1.66}
+.metin[data-boyut="buyuk"]{font-size:18.5px;line-height:1.76}
+.metin p{margin-bottom:14px}
+.metin h2{font-family:var(--display);font-size:22px;line-height:1.2;font-weight:700;color:var(--lacivert);margin:20px 0 10px}
+.alinti{border-left:5px solid var(--kirmizi);background:var(--yumusak);padding:14px 16px;margin:18px 0;font-family:var(--display);font-size:19px;line-height:1.34;font-weight:700;color:var(--lacivert)}
+.alinti cite{display:block;font-family:var(--govde);font-style:normal;font-size:12.5px;font-weight:400;color:var(--gri);margin-top:8px}
+.etiketler{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:20px;padding-top:14px;border-top:1px solid var(--cizgi)}
+.etiketler b{font-family:var(--display);font-size:12.5px;letter-spacing:.8px;color:var(--gri)}
+.etiketler a{border:1px solid var(--cizgi);background:var(--yumusak);font-size:12.5px;padding:4px 9px}
+.etiketler a:hover{background:var(--kirmizi);color:var(--kagit);border-color:var(--kirmizi)}
+@media(max-width:1000px){.ana-gorsel{height:300px}}
+@media(max-width:600px){
+  .detay{padding:14px 14px 18px}
+  .detay h1{font-size:25px}
+  .ana-gorsel{height:210px}
+  .arac{margin-left:0;flex-basis:100%}
+}
+@media print{
+  .servis,.menu,.ilce,.sondakika,.reklam,.arac,.yukari,aside,.kirinti,.footer-ilce,.sosyal{display:none!important}
+  body{background:var(--kagit)}
+  .izgara{grid-template-columns:minmax(0,1fr)}
+  .detay{border:0;padding:0}
+}
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-<defs>
-  <linearGradient id="gsky" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="var(--s1)"/><stop offset="100%" stop-color="var(--s2)"/>
-  </linearGradient>
-</defs>
-
-<symbol id="sc-uludag" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <circle cx="312" cy="58" r="26" fill="var(--s5)" opacity=".85"/>
-  <path d="M0 250 L0 168 L74 108 L132 152 L186 96 L248 158 L310 118 L400 176 L400 250Z" fill="var(--s3)"/>
-  <path d="M186 96 L162 121 L176 128 L196 118 L214 130 L228 118Z" fill="#F2F6F9" opacity=".9"/>
-  <path d="M0 250 L0 206 L58 178 L128 210 L204 172 L286 208 L400 168 L400 250Z" fill="var(--s4)"/>
-  <path d="M0 250 L96 226 L188 246 L286 222 L400 240 L400 250Z" fill="var(--s4)" opacity=".55"/>
-</symbol>
-
-<symbol id="sc-cami" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <circle cx="330" cy="52" r="22" fill="var(--s5)" opacity=".75"/>
-  <rect x="96" y="46" width="12" height="150" fill="var(--s3)"/>
-  <path d="M96 46 L102 22 L108 46Z" fill="var(--s3)"/>
-  <circle cx="102" cy="64" r="9" fill="var(--s4)"/>
-  <rect x="286" y="46" width="12" height="150" fill="var(--s3)"/>
-  <path d="M286 46 L292 22 L298 46Z" fill="var(--s3)"/>
-  <circle cx="292" cy="64" r="9" fill="var(--s4)"/>
-  <rect x="128" y="140" width="140" height="60" fill="var(--s3)"/>
-  <path d="M132 142 a66 52 0 0 1 132 0Z" fill="var(--s4)"/>
-  <path d="M198 90 l4 -14 l4 14Z" fill="var(--s5)"/>
-  <path d="M150 152 a20 18 0 0 1 40 0Z" fill="var(--s3)"/>
-  <path d="M208 152 a20 18 0 0 1 40 0Z" fill="var(--s3)"/>
-  <rect x="0" y="196" width="400" height="54" fill="var(--s4)" opacity=".8"/>
-  <rect x="140" y="166" width="18" height="30" fill="var(--s1)" opacity=".55"/>
-  <rect x="188" y="166" width="18" height="30" fill="var(--s1)" opacity=".55"/>
-  <rect x="236" y="166" width="18" height="30" fill="var(--s1)" opacity=".55"/>
-</symbol>
-
-<symbol id="sc-gol" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <circle cx="86" cy="62" r="24" fill="var(--s5)" opacity=".8"/>
-  <path d="M0 132 L70 96 L142 128 L226 90 L312 126 L400 100 L400 148 L0 148Z" fill="var(--s3)"/>
-  <rect x="0" y="148" width="400" height="34" fill="var(--s4)" opacity=".55"/>
-  <path d="M0 182 L400 182 L400 250 L0 250Z" fill="var(--s4)"/>
-  <path d="M18 196 h56 M96 196 h44 M164 196 h70 M256 196 h48 M320 196 h62" stroke="var(--s1)" stroke-width="3" opacity=".45"/>
-  <path d="M40 214 h70 M132 214 h56 M212 214 h84 M316 214 h54" stroke="var(--s1)" stroke-width="3" opacity=".3"/>
-  <rect x="0" y="160" width="400" height="4" fill="#fff" opacity=".5"/>
-</symbol>
-
-<symbol id="sc-fabrika" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <circle cx="288" cy="52" r="30" fill="var(--s5)" opacity=".3"/>
-  <circle cx="316" cy="42" r="22" fill="var(--s5)" opacity=".25"/>
-  <rect x="44" y="96" width="22" height="106" fill="var(--s3)"/>
-  <rect x="82" y="118" width="18" height="84" fill="var(--s3)"/>
-  <rect x="118" y="146" width="118" height="56" fill="var(--s4)"/>
-  <path d="M118 146 l20 -22 l20 22 M158 146 l20 -22 l20 22 M198 146 l20 -22 l20 22" fill="var(--s3)"/>
-  <rect x="252" y="128" width="96" height="74" fill="var(--s3)"/>
-  <rect x="266" y="146" width="16" height="16" fill="var(--s1)" opacity=".6"/>
-  <rect x="292" y="146" width="16" height="16" fill="var(--s1)" opacity=".6"/>
-  <rect x="318" y="146" width="16" height="16" fill="var(--s1)" opacity=".6"/>
-  <rect x="266" y="172" width="16" height="16" fill="var(--s1)" opacity=".4"/>
-  <rect x="292" y="172" width="16" height="16" fill="var(--s1)" opacity=".4"/>
-  <rect x="0" y="202" width="400" height="48" fill="var(--s4)"/>
-</symbol>
-
-<symbol id="sc-adliye" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <path d="M84 92 L200 44 L316 92Z" fill="var(--s3)"/>
-  <rect x="84" y="92" width="232" height="12" fill="var(--s4)"/>
-  <rect x="102" y="104" width="18" height="88" fill="var(--s3)"/>
-  <rect x="144" y="104" width="18" height="88" fill="var(--s3)"/>
-  <rect x="186" y="104" width="18" height="88" fill="var(--s3)"/>
-  <rect x="228" y="104" width="18" height="88" fill="var(--s3)"/>
-  <rect x="270" y="104" width="18" height="88" fill="var(--s3)"/>
-  <rect x="72" y="192" width="256" height="12" fill="var(--s4)"/>
-  <rect x="58" y="204" width="284" height="12" fill="var(--s4)" opacity=".8"/>
-  <rect x="44" y="216" width="312" height="34" fill="var(--s4)" opacity=".6"/>
-</symbol>
-
-<symbol id="sc-yangin" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <circle cx="238" cy="62" r="46" fill="var(--s3)" opacity=".45"/>
-  <circle cx="286" cy="44" r="34" fill="var(--s3)" opacity=".35"/>
-  <circle cx="196" cy="40" r="28" fill="var(--s3)" opacity=".3"/>
-  <path d="M0 250 L0 176 L86 138 L168 174 L262 132 L340 170 L400 148 L400 250Z" fill="var(--s4)"/>
-  <path d="M236 172 c-14 -22 4 -30 2 -46 c18 12 26 30 22 46 c8 -6 10 -16 9 -24 c10 12 12 28 4 40Z" fill="var(--s5)"/>
-  <path d="M0 250 L0 214 L104 196 L212 218 L318 198 L400 216 L400 250Z" fill="var(--s4)" opacity=".7"/>
-</symbol>
-
-<symbol id="sc-baraj" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <path d="M0 250 L0 84 L74 60 L110 250Z" fill="var(--s3)"/>
-  <path d="M400 250 L400 84 L326 60 L290 250Z" fill="var(--s3)"/>
-  <path d="M110 118 L290 118 L268 250 L132 250Z" fill="var(--s4)"/>
-  <rect x="110" y="106" width="180" height="14" fill="var(--s3)"/>
-  <path d="M124 148 h152 M128 172 h144 M134 196 h132" stroke="var(--s1)" stroke-width="3" opacity=".35"/>
-  <rect x="110" y="118" width="180" height="8" fill="#fff" opacity=".45"/>
-  <circle cx="200" cy="52" r="20" fill="var(--s5)" opacity=".7"/>
-</symbol>
-
-<symbol id="sc-ulasim" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <rect x="0" y="182" width="400" height="68" fill="var(--s4)"/>
-  <path d="M0 200 h400 M0 224 h400" stroke="var(--s1)" stroke-width="3" opacity=".3"/>
-  <rect x="70" y="86" width="200" height="98" rx="10" fill="var(--s3)"/>
-  <rect x="86" y="102" width="70" height="42" rx="4" fill="var(--s1)" opacity=".65"/>
-  <rect x="168" y="102" width="86" height="42" rx="4" fill="var(--s1)" opacity=".65"/>
-  <rect x="86" y="156" width="168" height="10" rx="4" fill="var(--s5)" opacity=".8"/>
-  <circle cx="112" cy="188" r="12" fill="var(--s1)" opacity=".7"/>
-  <circle cx="232" cy="188" r="12" fill="var(--s1)" opacity=".7"/>
-  <rect x="292" y="120" width="72" height="64" rx="8" fill="var(--s5)" opacity=".55"/>
-</symbol>
-
-<symbol id="sc-muze" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <path d="M150 40 L250 40 L228 96 L172 96Z" fill="var(--s5)" opacity=".2"/>
-  <path d="M182 78 h36 l10 18 c16 26 14 62 -10 82 h-36 c-24 -20 -26 -56 -10 -82Z" fill="var(--s3)"/>
-  <path d="M178 74 h44 v10 h-44Z" fill="var(--s4)"/>
-  <path d="M172 96 c-16 6 -18 26 -2 32 M228 96 c16 6 18 26 2 32" stroke="var(--s4)" stroke-width="7" fill="none"/>
-  <path d="M182 140 h36 M186 158 h28" stroke="var(--s5)" stroke-width="4" opacity=".7"/>
-  <rect x="140" y="178" width="120" height="14" fill="var(--s4)"/>
-  <rect x="128" y="192" width="144" height="58" fill="var(--s4)" opacity=".7"/>
-</symbol>
-
-<symbol id="sc-saglik" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <rect x="92" y="76" width="216" height="126" fill="var(--s3)"/>
-  <rect x="112" y="98" width="26" height="26" fill="var(--s1)" opacity=".6"/>
-  <rect x="150" y="98" width="26" height="26" fill="var(--s1)" opacity=".6"/>
-  <rect x="188" y="98" width="26" height="26" fill="var(--s1)" opacity=".6"/>
-  <rect x="226" y="98" width="26" height="26" fill="var(--s1)" opacity=".6"/>
-  <rect x="264" y="98" width="26" height="26" fill="var(--s1)" opacity=".6"/>
-  <rect x="112" y="138" width="26" height="26" fill="var(--s1)" opacity=".4"/>
-  <rect x="150" y="138" width="26" height="26" fill="var(--s1)" opacity=".4"/>
-  <rect x="264" y="138" width="26" height="26" fill="var(--s1)" opacity=".4"/>
-  <rect x="186" y="132" width="34" height="10" fill="var(--s5)"/>
-  <rect x="198" y="120" width="10" height="34" fill="var(--s5)"/>
-  <rect x="0" y="202" width="400" height="48" fill="var(--s4)"/>
-</symbol>
-
-<symbol id="sc-spor" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="var(--s3)"/>
-  <rect x="0" y="0" width="400" height="250" fill="url(#gsky)" opacity=".28"/>
-  <rect x="24" y="30" width="352" height="190" fill="none" stroke="#fff" stroke-width="3" opacity=".7"/>
-  <line x1="200" y1="30" x2="200" y2="220" stroke="#fff" stroke-width="3" opacity=".7"/>
-  <circle cx="200" cy="125" r="42" fill="none" stroke="#fff" stroke-width="3" opacity=".7"/>
-  <rect x="24" y="84" width="46" height="82" fill="none" stroke="#fff" stroke-width="3" opacity=".7"/>
-  <rect x="330" y="84" width="46" height="82" fill="none" stroke="#fff" stroke-width="3" opacity=".7"/>
-  <circle cx="200" cy="125" r="13" fill="var(--s5)"/>
-</symbol>
-
-<symbol id="sc-tarim" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <circle cx="322" cy="54" r="24" fill="var(--s5)" opacity=".8"/>
-  <path d="M0 250 L0 152 L400 128 L400 250Z" fill="var(--s3)"/>
-  <path d="M0 178 L400 154 M0 202 L400 178 M0 226 L400 202" stroke="var(--s4)" stroke-width="6" opacity=".55"/>
-  <path d="M96 152 c-18 -22 -6 -48 12 -56 c18 8 30 34 12 56Z" fill="var(--s4)"/>
-  <rect x="106" y="146" width="5" height="26" fill="var(--s4)"/>
-  <path d="M262 140 c-20 -24 -6 -52 14 -60 c20 8 34 36 14 60Z" fill="var(--s4)"/>
-  <rect x="274" y="134" width="5" height="28" fill="var(--s4)"/>
-</symbol>
-
-<symbol id="sc-market" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <rect x="70" y="70" width="260" height="30" fill="var(--s5)" opacity=".65"/>
-  <path d="M70 100 h260 v18 h-260Z" fill="var(--s3)"/>
-  <rect x="88" y="130" width="70" height="52" fill="var(--s3)"/>
-  <rect x="166" y="118" width="70" height="64" fill="var(--s4)"/>
-  <rect x="244" y="140" width="70" height="42" fill="var(--s3)"/>
-  <path d="M88 152 h70 M166 142 h70 M244 160 h70" stroke="var(--s1)" stroke-width="4" opacity=".4"/>
-  <rect x="0" y="182" width="400" height="68" fill="var(--s4)"/>
-  <path d="M56 216 h288" stroke="var(--s1)" stroke-width="4" opacity=".25"/>
-</symbol>
-
-<symbol id="sc-kaza" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
-  <path d="M0 250 L0 160 L120 132 L236 166 L400 126 L400 250Z" fill="var(--s3)"/>
-  <path d="M150 250 L182 152 L226 152 L268 250Z" fill="var(--s4)"/>
-  <path d="M196 168 h16 M192 192 h24 M186 216 h36" stroke="#fff" stroke-width="6" opacity=".8"/>
-  <circle cx="330" cy="60" r="22" fill="var(--s5)" opacity=".55"/>
-</symbol>
-</svg>
-
 
 <div class="servis">
   <div class="kapsa">
@@ -463,11 +324,11 @@ footer .alt{border-top:1px solid #24316B;margin-top:22px;padding-top:14px;font-s
   <div class="kapsa">
     <button class="hamburger" aria-expanded="false" aria-controls="ana-menu-liste">&#9776; MENÜ</button>
     <div class="menu-liste" id="ana-menu-liste">
-      <a href="#" class="aktif" aria-current="page">ANASAYFA</a><a href="#">BURSA</a>
+      <a href="tasarim-1-klasik.html">ANASAYFA</a><a href="#">BURSA</a>
       <div class="menu-oge">
         <button aria-expanded="false" aria-controls="alt-gundem">GÜNDEM</button>
         <div class="alt-menu" id="alt-gundem">
-          <a href="tasarim-1-haber-detay.html">Bozbey dosyası</a><a href="#">Yerel yönetim</a><a href="#">Asayiş</a>
+          <a href="tasarim-1-haber-detay.html" aria-current="page">Bozbey dosyası</a><a href="#">Yerel yönetim</a><a href="#">Asayiş</a>
           <a href="#">Çevre ve iklim</a><a href="#">Eğitim</a><a href="#">Tüm gündem &rarr;</a>
         </div>
       </div>
@@ -538,294 +399,142 @@ footer .alt{border-top:1px solid #24316B;margin-top:22px;padding-top:14px;font-s
   </div>
 </div>
 
+
 <main class="govde">
   <div class="kapsa">
     <div class="reklam tepe"><span><b>REKLAM ALANI</b><span class="olcu">970 &times; 250 · Leaderboard</span></span></div>
     <p class="suz-bilgi" role="status" aria-live="polite"></p>
+
+    <nav class="kirinti" aria-label="Kırıntı navigasyonu">
+      <ol>
+        <li><a href="tasarim-1-klasik.html">Anasayfa</a></li>
+        <li><a href="#">Gündem</a></li>
+        <li><a href="#">Bursa dışı</a></li>
+      </ol>
+    </nav>
+
     <div class="izgara">
       <div>
-        <div class="sutunlar">
-          <div>
-            <div class="surmanset">
-              <span class="etiket">SÜRMANŞET</span>
-              <p><a href="tasarim-1-haber-detay.html">İstifa kararı Büyükşehir'de yönetim tartışmasını yeniden başlattı</a></p>
-              <span class="zaman">15:51 · Güncellendi</span>
+        <article class="detay">
+          <span class="rozet-k">GÜNDEM</span>
+          <h1>Kalibaf: Baskı politikası ABD ekonomisine de dönecek</h1>
+          <p class="spot">İran Meclis Başkanı Muhammed Bakır Kalibaf, sosyal medya paylaşımında ABD'nin fiyatları kontrol altına alma adımlarını hedef aldı. Washington'ın yeni bir mali yaptırım paketini yarın açıklaması bekleniyor.</p>
+
+          <div class="detay-kunye">
+            <span class="yazan">Yazar adı</span>
+            <span>Haber Merkezi</span>
+            <span><time datetime="2026-08-23T23:50">23 Ağustos 2026, Pazar, 23:50</time></span>
+            <span>Güncelleme: 17:24</span>
+            <span>2.418 okunma</span>
+            <div class="arac">
+              <a href="#" aria-label="X'te paylaş">X</a>
+              <a href="#" aria-label="Facebook'ta paylaş">FACEBOOK</a>
+              <a href="#" aria-label="WhatsApp'ta paylaş">WHATSAPP</a>
+              <button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button>
+              <button type="button" class="yazi-kucult" aria-label="Yazı boyutunu küçült">A&minus;</button>
+              <button type="button" class="yazi-buyut" aria-label="Yazı boyutunu büyüt">A+</button>
+              <button type="button" class="yazdir">YAZDIR</button>
             </div>
+          </div>
 
-            <article class="manset">
-              <div class="foto karart">
-                <img src="gorseller/genis/belediye.jpg" alt="Bursa Büyükşehir Belediyesi hizmet binası" width="1280" height="720" decoding="async">
-              </div>
-              <div class="yazi">
-                <span class="rozet-k">GÜNDEM</span>
-                <h1><a href="tasarim-1-haber-detay.html">Tutuklu Büyükşehir Başkanı Bozbey, CHP üyeliğinden istifa etti</a></h1>
-                <p>Nisan ayından bu yana tutuklu bulunan ve görevinden uzaklaştırılan Mustafa Bozbey, kararını sosyal medya hesabından duyurdu. Bozbey, hukuki süreç sürerken siyasi kimliğinin tartışmaların parçası olmasını doğru bulmadığını belirtti. Hakkındaki yargılama devam ediyor; Bozbey suçlamaları reddediyor.</p>
-                <a class="dinle-bag" href="tasarim-1-haber-detay.html#seslendirme"><span aria-hidden="true">▶</span> SESLİ DİNLE</a>
-              </div>
-            </article>
+          <div class="foto ana-gorsel">
+            <img src="gorseller/kaynak/kalibaf-baski-politikasi-abd-ekonomisine-de-donecek.jpg" alt="Kürsüde konuşan İran Meclis Başkanı Muhammed Bakır Kalibaf" width="1280" height="720" decoding="async">
+          </div>
+          <p class="foto-alt">İran Meclis Başkanı Muhammed Bakır Kalibaf. Fotoğrafın çekildiği yer ve tarih kaynak yayında belirtilmedi. (Fotoğraf: AA)</p>
 
-            <div class="alt-manset">
-              <article class="yatay">
+          <div class="metin" data-boyut="orta">
+            <p>İran Meclis Başkanı Muhammed Bakır Kalibaf, sosyal medya hesabından yaptığı paylaşımda Washington'ın son ekonomi hamlelerini hedef aldı. Kalibaf'ın eleştirisi, ABD Başkanı Donald Trump'ın artan fiyatları dizginlemek için attığı adımlara yönelikti; İranlı siyasetçi alaycı bir dil kullandı ve bu politikaların ABD ekonomisine de yansıyacağını öne sürdü.</p>
+
+            <h2 id="dondurulmus-et-uzerinden-elestiri">Dondurulmuş et üzerinden eleştiri</h2>
+
+            <p>Kalibaf, et fiyatlarını düşürmek amacıyla dondurulmuş et ithalatı yapılmasına değinerek bu adım için &quot;Belki işe yarar&quot; ifadesini kullandı. İran Meclis Başkanı, ABD tahvil piyasasına ilişkin ise şu soruyu yöneltti:</p>
+
+            <div class="alinti">Tahviller için ne yapacaksınız, dondurulmuş getiriler mi ithal edeceksiniz?<cite>Yayın ilkeleri</cite></div>
+
+            <p>Kalibaf, konut piyasası ve ücret politikalarını da aynı çerçevede eleştirdi. Bu alanlarda da &quot;dondurulmuş alıcılar&quot; ve &quot;dondurulmuş maaş bordroları&quot; getirmenin çözüm olmayacağını savundu.</p>
+
+            <h2 id="donmus-dis-politika-durgun-ekonomi-dogur">&quot;Donmuş dış politika, durgun ekonomi doğurur&quot;</h2>
+
+            <p>İran Meclis Başkanı paylaşımında, &quot;İnisiyatifi olmayan, donmuş bir dış politika; donmuş ve durgun bir ekonomi doğurur&quot; değerlendirmesinde bulundu. Kalibaf bu sözlerle, ABD'nin İran'a yönelik baskı politikasının Washington'ın kendi ekonomisi açısından da sonuç doğuracağı iddiasını dile getirdi.</p>
+
+            <p>Kalibaf paylaşımını bir benzetmeyle bitirdi. &quot;Hâlâ hareket halinde olan tek şey ne? İran'ın bumerangı; sizin yüzünüze geri dönecek&quot; ifadelerini kullandı.</p>
+
+            <h2 id="yeni-yaptirim-paketi-bekleniyor">Yeni yaptırım paketi bekleniyor</h2>
+
+            <p>Açıklamalar, ABD yönetiminin Tahran'a dönük mali yaptırımlarda yeni bir paketi yarın duyuracağını bildirmesinin ardından geldi. Paketin kapsamına ilişkin ayrıntılar henüz paylaşılmadı.</p>
+
+            <aside class="kaynak-bolmesi" style="border-top:1px solid var(--cizgi);margin:30px 0 0;padding:14px 0 0">
+              <b style="display:block;font-size:11.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--gri);margin-bottom:6px">Kaynak</b>
+              <p style="margin:0;font-size:14px;line-height:1.55">Kaynak: <b>AA</b>. Haber, Bursa Hakimiyet haber masasında yazılmıştır. <a href="https://www.sozcu.com.tr/iran-dan-trump-a-bumerangli-gonderme-yuzunuze-geri-donecek-p352008" rel="nofollow noopener" target="_blank">Habere git</a></p>
+            </aside>
+          </div>
+
+          <div class="etiketler">
+            <b>ETİKETLER</b>
+            <a href="#">dış politika</a><a href="#">yaptırım</a><a href="#">ekonomi</a><a href="#">diplomasi</a><a href="#">tahvil piyasası</a>
+          </div>
+        </article>
+
+        <div class="reklam" style="margin-top:16px"><span><b>REKLAM ALANI</b><span class="olcu">970 &times; 90 · İçerik altı</span></span></div>
+
+        <div class="kutu">
+          <div class="kutu-bas"><h2>İLGİLİ HABERLER</h2><span class="tumu">Tümü &rarr;</span></div>
+          <div class="kutu-ic">
+            <div class="kartlar">
+              <article class="kart">
+                <div class="foto"><img src="gorseller/kart/adliye.jpg" alt="Adliye binası" width="640" height="400" loading="lazy" decoding="async"></div>
+                <div class="ic"><div class="ust">Yargı</div><h3>Bozbey dosyasında süreç nasıl işleyecek? Yargılama devam ediyor</h3></div>
+              </article>
+              <article class="kart">
+                <div class="foto"><img src="gorseller/kart/kent.jpg" alt="Bursa kent merkezinden görünüm" width="640" height="400" loading="lazy" decoding="async"></div>
+                <div class="ic"><div class="ust">Kent</div><h3>Büyükşehir'de yönetim tartışması: Yatırım takvimi ne olacak?</h3></div>
+              </article>
+              <article class="kart">
+                <div class="foto"><img src="gorseller/kart/baraj.jpg" alt="Baraj gövdesi ve su seviyesi" width="640" height="400" loading="lazy" decoding="async"></div>
+                <div class="ic"><div class="ust">Su Yönetimi</div><h3>Barajlarda doluluk %81'e geriledi: Son 30 günde 11,5 puan düşüş</h3></div>
+              </article>
+              <article class="kart">
+                <div class="foto"><img src="gorseller/kart/iznik-gol.jpg" alt="İznik Gölü kıyısı" width="640" height="400" loading="lazy" decoding="async"></div>
+                <div class="ic"><div class="ust">İznik</div><h3>İznik Gölü'nde kuraklık tehlikesi büyüyor: "İklim krizi burada"</h3></div>
+              </article>
+              <article class="kart">
+                <div class="foto"><img src="gorseller/kart/itfaiye.jpg" alt="Yangına müdahale eden itfaiye ekibi" width="640" height="400" loading="lazy" decoding="async"></div>
+                <div class="ic"><div class="ust">Mudanya</div><h3>Mudanya'daki yangına havadan ve karadan müdahale edildi</h3></div>
+              </article>
+              <article class="kart">
                 <div class="foto"><img src="gorseller/kart/hastane.jpg" alt="Hastane binası dış görünüm" width="640" height="400" loading="lazy" decoding="async"></div>
-                <div class="ic">
-                  <div class="ust">Sağlık</div>
-                  <h3>Ali Osman Sönmez Devlet Hastanesi için açılış takvimi netleşti</h3>
-                  <p>Kentin sağlık kapasitesine etkisi ve hangi bölümlerin hizmete gireceği konuşuluyor.</p>
-                </div>
-              </article>
-              <article class="yatay">
-                <div class="foto"><img src="gorseller/kart/sanayi.jpg" alt="Bursa'da sanayi tesisi" width="640" height="400" loading="lazy" decoding="async"></div>
-                <div class="ic">
-                  <div class="ust">Ekonomi</div>
-                  <h3>Matlı'nın enerji yatırımı sanayide kapasite tartışmasını büyüttü</h3>
-                  <p>Yatırım bütçesinin 160 milyon dolara çıkarılması sektörde yankı buldu.</p>
-                </div>
+                <div class="ic"><div class="ust">Sağlık</div><h3>Ali Osman Sönmez Devlet Hastanesi için açılış takvimi netleşti</h3></div>
               </article>
             </div>
-
-            <div class="dortlu">
-              <article class="kart"><div class="foto"><img src="gorseller/kart/uludag.jpg" alt="Uludağ ve Bursa ovası manzarası" width="640" height="400" loading="lazy" decoding="async"></div><div class="ic"><div class="ust">Hava Durumu</div><h3>Meteoroloji'den sıcaklık uyarısı: Bursa'da termometreler 34 dereceyi görecek</h3></div></article>
-              <article class="kart"><div class="foto"><img src="gorseller/kart/itfaiye.jpg" alt="Yangına müdahale eden itfaiye ekibi" width="640" height="400" loading="lazy" decoding="async"></div><div class="ic"><div class="ust">Mudanya</div><h3>Mudanya'daki yangına havadan ve karadan müdahale edildi</h3></div></article>
-              <article class="kart"><div class="foto"><img src="gorseller/kart/baraj.jpg" alt="Baraj gövdesi ve su seviyesi" width="640" height="400" loading="lazy" decoding="async"></div><div class="ic"><div class="ust">Su Yönetimi</div><h3>Barajlarda doluluk %81'e geriledi: Son 30 günde 11,5 puan düşüş</h3></div></article>
-              <article class="kart"><div class="foto"><img src="gorseller/kart/iznik-gol.jpg" alt="İznik Gölü kıyısı" width="640" height="400" loading="lazy" decoding="async"></div><div class="ic"><div class="ust">İznik</div><h3>İznik Gölü'nde kuraklık tehlikesi büyüyor: "İklim krizi burada"</h3></div></article>
-            </div>
-          </div>
-
-          <div class="dar">
-            <article class="oge"><div class="ust">DEPREM</div><h3>Prof. Dr. Okan Tüysüz'den Bursa için uyarı: Binaların arasından faylar geçiyor</h3><p>Uzman isim, kentin zemin ve yapı stoku için acil değerlendirme çağrısı yaptı.</p></article>
-            <article class="oge"><div class="ust">EKONOMİ</div><h3>Bursa merkezli Matlı'dan enerji hamlesi: Yatırım bütçesi 160 milyon dolara çıkıyor</h3><p>Şirket, yenilenebilir enerji kapasitesini artıracağını açıkladı.</p></article>
-            <article class="oge"><div class="ust">SANAYİ</div><h3>23 yıllık iplik firması iflas etti, mahkeme alacaklılara süre tanıdı</h3><p>Tekstil sektöründe maliyet baskısı tartışılıyor.</p></article>
-            <article class="oge"><div class="ust">KÜLTÜR</div><h3>Bursa'da 5 asırlık emanetler gün yüzüne çıkıyor: Yeni müze için ilk adım</h3><p>Koleksiyon için hazırlanan proje onay sürecine girdi.</p></article>
-            <article class="oge"><div class="ust">ULAŞIM</div><h3>Toplu ulaşımda yeni dönem: Engelsiz Bursa uygulaması değişiyor</h3><p>Kart ve başvuru sisteminde güncelleme yapılacak.</p></article>
-          </div>
-        </div>
-
-        <div class="kutu">
-          <div class="kutu-bas"><h2>GÜNDEM</h2><span class="tumu">Tümü &rarr;</span></div>
-          <div class="kutu-ic">
-            <div class="kartlar">
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kaynak/otomotiv-muhendisinin-sanayi-yuzu-gormez-dedigi-5-ikinci-el-otomobil.webp" alt="İkinci el satış alanında yan yana sıralanmış otomobiller" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Ekonomi</div><h3><a href="haber-otomotiv-muhendisinin-sanayi-yuzu-gormez-dedigi-5-ikinci-el-otomobil-t1.html">Otomotiv mühendisinden ikinci elde 5 model tavsiyesi</a></h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kaynak/kalibaf-baski-politikasi-abd-ekonomisine-de-donecek.jpg" alt="Kürsüde konuşan İran Meclis Başkanı Muhammed Bakır Kalibaf" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Gündem</div><h3><a href="haber-kalibaf-baski-politikasi-abd-ekonomisine-de-donecek-t1.html">Kalibaf: Baskı politikası ABD ekonomisine de dönecek</a></h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/sanayi.jpg" alt="Borsa İstanbul işlem salonunda gösterge ekranları" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Ekonomi</div><h3><a href="haber-bist-100-21-agustos-2026-kapanis-t1.html">Piyasa özeti: dolar 48,06, euro 56,15 liradan işlem gördü</a></h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kaynak/derecavus-ovaakca-atiksu-hatti-nilufer-cayi.jpg" alt="Büyükşehir Belediye Başkan Vekili Şahin Biba, atıksu kollektör hattı şantiyesinde incelemede bulunuyor" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Çevre ve su</div><h3><a href="haber-derecavus-ovaakca-atiksu-hatti-nilufer-cayi-t1.html">Dereçavuş–Ovaakça atıksu hattı Nilüfer Çayı'nı temizleyecek</a></h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kaynak/fiorentina-icardi-transfer-listesi.jpg" alt="Mauro Icardi maç sırasında forma giyerken" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Spor</div><h3><a href="haber-fiorentina-icardi-transfer-listesi-t1.html">Fiorentina, Icardi'yi transfer listesine aldı</a></h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/kent.jpg" alt="Bursa kent merkezinden görünüm" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Deprem</div><h3>Zemin ve yapı stoku tartışması: Uzmanlar acil değerlendirme istiyor</h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/adliye.jpg" alt="Adliye binası" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Yargı</div><h3><a href="tasarim-1-haber-detay.html">Bozbey dosyasında süreç nasıl işleyecek? Yargılama devam ediyor</a></h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/okul.jpg" alt="Okul binası ve bahçesi" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Eğitim</div><h3>Eğitim camiasındaki istifa yeni dönem öncesi tartışma başlattı</h3></div>
-            </article>
-            </div>
-          </div>
-        </div>
-
-        <div class="kutu">
-          <div class="kutu-bas"><h2>VİDEO &amp; FOTO GALERİ</h2><span class="tumu">Tüm galeriler &rarr;</span></div>
-          <div class="kutu-ic">
-            <div class="serit">
-              <article class="serit-oge"><div class="foto"><span class="rozet-o">VİDEO</span><img src="gorseller/genis/orman.jpg" alt="Mudanya kırsalında orman örtüsü" width="1280" height="720" loading="lazy" decoding="async"></div><h3>Mudanya'daki yangına havadan müdahale görüntüleri</h3></article>
-              <article class="serit-oge"><div class="foto"><span class="rozet-o">VİDEO</span><img src="gorseller/kart/tramvay.jpg" alt="Bursa'da tramvay" width="640" height="400" loading="lazy" decoding="async"></div><h3>Engelsiz Bursa uygulaması nasıl işleyecek?</h3></article>
-              <article class="serit-oge"><div class="foto"><span class="rozet-o">GALERİ</span><img src="gorseller/kart/carsi.jpg" alt="Tarihi çarşıda gündelik hayat" width="640" height="400" loading="lazy" decoding="async"></div><h3>Tarihi çarşıda bir gün: 18 kare</h3></article>
-              <article class="serit-oge"><div class="foto"><span class="rozet-o">VİDEO</span><img src="gorseller/kart/ulasim.jpg" alt="Toplu ulaşım aracı ve durak" width="640" height="400" loading="lazy" decoding="async"></div><h3>Ulaşım kartı başvurusu adım adım</h3></article>
-              <article class="serit-oge"><div class="foto"><span class="rozet-o">GALERİ</span><img src="gorseller/genis/uludag.jpg" alt="Uludağ eteklerinden kent manzarası" width="1280" height="720" loading="lazy" decoding="async"></div><h3>Sıcaklık uyarısı: Kent yükseklerden böyle görünüyor</h3></article>
-            </div>
-          </div>
-        </div>
-
-        <div class="reklam"><span><b>REKLAM ALANI</b><span class="olcu">970 &times; 90 · İçerik arası</span></span></div>
-
-        <div class="kutu">
-          <div class="kutu-bas"><h2>EKONOMİ</h2><span class="tumu">Tümü &rarr;</span></div>
-          <div class="kutu-ic">
-            <div class="kartlar">
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/tekstil.jpg" alt="Tekstil tesisinde iplik makineleri" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Tekstil</div><h3>İplik firmasının iflası sonrası maliyet baskısı konuşuluyor</h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/pazar.jpg" alt="Market ve pazar tezgâhı" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Denetim</div><h3>Zincir markette 250 kilo et imha edildi, 52 bin lira ceza kesildi</h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/tarim.jpg" alt="Bursa ovasında tarım arazisi" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Tarım</div><h3>Baraj doluluğundaki düşüş sulama planlamasını gündeme getirdi</h3></div>
-            </article>
-            </div>
-          </div>
-        </div>
-
-        <div class="kutu">
-          <div class="kutu-bas vurgu"><h2>SPOR</h2><span class="tumu">Tüm spor &rarr;</span></div>
-          <div class="kutu-ic">
-            <div class="kartlar">
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/spor.jpg" alt="Futbol sahası" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Yenişehir</div><h3>Yenişehir Belediyespor teknik direktörle anlaştı, hedef 3. Lig</h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kare/spor.jpg" alt="Spor sahasında antrenman" width="240" height="240" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">İnegöl</div><h3>İnegöl Kafkasspor'da 4 futbolcu imzayı attı</h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/yesil.jpg" alt="Yeşil alan ve park" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Osmangazi</div><h3>Osmangazi Belediyesi'nden dostluk turnuvası</h3></div>
-            </article>
-            </div>
-          </div>
-        </div>
-
-
-        <div class="kutu">
-          <div class="kutu-bas"><h2>KÖŞE YAZARLARI</h2><span class="tumu">Tüm yazarlar &rarr;</span></div>
-          <div class="yazarlar">
-            <a class="yazar" href="#"><div class="vesika" aria-hidden="true">AT</div><div><b>Yazar adı</b><p>Barajdaki düşüş bize ne anlatıyor?</p><span class="sutun-ad">Su ve kent</span></div></a>
-            <a class="yazar" href="#"><div class="vesika" aria-hidden="true">NA</div><div><b>Yazar adı</b><p>İznik Gölü bir uyarı levhası</p><span class="sutun-ad">Çevre notları</span></div></a>
-            <a class="yazar" href="#"><div class="vesika" aria-hidden="true">KD</div><div><b>Yazar adı</b><p>Tekstilde iflaslar münferit mi?</p><span class="sutun-ad">Ekonomi defteri</span></div></a>
-            <a class="yazar" href="#"><div class="vesika" aria-hidden="true">SE</div><div><b>Yazar adı</b><p>Deprem uyarısını duyan var mı?</p><span class="sutun-ad">Kent gündemi</span></div></a>
-            <a class="yazar" href="#"><div class="vesika" aria-hidden="true">MY</div><div><b>Yazar adı</b><p>Büyükşehir'de yönetim boşluğu nasıl doldurulur?</p><span class="sutun-ad">Yerel siyaset</span></div></a>
-          </div>
-        </div>
-
-        <div class="kutu">
-          <div class="kutu-bas"><h2>YAŞAM</h2><span class="tumu">Tümü &rarr;</span></div>
-          <div class="kutu-ic">
-            <div class="kartlar">
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/muze.jpg" alt="Müze salonunda sergilenen eserler" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Kültür</div><h3>5 asırlık emanetler için müze projesi onay sürecinde</h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/mudanya.jpg" alt="Mudanya sahili" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Sahil</div><h3>Sağlık Bakanlığı açıkladı: Su kalitesi zayıf çıkan 4 plaj belli oldu</h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto t-kirmizi"><svg><use href="#sc-yangin"/></svg></div>
-              <div class="ic"><div class="ust">Uyarı</div><h3>Unutulan sigara apartmanda yangına yol açtı</h3></div>
-            </article>
-            </div>
-          </div>
-        </div>
-
-        <div class="kutu">
-          <div class="kutu-bas"><h2>İLÇELERDEN</h2><span class="tumu">17 ilçe &rarr;</span></div>
-          <div class="kutu-ic">
-            <div class="kartlar">
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/orman.jpg" alt="Ormanlık alan" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">Mudanya</div><h3>Yangının ardından ormanlık alanda zarar tespiti sürüyor</h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto"><img src="gorseller/kart/yol.jpg" alt="Kırsal yol" width="640" height="400" loading="lazy" decoding="async"></div>
-              <div class="ic"><div class="ust">İnegöl</div><h3>Uçuruma yuvarlanan elektrikli bisiklette 3 çocuk kurtarıldı</h3></div>
-            </article>
-            <article class="kart">
-              <div class="foto t-mavi"><svg><use href="#sc-baraj"/></svg></div>
-              <div class="ic"><div class="ust">Nilüfer</div><h3>BUSKİ duyurdu: Nilüfer'de planlı su kesintisi uygulanacak</h3></div>
-            </article>
-            </div>
-          </div>
-        </div>
-
-        <div class="kutu">
-          <div class="kutu-bas"><h2>BURSA GÜNDEMİ</h2><span class="tumu">Tümü &rarr;</span></div>
-          <div class="kutu-ic uclu">
-            <ul class="liste">
-              <li>İnegöl'de uçuruma yuvarlanan elektrikli bisiklette 3 çocuk kurtarıldı<span class="zaman">2 saat önce</span></li>
-              <li>BUSKİ duyurdu: Nilüfer'de planlı su kesintisi uygulanacak<span class="zaman">3 saat önce</span></li>
-              <li>Zincir markette 250 kilo et imha edildi, 52 bin lira ceza kesildi<span class="zaman">5 saat önce</span></li>
-              <li>Bursa'da unutulan sigara apartmanda yangına yol açtı<span class="zaman">6 saat önce</span></li>
-            </ul>
-            <ul class="liste">
-              <li>Ali Osman Sönmez Devlet Hastanesi için açılış takvimi netleşti<span class="zaman">4 saat önce</span></li>
-              <li>Sağlık Bakanlığı açıkladı: Bursa'da su kalitesi zayıf çıkan 4 plaj<span class="zaman">7 saat önce</span></li>
-              <li>Osmangazi Belediyesi'nden dostluk turnuvası<span class="zaman">8 saat önce</span></li>
-              <li>Bursa'da eğitim camiasında beklenmedik istifa<span class="zaman">9 saat önce</span></li>
-            </ul>
-            <ul class="liste">
-              <li>Yenişehir Belediyespor teknik direktörle anlaştı, hedef 3. Lig<span class="zaman">3 saat önce</span></li>
-              <li>İnegöl Kafkasspor'da 4 futbolcu imzayı attı<span class="zaman">5 saat önce</span></li>
-              <li>Bursa'da kontrolden çıkan araç şarampole yuvarlandı<span class="zaman">6 saat önce</span></li>
-              <li>Muhtar isyan etti: Güllerin arasına çöp bıraktılar<span class="zaman">10 saat önce</span></li>
-            </ul>
           </div>
         </div>
       </div>
 
       <aside>
-        <div class="servis-kutu">
-          <div class="sek" role="tablist">
-            <button role="tab" aria-selected="true" data-hedef="hava">HAVA</button>
-            <button role="tab" aria-selected="false" data-hedef="vakit">NAMAZ</button>
-            <button role="tab" aria-selected="false" data-hedef="eczane">ECZANE</button>
-          </div>
-          <div class="panel" id="hava" data-acik="true">
-            <div class="hava-ana">
-              <span class="derece">34°</span>
-              <span class="aciklama">Güneşli<br>Sabah 26° · Gece 24°</span>
-            </div>
-            <div class="gunler"><div>Cmt<b>34°</b></div><div>Paz<b>33°</b></div><div>Pzt<b>31°</b></div><div>Sal<b>30°</b></div></div>
-          </div>
-          <div class="panel" id="vakit">
-            <ul class="vakit">
-              <li><span>İmsak</span><span>04:42</span></li><li><span>Güneş</span><span>06:14</span></li>
-              <li class="simdi"><span>Öğle</span><span>13:16</span></li><li><span>İkindi</span><span>16:56</span></li>
-              <li><span>Akşam</span><span>20:06</span></li><li><span>Yatsı</span><span>21:31</span></li>
-            </ul>
-          </div>
-          <div class="panel" id="eczane">
-            <div class="eczane">
-              <b>Nöbetçi eczane</b><span>Bu alan Sağlık Müdürlüğü verisiyle otomatik doldurulacak.</span>
-              <hr style="border:0;border-top:1px dotted var(--cizgi);margin:9px 0">
-              <b>Bugünün listesi</b><span>17 ilçe için ayrı ayrı gösterilir.</span>
-            </div>
-          </div>
-        </div>
-
         <div class="kutu">
-          <div class="kutu-bas"><h2>ÇOK OKUNANLAR</h2></div>
+          <div class="kutu-bas vurgu"><h2>SON DAKİKA</h2></div>
           <div class="kutu-ic">
-            <ol class="sira">
-              <li><span class="no">1</span><h4><a href="tasarim-1-haber-detay.html">Bozbey CHP'den istifa etti: "Vicdanla alınmış bir karar"</a></h4></li>
-              <li><span class="no">2</span><h4>Bursa'da su kalitesi zayıf çıkan 4 plaj belli oldu</h4></li>
-              <li><span class="no">3</span><h4>Ali Osman Sönmez Devlet Hastanesi ne zaman açılacak?</h4></li>
-              <li><span class="no">4</span><h4>Barajlarda doluluk oranı %81'e geriledi</h4></li>
-              <li><span class="no">5</span><h4>Zincir markette 250 kilo et imha edildi</h4></li>
-            </ol>
+            <ul class="liste">
+              <li>Bozbey CHP üyeliğinden istifa ettiğini duyurdu<span class="zaman">15:51</span></li>
+              <li>Meteoroloji'den Bursa için sıcaklık uyarısı: 34 derece<span class="zaman">14:20</span></li>
+              <li>Mudanya'daki yangına havadan ve karadan müdahale<span class="zaman">13:05</span></li>
+              <li>İznik Gölü'nde su seviyesi için yeni uyarı<span class="zaman">11:40</span></li>
+            </ul>
           </div>
         </div>
 
         <div class="reklam"><span><b>REKLAM ALANI</b><span class="olcu">300 &times; 250 · Yan kolon</span></span></div>
 
         <div class="kutu">
-          <div class="kutu-bas vurgu"><h2>SON DAKİKA</h2></div>
+          <div class="kutu-bas"><h2>ÇOK OKUNANLAR</h2></div>
           <div class="kutu-ic">
-            <ul class="liste">
-              <li><a href="tasarim-1-haber-detay.html">Bozbey CHP üyeliğinden istifa ettiğini duyurdu</a><span class="zaman">15:51</span></li>
-              <li>Meteoroloji'den Bursa için sıcaklık uyarısı: 34 derece<span class="zaman">14:20</span></li>
-              <li>Mudanya'daki yangına havadan ve karadan müdahale<span class="zaman">13:05</span></li>
-              <li>İznik Gölü'nde su seviyesi için yeni uyarı<span class="zaman">11:40</span></li>
-            </ul>
+            <ol class="sira">
+              <li><span class="no">1</span><h4>Bozbey CHP'den istifa etti: "Vicdanla alınmış bir karar"</h4></li>
+              <li><span class="no">2</span><h4>Bursa'da su kalitesi zayıf çıkan 4 plaj belli oldu</h4></li>
+              <li><span class="no">3</span><h4>Ali Osman Sönmez Devlet Hastanesi ne zaman açılacak?</h4></li>
+              <li><span class="no">4</span><h4>Barajlarda doluluk oranı %81'e geriledi</h4></li>
+              <li><span class="no">5</span><h4>Zincir markette 250 kilo et imha edildi</h4></li>
+            </ol>
           </div>
         </div>
 
@@ -993,6 +702,40 @@ footer .alt{border-top:1px solid #24316B;margin-top:22px;padding-top:14px;font-s
     yukari.addEventListener('click',function(){
       var azalt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       window.scrollTo({top:0, behavior: azalt ? 'auto' : 'smooth'});
+    });
+  }
+})();
+</script>
+<script>
+(function(){
+  /* yazi boyutu, yazdir, baglanti kopyala */
+  var metin = document.querySelector('.metin');
+  var basamak = ['kucuk','orta','buyuk'];
+  function boyutDegistir(yon){
+    if(!metin){ return; }
+    var i = basamak.indexOf(metin.getAttribute('data-boyut'));
+    if(i < 0){ i = 1; }
+    metin.setAttribute('data-boyut', basamak[Math.min(basamak.length - 1, Math.max(0, i + yon))]);
+  }
+  var buyut = document.querySelector('.yazi-buyut');
+  var kucult = document.querySelector('.yazi-kucult');
+  if(buyut){ buyut.addEventListener('click', function(){ boyutDegistir(1); }); }
+  if(kucult){ kucult.addEventListener('click', function(){ boyutDegistir(-1); }); }
+
+  var yazdir = document.querySelector('.yazdir');
+  if(yazdir){ yazdir.addEventListener('click', function(){ window.print(); }); }
+
+  var kopyala = document.querySelector('.kopyala');
+  if(kopyala){
+    kopyala.addEventListener('click', function(){
+      var eski = kopyala.textContent;
+      var bitir = function(){
+        kopyala.textContent = 'KOPYALANDI';
+        window.setTimeout(function(){ kopyala.textContent = eski; }, 1800);
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(window.location.href).then(bitir, function(){});
+      }
     });
   }
 })();

@@ -33,7 +33,8 @@
 *İmza öğeler:* 17 ilçelik navigasyon şeridi, sekmeli hava/namaz/eczane kutusu.
 
 **Yön 2 — Hibrit.** Aynı iskelet, serif başlık, kart yapısı, daha çok boşluk.
-*İmza öğeler:* Üstteki tıklanabilir ilçe filtresi, manşet altındaki "3 maddede ne oldu" kutusu, sesli dinle butonu.
+*İmza öğeler:* Üstteki tıklanabilir ilçe filtresi, manşet altındaki "3 maddede ne oldu" kutusu.
+*Not:* Sesli dinle düğmesi bu yönde doğmuştu; 24 Ağustos 2026'da çalışır hâle gelip üç yöne birden taşındı (aşağıda "Haber seslendirme").
 
 **Yön 3 — Modern.** Manşet fotoğrafı değil, başlığın kendisi hero. Bursa yeşili, koyu tema düğmesi, mono zaman damgaları.
 *İmza öğeler:* Yatay kaydırmalı ilçe kartları, "Arşive sor" kutusu, açık/koyu tema.
@@ -173,11 +174,57 @@ Gerçek fotoğraf geldiğinde aynı kutulara oturacak:
 
 ### JavaScript
 
-Toplam 10 satırın altında, her dosyada bir tane:
+Anasayfalarda tasarıma özgü küçük birer parça:
 
 - **Tasarım 1:** hava/namaz/eczane sekmeleri
 - **Tasarım 2:** ilçe filtresi çipleri
 - **Tasarım 3:** açık/koyu tema düğmesi
+
+Haber detay sayfalarında bunlara ek olarak, üçünde de **aynı** seslendirme betiği bulunur
+(`</body>` öncesindeki son `<script>`). Ayrıntısı bir alt başlıkta.
+
+### Haber seslendirme
+
+Haberi tarayıcının kendi ses motoru (Web Speech API) okur. Dış servis, API anahtarı,
+indirilen ses dosyası yok — sayfaların bağımsızlığı bozulmadı.
+
+| Parça | Nerede |
+|---|---|
+| Oynatıcı | Üç haber detay sayfasında, `id="seslendirme"`. T1'de fotoğraf altında kutu, T2'de imzanın altında yuvarlak panel, T3'te paylaş satırının altında kart |
+| Anasayfa girişi | Manşetteki "Sesli dinle" bağlantısı `...haber-detay.html#seslendirme` adresine gider; sayfa açılınca oynatıcı vurgulanır ve okuma kendiliğinden denenir |
+| Betik | Üç dosyada birebir aynı; okunacak öğeler `data-kaynak` seçicisinden gelir |
+
+Nasıl çalışır:
+
+- Metin **cümlelere bölünüp** sırayla seslendirilir (parça başına en çok 150 harf).
+  Tek parça uzun metin gönderildiğinde tarayıcılar okumayı 15 saniye dolayında kesiyor;
+  bölme bunun içindir. `EN_UZUN` sabitini büyütmeyin.
+- Okunan paragraf sayfada işaretlenir (`.ses-okunan`), görünmüyorsa ekrana getirilir.
+  İlerleme çubuğu ve "5/13 paragraf · yaklaşık 3 dk kaldı" bilgisi `role="status"` ile duyurulur.
+- Denetimler: oynat/duraklat, önceki/sonraki paragraf, durdur, hız (0,8× – 1,5×).
+- **Ses seçimi kalitenin kendisidir.** Adında Natural / Neural / Online / Google geçen
+  sesler öne alınır; birden çok Türkçe ses varsa oynatıcıda **Ses** açılır listesi çıkar ve
+  seçim `localStorage`'a yazılır. Yalnızca eski sistem sesi bulunduğunda sayfa bunu söyler.
+- `speechSynthesis` desteklenmiyorsa oynatıcı pasifleşir, sayfanın kalanı etkilenmez.
+- Okunmayanlar: fotoğraf altları, kenar notları, "3 maddede ne oldu" kutusu, editör notu,
+  kronoloji notu, `data-ses="atla"` işaretli her şey. **Kaynak bölmesinin cümlesi okunur** —
+  kaynak sesli dinleyende de belirtilmiş olur.
+
+Gövde yayında yeniden üretildiği için okunacak liste **her başlatmada yeniden toplanır**;
+`yayin.py` ile üretilen `haber-*-t{1,2,3}.html` sayfalarında oynatıcı olduğu gibi çalışır.
+
+**Bu makinede ölçülen sesler (24 Ağustos 2026):**
+
+| Tarayıcı | Türkçe sesler | Sonuç |
+|---|---|---|
+| Chrome | yalnızca `Microsoft Tolga` (eski SAPI sesi) | Belirgin biçimde makine gibi duyuluyor; Chrome'da Web Speech API ile yapılabilecek başka bir şey yok |
+| Edge | `Microsoft Emel Online (Natural)` + `Tolga` | Emel sinir ağı sesi, gazete demosu için kabul edilebilir |
+
+İlk sürümde sıralama "mümkünse cihazın yerel sesi" diyordu; bu, Edge'de doğal Emel yerine
+robotik Tolga'yı seçiyordu. Sıralama düzeltildi — **`localService` tercihini geri getirmeyin.**
+
+Tarayıcı sesinin tavanı buraya kadar. Her okuyucuda aynı ve daha doğal bir ses isteniyorsa
+yayın anında ses dosyası üretmek gerekir (bkz. "Bilinen eksikler").
 
 ---
 
@@ -238,6 +285,7 @@ ve şemasına birebir uyularak elle hazırlandı; anahtar tanımlanınca araç a
 | Menü içerikleri örnek | Açılır alt menüler çalışıyor, ama içindeki linkler `#` — hedef sayfalar henüz yok |
 | Döviz bandı statik | Sekiz kalemin tamamı **gerçek veri** (aşağıdaki tabloya bakın), ama sayfaya gömülü ve kendiliğinden güncellenmez. Canlıda bir piyasa servisine bağlanması gerekir; `.doviz` bileşeninin yapısı buna hazır, yalnızca `<dd>` içerikleri beslenecek |
 | "Arşive sor" arka planı yok | Tasarım 3'teki kutu görsel; gerçek arama altyapısı gerektirir |
+| Seslendirme cihaza bağlı | Ses, tarayıcının/işletim sisteminin Türkçe ses paketiyle üretilir; kalite makineden makineye değişir, bazı cihazlarda Türkçe ses hiç bulunmaz. Yayın kalitesinde tek tip ses isteniyorsa sunucu tarafında ses dosyası üreten bir servis gerekir |
 
 ---
 

@@ -1,0 +1,174 @@
+{
+  "kaynak": {
+    "kaynak_url": "https://www.sozcu.com.tr/iran-dan-trump-a-bumerangli-gonderme-yuzunuze-geri-donecek-p352008",
+    "kaynak_alan": "sozcu.com.tr",
+    "kaynak_adi": "Sözcü",
+    "orijinal_baslik": "İran’dan Trump’a bumeranglı gönderme: Yüzünüze geri dönecek",
+    "orijinal_spot": "İran Meclis Başkanı Muhammed Bakır Kalibaf, ABD’nin Tahran’a yönelik ekonomik baskı politikasının yalnızca İran’ı değil, Washington ekonomisini de olumsuz etkileyebileceğini savundu. Kalibaf, uygulanan politikaların bir süre sonra “bumerang gibi ABD’ye döneceğini” söyledi.",
+    "orijinal_govde": "ABD Başkanı Donald Trump’ın fiyatları kontrol altına almaya yönelik son adımlarını sosyal medya hesabından değerlendiren Kalibaf, ekonomi politikalarını alaycı ifadelerle eleştirdi. ‘DONDURULMUŞ GETİRİLER Mİ İTHAL EDECEKSİNİZ?’ Kalibaf, et fiyatlarının düşürülmesi amacıyla dondurulmuş et ithalatı yapılmasına atıfta bulunarak, “Belki işe yarar” ifadesini kullandı. ABD tahvil piyasasına ilişkin ise “Tahviller için ne yapacaksınız, dondurulmuş getiriler mi ithal edeceksiniz?” diye sordu. ‘DURGUN BİR EKONOMİ DOĞURUR’ Konut piyasası ve ücret politikalarını da eleştiren Kalibaf, bu alanlarda da benzer şekilde “dondurulmuş alıcılar” ve “dondurulmuş maaş bordroları” getirmenin çözüm olmayacağını belirtti. İran Meclis Başkanı, “İnisiyatifi olmayan, donmuş bir dış politika; donmuş ve durgun bir ekonomi doğurur” değerlendirmesinde bulunarak, ABD’nin İran’a yönelik baskı politikasının kendi ekonomisi açısından da sonuçlar doğuracağını öne sürdü. ‘TEK HAREKET EDEN İRAN’IN BUMERANGI’ Kalibaf paylaşımının sonunda ise dikkat çeken bir benzetme yaparak, “Hala hareket halinde olan tek şey ne? İran’ın bumerangı; sizin yüzünüze geri dönecek” ifadelerini kullandı. YENİ YAPTIRIM PAKETİ Washington yönetimi ise İran’a yönelik yeni bir mali yaptırım paketini yarın açıklayacağını duyurmuştu.",
+    "gorsel_url": "https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/8/kalibafjpg-FHj_SY_gj0qrJY8tbxeq2g.jpg?w=1200&h=900&mode=crop&scale=both",
+    "gorsel_alt": "İran’dan Trump’a bumeranglı gönderme: Yüzünüze geri dönecek",
+    "yazar": "AA",
+    "yayin_tarihi": "2026-08-23T21:02:00+03:00",
+    "guncelleme_tarihi": "2026-08-23T21:04:09+03:00",
+    "dil": "tr",
+    "kelime_sayisi": 160,
+    "ayiklama_yontemleri": [
+      "jsonld:headline",
+      "jsonld:description",
+      "jsonld:articleBody",
+      "jsonld:image"
+    ],
+    "ayiklama_guveni": "yuksek"
+  },
+  "taslak": {
+    "baslik_secenekleri": [
+      {
+        "metin": "İran Meclis Başkanı Kalibaf'tan ABD ekonomi politikalarına eleştiri",
+        "gerekce": "Düz haber başlığı: kim, kime, ne konuda. Tıklama tuzağı yok, arama sonuçlarında da net okunur."
+      },
+      {
+        "metin": "Kalibaf: Baskı politikası ABD ekonomisine de dönecek",
+        "gerekce": "Sonuç/etki odaklı: Kalibaf'ın öne sürdüğü asıl iddiayı öne çıkarıyor, alıntı kime ait olduğu belli."
+      },
+      {
+        "metin": "Tahran'dan Washington'a 'bumerang' benzetmesi",
+        "gerekce": "Kısa ve vurucu: haberin en çok konuşulacak benzetmesini merkeze alıyor, tırnakla alıntı olduğu belirtiliyor."
+      }
+    ],
+    "onerilen_baslik_indeksi": 1,
+    "spot": "İran Meclis Başkanı Muhammed Bakır Kalibaf, sosyal medya paylaşımında ABD'nin fiyatları kontrol altına alma adımlarını hedef aldı. Washington'ın yeni bir mali yaptırım paketini yarın açıklaması bekleniyor.",
+    "uc_madde": [
+      "İran Meclis Başkanı Kalibaf, sosyal medya hesabından ABD'nin ekonomi politikalarını alaycı bir dille eleştirdi.",
+      "Kalibaf, dondurulmuş et ithalatına atıfla \"Tahviller için ne yapacaksınız, dondurulmuş getiriler mi ithal edeceksiniz?\" diye sordu.",
+      "ABD yönetimi, İran'a yönelik yeni mali yaptırım paketini yarın duyuracağını açıklamıştı."
+    ],
+    "govde": [
+      {
+        "tur": "paragraf",
+        "metin": "İran Meclis Başkanı Muhammed Bakır Kalibaf, sosyal medya hesabından yaptığı paylaşımda Washington'ın son ekonomi hamlelerini hedef aldı. Kalibaf'ın eleştirisi, ABD Başkanı Donald Trump'ın artan fiyatları dizginlemek için attığı adımlara yönelikti; İranlı siyasetçi alaycı bir dil kullandı ve bu politikaların ABD ekonomisine de yansıyacağını öne sürdü."
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": "Dondurulmuş et üzerinden eleştiri"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Kalibaf, et fiyatlarını düşürmek amacıyla dondurulmuş et ithalatı yapılmasına değinerek bu adım için \"Belki işe yarar\" ifadesini kullandı. İran Meclis Başkanı, ABD tahvil piyasasına ilişkin ise şu soruyu yöneltti:"
+      },
+      {
+        "tur": "alinti",
+        "metin": "Tahviller için ne yapacaksınız, dondurulmuş getiriler mi ithal edeceksiniz?"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Kalibaf, konut piyasası ve ücret politikalarını da aynı çerçevede eleştirdi. Bu alanlarda da \"dondurulmuş alıcılar\" ve \"dondurulmuş maaş bordroları\" getirmenin çözüm olmayacağını savundu."
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": "\"Donmuş dış politika, durgun ekonomi doğurur\""
+      },
+      {
+        "tur": "paragraf",
+        "metin": "İran Meclis Başkanı paylaşımında, \"İnisiyatifi olmayan, donmuş bir dış politika; donmuş ve durgun bir ekonomi doğurur\" değerlendirmesinde bulundu. Kalibaf bu sözlerle, ABD'nin İran'a yönelik baskı politikasının Washington'ın kendi ekonomisi açısından da sonuç doğuracağı iddiasını dile getirdi."
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Kalibaf paylaşımını bir benzetmeyle bitirdi. \"Hâlâ hareket halinde olan tek şey ne? İran'ın bumerangı; sizin yüzünüze geri dönecek\" ifadelerini kullandı."
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": "Yeni yaptırım paketi bekleniyor"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Açıklamalar, ABD yönetiminin Tahran'a dönük mali yaptırımlarda yeni bir paketi yarın duyuracağını bildirmesinin ardından geldi. Paketin kapsamına ilişkin ayrıntılar henüz paylaşılmadı."
+      }
+    ],
+    "kategori": "Gündem",
+    "ilce": "Bursa dışı",
+    "etiketler": [
+      "dış politika",
+      "yaptırım",
+      "ekonomi",
+      "diplomasi",
+      "tahvil piyasası"
+    ],
+    "seo_baslik": "Kalibaf: Baskı politikası ABD ekonomisine de dönecek",
+    "seo_aciklama": "İran Meclis Başkanı Kalibaf, ABD'nin ekonomi ve yaptırım politikalarını eleştirdi. Washington'ın yeni mali yaptırım paketi yarın açıklanacak.",
+    "url_slug": "kalibaf-baski-politikasi-abd-ekonomisine-de-donecek",
+    "gorsel_alt": "Kürsüde konuşan İran Meclis Başkanı Muhammed Bakır Kalibaf",
+    "gorsel_altyazi": "İran Meclis Başkanı Muhammed Bakır Kalibaf. Fotoğrafın çekildiği yer ve tarih kaynak yayında belirtilmedi.",
+    "okuma_suresi_dk": 2,
+    "onem": "normal",
+    "kaynak_atfi": "Sözcü haberine göre; haber AA imzasını taşıyor.",
+    "dogrulanmasi_gerekenler": [
+      "Kalibaf'ın paylaşımının hangi platformda, hangi dilde ve hangi saatte yapıldığı kaynakta belirtilmemiş; orijinal paylaşım bulunup alıntılar birebir doğrulanmalı.",
+      "Alıntılar çeviri üzerinden aktarılıyor; \"dondurulmuş getiriler\", \"dondurulmuş alıcılar\", \"dondurulmuş maaş bordroları\" ifadelerinin orijinal metindeki karşılıkları kontrol edilmeli.",
+      "ABD'nin dondurulmuş et ithalatı, konut ve ücret politikalarına ilişkin adımlarının içeriği kaynakta açıklanmamış; bağımsız kaynaktan teyit edilmeli.",
+      "\"Yarın açıklanacağı\" belirtilen yeni mali yaptırım paketinin tarihi haberin yayın tarihine (23 Ağustos 2026) göre yazılmış; yayına girmeden önce takvim güncellenmeli ve paketin açıklanıp açıklanmadığı kontrol edilmeli.",
+      "Kaynak fotoğrafın hak durumu doğrulanmadan yayına girmez; ajans lisansı teyit edilmeli.",
+      "AA'nın orijinal servisine ulaşılıp metnin Sözcü'deki hâliyle örtüşüp örtüşmediği kontrol edilmeli."
+    ],
+    "hassas_konu": {
+      "var_mi": true,
+      "turu": "Dış politika / taraf açıklaması",
+      "uyari": "Metindeki iddialar bir tarafın —İran Meclis Başkanı'nın— siyasi değerlendirmesidir; ABD ekonomisine ilişkin savları gazetenin tespiti gibi sunulmamalı. Tüm ifadeler kaynağına atfen verildi. ABD tarafının yanıtı gelirse habere eklenmeli."
+    },
+    "bursa_ilgisi": {
+      "var_mi": false,
+      "aciklama": "Haberin Bursa ile doğrudan bağı yok; İran-ABD hattındaki bir açıklamaya dayanıyor. Zorlama bir yerel bağ kurulmadı, dünya/gündem sayfasında değerlendirilmeli."
+    },
+    "editor_notu": "Denetim bulguları giderildi: gövdenin ilk paragrafı ile yaptırım paragrafı, kaynakla birebir örtüşen kalıplardan arındırılıp yeniden kuruldu; olgular korundu, cümle düzeni ve sözcük seçimi değiştirildi. Haber baştan kendi cümlelerimizle yazıldı; yalnızca Kalibaf'a ait sözler tırnak içinde ve sahibi belirtilerek verildi. Orijinal başlıktaki \"gönderme\" vurgusu yerine kim-ne-söyledi düzeni tercih edildi. Metnin tamamı bir siyasi aktörün iddiası olduğu için \"öne sürdü\", \"savundu\" gibi yüklemler bilinçli kullanıldı; \"ABD ekonomisi zarar görecek\" gibi kesinlik bildiren bir cümle kurulmadı. En kritik nokta zaman ifadesi: kaynaktaki \"yarın\" göreli bir tarih, yayına girmeden mutlaka takvime çevrilmeli. Alıntılar çeviri olduğu için ikinci bir kaynakla karşılaştırılması iyi olur. İlçe alanı \"Bursa dışı\" seçildi."
+  },
+  "uretim": {
+    "saglayici": "skill",
+    "model": "claude-code-cli",
+    "surum": "1.0",
+    "turlar": [
+      {
+        "tur": 0,
+        "bulgu_sayisi": 2,
+        "bulgular": [
+          "K1 govde[0] kaynakla 8 kelimelik birebir ortusme: \"abd başkanı donald trumpın fiyatları kontrol altına almaya...\"",
+          "K1 govde[9] kaynakla 8 kelimelik birebir ortusme: \"irana yönelik yeni bir mali yaptırım paketini yarın...\""
+        ]
+      },
+      {
+        "tur": 1,
+        "bulgu_sayisi": 0,
+        "bulgular": []
+      }
+    ],
+    "kalan_bulgular": [],
+    "not": "taslak-denetimi Mod 1 zinciri uygulandi; K2 (uydurma olgu) elle kalir."
+  },
+  "konu_adaylari": [],
+  "konu_onerisi": {
+    "id": "muhammed-bakir-kalibaf",
+    "ad": "Muhammed Bakır Kalibaf",
+    "slug": "muhammed-bakir-kalibaf",
+    "durum": "acik",
+    "kategori": "Gündem",
+    "ilce": "Bursa dışı",
+    "anahtarlar": [
+      "dış politika",
+      "yaptırım",
+      "ekonomi",
+      "diplomasi",
+      "tahvil piyasası"
+    ],
+    "kisiler": [
+      "Muhammed Bakır Kalibaf",
+      "ABD Tahran"
+    ],
+    "kurumlar": [],
+    "hassas": {
+      "var_mi": true,
+      "turu": "Dış politika / taraf açıklaması",
+      "uyari": "Metindeki iddialar bir tarafın —İran Meclis Başkanı'nın— siyasi değerlendirmesidir; ABD ekonomisine ilişkin savları gazetenin tespiti gibi sunulmamalı. Tüm ifadeler kaynağına atfen verildi. ABD tarafının yanıtı gelirse habere eklenmeli."
+    },
+    "not": "",
+    "maddeler": []
+  }
+}

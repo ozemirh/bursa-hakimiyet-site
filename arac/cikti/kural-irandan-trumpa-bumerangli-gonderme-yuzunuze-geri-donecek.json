@@ -1,0 +1,166 @@
+{
+  "kaynak": {
+    "kaynak_url": "https://www.sozcu.com.tr/iran-dan-trump-a-bumerangli-gonderme-yuzunuze-geri-donecek-p352008",
+    "kaynak_alan": "sozcu.com.tr",
+    "kaynak_adi": "Sözcü",
+    "orijinal_baslik": "İran’dan Trump’a bumeranglı gönderme: Yüzünüze geri dönecek",
+    "orijinal_spot": "İran Meclis Başkanı Muhammed Bakır Kalibaf, ABD’nin Tahran’a yönelik ekonomik baskı politikasının yalnızca İran’ı değil, Washington ekonomisini de olumsuz etkileyebileceğini savundu. Kalibaf, uygulanan politikaların bir süre sonra “bumerang gibi ABD’ye döneceğini” söyledi.",
+    "orijinal_govde": "ABD Başkanı Donald Trump’ın fiyatları kontrol altına almaya yönelik son adımlarını sosyal medya hesabından değerlendiren Kalibaf, ekonomi politikalarını alaycı ifadelerle eleştirdi. ‘DONDURULMUŞ GETİRİLER Mİ İTHAL EDECEKSİNİZ?’ Kalibaf, et fiyatlarının düşürülmesi amacıyla dondurulmuş et ithalatı yapılmasına atıfta bulunarak, “Belki işe yarar” ifadesini kullandı. ABD tahvil piyasasına ilişkin ise “Tahviller için ne yapacaksınız, dondurulmuş getiriler mi ithal edeceksiniz?” diye sordu. ‘DURGUN BİR EKONOMİ DOĞURUR’ Konut piyasası ve ücret politikalarını da eleştiren Kalibaf, bu alanlarda da benzer şekilde “dondurulmuş alıcılar” ve “dondurulmuş maaş bordroları” getirmenin çözüm olmayacağını belirtti. İran Meclis Başkanı, “İnisiyatifi olmayan, donmuş bir dış politika; donmuş ve durgun bir ekonomi doğurur” değerlendirmesinde bulunarak, ABD’nin İran’a yönelik baskı politikasının kendi ekonomisi açısından da sonuçlar doğuracağını öne sürdü. ‘TEK HAREKET EDEN İRAN’IN BUMERANGI’ Kalibaf paylaşımının sonunda ise dikkat çeken bir benzetme yaparak, “Hala hareket halinde olan tek şey ne? İran’ın bumerangı; sizin yüzünüze geri dönecek” ifadelerini kullandı. YENİ YAPTIRIM PAKETİ Washington yönetimi ise İran’a yönelik yeni bir mali yaptırım paketini yarın açıklayacağını duyurmuştu.",
+    "gorsel_url": "https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/8/kalibafjpg-FHj_SY_gj0qrJY8tbxeq2g.jpg?w=1200&h=900&mode=crop&scale=both",
+    "gorsel_alt": "İran’dan Trump’a bumeranglı gönderme: Yüzünüze geri dönecek",
+    "yazar": "AA",
+    "asil_kaynak": "AA",
+    "yayin_tarihi": "2026-08-23T21:02:00+03:00",
+    "guncelleme_tarihi": "2026-08-23T21:04:09+03:00",
+    "dil": "tr",
+    "kelime_sayisi": 160,
+    "ayiklama_yontemleri": [
+      "jsonld:headline",
+      "jsonld:description",
+      "jsonld:articleBody",
+      "jsonld:image"
+    ],
+    "ayiklama_guveni": "yuksek"
+  },
+  "taslak": {
+    "baslik_secenekleri": [
+      {
+        "metin": "",
+        "gerekce": "Düz haber başlığı: ne oldu, kim yaptı, nerede. En fazla 70 karakter."
+      },
+      {
+        "metin": "",
+        "gerekce": "Sonuç/etki odaklı: bu gelişme okur için ne değiştiriyor?"
+      },
+      {
+        "metin": "",
+        "gerekce": "Kısa ve vurucu: 6-7 kelime. Tıklama tuzağı yok."
+      }
+    ],
+    "onerilen_baslik_indeksi": 0,
+    "spot": "",
+    "uc_madde": [
+      "",
+      "",
+      ""
+    ],
+    "govde": [
+      {
+        "tur": "paragraf",
+        "metin": ""
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": ""
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      }
+    ],
+    "kategori": "Siyaset",
+    "ilce": "Bursa dışı",
+    "etiketler": [
+      "abd’nin tahran",
+      "bakır kalibaf",
+      "iran",
+      "politikaların",
+      "dondurulmuş",
+      "trump",
+      "yüzünüze"
+    ],
+    "seo_baslik": "",
+    "seo_aciklama": "",
+    "url_slug": "",
+    "gorsel_alt": "",
+    "gorsel_altyazi": "",
+    "okuma_suresi_dk": 1,
+    "onem": "normal",
+    "kaynak_atfi": "Sözcü'nün haberine göre",
+    "dogrulanmasi_gerekenler": [
+      "“Trump” yazılışını ve varsa unvanını teyit edin.",
+      "“Muhammed Bakır Kalibaf” yazılışını ve varsa unvanını teyit edin.",
+      "“ABD’nin Tahran” yazılışını ve varsa unvanını teyit edin.",
+      "Kaynağın fotoğrafı yalnızca referanstır — hak durumu doğrulanmadan yayına giremez."
+    ],
+    "hassas_konu": {
+      "var_mi": false,
+      "turu": "",
+      "uyari": ""
+    },
+    "bursa_ilgisi": {
+      "var_mi": false,
+      "aciklama": "Metinde Bursa ya da ilçeleriyle bağ kuran bir ipucu yok. Haberi zorla yerelleştirmeyin; yerel bir açı bulunamıyorsa ajans/dış haber olarak girin."
+    },
+    "editor_notu": "Bu taslak kural tabanlı motorla hazırlandı — dil üretimi yapılmadı. Kategori, ilçe, etiketler, önem ve uyarılar sözlük ve sezgiyle dolduruldu; başlık, spot, üç madde ve gövde kasıtlı olarak boş bırakıldı. Ham malzeme panelinden yararlanarak haberi kendi cümlelerinizle yazın; kaynağın cümlelerini kopyalamayın. Kaynak, yayınlanan sayfada ayrı bir bölmede gösterilir; gövdeye atıf cümlesi koymak zorunda değilsiniz."
+  },
+  "uretim": {
+    "saglayici": "kural",
+    "model": "",
+    "surum": "1.0",
+    "zaman": "2026-08-23T20:51:26+00:00"
+  },
+  "tezgah": [
+    {
+      "metin": "İran Meclis Başkanı, “İnisiyatifi olmayan, donmuş bir dış politika; donmuş ve durgun bir ekonomi doğurur” değerlendirmesinde bulunarak, ABD’nin İran’a yönelik baskı politikasının kendi ekonomisi açısından da sonuçlar doğuracağını öne sürdü. ‘TEK HAREKET EDEN İRAN’IN BUMERANGI’ Kalibaf paylaşımının sonunda ise dikkat çeken bir benzetme yaparak, “Hala hareket halinde olan tek şey ne?",
+      "puan": 100,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "ABD Başkanı Donald Trump’ın fiyatları kontrol altına almaya yönelik son adımlarını sosyal medya hesabından değerlendiren Kalibaf, ekonomi politikalarını alaycı ifadelerle eleştirdi. ‘DONDURULMUŞ GETİRİLER Mİ İTHAL EDECEKSİNİZ?’ Kalibaf, et fiyatlarının düşürülmesi amacıyla dondurulmuş et ithalatı yapılmasına atıfta bulunarak, “Belki işe yarar” ifadesini kullandı.",
+      "puan": 92,
+      "oneri": "giriş"
+    },
+    {
+      "metin": "ABD tahvil piyasasına ilişkin ise “Tahviller için ne yapacaksınız, dondurulmuş getiriler mi ithal edeceksiniz?” diye sordu. ‘DURGUN BİR EKONOMİ DOĞURUR’ Konut piyasası ve ücret politikalarını da eleştiren Kalibaf, bu alanlarda da benzer şekilde “dondurulmuş alıcılar” ve “dondurulmuş maaş bordroları” getirmenin çözüm olmayacağını belirtti.",
+      "puan": 92,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "YENİ YAPTIRIM PAKETİ Washington yönetimi ise İran’a yönelik yeni bir mali yaptırım paketini yarın açıklayacağını duyurmuştu.",
+      "puan": 56,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "İran’ın bumerangı; sizin yüzünüze geri dönecek” ifadelerini kullandı.",
+      "puan": 45,
+      "oneri": "alıntı adayı"
+    }
+  ],
+  "konu_adaylari": [],
+  "konu_onerisi": {
+    "id": "muhammed-bakir-kalibaf",
+    "ad": "Muhammed Bakır Kalibaf",
+    "slug": "muhammed-bakir-kalibaf",
+    "durum": "acik",
+    "kategori": "Siyaset",
+    "ilce": "Bursa dışı",
+    "anahtarlar": [
+      "abd’nin tahran",
+      "bakır kalibaf",
+      "iran",
+      "politikaların",
+      "dondurulmuş"
+    ],
+    "kisiler": [
+      "Muhammed Bakır Kalibaf",
+      "ABD Tahran"
+    ],
+    "kurumlar": [],
+    "hassas": {
+      "var_mi": false,
+      "turu": "",
+      "uyari": ""
+    },
+    "not": "",
+    "maddeler": []
+  }
+}

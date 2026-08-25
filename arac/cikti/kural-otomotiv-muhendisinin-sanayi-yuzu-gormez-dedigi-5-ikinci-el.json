@@ -1,0 +1,195 @@
+{
+  "kaynak": {
+    "kaynak_url": "https://www.sozcu.com.tr/otomotiv-muhendisinin-sanayi-yuzu-gormez-dedigi-5-ikinci-el-otomobil-p352095",
+    "kaynak_alan": "sozcu.com.tr",
+    "kaynak_adi": "Sözcü",
+    "orijinal_baslik": "Otomotiv mühendisinin 'sanayi yüzü görmez' dediği 5 ikinci el otomobil",
+    "orijinal_spot": "İkinci el otomobil pazarında yükselen yedek parça ve bakım maliyetleri alıcıları daha temkinli davranmaya zorlarken, bir otomotiv uzmanından ezber bozan bir tavsiye listesi geldi. İşte mekanik aksamların sadeliği, kronik sorunsuzluk ve düşük işletme giderleri kriter alınarak hazırlanan listede, sanayi yüzü göstermeyecek en dayanıklı 5 model...",
+    "orijinal_govde": "İkinci el otomobil piyasasında doğru aracı seçmek, özellikle artan bakım ve yedek parça maliyetleri nedeniyle her zamankinden daha kritik hale geldi. Bir otomotiv mühendisi, mekanik aksamların sadeliği, yüksek dayanıklılık ve düşük işletme giderlerini dikkate alarak sanayi yüzü göstermeyen ve sorunsuz sürüş sunan 5 ikinci el otomobil modelini sıraladı. İşte uzman gözüyle güvenilirliği kanıtlanmış o modeller: Toyota Corolla Hybrid (1. Sırada): Mühendisin kişisel favorisi olan bu model, özellikle şehir içi kullanımlarda hibrit teknolojisi sayesinde ciddi yakıt tasarrufu sağlıyor. Minimum arıza riski ve yüksek güvenilirliğiyle listenin zirvesinde yer alıyor. Mazda 3 (2.0 Benzinli): Piyasada hak ettiği ilgiyi görmese de yüksek kalitesiyle öne çıkan bir alternatif. Dengeli yol tutuşu, kaliteli iç mekanı ve çok nadir arıza yapmasıyla standartların dışına çıkmak isteyen sürücülere hitap ediyor. Honda Civic (1.8 VTEC): Aracın kırılması güç sağlamlığının temel kaynağı olan efsanevi 1.8 VTEC motoru, geniş iç mekan ve pratiklikle birleşiyor. Kronik arıza riskini minimumda tutmak isteyenler için ideal bir seçenek. Lexus CT 200h (1.8 Hibrit): Konfor ve yakıt ekonomisini bir arada sunan kompakt hibrit model. Karmaşık ve narin teknolojilerden uzak tutulan 1.8 litrelik motor mimarisi, düzenli bakımla uzun yıllar masrafsız kullanım vaat ediyor. Suzuki Vitara (1.6 Benzinli): Listenin en büyük kozu mekanik sadelik. Yalın motor yapısı olası tamir süreçlerini basitleştirirken bakım maliyetlerini de oldukça düşük seviyelerde tutuyor.",
+    "gorsel_url": "https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/8/ikinci-elpng-TGrFM08MwUWE-oRs3OASlA.png?w=1200&h=900&mode=crop&scale=both",
+    "gorsel_alt": "Otomotiv mühendisinin 'sanayi yüzü görmez' dediği 5 ikinci el otomobil",
+    "yazar": "Haber Merkezi",
+    "asil_kaynak": "",
+    "yayin_tarihi": "2026-08-24T08:51:01+03:00",
+    "guncelleme_tarihi": "2026-08-24T08:51:01+03:00",
+    "dil": "tr",
+    "kelime_sayisi": 209,
+    "ayiklama_yontemleri": [
+      "jsonld:headline",
+      "jsonld:description",
+      "jsonld:articleBody",
+      "jsonld:image"
+    ],
+    "ayiklama_guveni": "yuksek"
+  },
+  "taslak": {
+    "baslik_secenekleri": [
+      {
+        "metin": "",
+        "gerekce": "Düz haber başlığı: ne oldu, kim yaptı, nerede. En fazla 70 karakter."
+      },
+      {
+        "metin": "",
+        "gerekce": "Sonuç/etki odaklı: bu gelişme okur için ne değiştiriyor?"
+      },
+      {
+        "metin": "",
+        "gerekce": "Kısa ve vurucu: 6-7 kelime. Tıklama tuzağı yok."
+      }
+    ],
+    "onerilen_baslik_indeksi": 0,
+    "spot": "",
+    "uc_madde": [
+      "",
+      "",
+      ""
+    ],
+    "govde": [
+      {
+        "tur": "paragraf",
+        "metin": ""
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": ""
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      }
+    ],
+    "kategori": "Ekonomi",
+    "ilce": "Bursa dışı",
+    "etiketler": [
+      "ikinci",
+      "otomobil",
+      "otomotiv",
+      "sanayi",
+      "yüzü",
+      "mühendisinin",
+      "bakım"
+    ],
+    "seo_baslik": "",
+    "seo_aciklama": "",
+    "url_slug": "",
+    "gorsel_alt": "",
+    "gorsel_altyazi": "",
+    "okuma_suresi_dk": 1,
+    "onem": "normal",
+    "kaynak_atfi": "Sözcü'nün haberine göre",
+    "dogrulanmasi_gerekenler": [
+      "Kaynağın fotoğrafı yalnızca referanstır — hak durumu doğrulanmadan yayına giremez."
+    ],
+    "hassas_konu": {
+      "var_mi": false,
+      "turu": "",
+      "uyari": ""
+    },
+    "bursa_ilgisi": {
+      "var_mi": false,
+      "aciklama": "Metinde Bursa ya da ilçeleriyle bağ kuran bir ipucu yok. Haberi zorla yerelleştirmeyin; yerel bir açı bulunamıyorsa ajans/dış haber olarak girin."
+    },
+    "editor_notu": "Bu taslak kural tabanlı motorla hazırlandı — dil üretimi yapılmadı. Kategori, ilçe, etiketler, önem ve uyarılar sözlük ve sezgiyle dolduruldu; başlık, spot, üç madde ve gövde kasıtlı olarak boş bırakıldı. Ham malzeme panelinden yararlanarak haberi kendi cümlelerinizle yazın; kaynağın cümlelerini kopyalamayın. Kaynak, yayınlanan sayfada ayrı bir bölmede gösterilir; gövdeye atıf cümlesi koymak zorunda değilsiniz."
+  },
+  "uretim": {
+    "saglayici": "kural",
+    "model": "",
+    "surum": "1.0",
+    "zaman": "2026-08-24T07:21:37+00:00"
+  },
+  "tezgah": [
+    {
+      "metin": "Honda Civic (1.8 VTEC): Aracın kırılması güç sağlamlığının temel kaynağı olan efsanevi 1.8 VTEC motoru, geniş iç mekan ve pratiklikle birleşiyor.",
+      "puan": 78,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Lexus CT 200h (1.8 Hibrit): Konfor ve yakıt ekonomisini bir arada sunan kompakt hibrit model.",
+      "puan": 73,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Suzuki Vitara (1.6 Benzinli): Listenin en büyük kozu mekanik sadelik.",
+      "puan": 71,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Bir otomotiv mühendisi, mekanik aksamların sadeliği, yüksek dayanıklılık ve düşük işletme giderlerini dikkate alarak sanayi yüzü göstermeyen ve sorunsuz sürüş sunan 5 ikinci el otomobil modelini sıraladı.",
+      "puan": 67,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Mazda 3 (2.0 Benzinli): Piyasada hak ettiği ilgiyi görmese de yüksek kalitesiyle öne çıkan bir alternatif.",
+      "puan": 66,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "İşte uzman gözüyle güvenilirliği kanıtlanmış o modeller: Toyota Corolla Hybrid (1.",
+      "puan": 64,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Karmaşık ve narin teknolojilerden uzak tutulan 1.8 litrelik motor mimarisi, düzenli bakımla uzun yıllar masrafsız kullanım vaat ediyor.",
+      "puan": 61,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "İkinci el otomobil piyasasında doğru aracı seçmek, özellikle artan bakım ve yedek parça maliyetleri nedeniyle her zamankinden daha kritik hale geldi.",
+      "puan": 42,
+      "oneri": "giriş"
+    },
+    {
+      "metin": "Sırada): Mühendisin kişisel favorisi olan bu model, özellikle şehir içi kullanımlarda hibrit teknolojisi sayesinde ciddi yakıt tasarrufu sağlıyor.",
+      "puan": 42,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "Dengeli yol tutuşu, kaliteli iç mekanı ve çok nadir arıza yapmasıyla standartların dışına çıkmak isteyen sürücülere hitap ediyor.",
+      "puan": 40,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "Yalın motor yapısı olası tamir süreçlerini basitleştirirken bakım maliyetlerini de oldukça düşük seviyelerde tutuyor.",
+      "puan": 39,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "Minimum arıza riski ve yüksek güvenilirliğiyle listenin zirvesinde yer alıyor.",
+      "puan": 36,
+      "oneri": "gelişme"
+    }
+  ],
+  "konu_adaylari": [],
+  "konu_onerisi": {
+    "id": "ekonomi",
+    "ad": "Ekonomi",
+    "slug": "ekonomi",
+    "durum": "acik",
+    "kategori": "Ekonomi",
+    "ilce": "Bursa dışı",
+    "anahtarlar": [
+      "ikinci",
+      "otomobil",
+      "otomotiv",
+      "sanayi",
+      "yüzü"
+    ],
+    "kisiler": [],
+    "kurumlar": [],
+    "hassas": {
+      "var_mi": false,
+      "turu": "",
+      "uyari": ""
+    },
+    "not": "",
+    "maddeler": []
+  }
+}

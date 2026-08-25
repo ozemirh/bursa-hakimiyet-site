@@ -1,0 +1,193 @@
+{
+  "kaynak": {
+    "kaynak_url": "https://www.kentbursa.com/nilufer-cayi-icin-buyuk-adim-351959-mansetler.html",
+    "kaynak_alan": "kentbursa.com",
+    "kaynak_adi": "Kent Bursa Gazetesi",
+    "orijinal_baslik": "Nilüfer Çayı için büyük adım",
+    "orijinal_spot": "Bursa Büyükşehir Belediyesi Başkan Vekili Şahin Biba, Osmangazi ilçesi Dereçavuş Mahallesi’nde yapımı devam eden atıksu kollektör hattının Nilüfer Çayı’nın temiz akmasına katkı sağlayacağını söyledi. Şahin Biba başkanlığında belediye bürokratlarından oluşan heyet, Dereçavuş Mahallesi’nden Ovaakça Mahallesi’ne kadar uzanacak yaklaşık 2 kilometre uzunluğundaki atıksu kollektör hattı inşaatını yerinde inceledi. Çalışmalar hakkında yetkililerden bilgi alan Başkan Vekili Biba, […]",
+    "orijinal_govde": "Bursa Büyükşehir Belediyesi Başkan Vekili Şahin Biba, Osmangazi ilçesi Dereçavuş Mahallesi’nde yapımı devam eden atıksu kollektör hattının Nilüfer Çayı’nın temiz akmasına katkı sağlayacağını söyledi.\n\nŞahin Biba başkanlığında belediye bürokratlarından oluşan heyet, Dereçavuş Mahallesi’nden Ovaakça Mahallesi’ne kadar uzanacak yaklaşık 2 kilometre uzunluğundaki atıksu kollektör hattı inşaatını yerinde inceledi. Çalışmalar hakkında yetkililerden bilgi alan Başkan Vekili Biba, gelinen son durum ve projenin önemi hakkında açıklamalarda bulundu.\n\n“HEDEFİMİZ EKSİKSİZ BİR ŞEKİLDE HİZMETE AÇMAK”\n\n‘Osmangazi ilçesi Atıksu Kollektörleri İnşaatı Yapım İşi’nin BUSKİ tarafından titizlikle yürütüldüğünü belirten Başkan Vekili Biba, “127 milyon 192 bin lira bedelle projemizi imzaladık. 21 Mayıs 2026 tarihi itibarıyla yer teslimini gerçekleştirdik. Önümüzde 730 günlük yoğun bir çalışma dönemi var. Hedefimiz, projemizi 19 Mayıs 2028 tarihinde eksiksiz bir şekilde tamamlayıp hizmete açmak.” dedi.\n\n“BU HAT SAYESİNDE NİLÜFER ÇAYI KİRLENMEYECEK”\n\nDereçavuş Mahallesi’nden başlayıp Ovaakça’ya kadar uzanan, toplam 2 kilometre uzunluğunda çok güçlü bir atıksu kollektör hattı inşa ettiklerini ifade eden Başkan Vekili Biba, hat üzerinde ihtiyaca göre 1.000, 1.200 ve 1.400 santimetre çaplarında devasa kanalizasyon boruları kullanılacağını dile getirdi. Tamamlandığında Dereçavuş, Çağlayan, Gündoğdu, Dürdane, Karabalçık ve Ovaakça mahallelerinin bu hatta entegre edilmiş olacağını anlatan Başkan Vekili Biba, “Çalışmalar bittiğinde bu mahallelerimizden gelen tüm atıksu, hiçbir pompa veya enerji maliyeti gerektirmeksizin, tamamen cazibeli yani yerçekimi akışıyla Hançerli’deki Nilüfer Arıtma Tesisi’ne ulaşacak. Bu projenin bize sağlayacağı en büyük kazanım, Nilüfer Çayı’nın kirlenmesini önleyecek olmasıdır.” diye konuştu. Çalışmayla beraber bölge altyapısının modern ve sürdürülebilir bir yapıya kavuşacağını söyleyen Başkan Vekili Biba, “İşletme maliyetlerinde çok ciddi verimlilik sağlayacağız. Bölgemiz atıksu yönetimi adına milat niteliğindeki bu projenin şimdiden hayırlı olmasını diliyorum.” ifadelerini kullandı.(HABER MERKEZİ)",
+    "gorsel_url": "https://www.kentbursa.com/wp-content/uploads/2026/07/BIBA.jpeg",
+    "gorsel_alt": "Kent Bursa Gazetesi",
+    "yazar": "Hande DURMUŞ",
+    "yayin_tarihi": "2026-07-20T11:05:16+00:00",
+    "guncelleme_tarihi": "",
+    "dil": "tr_TR",
+    "kelime_sayisi": 257,
+    "ayiklama_yontemleri": [
+      "jsonld:headline",
+      "og:description",
+      "paragraf-sezgisi",
+      "og:image"
+    ],
+    "ayiklama_guveni": "yuksek"
+  },
+  "taslak": {
+    "baslik_secenekleri": [
+      {
+        "metin": "",
+        "gerekce": "Düz haber başlığı: ne oldu, kim yaptı, nerede. En fazla 70 karakter."
+      },
+      {
+        "metin": "",
+        "gerekce": "Sonuç/etki odaklı: bu gelişme okur için ne değiştiriyor?"
+      },
+      {
+        "metin": "",
+        "gerekce": "Kısa ve vurucu: 6-7 kelime. Tıklama tuzağı yok."
+      }
+    ],
+    "onerilen_baslik_indeksi": 0,
+    "spot": "",
+    "uc_madde": [
+      "",
+      "",
+      ""
+    ],
+    "govde": [
+      {
+        "tur": "paragraf",
+        "metin": ""
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": ""
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      }
+    ],
+    "kategori": "Çevre ve su",
+    "ilce": "Nilüfer",
+    "etiketler": [
+      "osmangazi",
+      "şahin biba",
+      "mahallesi",
+      "atıksu",
+      "nilüfer",
+      "çayı",
+      "dereçavuş"
+    ],
+    "seo_baslik": "",
+    "seo_aciklama": "",
+    "url_slug": "",
+    "gorsel_alt": "",
+    "gorsel_altyazi": "",
+    "okuma_suresi_dk": 1,
+    "onem": "one_cikan",
+    "kaynak_atfi": "Kent Bursa Gazetesi'nin haberine göre",
+    "dogrulanmasi_gerekenler": [
+      "“2 kilometre” rakamını resmî kaynaktan teyit edin.",
+      "“127 milyon” rakamını resmî kaynaktan teyit edin.",
+      "“21 Mayıs 2026” tarihini kaynak belgeyle karşılaştırın.",
+      "“19 Mayıs 2028” tarihini kaynak belgeyle karşılaştırın.",
+      "“Çayı” yazılışını ve varsa unvanını teyit edin.",
+      "“Vekili Şahin Biba” yazılışını ve varsa unvanını teyit edin.",
+      "“Osmangazi” yazılışını ve varsa unvanını teyit edin.",
+      "Kaynağın fotoğrafı yalnızca referanstır — hak durumu doğrulanmadan yayına giremez."
+    ],
+    "hassas_konu": {
+      "var_mi": false,
+      "turu": "",
+      "uyari": ""
+    },
+    "bursa_ilgisi": {
+      "var_mi": true,
+      "aciklama": "Haber Nilüfer ile ilişkili; metinde 7 kez geçiyor."
+    },
+    "editor_notu": "Bu taslak kural tabanlı motorla hazırlandı — dil üretimi yapılmadı. Kategori, ilçe, etiketler, önem ve uyarılar sözlük ve sezgiyle dolduruldu; başlık, spot, üç madde ve gövde kasıtlı olarak boş bırakıldı. Ham malzeme panelinden yararlanarak haberi kendi cümlelerinizle yazın; kaynağın cümlelerini kopyalamayın. Kaynak, yayınlanan sayfada ayrı bir bölmede gösterilir; gövdeye atıf cümlesi koymak zorunda değilsiniz."
+  },
+  "uretim": {
+    "saglayici": "kural",
+    "model": "",
+    "surum": "1.0",
+    "zaman": "2026-08-23T20:47:54+00:00"
+  },
+  "tezgah": [
+    {
+      "metin": "Çalışmalar hakkında yetkililerden bilgi alan Başkan Vekili Biba, gelinen son durum ve projenin önemi hakkında açıklamalarda bulundu.\n\n“HEDEFİMİZ EKSİKSİZ BİR ŞEKİLDE HİZMETE AÇMAK”\n\n‘Osmangazi ilçesi Atıksu Kollektörleri İnşaatı Yapım İşi’nin BUSKİ tarafından titizlikle yürütüldüğünü belirten Başkan Vekili Biba, “127 milyon 192 bin lira bedelle projemizi imzaladık.",
+      "puan": 100,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Hedefimiz, projemizi 19 Mayıs 2028 tarihinde eksiksiz bir şekilde tamamlayıp hizmete açmak.” dedi.\n\n“BU HAT SAYESİNDE NİLÜFER ÇAYI KİRLENMEYECEK”\n\nDereçavuş Mahallesi’nden başlayıp Ovaakça’ya kadar uzanan, toplam 2 kilometre uzunluğunda çok güçlü bir atıksu kollektör hattı inşa ettiklerini ifade eden Başkan Vekili Biba, hat üzerinde ihtiyaca göre 1.000, 1.200 ve 1.400 santimetre çaplarında devasa kanalizasyon boruları kullanılacağını dile getirdi.",
+      "puan": 100,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Tamamlandığında Dereçavuş, Çağlayan, Gündoğdu, Dürdane, Karabalçık ve Ovaakça mahallelerinin bu hatta entegre edilmiş olacağını anlatan Başkan Vekili Biba, “Çalışmalar bittiğinde bu mahallelerimizden gelen tüm atıksu, hiçbir pompa veya enerji maliyeti gerektirmeksizin, tamamen cazibeli yani yerçekimi akışıyla Hançerli’deki Nilüfer Arıtma Tesisi’ne ulaşacak.",
+      "puan": 100,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "Bursa Büyükşehir Belediyesi Başkan Vekili Şahin Biba, Osmangazi ilçesi Dereçavuş Mahallesi’nde yapımı devam eden atıksu kollektör hattının Nilüfer Çayı’nın temiz akmasına katkı sağlayacağını söyledi.",
+      "puan": 88,
+      "oneri": "giriş"
+    },
+    {
+      "metin": "Şahin Biba başkanlığında belediye bürokratlarından oluşan heyet, Dereçavuş Mahallesi’nden Ovaakça Mahallesi’ne kadar uzanacak yaklaşık 2 kilometre uzunluğundaki atıksu kollektör hattı inşaatını yerinde inceledi.",
+      "puan": 83,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Çalışmayla beraber bölge altyapısının modern ve sürdürülebilir bir yapıya kavuşacağını söyleyen Başkan Vekili Biba, “İşletme maliyetlerinde çok ciddi verimlilik sağlayacağız.",
+      "puan": 70,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "21 Mayıs 2026 tarihi itibarıyla yer teslimini gerçekleştirdik.",
+      "puan": 63,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Bölgemiz atıksu yönetimi adına milat niteliğindeki bu projenin şimdiden hayırlı olmasını diliyorum.” ifadelerini kullandı.(HABER MERKEZİ)",
+      "puan": 59,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "Bu projenin bize sağlayacağı en büyük kazanım, Nilüfer Çayı’nın kirlenmesini önleyecek olmasıdır.” diye konuştu.",
+      "puan": 57,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "Önümüzde 730 günlük yoğun bir çalışma dönemi var.",
+      "puan": 54,
+      "oneri": "rakam"
+    }
+  ],
+  "konu_adaylari": [],
+  "konu_onerisi": {
+    "id": "derecavus-mahallesi",
+    "ad": "Dereçavuş Mahallesi",
+    "slug": "derecavus-mahallesi",
+    "durum": "acik",
+    "kategori": "Çevre ve su",
+    "ilce": "Nilüfer",
+    "anahtarlar": [
+      "osmangazi",
+      "şahin biba",
+      "mahallesi",
+      "atıksu",
+      "nilüfer"
+    ],
+    "kisiler": [
+      "Şahin Biba"
+    ],
+    "kurumlar": [],
+    "hassas": {
+      "var_mi": false,
+      "turu": "",
+      "uyari": ""
+    },
+    "not": "",
+    "maddeler": []
+  }
+}

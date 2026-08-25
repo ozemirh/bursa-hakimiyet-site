@@ -1,0 +1,169 @@
+{
+  "kaynak": {
+    "kaynak_url": "https://www.sozcu.com.tr/fiorentina-icardiyi-transfer-listesine-aldi-p351748",
+    "kaynak_alan": "sozcu.com.tr",
+    "kaynak_adi": "Sözcü",
+    "orijinal_baslik": "Icardi 7 yıl sonra geri dönüyor!",
+    "orijinal_spot": "İtalyan basınına göre Fiorentina, Moise Kean'in ayrılığı ihtimaline karşı 33 yaşındaki Arjantinli golcüyü transfer listesine aldı.",
+    "orijinal_govde": "Galatasaray ile yollarını ayıran Mauro Icardi'nin yeni adresi belli oluyor... İtalyan basını, Arjantinli golcünün Fiorentina'nın transfer listesine girdiğini yazdı. İtalyan basınına göre Icardi'yle ilgilenen Lazio, rotasını Sassuolo'dan Andrea Pinamonti'ye çevirdi. Arjantinli golcü için nabız yoklayan Real Betis ise AZ Alkmaar'dan Troy Parrott'u tercih ederek transferden çekildi. FIORENTINA LİSTEYE ALDI Icardi için son olarak Fiorentina seçeneği ortaya çıktı. Como'nun Moise Kean için yaklaşık 40 milyon euroluk teklif hazırlığında olduğu, Fiorentina'nın ise yıldız golcünün ayrılma ihtimaline karşı Icardi'yi gündemine aldığı belirtildi. Fiorentina Sportif Direktörü Fabio Paratici'nin de Icardi'yi uzun süredir takip ettiği aktarıldı. Paratici'nin Juventus'ta görev yaptığı dönemde Arjantinli yıldızı Inter'den transfer etmek için girişimde bulunduğu hatırlatıldı. Icardi'nin de İtalya'ya dönmeye sıcak baktığı öğrenildi. SERIE A'YA DÖNÜŞ Inter'den ayrılmasının üzerinden 7 yıl geçen Icardi, Fiorentina'ya transfer olması halinde Serie A'ya geri dönmüş olacak. Arjantinli yıldız, İtalya kariyerinde çıktığı 219 lig maçında 121 gol kaydetti.",
+    "gorsel_url": "https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/2/icardiaa3684275jpeg-hKhKV0_k106qyXresW7bIQ.jpeg?w=1200&h=900&mode=crop&scale=both",
+    "gorsel_alt": "Icardi'nin yeni adresi şaşırtacak! 7 yıl sonra geri dönüyor",
+    "yazar": "Haber Merkezi",
+    "yayin_tarihi": "2026-08-22T16:33:00+03:00",
+    "guncelleme_tarihi": "2026-08-22T16:49:26+03:00",
+    "dil": "tr",
+    "kelime_sayisi": 142,
+    "ayiklama_yontemleri": [
+      "jsonld:headline",
+      "jsonld:description",
+      "jsonld:articleBody",
+      "jsonld:image"
+    ],
+    "ayiklama_guveni": "orta"
+  },
+  "taslak": {
+    "baslik_secenekleri": [
+      {
+        "metin": "",
+        "gerekce": "Düz haber başlığı: ne oldu, kim yaptı, nerede. En fazla 70 karakter."
+      },
+      {
+        "metin": "",
+        "gerekce": "Sonuç/etki odaklı: bu gelişme okur için ne değiştiriyor?"
+      },
+      {
+        "metin": "",
+        "gerekce": "Kısa ve vurucu: 6-7 kelime. Tıklama tuzağı yok."
+      }
+    ],
+    "onerilen_baslik_indeksi": 0,
+    "spot": "",
+    "uc_madde": [
+      "",
+      "",
+      ""
+    ],
+    "govde": [
+      {
+        "tur": "paragraf",
+        "metin": "Sözcü'nün haberine göre, "
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": ""
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      },
+      {
+        "tur": "paragraf",
+        "metin": ""
+      }
+    ],
+    "kategori": "Spor",
+    "ilce": "Bursa dışı",
+    "etiketler": [
+      "moise kean",
+      "icardi",
+      "fiorentina",
+      "arjantinli",
+      "transfer",
+      "golcüyü",
+      "geri"
+    ],
+    "seo_baslik": "",
+    "seo_aciklama": "",
+    "url_slug": "",
+    "gorsel_alt": "",
+    "gorsel_altyazi": "",
+    "okuma_suresi_dk": 1,
+    "onem": "normal",
+    "kaynak_atfi": "Sözcü'nün haberine göre",
+    "dogrulanmasi_gerekenler": [
+      "“40 milyon” rakamını resmî kaynaktan teyit edin.",
+      "“Fiorentina” yazılışını ve varsa unvanını teyit edin.",
+      "“Moise Kean” yazılışını ve varsa unvanını teyit edin.",
+      "“Arjantinli” yazılışını ve varsa unvanını teyit edin.",
+      "Haberde “belirtildi” kalıbıyla verilen bilgi tek kaynağa dayanıyor; ikinci bir kaynaktan doğrulayın.",
+      "Kaynağın fotoğrafı yalnızca referanstır — hak durumu doğrulanmadan yayına giremez."
+    ],
+    "hassas_konu": {
+      "var_mi": false,
+      "turu": "",
+      "uyari": ""
+    },
+    "bursa_ilgisi": {
+      "var_mi": false,
+      "aciklama": "Metinde Bursa ya da ilçeleriyle bağ kuran bir ipucu yok. Haberi zorla yerelleştirmeyin; yerel bir açı bulunamıyorsa ajans/dış haber olarak girin."
+    },
+    "editor_notu": "Bu taslak kural tabanlı motorla hazırlandı — dil üretimi yapılmadı. Kategori, ilçe, etiketler, önem ve uyarılar sözlük ve sezgiyle dolduruldu; başlık, spot, üç madde ve gövde kasıtlı olarak boş bırakıldı. Sağdaki ham malzeme panelinden yararlanarak haberi kendi cümlelerinizle yazın; kaynağın cümlelerini kopyalamayın. Atıf cümlesi ilk paragrafta hazır duruyor."
+  },
+  "uretim": {
+    "saglayici": "kural",
+    "model": "",
+    "surum": "1.0",
+    "zaman": "2026-08-22T19:12:36+00:00"
+  },
+  "tezgah": [
+    {
+      "metin": "SERIE A'YA DÖNÜŞ Inter'den ayrılmasının üzerinden 7 yıl geçen Icardi, Fiorentina'ya transfer olması halinde Serie A'ya geri dönmüş olacak.",
+      "puan": 93,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Como'nun Moise Kean için yaklaşık 40 milyon euroluk teklif hazırlığında olduğu, Fiorentina'nın ise yıldız golcünün ayrılma ihtimaline karşı Icardi'yi gündemine aldığı belirtildi.",
+      "puan": 88,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Paratici'nin Juventus'ta görev yaptığı dönemde Arjantinli yıldızı Inter'den transfer etmek için girişimde bulunduğu hatırlatıldı.",
+      "puan": 64,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "Arjantinli yıldız, İtalya kariyerinde çıktığı 219 lig maçında 121 gol kaydetti.",
+      "puan": 64,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "İtalyan basınına göre Icardi'yle ilgilenen Lazio, rotasını Sassuolo'dan Andrea Pinamonti'ye çevirdi.",
+      "puan": 62,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "Arjantinli golcü için nabız yoklayan Real Betis ise AZ Alkmaar'dan Troy Parrott'u tercih ederek transferden çekildi.",
+      "puan": 55,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "Fiorentina Sportif Direktörü Fabio Paratici'nin de Icardi'yi uzun süredir takip ettiği aktarıldı.",
+      "puan": 54,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "İtalyan basını, Arjantinli golcünün Fiorentina'nın transfer listesine girdiğini yazdı.",
+      "puan": 53,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "FIORENTINA LİSTEYE ALDI Icardi için son olarak Fiorentina seçeneği ortaya çıktı.",
+      "puan": 52,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "Galatasaray ile yollarını ayıran Mauro Icardi'nin yeni adresi belli oluyor...",
+      "puan": 44,
+      "oneri": "giriş"
+    },
+    {
+      "metin": "Icardi'nin de İtalya'ya dönmeye sıcak baktığı öğrenildi.",
+      "puan": 42,
+      "oneri": "gelişme"
+    }
+  ]
+}

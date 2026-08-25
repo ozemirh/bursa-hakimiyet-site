@@ -1,0 +1,88 @@
+{
+  "_not": "Kural motorunun tek kaynak sozlugu. Python (kural_motoru.py, konu_eslestirme.py) ve tarayici (gomulu_uret.py ile yapay-zeka-editor.html icine gomulur) ayni tablolari kullanir.",
+
+  "ajanslar": ["AA", "Anadolu Ajansı", "DHA", "Demirören Haber Ajansı",
+               "İHA", "İhlas Haber Ajansı", "ANKA", "Reuters", "AFP", "AP",
+               "Bloomberg", "Bloomberg HT", "TRT Haber", "BBC"],
+
+  "kategori_anahtarlari": {
+    "Çevre ve su": {"baraj": 3, "arıtma": 3, "atık": 3, "su kesintisi": 4, "buski": 4, "çevre": 2, "kirlilik": 3, "dere": 2, "gölet": 3, "orman": 2, "iklim": 2, "geri dönüşüm": 3, "kuraklık": 3, "doluluk": 2, "arıtma tesisi": 4, "deşarj": 3, "sulak": 2, "içme suyu": 4, "atık su": 4},
+    "Ulaşım": {"metro": 4, "burulaş": 4, "otobüs": 3, "tramvay": 4, "trafik": 3, "kavşak": 3, "otoyol": 3, "havalimanı": 3, "sefer": 2, "durak": 2, "raylı": 4, "ulaşım": 3, "otopark": 2, "köprü": 2, "viyadük": 3},
+    "Ekonomi": {"yatırım": 3, "ihracat": 3, "enflasyon": 4, "faiz": 3, "dolar": 3, "euro": 3, "borsa": 3, "asgari ücret": 4, "zam": 3, "istihdam": 3, "işsizlik": 3, "şirket": 2, "fabrika": 2, "üretim": 2, "iflas": 3, "esnaf": 2, "ticaret": 2, "milyon dolar": 3, "milyar": 2, "sanayi": 2, "tekstil": 2, "kredi": 2, "altın": 2, "piyasa": 3, "alacaklı": 3, "konkordato": 4},
+    "Asayiş": {"gözaltı": 3, "operasyon": 3, "polis": 3, "jandarma": 3, "hırsızlık": 4, "kaçakçılık": 4, "silah": 3, "uyuşturucu": 4, "kaza": 3, "yaralı": 3, "cinayet": 4, "dolandırıcılık": 4, "emniyet": 3, "zabıta": 2, "asayiş": 4, "yangın": 2},
+    "Yargı": {"mahkeme": 4, "duruşma": 4, "iddianame": 4, "savcılık": 4, "tutuklandı": 4, "tutukluluk": 4, "dava": 3, "sanık": 3, "şüpheli": 3, "beraat": 4, "hüküm": 3, "istinaf": 4, "yargıtay": 4, "soruşturma": 3, "adliye": 3, "hakim": 3, "tahliye": 3, "görevden uzaklaştırma": 4, "adli kontrol": 4},
+    "Siyaset": {"belediye başkanı": 3, "meclis": 3, "parti": 3, "chp": 3, "akp": 3, "ak parti": 3, "mhp": 3, "iyi parti": 3, "seçim": 4, "milletvekili": 4, "bakan": 3, "vali": 3, "istifa": 3, "kongre": 2, "muhalefet": 3, "iktidar": 3, "genel başkan": 3, "üyeliğinden": 3},
+    "Sağlık": {"hastane": 3, "hasta": 2, "doktor": 3, "tedavi": 3, "ameliyat": 3, "aşı": 3, "salgın": 4, "poliklinik": 4, "sağlık müdürlüğü": 4, "acil servis": 4, "ilaç": 2, "randevu": 2, "başhekim": 3},
+    "Eğitim": {"okul": 3, "öğrenci": 3, "öğretmen": 3, "üniversite": 3, "sınav": 3, "yks": 4, "lgs": 4, "milli eğitim": 4, "burs": 3, "yurt": 2, "kampüs": 3, "akademik": 2, "eğitim öğretim": 4},
+    "Spor": {"maç": 3, "gol": 3, "transfer": 4, "lig": 3, "futbol": 3, "bursaspor": 4, "teknik direktör": 4, "kadro": 2, "şampiyonluk": 3, "kupa": 2, "basketbol": 3, "voleybol": 3, "stat": 3, "taraftar": 3, "sezon": 2, "forma": 2, "sporcu": 2, "turnuva": 3, "golcü": 4, "serie a": 4, "süper lig": 4},
+    "Kültür": {"müze": 4, "sergi": 3, "festival": 3, "tiyatro": 4, "konser": 3, "sanat": 3, "restorasyon": 3, "unesco": 4, "miras": 2, "türbe": 3, "ören": 3, "arkeoloji": 4, "eser": 2, "kazı": 3},
+    "Tarım": {"çiftçi": 4, "hasat": 4, "üretici": 3, "buğday": 3, "zeytin": 3, "hayvancılık": 4, "tarla": 3, "sulama": 3, "gübre": 3, "kooperatif": 3, "sera": 3, "ova": 2, "rekolte": 4, "mahsul": 4},
+    "Teknoloji": {"yazılım": 4, "yapay zeka": 4, "dijital": 3, "siber": 4, "teknokent": 4, "girişim": 2, "elektrikli araç": 3, "batarya": 3, "veri merkezi": 4},
+    "Yaşam": {"hava durumu": 3, "sıcaklık": 2, "yağış": 2, "meteoroloji": 3, "sokak hayvanı": 3, "park": 2, "hafta sonu": 2, "etkinlik": 2, "piknik": 2, "yeşil alan": 3},
+    "Gündem": {"açıklama": 1, "toplantı": 1, "duyuru": 1, "kent": 1, "vatandaş": 1, "çalışma": 1}
+  },
+
+  "ilce_ipuclari": {
+    "Osmangazi": ["osmangazi", "heykel", "santral garaj", "soğanlı", "demirtaş", "hamitler", "altıparmak", "çekirge"],
+    "Nilüfer": ["nilüfer", "görükle", "ihsaniye", "beşevler", "özlüce", "fethiye", "ataevler"],
+    "Yıldırım": ["yıldırım", "davutkadı", "duaçınarı", "teleferik", "yeşil türbe"],
+    "İnegöl": ["inegöl", "cerrah"],
+    "Gemlik": ["gemlik", "umurbey", "küçükkumla"],
+    "Mudanya": ["mudanya", "güzelyalı", "tirilye", "zeytinbağı"],
+    "Mustafakemalpaşa": ["mustafakemalpaşa"],
+    "Karacabey": ["karacabey", "longoz"],
+    "İznik": ["iznik"],
+    "Orhangazi": ["orhangazi", "gedelek"],
+    "Kestel": ["kestel"],
+    "Gürsu": ["gürsu"],
+    "Yenişehir": ["yenişehir"],
+    "Orhaneli": ["orhaneli"],
+    "Keles": ["keles"],
+    "Büyükorhan": ["büyükorhan"],
+    "Harmancık": ["harmancık"]
+  },
+
+  "bursa_ipuclari": ["bursa", "büyükşehir belediyesi", "buski", "burulaş", "uludağ", "bursaspor", "nilüfer çayı", "gökdere", "bursa valiliği", "bursa ticaret"],
+
+  "hassas_anahtarlar": {
+    "yargı süreci": {
+      "kelimeler": ["tutuklandı", "tutukluluk", "gözaltı", "iddianame", "savcılık", "mahkeme", "duruşma", "sanık", "şüpheli", "soruşturma", "beraat", "adli kontrol", "tahliye", "yargılama"],
+      "uyari": "Devam eden bir yargı süreci var. Masumiyet karinesini koruyun: iddia ediliyor, suçlamaları reddediyor, yargılama sürüyor kalıplarını kullanın; kesin hüküm diliyle yazmayın."
+    },
+    "çocuk": {
+      "kelimeler": ["çocuk", "bebek", "küçük yaştaki", "reşit olmayan", "öğrenci"],
+      "haric": ["çocuk parkı", "çocuk oyun", "çocuk bahçesi", "çocuk kütüphanesi", "çocuk şenliği", "çocuklu aile", "öğrenci yurdu", "öğrenci indirimi"],
+      "baglam": ["tutuklandı", "gözaltı", "şüpheli", "mağdur", "istismar", "taciz", "şiddet", "darp", "yaralandı", "hayatını kaybetti", "kayıp", "soruşturma", "dava", "kaza"],
+      "uyari": "Haberde çocuk geçiyor. Kimlik bilgisi, okul adı, fotoğraf ve adres paylaşmayın; baş harfle anın."
+    },
+    "sağlık verisi": {
+      "kelimeler": ["teşhis", "tanı kondu", "tedavi", "ameliyat", "yoğun bakım", "psikiyatri"],
+      "haric": ["atık su tedavi"],
+      "uyari": "Kişisel sağlık verisi hassastır. Hastanın kimliğini ve tanısını eşleştirecek ayrıntı vermeyin."
+    },
+    "intihar": {
+      "kelimeler": ["intihar", "canına kıydı", "kendini astı", "yaşamına son verdi"],
+      "uyari": "İntihar haberciliği kuralları geçerli: yöntem ve yer ayrıntısı vermeyin, ayrıntılı betimleme yapmayın, destek hattı bilgisi ekleyin."
+    },
+    "cinsel suç": {
+      "kelimeler": ["taciz", "tecavüz", "istismar", "cinsel saldırı"],
+      "uyari": "Mağdurun kimliğini açığa çıkaracak hiçbir ayrıntı vermeyin. Sansasyonel dil kullanmayın."
+    },
+    "ölüm ve kaza": {
+      "kelimeler": ["hayatını kaybetti", "cenaze", "ceset", "feci kaza", "can kaybı"],
+      "uyari": "Can kaybı var. Yakınlarına saygı gösterin; olay yeri fotoğrafında kimlik görünmemeli, sayıları resmî kaynaktan teyit edin."
+    }
+  },
+
+  "teyit_kaliplari": ["iddia edildi", "iddia ediliyor", "öne sürüldü", "belirtildi", "bildirildi", "öğrenildi", "aktarıldı", "yazdı", "duyurdu", "ifade edildi", "kaydedildi", "belirtiliyor", "iddiasına göre", "iddialara göre", "hatırlatıldı", "olduğu ileri sürüldü"],
+
+  "unvanlar": ["başkan", "başkanı", "vekil", "vekili", "başkan vekili", "belediye başkanı", "vali", "kaymakam", "müdür", "genel müdür", "bakan", "milletvekili", "avukat", "doktor", "profesör", "doçent", "teknik direktör", "sportif direktör", "savcı", "hakim", "müfettiş", "rektör", "komutan", "sözcü", "başhekim", "genel başkan"],
+
+  "kurum_ipuclari": ["belediye", "büyükşehir", "buski", "burulaş", "valilik", "kaymakamlık", "emniyet", "jandarma", "savcılık", "mahkeme", "bakanlık", "müdürlüğü", "üniversite", "hastane", "kulüp", "federasyon", "meteoroloji", "odası", "borsası", "chp", "akp", "mhp", "spor", "holding", "derneği", "vakfı", "sendika", "müzesi", "okulu"],
+
+  "durak_kelimeler": ["ve", "ile", "bir", "bu", "şu", "da", "de", "ki", "mi", "mı", "mu", "mü", "için", "gibi", "kadar", "sonra", "önce", "daha", "çok", "en", "ama", "fakat", "ancak", "veya", "ya", "hem", "ne", "her", "bazı", "tüm", "olarak", "olan", "oldu", "olduğu", "olur", "olması", "var", "yok", "göre", "üzere", "diye", "böyle", "şöyle", "yine", "ise", "değil", "kendi", "aynı", "başka", "diğer", "ilk", "son", "yeni", "büyük", "küçük", "iki", "üç", "dört", "beş", "dedi", "söyledi", "yaptı", "etti", "bulunan", "yapılan", "edilen", "verilen", "alınan", "eden", "yapan", "arasında", "içinde", "üzerinde", "birlikte", "nedeniyle", "sebebiyle", "yaklaşık", "ayrıca", "bugün", "dün", "yarın", "geçen", "sırasında", "hakkında", "karşı", "doğru", "kez", "defa", "adet", "yıl", "ay", "gün", "saat", "kişi", "sayıda", "ilgili", "konusunda", "şekilde", "durumu", "yönelik"],
+
+  "ek_listesi": ["larının", "lerinin", "larından", "lerinden", "larına", "lerine", "larını", "lerini", "ların", "lerin", "ları", "leri", "ndan", "nden", "tan", "ten", "dan", "den", "nın", "nin", "nun", "nün", "ın", "in", "un", "ün", "ya", "ye", "da", "de", "ta", "te", "la", "le", "yı", "yi", "yu", "yü", "ı", "i", "u", "ü", "a", "e"],
+
+  "birimler": ["milyon", "milyar", "bin", "tl", "lira", "dolar", "euro", "yüzde", "kişi", "metre", "kilometre", "hektar", "ton", "litre", "derece", "adet", "araç", "daire", "konut", "milyon euro", "milyon dolar"]
+}

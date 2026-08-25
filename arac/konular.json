@@ -1,0 +1,146 @@
+{
+  "_not": "Konu (dosya) arsivi. Maddeler demo sayfalarindaki mevcut metinlerden derlendi; uydurma madde eklenmedi. Bozbey kronolojisi tasarim-3'teki <ol class=\"zaman\"> blogundan birebir tasindi. Diger dosyalarin maddeleri demo sayfalarinin basliklarindan alindi ve gazetenin 18-22 Agustos 2026 demo tarih araligina yerlestirildi.",
+
+  "konular": [
+    {
+      "id": "bozbey-sureci",
+      "ad": "Bozbey süreci",
+      "slug": "bozbey-sureci",
+      "durum": "acik",
+      "kategori": "Yargı",
+      "ilce": "Bursa geneli",
+      "anahtarlar": ["bozbey", "tutukluluk", "görevden uzaklaştırma", "yargılama", "belediye başkanlığı", "istifa"],
+      "kisiler": ["Mustafa Bozbey"],
+      "kurumlar": ["Bursa Büyükşehir Belediyesi", "CHP"],
+      "hassas": {
+        "var_mi": true,
+        "turu": "yargı süreci",
+        "uyari": "Yargılama sürüyor. Masumiyet karinesi korunacak: kesin hüküm dili kullanılmaz, Bozbey'in suçlamaları reddettiği her haberde belirtilir."
+      },
+      "not": "Kronoloji, gazetenin 18-21 Ağustos 2026 tarihli haberlerinden derlendi. Demo sayfasıdır; canlı yayında her madde kaynak habere bağlanacak.",
+      "maddeler": [
+        {
+          "tarih": "2026-04",
+          "baslik": "Tutuklama ve görevden uzaklaştırma",
+          "ozet": "Büyükşehir Belediye Başkanı Mustafa Bozbey tutuklandı, görevinden uzaklaştırıldı. Belediyede işleyiş vekâletle sürdürülüyor.",
+          "haber_slug": ""
+        },
+        {
+          "tarih": "2026-05",
+          "gorunen": "Mayıs — Temmuz 2026",
+          "baslik": "Yargılama süreci devam etti",
+          "ozet": "Dosya kapsamındaki duruşma ve itiraz süreçleri sürdü. Bozbey bu dönem boyunca suçlamaları reddetti.",
+          "haber_slug": ""
+        },
+        {
+          "tarih": "2026-08-20",
+          "baslik": "CHP üyeliğinden istifa",
+          "ozet": "Bozbey, partiden ayrıldığını sosyal medya hesabından duyurdu. Kararın belediye başkanlığı sıfatına etkisi bulunmuyor.",
+          "haber_slug": ""
+        },
+        {
+          "tarih": "2026-08-21",
+          "baslik": "Süreç sürüyor",
+          "ozet": "Tutukluluk hâli ve yargılama devam ediyor. Bozbey suçlamaları reddediyor.",
+          "haber_slug": "bozbey-dosyasinda-surec-nasil-isleyecek"
+        }
+      ]
+    },
+
+    {
+      "id": "su-ve-kuraklik",
+      "ad": "Su ve kuraklık dosyası",
+      "slug": "su-ve-kuraklik",
+      "durum": "acik",
+      "kategori": "Çevre ve su",
+      "ilce": "Bursa geneli",
+      "anahtarlar": ["baraj", "doluluk", "kuraklık", "su kesintisi", "sulama", "içme suyu", "gölet"],
+      "kisiler": [],
+      "kurumlar": ["BUSKİ", "Bursa Büyükşehir Belediyesi"],
+      "hassas": {"var_mi": false, "turu": "", "uyari": ""},
+      "not": "Dosya, gazetenin 18-22 Ağustos 2026 tarihli su ve kuraklık haberlerinden derlendi.",
+      "maddeler": [
+        {
+          "tarih": "2026-08-19",
+          "baslik": "Barajlarda doluluk %81'e geriledi",
+          "ozet": "Son 30 günde 11,5 puanlık düşüş kaydedildi; sulama planlaması gündeme geldi.",
+          "haber_slug": "barajlarda-doluluk-81e-geriledi"
+        },
+        {
+          "tarih": "2026-08-20",
+          "baslik": "İznik Gölü'nde kuraklık tehlikesi büyüyor",
+          "ozet": "Göldeki su çekilmesi yakın takibe alındı.",
+          "haber_slug": "iznik-golunde-kuraklik-tehlikesi-buyuyor"
+        },
+        {
+          "tarih": "2026-08-21",
+          "baslik": "BUSKİ'den tasarruf çağrısı",
+          "ozet": "Kuraklığın yaz boyunca gündemde kalacağı bildirildi.",
+          "haber_slug": "buskiden-tasarruf-cagrisi"
+        },
+        {
+          "tarih": "2026-08-22",
+          "baslik": "BUSKİ duyurdu: Nilüfer'de planlı su kesintisi",
+          "ozet": "Kesinti saatleri ve etkilenecek mahalleler açıklandı.",
+          "haber_slug": "buski-duyurdu-niluferde-planli-su-kesintisi"
+        }
+      ]
+    },
+
+    {
+      "id": "yeni-muze-binasi",
+      "ad": "Yeni müze binası",
+      "slug": "yeni-muze-binasi",
+      "durum": "acik",
+      "kategori": "Kültür",
+      "ilce": "Osmangazi",
+      "anahtarlar": ["müze", "emanetler", "restorasyon", "proje", "onay süreci", "eser"],
+      "kisiler": [],
+      "kurumlar": ["Bursa Büyükşehir Belediyesi"],
+      "hassas": {"var_mi": false, "turu": "", "uyari": ""},
+      "not": "Dosya, gazetenin 18-22 Ağustos 2026 tarihli kültür haberlerinden derlendi.",
+      "maddeler": [
+        {
+          "tarih": "2026-08-20",
+          "baslik": "5 asırlık emanetler için müze projesi onay sürecinde",
+          "ozet": "Proje onay aşamasına geldi.",
+          "haber_slug": "5-asirlik-emanetler-icin-muze-projesi-onay-surecinde"
+        },
+        {
+          "tarih": "2026-08-22",
+          "baslik": "5 asırlık emanetler gün yüzüne çıkıyor: Yeni müze için ilk adım",
+          "ozet": "Yeni müze binası için ilk adım atıldı.",
+          "haber_slug": "5-asirlik-emanetler-gun-yuzune-cikiyor"
+        }
+      ]
+    },
+
+    {
+      "id": "sonmez-hastanesi",
+      "ad": "Ali Osman Sönmez Devlet Hastanesi",
+      "slug": "sonmez-hastanesi",
+      "durum": "acik",
+      "kategori": "Sağlık",
+      "ilce": "Osmangazi",
+      "anahtarlar": ["hastane", "açılış takvimi", "poliklinik", "yatak kapasitesi"],
+      "kisiler": [],
+      "kurumlar": ["Sağlık Bakanlığı", "Ali Osman Sönmez Devlet Hastanesi"],
+      "hassas": {"var_mi": false, "turu": "", "uyari": ""},
+      "not": "Dosya, gazetenin 18-22 Ağustos 2026 tarihli sağlık haberlerinden derlendi.",
+      "maddeler": [
+        {
+          "tarih": "2026-08-21",
+          "baslik": "Ali Osman Sönmez Devlet Hastanesi ne zaman açılacak?",
+          "ozet": "Açılış takvimine ilişkin soru gündemde.",
+          "haber_slug": "sonmez-hastanesi-ne-zaman-acilacak"
+        },
+        {
+          "tarih": "2026-08-22",
+          "baslik": "Ali Osman Sönmez Devlet Hastanesi için açılış takvimi netleşti",
+          "ozet": "Açılış takvimi açıklandı.",
+          "haber_slug": "sonmez-hastanesi-acilis-takvimi-netlesti"
+        }
+      ]
+    }
+  ]
+}

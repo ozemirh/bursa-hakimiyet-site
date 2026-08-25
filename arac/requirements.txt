@@ -1,1 +1,4 @@
+# Kural motoru (varsayilan saglayici) hicbir pakete bagimli degildir —
+# ayiklayici.py, kural_motoru.py ve konu_eslestirme.py yalnizca standart
+# kutuphane kullanir. Asagidaki paket YALNIZCA `--saglayici claude` icin gerekir.
 anthropic>=1.0.0

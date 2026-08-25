@@ -29,3 +29,10 @@ Tümü Wikimedia Commons'tan, telifsiz veya Creative Commons lisanslı. `genis/`
 | `uludag.jpg` | [Uludag.JPG](https://commons.wikimedia.org/wiki/File:Uludag.JPG) | Julian Nyča | CC BY-SA 4.0 |
 | `yesil.jpg` | [Yeşil Cami - Minaret.jpg](https://commons.wikimedia.org/wiki/File:Ye%C5%9Fil_Cami_-_Minaret.jpg) | Bernard Gagnon | CC BY-SA 3.0 |
 | `yol.jpg` | [16370 Süleymaniye-Osmangazi-Bursa, Turkey - panoramio (4).jpg](https://commons.wikimedia.org/wiki/File:16370_S%C3%BCleymaniye-Osmangazi-Bursa,_Turkey_-_panoramio_(4).jpg) | MERMERCİ ÖZGÜR1 | CC BY 3.0 |
+
+## Yayından inen kaynak görselleri
+
+- `gorseller/kaynak/derecavus-ovaakca-atiksu-hatti-nilufer-cayi.jpg` — Kent Bursa Gazetesi, https://www.kentbursa.com/wp-content/uploads/2026/07/BIBA.jpeg (demo için indirildi, 23.08.2026)
+- `gorseller/kaynak/fiorentina-icardi-transfer-listesi.jpg` — Sözcü, https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/2/icardiaa3684275jpeg-hKhKV0_k106qyXresW7bIQ.jpeg?w=1200&h=900&mode=crop&scale=both (demo için indirildi, 23.08.2026)
+- `gorseller/kaynak/kalibaf-baski-politikasi-abd-ekonomisine-de-donecek.jpg` — Sözcü, https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/8/kalibafjpg-FHj_SY_gj0qrJY8tbxeq2g.jpg?w=1200&h=900&mode=crop&scale=both (demo için indirildi, 23.08.2026)
+- `gorseller/kaynak/otomotiv-muhendisinin-sanayi-yuzu-gormez-dedigi-5-ikinci-el-otomobil.webp` — Sözcü, https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/8/ikinci-elpng-TGrFM08MwUWE-oRs3OASlA.png?w=1200&h=900&mode=crop&scale=both (demo için indirildi, 24.08.2026)

@@ -79,7 +79,8 @@ main{padding:28px 0 48px}
 .manset h1{font-family:var(--serif);font-size:40px;line-height:1.1;font-weight:700;letter-spacing:-.8px}
 .manset .spot{font-size:17.5px;color:var(--gri);margin-top:12px;max-width:64ch;line-height:1.55}
 .meta{display:flex;gap:14px;align-items:center;font-size:13px;color:var(--gri-acik);margin-top:14px;flex-wrap:wrap}
-.dinle{border:1px solid var(--cizgi);background:#fff;border-radius:999px;padding:6px 13px;font-size:13px;font-family:inherit;color:var(--murekkep);cursor:pointer}
+.dinle{display:inline-block;border:1px solid var(--cizgi);background:#fff;border-radius:999px;padding:6px 13px;font-size:13px;font-family:inherit;color:var(--murekkep);cursor:pointer}
+.dinle:hover{border-color:var(--deniz);color:var(--deniz)}
 
 .ozet{background:var(--deniz-hafif);border-left:3px solid var(--deniz);border-radius:0 8px 8px 0;padding:16px 18px;margin-top:20px}
 .ozet h4{font-size:11.5px;letter-spacing:1.3px;font-weight:700;color:var(--deniz);margin-bottom:10px}
@@ -637,7 +638,7 @@ footer a:hover{color:var(--murekkep)}
           <h1><a href="tasarim-2-haber-detay.html">Tutuklu Büyükşehir Başkanı Bozbey, CHP üyeliğinden istifa etti</a></h1>
           <p class="spot">Nisan ayından bu yana tutuklu bulunan ve görevinden uzaklaştırılan Mustafa Bozbey, kararını sosyal medya hesabından duyurdu. Hakkındaki yargılama sürüyor; Bozbey suçlamaları reddediyor.</p>
           <div class="meta">
-            <button class="dinle" type="button" data-dinle>▶ Sesli dinle · 3 dk</button>
+            <a class="dinle" href="tasarim-2-haber-detay.html#seslendirme">▶ Sesli dinle · 3 dk</a>
             <span>Haber Merkezi</span><span>·</span><span>18 Ağustos, 15:51</span>
           </div>
           <div class="ozet">
@@ -702,6 +703,26 @@ footer a:hover{color:var(--murekkep)}
         <section class="bolum">
           <div class="bolum-bas"><h2>Bursa gündemi</h2><span class="cizgi"></span><a href="#">Tümü →</a></div>
           <div class="uclu">
+            <article class="mini suzulen" data-ilce="bursa-disi">
+              <div class="foto t-kirmizi"><img src="gorseller/kaynak/otomotiv-muhendisinin-sanayi-yuzu-gormez-dedigi-5-ikinci-el-otomobil.webp" width="640" height="400" loading="lazy" decoding="async" alt="İkinci el satış alanında yan yana sıralanmış otomobiller"></div>
+              <h3><a href="haber-otomotiv-muhendisinin-sanayi-yuzu-gormez-dedigi-5-ikinci-el-otomobil-t2.html">Otomotiv mühendisinden ikinci elde 5 model tavsiyesi</a></h3><span class="zaman">Az önce · Ekonomi</span>
+            </article>
+            <article class="mini suzulen" data-ilce="bursa-disi">
+              <div class="foto t-kirmizi"><img src="gorseller/kaynak/kalibaf-baski-politikasi-abd-ekonomisine-de-donecek.jpg" width="640" height="400" loading="lazy" decoding="async" alt="Kürsüde konuşan İran Meclis Başkanı Muhammed Bakır Kalibaf"></div>
+              <h3><a href="haber-kalibaf-baski-politikasi-abd-ekonomisine-de-donecek-t2.html">Kalibaf: Baskı politikası ABD ekonomisine de dönecek</a></h3><span class="zaman">Az önce · Gündem</span>
+            </article>
+            <article class="mini suzulen" data-ilce="bursa-disi">
+              <div class="foto t-kirmizi"><img src="gorseller/kart/sanayi.jpg" width="640" height="400" loading="lazy" decoding="async" alt="Borsa İstanbul işlem salonunda gösterge ekranları"></div>
+              <h3><a href="haber-bist-100-21-agustos-2026-kapanis-t2.html">Piyasa özeti: dolar 48,06, euro 56,15 liradan işlem gördü</a></h3><span class="zaman">Az önce · Ekonomi</span>
+            </article>
+            <article class="mini suzulen" data-ilce="osmangazi">
+              <div class="foto t-kirmizi"><img src="gorseller/kaynak/derecavus-ovaakca-atiksu-hatti-nilufer-cayi.jpg" width="640" height="400" loading="lazy" decoding="async" alt="Büyükşehir Belediye Başkan Vekili Şahin Biba, atıksu kollektör hattı şantiyesinde incelemede bulunuyor"></div>
+              <h3><a href="haber-derecavus-ovaakca-atiksu-hatti-nilufer-cayi-t2.html">Dereçavuş–Ovaakça atıksu hattı Nilüfer Çayı'nı temizleyecek</a></h3><span class="zaman">Az önce · Çevre ve su</span>
+            </article>
+            <article class="mini suzulen" data-ilce="bursa-disi">
+              <div class="foto t-kirmizi"><img src="gorseller/kaynak/fiorentina-icardi-transfer-listesi.jpg" width="640" height="400" loading="lazy" decoding="async" alt="Mauro Icardi maç sırasında forma giyerken"></div>
+              <h3><a href="haber-fiorentina-icardi-transfer-listesi-t2.html">Fiorentina, Icardi'yi transfer listesine aldı</a></h3><span class="zaman">Az önce · Spor</span>
+            </article>
             <article class="mini suzulen" data-ilce="bursa mudanya">
               <div class="foto t-kirmizi"><img src="gorseller/kart/orman.jpg" width="640" height="400" loading="lazy" decoding="async" alt="Mudanya kırsalında orman örtüsü"></div>
               <h3><a href="tasarim-2-haber-detay.html">Mudanya'daki yangına havadan ve karadan müdahale edildi</a></h3><span class="zaman">2 saat önce · Mudanya</span>
@@ -1093,20 +1114,6 @@ footer a:hover{color:var(--murekkep)}
   });
   if(araAlan){ araAlan.addEventListener("input", kartlariSuz); }
   kartlariSuz();
-
-  /* ---- sesli dinle: sahte ses yok, yalnızca durum bildirimi ---- */
-  document.querySelectorAll("[data-dinle]").forEach(function(dugme){
-    dugme.addEventListener("click", function(){
-      if(dugme.dataset.durum === "hazirlaniyor"){ return; }
-      dugme.dataset.durum = "hazirlaniyor";
-      dugme.setAttribute("aria-live","polite");
-      dugme.textContent = "Ses dosyası hazırlanıyor…";
-      window.setTimeout(function(){
-        dugme.textContent = "Seslendirme yakında · demo";
-        dugme.disabled = true;
-      }, 1400);
-    });
-  });
 
   /* ---- bülten formu: demo, veri gönderilmiyor ---- */
   var bultenForm = document.getElementById("bulten-form");

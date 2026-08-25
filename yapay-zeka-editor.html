@@ -17,6 +17,8 @@
   --uyari-zemin:#FFF8E6;--uyari-cizgi:#E8C766;--uyari-yazi:#6B4E00;
   --tehlike-zemin:#FDECEC;--tehlike-cizgi:#F0A9A9;--tehlike-yazi:#8C1D1D;
   --bilgi-zemin:#EAF4F4;--bilgi-cizgi:#A8CFCF;
+  --tezgah-zemin:#FBF7EF;--tezgah-cizgi:#E4D9C4;--tezgah-yazi:#6B5A38;
+  --guclu-zemin:#ECF6F0;--guclu-cizgi:#9BC9AE;
   --serif:"Source Serif 4",Georgia,serif;
   --sans:"Inter",-apple-system,Segoe UI,Roboto,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,monospace;
@@ -56,6 +58,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .ornekler{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;align-items:center}
 .ornekler .baslik{font-size:12.5px;color:var(--gri-acik);font-weight:600;letter-spacing:.4px;text-transform:uppercase}
 .cip{border:1px solid var(--cizgi);background:var(--zemin);border-radius:999px;padding:6px 13px;font:inherit;font-size:13px;cursor:pointer;color:var(--gri)}
+.yontemler{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;align-items:center}
+.yontemler .baslik{font-size:12.5px;color:var(--gri-acik);font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+.yontem{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--cizgi);background:var(--zemin);border-radius:999px;padding:6px 13px;font-size:13px;color:var(--gri);cursor:pointer}
+.yontem:has(input:checked){border-color:var(--deniz);color:var(--deniz);background:var(--bilgi-zemin)}
+.yontem input{accent-color:var(--deniz)}
+.yontem-not{margin-top:9px;font-size:12.5px;color:var(--gri-acik);line-height:1.5}
 .cip:hover{border-color:var(--deniz);color:var(--deniz)}
 .birak{margin-top:13px;border:1px dashed var(--cizgi);border-radius:10px;padding:13px;text-align:center;font-size:13.5px;color:var(--gri-acik)}
 .birak.uzerinde{border-color:var(--deniz);background:var(--bilgi-zemin);color:var(--deniz)}
@@ -111,13 +119,20 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 
 .secenek{display:block;border:1px solid var(--cizgi);border-radius:10px;padding:12px 14px;margin-bottom:9px;cursor:pointer;background:var(--yuzey)}
 .secenek:hover{border-color:var(--deniz)}
-.secenek input{position:absolute;opacity:0;pointer-events:none}
+.secenek input[type=radio]{position:absolute;opacity:0;pointer-events:none}
 .secenek .bas{font-family:var(--serif);font-size:18px;font-weight:600;line-height:1.25;display:flex;gap:9px;align-items:baseline}
 .secenek .bas::before{content:"";flex:0 0 13px;height:13px;border-radius:50%;border:2px solid var(--cizgi);margin-top:4px}
 .secenek.secili{border-color:var(--lacivert);background:#F7F9FC}
 .secenek.secili .bas::before{border-color:var(--lacivert);background:var(--lacivert);box-shadow:inset 0 0 0 2.5px #fff}
 .secenek .gerekce{font-size:12.5px;color:var(--gri);margin-top:6px;padding-left:22px}
 .secenek .uzunluk{font-family:var(--mono);font-size:10.5px;color:var(--gri-acik);margin-top:4px;padding-left:22px}
+.secenek .uzunluk.asti{color:var(--tehlike-yazi)}
+.bas-yazi{flex:1 1 auto;min-width:0;border:0;border-bottom:1px dashed var(--cizgi);background:transparent;
+  font-family:var(--serif);font-size:18px;font-weight:600;line-height:1.25;color:var(--murekkep);padding:0 0 3px}
+.bas-yazi::placeholder{color:var(--gri-acik);font-weight:400}
+.bas-yazi:focus{border-bottom-color:var(--deniz);outline-offset:3px}
+.madde-yazi{flex:1 1 auto;min-width:0;border:0;background:transparent;font:inherit;font-size:14px;color:var(--murekkep);padding:0}
+.madde-yazi::placeholder{color:var(--gri-acik)}
 
 .madde-liste{list-style:none;display:grid;gap:8px}
 .madde-liste li{display:flex;gap:9px;align-items:flex-start;background:var(--bilgi-zemin);border:1px solid var(--bilgi-cizgi);border-radius:8px;padding:9px 11px;font-size:14px}
@@ -172,10 +187,67 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .bos{padding:60px 22px;text-align:center;color:var(--gri-acik)}
 .bos h2{font-family:var(--serif);font-size:21px;color:var(--gri);margin-bottom:8px}
 
+/* ---- metni yapıştır ---- */
+.yapistir-kutu{margin-top:13px;border:1px solid var(--cizgi);border-radius:10px;background:var(--zemin)}
+.yapistir-kutu > summary{cursor:pointer;padding:11px 14px;font-size:13.5px;font-weight:600;color:var(--gri);list-style:none}
+.yapistir-kutu > summary::-webkit-details-marker{display:none}
+.yapistir-kutu > summary::before{content:"＋ ";font-family:var(--mono);color:var(--gri-acik)}
+.yapistir-kutu[open] > summary::before{content:"− "}
+.yapistir-kutu[open] > summary{border-bottom:1px solid var(--cizgi)}
+.yapistir-ic{padding:14px}
+.yapistir-ic label{display:block;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--gri-acik);font-weight:600;margin:0 0 6px}
+.yapistir-ic input,.yapistir-ic textarea{width:100%;border:1px solid var(--cizgi);border-radius:9px;padding:10px 12px;font:inherit;font-size:14.5px;background:var(--yuzey);color:var(--murekkep);margin-bottom:12px}
+.yapistir-ic textarea{resize:vertical;line-height:1.55}
+.yapistir-ic .ikili{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.yapistir-ic .not{font-size:12.5px;color:var(--gri-acik);margin-top:8px;line-height:1.5}
+
+/* ---- yazım tezgahı ---- */
+.govde-duzen{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,280px);gap:14px;align-items:start}
+.tezgah{background:var(--tezgah-zemin);border:1px solid var(--tezgah-cizgi);border-radius:10px;padding:12px;position:sticky;top:78px}
+.tezgah > h3{font-family:var(--mono);font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--tezgah-yazi);font-weight:500;margin-bottom:4px}
+.tezgah > .aciklama{font-size:12.5px;color:var(--tezgah-yazi);line-height:1.45;margin-bottom:10px}
+.tezgah-liste{display:grid;gap:8px;max-height:520px;overflow:auto}
+.malzeme{background:var(--yuzey);border:1px solid var(--tezgah-cizgi);border-radius:8px;padding:9px 10px;text-align:left;font:inherit;width:100%;cursor:pointer;color:var(--murekkep)}
+.malzeme:hover{border-color:var(--deniz)}
+.malzeme .damga{display:flex;gap:7px;align-items:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--tezgah-yazi);margin-bottom:5px}
+.malzeme .damga .tur{border:1px solid var(--tezgah-cizgi);border-radius:4px;padding:1px 6px;background:var(--tezgah-zemin)}
+.malzeme .damga .puan{margin-left:auto;color:var(--gri-acik)}
+.malzeme .metin{font-size:13px;line-height:1.5;color:var(--gri)}
+.tezgah .kapanis{font-size:12px;color:var(--tezgah-yazi);margin-top:10px;line-height:1.45}
+
+/* ---- konu bağlantısı ---- */
+.konu-panel{border:1px solid var(--cizgi);border-radius:12px;padding:14px;margin-bottom:19px;background:var(--yuzey)}
+.konu-panel > h3{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--gri-acik);font-weight:600;margin-bottom:4px}
+.konu-panel > .aciklama{font-size:12.5px;color:var(--gri);line-height:1.45;margin-bottom:11px}
+.aday{border:1px solid var(--cizgi);border-radius:10px;padding:11px 13px;margin-bottom:9px}
+.aday.guclu{border-color:var(--guclu-cizgi);background:var(--guclu-zemin)}
+.aday-bas{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
+.aday-bas .ad{font-family:var(--serif);font-size:16px;font-weight:600;line-height:1.3}
+.aday-bas .tur{font-family:var(--mono);font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--gri-acik);border:1px solid var(--cizgi);border-radius:4px;padding:1px 6px}
+.skor{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--gri);border:1px solid var(--cizgi);border-radius:999px;padding:2px 9px;background:var(--yuzey)}
+.skor.guclu{border-color:var(--artis);color:var(--artis)}
+.gerekce{list-style:none;display:grid;gap:3px;margin:8px 0 0;font-size:12.5px;color:var(--gri)}
+.gerekce li::before{content:"· ";color:var(--gri-acik)}
+.aday .son-maddeler{font-size:12.5px;color:var(--gri-acik);margin-top:7px;line-height:1.45;border-top:1px dashed var(--cizgi);padding-top:7px}
+.aday .eylem{gap:8px;padding-top:10px}
+.aday .btn{padding:7px 13px;font-size:13.5px}
+.bagli-kutu{background:var(--guclu-zemin);border:1px solid var(--guclu-cizgi);border-radius:10px;padding:12px 14px}
+.bagli-kutu h4{font-size:13.5px;font-weight:600;margin-bottom:8px}
+.kronoloji{list-style:none;display:grid;gap:9px;margin:10px 0 0;border-left:2px solid var(--cizgi);padding-left:13px}
+.kronoloji li{font-size:13px;line-height:1.45}
+.kronoloji li.yeni{border-left:2px solid var(--kirmizi);margin-left:-15px;padding-left:13px}
+.kronoloji time{font-family:var(--mono);font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--gri-acik);display:block}
+.kronoloji .bas{font-weight:600}
+.kronoloji li.yeni .bas::after{content:" · yeni";color:var(--kirmizi);font-weight:500;font-size:11.5px}
+.kod-kutu{background:var(--zemin);border:1px solid var(--cizgi);border-radius:9px;padding:11px;font-family:var(--mono);font-size:11.5px;line-height:1.5;white-space:pre;overflow:auto;max-height:210px;margin-top:10px;color:var(--gri)}
+
 @media(max-width:1080px){
   .calisma{grid-template-columns:minmax(0,1fr)}
   .sol{position:static}
   .ucluk{grid-template-columns:minmax(0,1fr)}
+  .govde-duzen{grid-template-columns:minmax(0,1fr)}
+  .tezgah{position:static}
+  .yapistir-ic .ikili{grid-template-columns:minmax(0,1fr)}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -196,11 +268,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 
 <main class="kapsa">
   <div class="giris">
-    <h1>Bir haber adresi verin, yayına hazır taslak çıksın</h1>
-    <p class="aciklama">Araç kaynağı indirir, yapılandırılmış olgu çıkarımı yapar ve haberi <b>kaynak göstererek yeniden yazar</b>. Başlık seçenekleri, spot, kategori, ilçe, etiketler, SEO alanları ve görsel bilgisi doldurulmuş olarak gelir. Doğrulanması gereken noktalar ayrıca işaretlenir.</p>
+    <h1>Kaynağı verin, yayın alanları dolu gelsin</h1>
+    <p class="aciklama">Araç kaynağı ayıklar; kategori, ilçe, etiketler, SEO alanları, önem, uyarılar ve doğrulanacaklar listesini <b>kural motoruyla</b> doldurur. Aynı haberle ilgili <b>açık dosyaları bulup önerir</b>. Model kullanmaz: ücretsiz, internetsiz ve her seferinde aynı sonucu verir.</p>
 
     <div class="uyari-kutu">
-      <b>Kopyalamaz, yeniden yazar.</b> Kaynağın cümleleri alınmaz; olgular çıkarılıp habere kendi dilimizle dönüştürülür ve atıf zorunlu tutulur. Kaynağın fotoğrafı yalnızca <b>referans</b> olarak gösterilir, hak durumu doğrulanmadan yayına giremez. Çıkan şey bir <b>taslaktır</b> — editör onayı olmadan yayımlanmaz.
+      <b>Gövdeyi araç yazmaz, siz yazarsınız.</b> Kural motoru dil üretmez; kaynağın cümleleri taslağa girmez, yalnızca “ham malzeme” olarak yan panelde durur — okur, kendi cümlenizle yazarsınız. Kaynak, yayınlanan sayfada <b>ayrı bir bölmede</b> gösterilir; gövdeye atıf cümlesi koymak zorunda değilsiniz. Kaynak sayfa kendi kaynağını belirtmişse (AA, DHA…) o da anılır. Konu bağlantısı da <b>onayınız olmadan kurulmaz</b>. Çıkan şey bir <b>taslaktır</b>.
     </div>
 
     <div class="adres-kutu">
@@ -211,6 +283,14 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
         <input type="file" id="json-dosya" accept="application/json,.json" hidden>
       </form>
 
+      <div class="yontemler" role="radiogroup" aria-label="Taslak üretme yöntemi">
+        <span class="baslik">Yöntem</span>
+        <label class="yontem"><input type="radio" name="yontem" value="kural" checked> A · Kural motoru</label>
+        <label class="yontem"><input type="radio" name="yontem" value="skill"> B · Skill zinciri</label>
+        <label class="yontem"><input type="radio" name="yontem" value="yz"> C · Yapay zekâ · çıplak</label>
+      </div>
+      <p class="yontem-not" id="yontem-not"><b>A</b> model kullanmaz: alanları sözlükle doldurur, gövdeyi <b>yazmaz</b> — kaynaktan cümle taşımak yapısal olarak imkânsızdır, haberi siz yazarsınız (anlık). <b>C</b> makinedeki <code>claude</code> komutuyla tam taslak yazar; anahtar istemez ama kaynakla birebir örtüşme riski vardır (~1 dk). <b>B</b> aynı üretimi yapar, sonra <code>denetim.py</code> ile kendi çıktısını denetler ve bulgu varsa düzelttirip yeniden denetler (~2-3 dk). Üçü de aynı adresi kabul eder.</p>
+
       <div class="ornekler">
         <span class="baslik">Hazır örnek</span>
         <button class="cip" type="button" data-ornek="nilufer-cayi-icin-buyuk-adim">Nilüfer Çayı · Kent Bursa</button>
@@ -219,13 +299,35 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
         <button class="cip" type="button" data-ornek="icardi-7-yil-sonra-geri-donuyor">Icardi transferi · Sözcü</button>
       </div>
 
+      <details class="yapistir-kutu" id="yapistir-kutu">
+        <summary>Metni yapıştır — adres çekilemiyorsa taslağı burada kurun</summary>
+        <div class="yapistir-ic">
+          <label for="y-baslik">Kaynağın başlığı</label>
+          <input type="text" id="y-baslik" placeholder="Boş bırakırsanız gövdenin ilk satırı başlık sayılır">
+          <div class="ikili">
+            <div>
+              <label for="y-yayin">Kaynak yayın</label>
+              <input type="text" id="y-yayin" placeholder="Örn. Kent Bursa">
+            </div>
+            <div>
+              <label for="y-adres">Kaynak adresi (varsa)</label>
+              <input type="url" id="y-adres" placeholder="https://...">
+            </div>
+          </div>
+          <label for="y-govde">Gövde metni</label>
+          <textarea id="y-govde" rows="8" placeholder="Kaynağın metnini buraya yapıştırın."></textarea>
+          <button class="btn dolu" type="button" id="y-uret">Taslağı kur</button>
+          <p class="not">Bu adım tarayıcıda, kural motoruyla çalışır: model yok, ağ isteği yok, API anahtarı gerekmez. Alanlar doldurulur, <b>gövde kasıtlı olarak boş bırakılır</b> — kaynağın cümleleri yalnızca ham malzeme olarak tezgaha konur.</p>
+        </div>
+      </details>
+
       <div class="birak" id="birak-alani">Araçtan çıkan <code>.json</code> dosyasını buraya sürükleyip bırakabilirsiniz</div>
 
       <div class="akis" id="akis" hidden aria-live="polite">
         <span class="adim" data-adim="1">1 · Kaynak indiriliyor</span>
         <span class="adim" data-adim="2">2 · İçerik ayıklanıyor</span>
-        <span class="adim" data-adim="3">3 · Taslak yazılıyor</span>
-        <span class="adim" data-adim="4">4 · Alanlar dolduruluyor</span>
+        <span class="adim" data-adim="3">3 · Alanlar dolduruluyor</span>
+        <span class="adim" data-adim="4">4 · İlgili konular aranıyor</span>
       </div>
     </div>
   </div>
@@ -277,6 +379,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
       <div class="panel-ic" id="taslak-alanlari">
         <div id="bayraklar"></div>
 
+        <section class="konu-panel" id="konu-panel" aria-live="polite" hidden>
+          <h3>Konu bağlantısı</h3>
+          <p class="aciklama" id="konu-aciklama"></p>
+          <div id="konu-icerik"></div>
+        </section>
+
         <div class="alan">
           <span class="etiket-bas">Başlık seçenekleri</span>
           <div id="baslik-secenekleri"></div>
@@ -308,7 +416,15 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 
         <div class="alan">
           <span class="etiket-bas">Gövde</span>
-          <div id="t-govde"></div>
+          <div class="govde-duzen">
+            <div id="t-govde"></div>
+            <aside class="tezgah" id="tezgah" hidden>
+              <h3>Ham malzeme</h3>
+              <p class="aciklama">Kaynağın cümleleri. <b>Kopyalanmaz</b> — okuyup kendi cümlenizle yazın. Bir malzemeye tıklamak sizi yazacağınız bloğa götürür.</p>
+              <div class="tezgah-liste" id="tezgah-liste"></div>
+              <p class="kapanis">Atıf cümlesi ilk paragrafta hazır duruyor. Rakam ve isimleri “doğrulanacaklar” listesinden geçirmeden yayına göndermeyin.</p>
+            </aside>
+          </div>
         </div>
 
         <hr class="ayrac">
@@ -357,6 +473,1993 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
     </section>
   </div>
 </main>
+
+<script>
+/* === ÜRETİLMİŞ BLOK — arac/gomulu_uret.py üretir, elle düzenlemeyin === */
+/* Kaynak: arac/sozluk.json · arac/konular.json · arac/arsiv.json · arac/motor.js */
+window.BHVeri = {
+ "sozluk": {
+  "_not": "Kural motorunun tek kaynak sozlugu. Python (kural_motoru.py, konu_eslestirme.py) ve tarayici (gomulu_uret.py ile yapay-zeka-editor.html icine gomulur) ayni tablolari kullanir.",
+  "ajanslar": [
+   "AA",
+   "Anadolu Ajansı",
+   "DHA",
+   "Demirören Haber Ajansı",
+   "İHA",
+   "İhlas Haber Ajansı",
+   "ANKA",
+   "Reuters",
+   "AFP",
+   "AP",
+   "Bloomberg",
+   "Bloomberg HT",
+   "TRT Haber",
+   "BBC"
+  ],
+  "kategori_anahtarlari": {
+   "Çevre ve su": {
+    "baraj": 3,
+    "arıtma": 3,
+    "atık": 3,
+    "su kesintisi": 4,
+    "buski": 4,
+    "çevre": 2,
+    "kirlilik": 3,
+    "dere": 2,
+    "gölet": 3,
+    "orman": 2,
+    "iklim": 2,
+    "geri dönüşüm": 3,
+    "kuraklık": 3,
+    "doluluk": 2,
+    "arıtma tesisi": 4,
+    "deşarj": 3,
+    "sulak": 2,
+    "içme suyu": 4,
+    "atık su": 4
+   },
+   "Ulaşım": {
+    "metro": 4,
+    "burulaş": 4,
+    "otobüs": 3,
+    "tramvay": 4,
+    "trafik": 3,
+    "kavşak": 3,
+    "otoyol": 3,
+    "havalimanı": 3,
+    "sefer": 2,
+    "durak": 2,
+    "raylı": 4,
+    "ulaşım": 3,
+    "otopark": 2,
+    "köprü": 2,
+    "viyadük": 3
+   },
+   "Ekonomi": {
+    "yatırım": 3,
+    "ihracat": 3,
+    "enflasyon": 4,
+    "faiz": 3,
+    "dolar": 3,
+    "euro": 3,
+    "borsa": 3,
+    "asgari ücret": 4,
+    "zam": 3,
+    "istihdam": 3,
+    "işsizlik": 3,
+    "şirket": 2,
+    "fabrika": 2,
+    "üretim": 2,
+    "iflas": 3,
+    "esnaf": 2,
+    "ticaret": 2,
+    "milyon dolar": 3,
+    "milyar": 2,
+    "sanayi": 2,
+    "tekstil": 2,
+    "kredi": 2,
+    "altın": 2,
+    "piyasa": 3,
+    "alacaklı": 3,
+    "konkordato": 4
+   },
+   "Asayiş": {
+    "gözaltı": 3,
+    "operasyon": 3,
+    "polis": 3,
+    "jandarma": 3,
+    "hırsızlık": 4,
+    "kaçakçılık": 4,
+    "silah": 3,
+    "uyuşturucu": 4,
+    "kaza": 3,
+    "yaralı": 3,
+    "cinayet": 4,
+    "dolandırıcılık": 4,
+    "emniyet": 3,
+    "zabıta": 2,
+    "asayiş": 4,
+    "yangın": 2
+   },
+   "Yargı": {
+    "mahkeme": 4,
+    "duruşma": 4,
+    "iddianame": 4,
+    "savcılık": 4,
+    "tutuklandı": 4,
+    "tutukluluk": 4,
+    "dava": 3,
+    "sanık": 3,
+    "şüpheli": 3,
+    "beraat": 4,
+    "hüküm": 3,
+    "istinaf": 4,
+    "yargıtay": 4,
+    "soruşturma": 3,
+    "adliye": 3,
+    "hakim": 3,
+    "tahliye": 3,
+    "görevden uzaklaştırma": 4,
+    "adli kontrol": 4
+   },
+   "Siyaset": {
+    "belediye başkanı": 3,
+    "meclis": 3,
+    "parti": 3,
+    "chp": 3,
+    "akp": 3,
+    "ak parti": 3,
+    "mhp": 3,
+    "iyi parti": 3,
+    "seçim": 4,
+    "milletvekili": 4,
+    "bakan": 3,
+    "vali": 3,
+    "istifa": 3,
+    "kongre": 2,
+    "muhalefet": 3,
+    "iktidar": 3,
+    "genel başkan": 3,
+    "üyeliğinden": 3
+   },
+   "Sağlık": {
+    "hastane": 3,
+    "hasta": 2,
+    "doktor": 3,
+    "tedavi": 3,
+    "ameliyat": 3,
+    "aşı": 3,
+    "salgın": 4,
+    "poliklinik": 4,
+    "sağlık müdürlüğü": 4,
+    "acil servis": 4,
+    "ilaç": 2,
+    "randevu": 2,
+    "başhekim": 3
+   },
+   "Eğitim": {
+    "okul": 3,
+    "öğrenci": 3,
+    "öğretmen": 3,
+    "üniversite": 3,
+    "sınav": 3,
+    "yks": 4,
+    "lgs": 4,
+    "milli eğitim": 4,
+    "burs": 3,
+    "yurt": 2,
+    "kampüs": 3,
+    "akademik": 2,
+    "eğitim öğretim": 4
+   },
+   "Spor": {
+    "maç": 3,
+    "gol": 3,
+    "transfer": 4,
+    "lig": 3,
+    "futbol": 3,
+    "bursaspor": 4,
+    "teknik direktör": 4,
+    "kadro": 2,
+    "şampiyonluk": 3,
+    "kupa": 2,
+    "basketbol": 3,
+    "voleybol": 3,
+    "stat": 3,
+    "taraftar": 3,
+    "sezon": 2,
+    "forma": 2,
+    "sporcu": 2,
+    "turnuva": 3,
+    "golcü": 4,
+    "serie a": 4,
+    "süper lig": 4
+   },
+   "Kültür": {
+    "müze": 4,
+    "sergi": 3,
+    "festival": 3,
+    "tiyatro": 4,
+    "konser": 3,
+    "sanat": 3,
+    "restorasyon": 3,
+    "unesco": 4,
+    "miras": 2,
+    "türbe": 3,
+    "ören": 3,
+    "arkeoloji": 4,
+    "eser": 2,
+    "kazı": 3
+   },
+   "Tarım": {
+    "çiftçi": 4,
+    "hasat": 4,
+    "üretici": 3,
+    "buğday": 3,
+    "zeytin": 3,
+    "hayvancılık": 4,
+    "tarla": 3,
+    "sulama": 3,
+    "gübre": 3,
+    "kooperatif": 3,
+    "sera": 3,
+    "ova": 2,
+    "rekolte": 4,
+    "mahsul": 4
+   },
+   "Teknoloji": {
+    "yazılım": 4,
+    "yapay zeka": 4,
+    "dijital": 3,
+    "siber": 4,
+    "teknokent": 4,
+    "girişim": 2,
+    "elektrikli araç": 3,
+    "batarya": 3,
+    "veri merkezi": 4
+   },
+   "Yaşam": {
+    "hava durumu": 3,
+    "sıcaklık": 2,
+    "yağış": 2,
+    "meteoroloji": 3,
+    "sokak hayvanı": 3,
+    "park": 2,
+    "hafta sonu": 2,
+    "etkinlik": 2,
+    "piknik": 2,
+    "yeşil alan": 3
+   },
+   "Gündem": {
+    "açıklama": 1,
+    "toplantı": 1,
+    "duyuru": 1,
+    "kent": 1,
+    "vatandaş": 1,
+    "çalışma": 1
+   }
+  },
+  "ilce_ipuclari": {
+   "Osmangazi": [
+    "osmangazi",
+    "heykel",
+    "santral garaj",
+    "soğanlı",
+    "demirtaş",
+    "hamitler",
+    "altıparmak",
+    "çekirge"
+   ],
+   "Nilüfer": [
+    "nilüfer",
+    "görükle",
+    "ihsaniye",
+    "beşevler",
+    "özlüce",
+    "fethiye",
+    "ataevler"
+   ],
+   "Yıldırım": [
+    "yıldırım",
+    "davutkadı",
+    "duaçınarı",
+    "teleferik",
+    "yeşil türbe"
+   ],
+   "İnegöl": [
+    "inegöl",
+    "cerrah"
+   ],
+   "Gemlik": [
+    "gemlik",
+    "umurbey",
+    "küçükkumla"
+   ],
+   "Mudanya": [
+    "mudanya",
+    "güzelyalı",
+    "tirilye",
+    "zeytinbağı"
+   ],
+   "Mustafakemalpaşa": [
+    "mustafakemalpaşa"
+   ],
+   "Karacabey": [
+    "karacabey",
+    "longoz"
+   ],
+   "İznik": [
+    "iznik"
+   ],
+   "Orhangazi": [
+    "orhangazi",
+    "gedelek"
+   ],
+   "Kestel": [
+    "kestel"
+   ],
+   "Gürsu": [
+    "gürsu"
+   ],
+   "Yenişehir": [
+    "yenişehir"
+   ],
+   "Orhaneli": [
+    "orhaneli"
+   ],
+   "Keles": [
+    "keles"
+   ],
+   "Büyükorhan": [
+    "büyükorhan"
+   ],
+   "Harmancık": [
+    "harmancık"
+   ]
+  },
+  "bursa_ipuclari": [
+   "bursa",
+   "büyükşehir belediyesi",
+   "buski",
+   "burulaş",
+   "uludağ",
+   "bursaspor",
+   "nilüfer çayı",
+   "gökdere",
+   "bursa valiliği",
+   "bursa ticaret"
+  ],
+  "hassas_anahtarlar": {
+   "yargı süreci": {
+    "kelimeler": [
+     "tutuklandı",
+     "tutukluluk",
+     "gözaltı",
+     "iddianame",
+     "savcılık",
+     "mahkeme",
+     "duruşma",
+     "sanık",
+     "şüpheli",
+     "soruşturma",
+     "beraat",
+     "adli kontrol",
+     "tahliye",
+     "yargılama"
+    ],
+    "uyari": "Devam eden bir yargı süreci var. Masumiyet karinesini koruyun: iddia ediliyor, suçlamaları reddediyor, yargılama sürüyor kalıplarını kullanın; kesin hüküm diliyle yazmayın."
+   },
+   "çocuk": {
+    "kelimeler": [
+     "çocuk",
+     "bebek",
+     "küçük yaştaki",
+     "reşit olmayan",
+     "öğrenci"
+    ],
+    "haric": [
+     "çocuk parkı",
+     "çocuk oyun",
+     "çocuk bahçesi",
+     "çocuk kütüphanesi",
+     "çocuk şenliği",
+     "çocuklu aile",
+     "öğrenci yurdu",
+     "öğrenci indirimi"
+    ],
+    "baglam": [
+     "tutuklandı",
+     "gözaltı",
+     "şüpheli",
+     "mağdur",
+     "istismar",
+     "taciz",
+     "şiddet",
+     "darp",
+     "yaralandı",
+     "hayatını kaybetti",
+     "kayıp",
+     "soruşturma",
+     "dava",
+     "kaza"
+    ],
+    "uyari": "Haberde çocuk geçiyor. Kimlik bilgisi, okul adı, fotoğraf ve adres paylaşmayın; baş harfle anın."
+   },
+   "sağlık verisi": {
+    "kelimeler": [
+     "teşhis",
+     "tanı kondu",
+     "tedavi",
+     "ameliyat",
+     "yoğun bakım",
+     "psikiyatri"
+    ],
+    "haric": [
+     "atık su tedavi"
+    ],
+    "uyari": "Kişisel sağlık verisi hassastır. Hastanın kimliğini ve tanısını eşleştirecek ayrıntı vermeyin."
+   },
+   "intihar": {
+    "kelimeler": [
+     "intihar",
+     "canına kıydı",
+     "kendini astı",
+     "yaşamına son verdi"
+    ],
+    "uyari": "İntihar haberciliği kuralları geçerli: yöntem ve yer ayrıntısı vermeyin, ayrıntılı betimleme yapmayın, destek hattı bilgisi ekleyin."
+   },
+   "cinsel suç": {
+    "kelimeler": [
+     "taciz",
+     "tecavüz",
+     "istismar",
+     "cinsel saldırı"
+    ],
+    "uyari": "Mağdurun kimliğini açığa çıkaracak hiçbir ayrıntı vermeyin. Sansasyonel dil kullanmayın."
+   },
+   "ölüm ve kaza": {
+    "kelimeler": [
+     "hayatını kaybetti",
+     "cenaze",
+     "ceset",
+     "feci kaza",
+     "can kaybı"
+    ],
+    "uyari": "Can kaybı var. Yakınlarına saygı gösterin; olay yeri fotoğrafında kimlik görünmemeli, sayıları resmî kaynaktan teyit edin."
+   }
+  },
+  "teyit_kaliplari": [
+   "iddia edildi",
+   "iddia ediliyor",
+   "öne sürüldü",
+   "belirtildi",
+   "bildirildi",
+   "öğrenildi",
+   "aktarıldı",
+   "yazdı",
+   "duyurdu",
+   "ifade edildi",
+   "kaydedildi",
+   "belirtiliyor",
+   "iddiasına göre",
+   "iddialara göre",
+   "hatırlatıldı",
+   "olduğu ileri sürüldü"
+  ],
+  "unvanlar": [
+   "başkan",
+   "başkanı",
+   "vekil",
+   "vekili",
+   "başkan vekili",
+   "belediye başkanı",
+   "vali",
+   "kaymakam",
+   "müdür",
+   "genel müdür",
+   "bakan",
+   "milletvekili",
+   "avukat",
+   "doktor",
+   "profesör",
+   "doçent",
+   "teknik direktör",
+   "sportif direktör",
+   "savcı",
+   "hakim",
+   "müfettiş",
+   "rektör",
+   "komutan",
+   "sözcü",
+   "başhekim",
+   "genel başkan"
+  ],
+  "kurum_ipuclari": [
+   "belediye",
+   "büyükşehir",
+   "buski",
+   "burulaş",
+   "valilik",
+   "kaymakamlık",
+   "emniyet",
+   "jandarma",
+   "savcılık",
+   "mahkeme",
+   "bakanlık",
+   "müdürlüğü",
+   "üniversite",
+   "hastane",
+   "kulüp",
+   "federasyon",
+   "meteoroloji",
+   "odası",
+   "borsası",
+   "chp",
+   "akp",
+   "mhp",
+   "spor",
+   "holding",
+   "derneği",
+   "vakfı",
+   "sendika",
+   "müzesi",
+   "okulu"
+  ],
+  "durak_kelimeler": [
+   "ve",
+   "ile",
+   "bir",
+   "bu",
+   "şu",
+   "da",
+   "de",
+   "ki",
+   "mi",
+   "mı",
+   "mu",
+   "mü",
+   "için",
+   "gibi",
+   "kadar",
+   "sonra",
+   "önce",
+   "daha",
+   "çok",
+   "en",
+   "ama",
+   "fakat",
+   "ancak",
+   "veya",
+   "ya",
+   "hem",
+   "ne",
+   "her",
+   "bazı",
+   "tüm",
+   "olarak",
+   "olan",
+   "oldu",
+   "olduğu",
+   "olur",
+   "olması",
+   "var",
+   "yok",
+   "göre",
+   "üzere",
+   "diye",
+   "böyle",
+   "şöyle",
+   "yine",
+   "ise",
+   "değil",
+   "kendi",
+   "aynı",
+   "başka",
+   "diğer",
+   "ilk",
+   "son",
+   "yeni",
+   "büyük",
+   "küçük",
+   "iki",
+   "üç",
+   "dört",
+   "beş",
+   "dedi",
+   "söyledi",
+   "yaptı",
+   "etti",
+   "bulunan",
+   "yapılan",
+   "edilen",
+   "verilen",
+   "alınan",
+   "eden",
+   "yapan",
+   "arasında",
+   "içinde",
+   "üzerinde",
+   "birlikte",
+   "nedeniyle",
+   "sebebiyle",
+   "yaklaşık",
+   "ayrıca",
+   "bugün",
+   "dün",
+   "yarın",
+   "geçen",
+   "sırasında",
+   "hakkında",
+   "karşı",
+   "doğru",
+   "kez",
+   "defa",
+   "adet",
+   "yıl",
+   "ay",
+   "gün",
+   "saat",
+   "kişi",
+   "sayıda",
+   "ilgili",
+   "konusunda",
+   "şekilde",
+   "durumu",
+   "yönelik"
+  ],
+  "ek_listesi": [
+   "larının",
+   "lerinin",
+   "larından",
+   "lerinden",
+   "larına",
+   "lerine",
+   "larını",
+   "lerini",
+   "ların",
+   "lerin",
+   "ları",
+   "leri",
+   "ndan",
+   "nden",
+   "tan",
+   "ten",
+   "dan",
+   "den",
+   "nın",
+   "nin",
+   "nun",
+   "nün",
+   "ın",
+   "in",
+   "un",
+   "ün",
+   "ya",
+   "ye",
+   "da",
+   "de",
+   "ta",
+   "te",
+   "la",
+   "le",
+   "yı",
+   "yi",
+   "yu",
+   "yü",
+   "ı",
+   "i",
+   "u",
+   "ü",
+   "a",
+   "e"
+  ],
+  "birimler": [
+   "milyon",
+   "milyar",
+   "bin",
+   "tl",
+   "lira",
+   "dolar",
+   "euro",
+   "yüzde",
+   "kişi",
+   "metre",
+   "kilometre",
+   "hektar",
+   "ton",
+   "litre",
+   "derece",
+   "adet",
+   "araç",
+   "daire",
+   "konut",
+   "milyon euro",
+   "milyon dolar"
+  ]
+ },
+ "konular": [
+  {
+   "id": "bozbey-sureci",
+   "ad": "Bozbey süreci",
+   "slug": "bozbey-sureci",
+   "durum": "acik",
+   "kategori": "Yargı",
+   "ilce": "Bursa geneli",
+   "anahtarlar": [
+    "bozbey",
+    "tutukluluk",
+    "görevden uzaklaştırma",
+    "yargılama",
+    "belediye başkanlığı",
+    "istifa"
+   ],
+   "kisiler": [
+    "Mustafa Bozbey"
+   ],
+   "kurumlar": [
+    "Bursa Büyükşehir Belediyesi",
+    "CHP"
+   ],
+   "hassas": {
+    "var_mi": true,
+    "turu": "yargı süreci",
+    "uyari": "Yargılama sürüyor. Masumiyet karinesi korunacak: kesin hüküm dili kullanılmaz, Bozbey'in suçlamaları reddettiği her haberde belirtilir."
+   },
+   "not": "Kronoloji, gazetenin 18-21 Ağustos 2026 tarihli haberlerinden derlendi. Demo sayfasıdır; canlı yayında her madde kaynak habere bağlanacak.",
+   "maddeler": [
+    {
+     "tarih": "2026-04",
+     "baslik": "Tutuklama ve görevden uzaklaştırma",
+     "ozet": "Büyükşehir Belediye Başkanı Mustafa Bozbey tutuklandı, görevinden uzaklaştırıldı. Belediyede işleyiş vekâletle sürdürülüyor.",
+     "haber_slug": ""
+    },
+    {
+     "tarih": "2026-05",
+     "gorunen": "Mayıs — Temmuz 2026",
+     "baslik": "Yargılama süreci devam etti",
+     "ozet": "Dosya kapsamındaki duruşma ve itiraz süreçleri sürdü. Bozbey bu dönem boyunca suçlamaları reddetti.",
+     "haber_slug": ""
+    },
+    {
+     "tarih": "2026-08-20",
+     "baslik": "CHP üyeliğinden istifa",
+     "ozet": "Bozbey, partiden ayrıldığını sosyal medya hesabından duyurdu. Kararın belediye başkanlığı sıfatına etkisi bulunmuyor.",
+     "haber_slug": ""
+    },
+    {
+     "tarih": "2026-08-21",
+     "baslik": "Süreç sürüyor",
+     "ozet": "Tutukluluk hâli ve yargılama devam ediyor. Bozbey suçlamaları reddediyor.",
+     "haber_slug": "bozbey-dosyasinda-surec-nasil-isleyecek"
+    }
+   ]
+  },
+  {
+   "id": "su-ve-kuraklik",
+   "ad": "Su ve kuraklık dosyası",
+   "slug": "su-ve-kuraklik",
+   "durum": "acik",
+   "kategori": "Çevre ve su",
+   "ilce": "Bursa geneli",
+   "anahtarlar": [
+    "baraj",
+    "doluluk",
+    "kuraklık",
+    "su kesintisi",
+    "sulama",
+    "içme suyu",
+    "gölet"
+   ],
+   "kisiler": [],
+   "kurumlar": [
+    "BUSKİ",
+    "Bursa Büyükşehir Belediyesi"
+   ],
+   "hassas": {
+    "var_mi": false,
+    "turu": "",
+    "uyari": ""
+   },
+   "not": "Dosya, gazetenin 18-22 Ağustos 2026 tarihli su ve kuraklık haberlerinden derlendi.",
+   "maddeler": [
+    {
+     "tarih": "2026-08-19",
+     "baslik": "Barajlarda doluluk %81'e geriledi",
+     "ozet": "Son 30 günde 11,5 puanlık düşüş kaydedildi; sulama planlaması gündeme geldi.",
+     "haber_slug": "barajlarda-doluluk-81e-geriledi"
+    },
+    {
+     "tarih": "2026-08-20",
+     "baslik": "İznik Gölü'nde kuraklık tehlikesi büyüyor",
+     "ozet": "Göldeki su çekilmesi yakın takibe alındı.",
+     "haber_slug": "iznik-golunde-kuraklik-tehlikesi-buyuyor"
+    },
+    {
+     "tarih": "2026-08-21",
+     "baslik": "BUSKİ'den tasarruf çağrısı",
+     "ozet": "Kuraklığın yaz boyunca gündemde kalacağı bildirildi.",
+     "haber_slug": "buskiden-tasarruf-cagrisi"
+    },
+    {
+     "tarih": "2026-08-22",
+     "baslik": "BUSKİ duyurdu: Nilüfer'de planlı su kesintisi",
+     "ozet": "Kesinti saatleri ve etkilenecek mahalleler açıklandı.",
+     "haber_slug": "buski-duyurdu-niluferde-planli-su-kesintisi"
+    }
+   ]
+  },
+  {
+   "id": "yeni-muze-binasi",
+   "ad": "Yeni müze binası",
+   "slug": "yeni-muze-binasi",
+   "durum": "acik",
+   "kategori": "Kültür",
+   "ilce": "Osmangazi",
+   "anahtarlar": [
+    "müze",
+    "emanetler",
+    "restorasyon",
+    "proje",
+    "onay süreci",
+    "eser"
+   ],
+   "kisiler": [],
+   "kurumlar": [
+    "Bursa Büyükşehir Belediyesi"
+   ],
+   "hassas": {
+    "var_mi": false,
+    "turu": "",
+    "uyari": ""
+   },
+   "not": "Dosya, gazetenin 18-22 Ağustos 2026 tarihli kültür haberlerinden derlendi.",
+   "maddeler": [
+    {
+     "tarih": "2026-08-20",
+     "baslik": "5 asırlık emanetler için müze projesi onay sürecinde",
+     "ozet": "Proje onay aşamasına geldi.",
+     "haber_slug": "5-asirlik-emanetler-icin-muze-projesi-onay-surecinde"
+    },
+    {
+     "tarih": "2026-08-22",
+     "baslik": "5 asırlık emanetler gün yüzüne çıkıyor: Yeni müze için ilk adım",
+     "ozet": "Yeni müze binası için ilk adım atıldı.",
+     "haber_slug": "5-asirlik-emanetler-gun-yuzune-cikiyor"
+    }
+   ]
+  },
+  {
+   "id": "sonmez-hastanesi",
+   "ad": "Ali Osman Sönmez Devlet Hastanesi",
+   "slug": "sonmez-hastanesi",
+   "durum": "acik",
+   "kategori": "Sağlık",
+   "ilce": "Osmangazi",
+   "anahtarlar": [
+    "hastane",
+    "açılış takvimi",
+    "poliklinik",
+    "yatak kapasitesi"
+   ],
+   "kisiler": [],
+   "kurumlar": [
+    "Sağlık Bakanlığı",
+    "Ali Osman Sönmez Devlet Hastanesi"
+   ],
+   "hassas": {
+    "var_mi": false,
+    "turu": "",
+    "uyari": ""
+   },
+   "not": "Dosya, gazetenin 18-22 Ağustos 2026 tarihli sağlık haberlerinden derlendi.",
+   "maddeler": [
+    {
+     "tarih": "2026-08-21",
+     "baslik": "Ali Osman Sönmez Devlet Hastanesi ne zaman açılacak?",
+     "ozet": "Açılış takvimine ilişkin soru gündemde.",
+     "haber_slug": "sonmez-hastanesi-ne-zaman-acilacak"
+    },
+    {
+     "tarih": "2026-08-22",
+     "baslik": "Ali Osman Sönmez Devlet Hastanesi için açılış takvimi netleşti",
+     "ozet": "Açılış takvimi açıklandı.",
+     "haber_slug": "sonmez-hastanesi-acilis-takvimi-netlesti"
+    }
+   ]
+  }
+ ],
+ "arsiv": [
+  {
+   "slug": "bozbey-dosyasinda-surec-nasil-isleyecek",
+   "baslik": "Bozbey dosyasında süreç nasıl işleyecek? Yargılama devam ediyor",
+   "spot": "Tutukluluk hâli ve yargılama sürüyor; Bozbey suçlamaları reddediyor.",
+   "tarih": "2026-08-21",
+   "kategori": "Yargı",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "bozbey",
+    "yargılama",
+    "tutukluluk",
+    "büyükşehir"
+   ],
+   "konu_id": "bozbey-sureci"
+  },
+  {
+   "slug": "bozbey-surecinde-dort-ay",
+   "baslik": "Tutukluluk, görevden uzaklaştırma, istifa: Bozbey sürecinde dört ay",
+   "spot": "Nisandan bugüne kararlar, açıklamalar ve belediyede işleyişin nasıl yürüdüğü.",
+   "tarih": "2026-08-21",
+   "kategori": "Yargı",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "bozbey",
+    "görevden uzaklaştırma",
+    "istifa",
+    "chp"
+   ],
+   "konu_id": "bozbey-sureci"
+  },
+  {
+   "slug": "barajlarda-doluluk-81e-geriledi",
+   "baslik": "Barajlarda doluluk %81'e geriledi: Son 30 günde 11,5 puan düşüş",
+   "spot": "Düşüş sulama planlamasını gündeme getirdi.",
+   "tarih": "2026-08-19",
+   "kategori": "Çevre ve su",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "baraj",
+    "doluluk",
+    "sulama",
+    "kuraklık"
+   ],
+   "konu_id": "su-ve-kuraklik"
+  },
+  {
+   "slug": "iznik-golunde-kuraklik-tehlikesi-buyuyor",
+   "baslik": "İznik Gölü'nde kuraklık tehlikesi büyüyor: \"İklim krizi burada\"",
+   "spot": "Göldeki su çekilmesi yakın takipte.",
+   "tarih": "2026-08-20",
+   "kategori": "Çevre ve su",
+   "ilce": "İznik",
+   "etiketler": [
+    "iznik gölü",
+    "kuraklık",
+    "iklim"
+   ],
+   "konu_id": "su-ve-kuraklik"
+  },
+  {
+   "slug": "buskiden-tasarruf-cagrisi",
+   "baslik": "BUSKİ'den tasarruf çağrısı: kuraklık yaz boyunca gündemde kalacak",
+   "spot": "Kurum, su tüketiminde tasarruf çağrısı yaptı.",
+   "tarih": "2026-08-21",
+   "kategori": "Çevre ve su",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "buski",
+    "kuraklık",
+    "tasarruf"
+   ],
+   "konu_id": "su-ve-kuraklik"
+  },
+  {
+   "slug": "buski-duyurdu-niluferde-planli-su-kesintisi",
+   "baslik": "BUSKİ duyurdu: Nilüfer'de planlı su kesintisi uygulanacak",
+   "spot": "Kesinti saatleri ve etkilenecek mahalleler açıklandı.",
+   "tarih": "2026-08-22",
+   "kategori": "Çevre ve su",
+   "ilce": "Nilüfer",
+   "etiketler": [
+    "buski",
+    "su kesintisi",
+    "nilüfer"
+   ],
+   "konu_id": "su-ve-kuraklik"
+  },
+  {
+   "slug": "5-asirlik-emanetler-icin-muze-projesi-onay-surecinde",
+   "baslik": "5 asırlık emanetler için müze projesi onay sürecinde",
+   "spot": "Proje onay aşamasına geldi.",
+   "tarih": "2026-08-20",
+   "kategori": "Kültür",
+   "ilce": "Osmangazi",
+   "etiketler": [
+    "müze",
+    "emanetler",
+    "proje"
+   ],
+   "konu_id": "yeni-muze-binasi"
+  },
+  {
+   "slug": "5-asirlik-emanetler-gun-yuzune-cikiyor",
+   "baslik": "Bursa'da 5 asırlık emanetler gün yüzüne çıkıyor: Yeni müze için ilk adım",
+   "spot": "Yeni müze binası için ilk adım atıldı.",
+   "tarih": "2026-08-22",
+   "kategori": "Kültür",
+   "ilce": "Osmangazi",
+   "etiketler": [
+    "müze",
+    "emanetler",
+    "restorasyon"
+   ],
+   "konu_id": "yeni-muze-binasi"
+  },
+  {
+   "slug": "sonmez-hastanesi-ne-zaman-acilacak",
+   "baslik": "Ali Osman Sönmez Devlet Hastanesi ne zaman açılacak?",
+   "spot": "Açılış takvimine ilişkin soru gündemde.",
+   "tarih": "2026-08-21",
+   "kategori": "Sağlık",
+   "ilce": "Osmangazi",
+   "etiketler": [
+    "hastane",
+    "açılış takvimi",
+    "sağlık"
+   ],
+   "konu_id": "sonmez-hastanesi"
+  },
+  {
+   "slug": "sonmez-hastanesi-acilis-takvimi-netlesti",
+   "baslik": "Ali Osman Sönmez Devlet Hastanesi için açılış takvimi netleşti",
+   "spot": "Açılış takvimi açıklandı.",
+   "tarih": "2026-08-22",
+   "kategori": "Sağlık",
+   "ilce": "Osmangazi",
+   "etiketler": [
+    "hastane",
+    "açılış takvimi",
+    "sağlık"
+   ],
+   "konu_id": "sonmez-hastanesi"
+  },
+  {
+   "slug": "matlidan-enerji-hamlesi",
+   "baslik": "Bursa merkezli Matlı'dan enerji hamlesi: Yatırım bütçesi 160 milyon dolara çıkıyor",
+   "spot": "Yatırımın üretim maliyetleri ve istihdam tarafındaki karşılığı tartışılıyor.",
+   "tarih": "2026-08-22",
+   "kategori": "Ekonomi",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "matlı",
+    "enerji",
+    "yatırım",
+    "sanayi"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "iplik-firmasi-iflas-etti",
+   "baslik": "23 yıllık iplik firması iflas etti, mahkeme alacaklılara süre tanıdı",
+   "spot": "Mahkemenin alacaklılara tanıdığı süre küçük atölyeleri de ilgilendiriyor.",
+   "tarih": "2026-08-22",
+   "kategori": "Ekonomi",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "iflas",
+    "tekstil",
+    "iplik",
+    "alacaklı"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "meteorolojiden-sicaklik-uyarisi",
+   "baslik": "Meteoroloji'den sıcaklık uyarısı: Bursa'da termometreler 34 dereceyi görecek",
+   "spot": "Sıcak hava dalgası hafta boyunca sürecek.",
+   "tarih": "2026-08-22",
+   "kategori": "Yaşam",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "meteoroloji",
+    "sıcaklık",
+    "hava durumu"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "mudanyadaki-yangina-mudahale",
+   "baslik": "Mudanya'daki yangına havadan ve karadan müdahale edildi",
+   "spot": "Ormanlık alanda zarar tespiti sürüyor.",
+   "tarih": "2026-08-21",
+   "kategori": "Asayiş",
+   "ilce": "Mudanya",
+   "etiketler": [
+    "yangın",
+    "mudanya",
+    "orman"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "yangin-bolgesinde-sogutma-calismalari",
+   "baslik": "Yangın bölgesinde soğutma çalışmaları sürüyor",
+   "spot": "Ekipler bölgede çalışmayı sürdürüyor.",
+   "tarih": "2026-08-22",
+   "kategori": "Asayiş",
+   "ilce": "Mudanya",
+   "etiketler": [
+    "yangın",
+    "soğutma",
+    "mudanya"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "uzmandan-deprem-uyarisi",
+   "baslik": "Prof. Dr. Okan Tüysüz'den Bursa için uyarı: Binaların arasından faylar geçiyor",
+   "spot": "Uzmanlar zemin ve yapı stoku için acil değerlendirme istiyor.",
+   "tarih": "2026-08-21",
+   "kategori": "Gündem",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "deprem",
+    "fay",
+    "yapı stoku",
+    "zemin"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "toplu-ulasimda-yeni-donem",
+   "baslik": "Toplu ulaşımda yeni dönem: Engelsiz Bursa uygulaması değişiyor",
+   "spot": "Ulaşım kartı başvurusu ve uygulamanın işleyişi değişiyor.",
+   "tarih": "2026-08-20",
+   "kategori": "Ulaşım",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "ulaşım",
+    "engelsiz bursa",
+    "ulaşım kartı"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "su-kalitesi-zayif-plajlar",
+   "baslik": "Sağlık Bakanlığı açıkladı: Su kalitesi zayıf çıkan 4 plaj belli oldu",
+   "spot": "Bakanlık ölçüm sonuçlarını yayımladı.",
+   "tarih": "2026-08-20",
+   "kategori": "Sağlık",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "plaj",
+    "su kalitesi",
+    "sağlık bakanlığı"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "zincir-markette-et-imha-edildi",
+   "baslik": "Zincir markette 250 kilo et imha edildi, 52 bin lira ceza kesildi",
+   "spot": "Denetimlerde uygunsuz ürünler tespit edildi.",
+   "tarih": "2026-08-19",
+   "kategori": "Asayiş",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "denetim",
+    "market",
+    "ceza"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "ucuruma-yuvarlanan-bisiklette-3-cocuk-kurtarildi",
+   "baslik": "Uçuruma yuvarlanan elektrikli bisiklette 3 çocuk kurtarıldı",
+   "spot": "Ekipler bölgeye sevk edildi.",
+   "tarih": "2026-08-19",
+   "kategori": "Asayiş",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "kaza",
+    "kurtarma",
+    "bisiklet"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "yenisehir-belediyespor-teknik-direktorle-anlasti",
+   "baslik": "Yenişehir Belediyespor teknik direktörle anlaştı, hedef 3. Lig",
+   "spot": "Kulüp yeni sezon hazırlıklarına başladı.",
+   "tarih": "2026-08-21",
+   "kategori": "Spor",
+   "ilce": "Yenişehir",
+   "etiketler": [
+    "yenişehir belediyespor",
+    "teknik direktör",
+    "amatör lig"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "inegol-kafkassporda-4-futbolcu-imzayi-atti",
+   "baslik": "İnegöl Kafkasspor'da 4 futbolcu imzayı attı",
+   "spot": "Kulüp kadrosunu güçlendiriyor.",
+   "tarih": "2026-08-20",
+   "kategori": "Spor",
+   "ilce": "İnegöl",
+   "etiketler": [
+    "inegöl kafkasspor",
+    "transfer",
+    "amatör lig"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "osmangazi-belediyesinden-dostluk-turnuvasi",
+   "baslik": "Osmangazi Belediyesi'nden dostluk turnuvası",
+   "spot": "Turnuva ilçe genelinde düzenlenecek.",
+   "tarih": "2026-08-19",
+   "kategori": "Spor",
+   "ilce": "Osmangazi",
+   "etiketler": [
+    "osmangazi belediyesi",
+    "turnuva"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "unesco-listesindeki-bursa-cumalikizik",
+   "baslik": "UNESCO listesindeki Bursa: Cumalıkızık'ta ne görülür?",
+   "spot": "Kent merkezinde ve çevresinde rota önerileri.",
+   "tarih": "2026-08-18",
+   "kategori": "Kültür",
+   "ilce": "Yıldırım",
+   "etiketler": [
+    "unesco",
+    "cumalıkızık",
+    "gezi"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "tarihi-carsi-ve-hanlar-bolgesi-restorasyon",
+   "baslik": "Tarihi Çarşı ve Hanlar Bölgesi: Restorasyon sonrası ne değişti?",
+   "spot": "Restorasyon sonrası bölgedeki değişim.",
+   "tarih": "2026-08-18",
+   "kategori": "Kültür",
+   "ilce": "Osmangazi",
+   "etiketler": [
+    "hanlar bölgesi",
+    "restorasyon",
+    "tarihi çarşı"
+   ],
+   "konu_id": null
+  },
+  {
+   "slug": "egitim-camiasindaki-istifa",
+   "baslik": "Eğitim camiasındaki istifa yeni dönem öncesi tartışma başlattı",
+   "spot": "Yeni dönem öncesi okul hazırlıkları gündemde.",
+   "tarih": "2026-08-21",
+   "kategori": "Eğitim",
+   "ilce": "Bursa geneli",
+   "etiketler": [
+    "eğitim",
+    "istifa",
+    "okul"
+   ],
+   "konu_id": null
+  }
+ ]
+};
+
+/* Kural motoru + konu eslestirme — tarayici surumu.
+ *
+ * arac/kural_motoru.py ve arac/konu_eslestirme.py dosyalarinin bire bir
+ * karsiligidir. Sozluk, konular ve arsiv verisi disaridan gelir (window.BHVeri);
+ * bu dosyayla birlikte gomulu_uret.py tarafindan yapay-zeka-editor.html icine
+ * gomulur. Sayfa bagimsizligini bozmaz: ag istegi yok, bagimlilik yok.
+ *
+ * Model kullanmaz. Govde YAZILMAZ; kaynagin cumleleri yalnizca tezgahta durur.
+ * Konu baglantisi kendiliginden kurulmaz, yalnizca aday onerilir.
+ */
+(function (kok) {
+  "use strict";
+
+  var V = kok.BHVeri || {};
+  var S = V.sozluk || {};
+  var KONULAR = V.konular || [];
+  var ARSIV = V.arsiv || [];
+
+  var UNLULER = "aeıioöuü";
+  var GUCLU_ESIK = 60, OLASI_ESIK = 35;
+  var AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+               "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+  var GENEL_ISIMLER = ["mahalle", "mahallesi", "cadde", "caddesi", "sokak", "bulvar",
+                       "belediye", "belediyesi", "müdürlüğü", "valiliği", "ilçe", "köyü",
+                       "semti", "bölgesi", "merkezi", "projesi", "alanı"];
+
+  var HARF = "A-Za-zÇĞİÖŞÜçğıöşü0-9_";
+  var BUYUK = "A-ZÇĞİÖŞÜ";
+
+  /* ------------------------------------------------------------ metin */
+
+  function kucuk(m) {
+    return String(m || "").replace(/İ/g, "i").replace(/I/g, "ı")
+      .replace(/Ç/g, "ç").replace(/Ğ/g, "ğ").replace(/Ö/g, "ö")
+      .replace(/Ş/g, "ş").replace(/Ü/g, "ü").toLowerCase();
+  }
+
+  var TR_HARF = /[çğıöşüÇĞİÖŞÜ]/;
+  function etiketKucuk(k) { return TR_HARF.test(k) ? kucuk(k) : String(k).toLowerCase(); }
+
+  function sadelestir(m) {
+    return kucuk(m).replace(new RegExp("[^" + HARF + "]+", "g"), " ").trim();
+  }
+
+  function kokle(kelime, tur) {
+    var ekler = S.ek_listesi || [], k = kucuk(kelime), i, ek, bulundu;
+    tur = tur || 2;
+    for (var t = 0; t < tur; t++) {
+      bulundu = false;
+      for (i = 0; i < ekler.length; i++) {
+        ek = ekler[i];
+        if (k.length - ek.length >= 3 && k.slice(-ek.length) === ek) {
+          k = k.slice(0, -ek.length); bulundu = true; break;
+        }
+      }
+      if (!bulundu) break;
+    }
+    return k;
+  }
+
+  /* "kaza" kelimesi "kazandırılıyor" icinde bulunmasin diye kelime sinirina bakar */
+  function gecer(anahtar, duz) {
+    var a = kucuk(anahtar);
+    if (a.indexOf(" ") >= 0) return duz.indexOf(a) >= 0;
+    var parcalar = duz.split(" ");
+    for (var i = 0; i < parcalar.length; i++) {
+      var p = parcalar[i];
+      if (p === a || (p.indexOf(a) === 0 && p.length - a.length <= 3)) return true;
+    }
+    return false;
+  }
+
+  function cumlele(metin) {
+    if (!metin) return [];
+    return String(metin).trim()
+      .split(new RegExp("(?<=[.!?])\\s+(?=[" + BUYUK + "0-9])"))
+      .map(function (c) { return c.trim(); })
+      .filter(function (c) { return c.length > 25; });
+  }
+
+  function ekEkle(isim) {
+    if (!isim) return "";
+    var temiz = String(isim).trim().replace(/\.+$/, "");
+    var kucukHal = kucuk(temiz);
+    var son = kucukHal.slice(-1);
+    var sonUnlu = "e";
+    for (var i = kucukHal.length - 1; i >= 0; i--) {
+      if (UNLULER.indexOf(kucukHal[i]) >= 0) { sonUnlu = kucukHal[i]; break; }
+    }
+    var tablo = { a: "ın", "ı": "ın", e: "in", i: "in", o: "un", u: "un", "ö": "ün", "ü": "ün" };
+    var ek = tablo[sonUnlu] || "in";
+    if (UNLULER.indexOf(son) >= 0) ek = "n" + ek;
+    return temiz + "'" + ek;
+  }
+
+  var OZEL_RE = new RegExp(
+    "[" + BUYUK + "][" + HARF + "]*(?:['’][" + HARF + "]+)?" +
+    "(?:\\s+[" + BUYUK + "][" + HARF + "]*(?:['’][" + HARF + "]+)?)*", "g");
+  var CUMLE_BASI = /(?:^|[.!?:]\s+|\n)\s*$/;
+
+  function ozelIsimler(metin, enUzunObek) {
+    if (!metin) return [];
+    enUzunObek = enUzunObek || 3;
+    var bulunan = [], esle;
+    OZEL_RE.lastIndex = 0;
+    while ((esle = OZEL_RE.exec(metin)) !== null) {
+      var parcalar = esle[0].split(/\s+/);
+      var oncesi = metin.slice(Math.max(0, esle.index - 3), esle.index);
+      if (CUMLE_BASI.test(oncesi) || esle.index === 0) parcalar = parcalar.slice(1);
+      if (!parcalar.length) continue;
+      if (parcalar.length > enUzunObek) parcalar = parcalar.slice(-enUzunObek);
+      var obek = parcalar.join(" ").trim().replace(new RegExp("['’][" + HARF + "]+$"), "");
+      // Python tarafi 2 harfli buyuk kisaltmalari da isim sayar: TL, AB, BB.
+      var kisaltma = obek.length >= 2 && /[A-ZÇĞİÖŞÜ]/.test(obek) && !/[a-zçğıöşü]/.test(obek);
+      if (obek.length >= 3 || kisaltma) bulunan.push(obek);
+    }
+    var gorulen = {}, sonuc = [];
+    bulunan.forEach(function (o) {
+      var k = kucuk(o);
+      if (!gorulen[k]) { gorulen[k] = true; sonuc.push(o); }
+    });
+    return sonuc;
+  }
+
+  /* Ad hic yoksa bos doner — atif uydurulmaz, editore doldurtulur. */
+  function yayinAdi(kaynak) {
+    var ad = (kaynak.kaynak_adi || "").trim();
+    if (!ad || (ad.indexOf(".") >= 0 && ad.indexOf(" ") < 0)) {
+      var ham = ad || kaynak.kaynak_alan || "";
+      if (!ham) return "";
+      var kokAd = ham.split(".")[0];
+      ad = kokAd.charAt(0).toUpperCase() + kokAd.slice(1);
+    }
+    return ad;
+  }
+
+  var ATIF_YER_TUTUCU = "[kaynak yayının adı]'nın haberine göre";
+
+  function atifKur(kaynak) {
+    var ad = yayinAdi(kaynak);
+    return ad ? (ekEkle(ad) + " haberine göre") : ATIF_YER_TUTUCU;
+  }
+
+  function slugla(metin, uzunluk) {
+    var esle = { "ç": "c", "ğ": "g", "ı": "i", "ö": "o", "ş": "s", "ü": "u" };
+    var d = kucuk(metin).replace(/[çğıöşü]/g, function (h) { return esle[h]; });
+    d = d.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    return d.slice(0, uzunluk || 60).replace(/-+$/, "") || "taslak";
+  }
+
+  /* ------------------------------------------------------------ alanlar */
+
+  function havuz(k) {
+    return [k.orijinal_baslik || "", k.orijinal_spot || "", k.orijinal_govde || ""];
+  }
+
+  function kategoriBul(kaynak) {
+    var h = havuz(kaynak), agirliklar = [3, 2, 1], puanlar = {};
+    h.forEach(function (metin, i) {
+      var duz = sadelestir(metin);
+      if (!duz) return;
+      var kelimeler = duz.split(" "), koklu = {};
+      kelimeler.forEach(function (k) { koklu[kokle(k)] = true; });
+      var kelimeKume = {};
+      kelimeler.forEach(function (k) { kelimeKume[k] = true; });
+      Object.keys(S.kategori_anahtarlari || {}).forEach(function (kategori) {
+        var anahtarlar = S.kategori_anahtarlari[kategori];
+        Object.keys(anahtarlar).forEach(function (anahtar) {
+          var katsayi = anahtarlar[anahtar], vurdu;
+          if (anahtar.indexOf(" ") >= 0) vurdu = duz.indexOf(anahtar) >= 0;
+          else vurdu = !!kelimeKume[anahtar] || !!koklu[kokle(anahtar)];
+          if (vurdu) puanlar[kategori] = (puanlar[kategori] || 0) + katsayi * agirliklar[i];
+        });
+      });
+    });
+    var enIyi = "Gündem", enYuksek = 0;
+    Object.keys(puanlar).forEach(function (k) {
+      if (puanlar[k] > enYuksek) { enYuksek = puanlar[k]; enIyi = k; }
+    });
+    return enIyi;
+  }
+
+  function ilceBul(kaynak) {
+    var h = havuz(kaynak);
+    var duz = sadelestir(h[0] + " " + h[0] + " " + h[1] + " " + h[2]);
+    var bulunan = {}, enIyi = null, enYuksek = 0;
+    Object.keys(S.ilce_ipuclari || {}).forEach(function (ilce) {
+      var sayi = 0;
+      S.ilce_ipuclari[ilce].forEach(function (ip) {
+        var parca = kucuk(ip), idx = duz.indexOf(parca);
+        while (idx >= 0) { sayi++; idx = duz.indexOf(parca, idx + parca.length); }
+      });
+      if (sayi) {
+        bulunan[ilce] = sayi;
+        if (sayi > enYuksek) { enYuksek = sayi; enIyi = ilce; }
+      }
+    });
+    var bursaVar = enIyi !== null || (S.bursa_ipuclari || []).some(function (ip) {
+      return duz.indexOf(kucuk(ip)) >= 0;
+    });
+    if (enIyi) {
+      return { ilce: enIyi, bursa: true,
+        aciklama: "Haber " + enIyi + " ile ilişkili; metinde " + enYuksek + " kez geçiyor." };
+    }
+    if (bursaVar) {
+      return { ilce: "Bursa geneli", bursa: true,
+        aciklama: "Bursa geçiyor ancak tek bir ilçeye bağlanmıyor." };
+    }
+    return { ilce: "Bursa dışı", bursa: false,
+      aciklama: "Metinde Bursa ya da ilçeleriyle bağ kuran bir ipucu yok. Haberi zorla " +
+                "yerelleştirmeyin; yerel bir açı bulunamıyorsa ajans/dış haber olarak girin." };
+  }
+
+  function etiketBul(kaynak, enFazla) {
+    enFazla = enFazla || 7;
+    var h = havuz(kaynak), agirliklar = [3, 2, 1];
+    var durak = {}, unvan = {};
+    (S.durak_kelimeler || []).forEach(function (d) { durak[kokle(d)] = true; });
+    (S.unvanlar || []).forEach(function (u) { unvan[kokle(u)] = true; });
+
+    var sayac = {};
+    var kelimeRe = new RegExp("[" + HARF + "]+", "g");
+    h.forEach(function (metin, i) {
+      var esle;
+      kelimeRe.lastIndex = 0;
+      while ((esle = kelimeRe.exec(metin)) !== null) {
+        var kelime = esle[0];
+        if (kelime.length < 4 || /^\d+$/.test(kelime)) continue;
+        var kok = kokle(kelime);
+        if (durak[kok] || unvan[kok] || kok.length < 3) continue;
+        if (!sayac[kok]) sayac[kok] = { puan: 0, ham: kelime };
+        sayac[kok].puan += agirliklar[i];
+      }
+    });
+
+    var etiketler = Object.keys(sayac)
+      .sort(function (a, b) { return sayac[b].puan - sayac[a].puan; })
+      .slice(0, enFazla)
+      .map(function (k) { return etiketKucuk(sayac[k].ham); });
+
+    ozelIsimler(h[0] + ". " + h[1], 2).slice(0, 3).forEach(function (isim) {
+      var e = etiketKucuk(isim);
+      if (etiketler.indexOf(e) < 0 && e.split(" ").length <= 2) etiketler.unshift(e);
+    });
+
+    return etiketler.filter(function (e) {
+      return !etiketler.some(function (d) { return e !== d && d.split(" ").indexOf(e) >= 0; });
+    }).slice(0, enFazla);
+  }
+
+  function hassasBul(kaynak) {
+    var h = havuz(kaynak), duz = sadelestir(h.join(" "));
+    var bulgular = [];
+    Object.keys(S.hassas_anahtarlar || {}).forEach(function (tur) {
+      var veri = S.hassas_anahtarlar[tur], temiz = duz;
+      (veri.haric || []).forEach(function (kalip) {
+        temiz = temiz.split(kucuk(kalip)).join(" ");
+      });
+      if (veri.baglam && !veri.baglam.some(function (b) { return gecer(b, temiz); })) return;
+      var vurus = veri.kelimeler.filter(function (k) { return gecer(k, temiz); }).length;
+      if (vurus) bulgular.push({ tur: tur, vurus: vurus, uyari: veri.uyari });
+    });
+    if (!bulgular.length) return { var_mi: false, turu: "", uyari: "" };
+    bulgular.sort(function (a, b) { return b.vurus - a.vurus; });
+    var turler = bulgular.map(function (b) { return b.tur; }).join(", ");
+    return {
+      var_mi: true, turu: bulgular[0].tur,
+      uyari: bulgular[0].uyari + (bulgular.length > 1
+        ? " (Ayrıca işaretlenen başlıklar: " + turler + ".)" : "")
+    };
+  }
+
+  var TARIH_RE = /\b\d{1,2}\s+(?:Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)\s+\d{4}\b/g;
+
+  function dogrulanacaklar(kaynak, enFazla) {
+    enFazla = enFazla || 8;
+    var h = havuz(kaynak);
+    var tam = h[0] + ". " + h[1] + " " + h[2];
+    var duz = sadelestir(tam), maddeler = [];
+
+    // Sayidan sonraki birim kelimelerini oldugu gibi topla: "45 milyon TL",
+    // yalnizca "45 milyon" degil. Ozgun metinde arandigi icin buyuk harf korunur.
+    var birimKume = {};
+    (S.birimler || []).forEach(function (b) {
+      b.split(" ").forEach(function (p) { birimKume[kucuk(p)] = true; });
+    });
+    var sayiRe = new RegExp("(\\d[\\d.,]*)((?:\\s+[" + HARF + "%]+){0,2})", "g");
+    var sesle;
+    while ((sesle = sayiRe.exec(tam)) !== null) {
+      var parcalar = [];
+      var kelimeler = sesle[2].split(/\s+/).filter(function (k) { return k; });
+      for (var ki = 0; ki < kelimeler.length; ki++) {
+        var temizK = kelimeler[ki].replace(/[.,;:]+$/, "");
+        if (birimKume[kucuk(temizK)]) parcalar.push(temizK); else break;
+      }
+      if (parcalar.length) {
+        var madde = "\u201C" + sesle[1] + " " + parcalar.join(" ") +
+                    "\u201D rakam\u0131n\u0131 resm\u00EE kaynaktan teyit edin.";
+        if (maddeler.indexOf(madde) < 0) maddeler.push(madde);
+      }
+    }
+
+    TARIH_RE.lastIndex = 0;
+    (tam.match(TARIH_RE) || []).slice(0, 2).forEach(function (t) {
+      maddeler.push("“" + t + "” tarihini kaynak belgeyle karşılaştırın.");
+    });
+
+    ozelIsimler(h[0] + ". " + h[1], 3).slice(0, 3).forEach(function (isim) {
+      maddeler.push("“" + isim + "” yazılışını ve varsa unvanını teyit edin.");
+    });
+
+    for (var i = 0; i < (S.teyit_kaliplari || []).length; i++) {
+      if (duz.indexOf(kucuk(S.teyit_kaliplari[i])) >= 0) {
+        maddeler.push("Haberde “" + S.teyit_kaliplari[i] + "” kalıbıyla verilen bilgi tek " +
+                      "kaynağa dayanıyor; ikinci bir kaynaktan doğrulayın.");
+        break;
+      }
+    }
+
+    if (!yayinAdi(kaynak)) {
+      maddeler.unshift("Kaynak yayının adı girilmedi — atıf cümlesindeki yer tutucuyu " +
+                       "gerçek yayın adıyla değiştirin.");
+    }
+    if (kaynak.gorsel_url) {
+      maddeler.push("Kaynağın fotoğrafı yalnızca referanstır — hak durumu doğrulanmadan " +
+                    "yayına giremez.");
+    }
+    if (!kaynak.yayin_tarihi) {
+      maddeler.push("Kaynak haberin yayın tarihi ayıklanamadı; sayfadan elle kontrol edin.");
+    }
+    if (kaynak.ayiklama_guveni === "dusuk") {
+      maddeler.push("Ayıklama güveni düşük — kaynağı elle açıp gövdeyi karşılaştırın.");
+    }
+    return maddeler.slice(0, enFazla);
+  }
+
+  function tezgahKur(kaynak, enFazla) {
+    enFazla = enFazla || 12;
+    var cumleler = cumlele(kaynak.orijinal_govde || "");
+    var malzeme = cumleler.map(function (c, i) {
+      var sayiVar = /\d/.test(c);
+      var alintiVar = /["“”]|\bdedi\b|\bsöyledi\b|\baçıkladı\b|\bbelirtti\b/.test(c);
+      var isimSayisi = ozelIsimler(c).length;
+      var puan = Math.min(100, 30 + isimSayisi * 8 + (sayiVar ? 20 : 0) +
+                          (alintiVar ? 10 : 0) + Math.min(20, Math.floor(c.length / 12)));
+      var oneri = i === 0 ? "giriş" : (sayiVar ? "rakam" : (alintiVar ? "alıntı adayı" : "gelişme"));
+      return { metin: c, puan: puan, oneri: oneri };
+    });
+    malzeme.sort(function (a, b) { return b.puan - a.puan; });
+    return malzeme.slice(0, enFazla);
+  }
+
+  function onemBul(kategori, bursaVar, kelime) {
+    if (!bursaVar) return "normal";
+    var agir = ["Yargı", "Siyaset", "Çevre ve su", "Asayiş", "Ulaşım", "Sağlık"];
+    return (agir.indexOf(kategori) >= 0 && kelime >= 120) ? "one_cikan" : "normal";
+  }
+
+  function taslakUretKural(kaynak) {
+    var kategori = kategoriBul(kaynak);
+    var yer = ilceBul(kaynak);
+    var kelime = parseInt(kaynak.kelime_sayisi, 10) || 0;
+    var atif = atifKur(kaynak);
+
+    var taslak = {
+      baslik_secenekleri: [
+        { metin: "", gerekce: "Düz haber başlığı: ne oldu, kim yaptı, nerede. En fazla 70 karakter." },
+        { metin: "", gerekce: "Sonuç/etki odaklı: bu gelişme okur için ne değiştiriyor?" },
+        { metin: "", gerekce: "Kısa ve vurucu: 6-7 kelime. Tıklama tuzağı yok." }
+      ],
+      onerilen_baslik_indeksi: 0,
+      spot: "",
+      uc_madde: ["", "", ""],
+      govde: [
+        { tur: "paragraf", metin: "" },
+        { tur: "paragraf", metin: "" },
+        { tur: "ara_baslik", metin: "" },
+        { tur: "paragraf", metin: "" },
+        { tur: "paragraf", metin: "" }
+      ],
+      kategori: kategori,
+      ilce: yer.ilce,
+      etiketler: etiketBul(kaynak),
+      seo_baslik: "", seo_aciklama: "", url_slug: "",
+      gorsel_alt: "", gorsel_altyazi: "",
+      okuma_suresi_dk: kelime ? Math.max(1, Math.round(kelime / 200)) : 1,
+      onem: onemBul(kategori, yer.bursa, kelime),
+      kaynak_atfi: atif,
+      dogrulanmasi_gerekenler: dogrulanacaklar(kaynak),
+      hassas_konu: hassasBul(kaynak),
+      bursa_ilgisi: { var_mi: yer.bursa, aciklama: yer.aciklama },
+      editor_notu: "Bu taslak kural tabanlı motorla hazırlandı — dil üretimi yapılmadı. " +
+        "Kategori, ilçe, etiketler, önem ve uyarılar sözlük ve sezgiyle dolduruldu; başlık, " +
+        "spot, üç madde ve gövde kasıtlı olarak boş bırakıldı. Ham malzeme panelinden " +
+        "yararlanarak haberi kendi cümlelerinizle yazın; kaynağın cümlelerini kopyalamayın. " +
+        "Kaynak, yayınlanan sayfada ayrı bir bölmede gösterilir; gövdeye atıf " +
+        "cümlesi koymak zorunda değilsiniz."
+    };
+
+    return {
+      taslak: taslak,
+      uretim: { saglayici: "kural", model: "", surum: "1.0",
+                zaman: new Date().toISOString().slice(0, 19) + "+00:00" },
+      tezgah: tezgahKur(kaynak)
+    };
+  }
+
+  /* ------------------------------------------------------------ konu takibi */
+
+  var KESME_EKI = /['’][a-zçğıöşü]{1,6}/g;
+
+  function kokluKume(degerler) {
+    var kume = {};
+    (degerler || []).forEach(function (d) {
+      sadelestir(String(d)).split(" ").forEach(function (p) {
+        if (p.length >= 3) kume[kokle(p)] = true;
+      });
+    });
+    return kume;
+  }
+
+  function isimHaritasi(isimler) {
+    var harita = {};
+    (isimler || []).forEach(function (isim) {
+      var gosterim = String(isim || "").trim();
+      if (!gosterim) return;
+      sadelestir(gosterim.replace(KESME_EKI, "")).split(" ").forEach(function (p) {
+        if (p.length >= 4 && !harita[kokle(p)]) harita[kokle(p)] = gosterim;
+      });
+    });
+    return harita;
+  }
+
+  function zayifKokler() {
+    var zayif = Object.keys(S.ilce_ipuclari || {}).concat(["Bursa", "Bursa geneli", "Bursa dışı"]);
+    Object.keys(S.ilce_ipuclari || {}).forEach(function (i) {
+      zayif = zayif.concat(S.ilce_ipuclari[i]);
+    });
+    zayif = zayif.concat(S.unvanlar || [], S.durak_kelimeler || [], GENEL_ISIMLER);
+    return kokluKume(zayif);
+  }
+
+  function gosterimTemizle(obek) {
+    var atilacak = {};
+    (S.unvanlar || []).concat(GENEL_ISIMLER).forEach(function (u) { atilacak[kucuk(u)] = true; });
+    var parcalar = String(obek).replace(KESME_EKI, "").split(/\s+/);
+    while (parcalar.length > 1 && atilacak[kucuk(parcalar[0])]) parcalar.shift();
+    return parcalar.join(" ");
+  }
+
+  function secilenBaslik(taslak) {
+    var secenekler = taslak.baslik_secenekleri || [];
+    if (!secenekler.length) return "";
+    var i = taslak.onerilen_baslik_indeksi || 0;
+    return (secenekler[i] || secenekler[0]).metin || "";
+  }
+
+  function parmakIzi(taslak, kaynak) {
+    var baslik = kaynak.orijinal_baslik || "", spot = kaynak.orijinal_spot || "";
+    var govde = kaynak.orijinal_govde || "", secili = secilenBaslik(taslak);
+    var isimler = ozelIsimler(secili + ". " + baslik + ". " + spot, 3)
+      .map(function (i) { return gosterimTemizle(i); });
+    return {
+      isimler: isimHaritasi(isimler),
+      zayif: zayifKokler(),
+      etiketler: kokluKume(taslak.etiketler || []),
+      kategori: taslak.kategori || "",
+      ilce: taslak.ilce || "",
+      tarih: (kaynak.yayin_tarihi || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
+      duz: sadelestir(secili + ". " + baslik + ". " + spot + " " + govde)
+    };
+  }
+
+  function tarihCoz(metin) {
+    var m = /^(\d{4})-(\d{2})(?:-(\d{2}))?/.exec(metin || "");
+    if (!m) return null;
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +(m[3] || 1)));
+  }
+
+  function gunFarki(a, b) {
+    var ta = tarihCoz(a), tb = tarihCoz(b);
+    if (!ta || !tb) return null;
+    return Math.abs(Math.round((ta - tb) / 86400000));
+  }
+
+  function puanla(parmak, aday, tur) {
+    var ham = 0, gerekceler = [];
+
+    var adayIsimKaynagi = tur === "haber"
+      ? ozelIsimler(aday.baslik || "", 3)
+      : (aday.kisiler || []).concat(aday.kurumlar || []);
+    adayIsimKaynagi = adayIsimKaynagi.concat([aday.ad || aday.baslik || ""]);
+    var adayKokler = isimHaritasi(adayIsimKaynagi);
+
+    var ortakIsim = [];
+    Object.keys(parmak.isimler).forEach(function (kok) {
+      if (parmak.zayif[kok] || !adayKokler[kok]) return;
+      var g = parmak.isimler[kok];
+      if (ortakIsim.indexOf(g) < 0) ortakIsim.push(g);
+    });
+    if (ortakIsim.length) {
+      ham += 5 * ortakIsim.length;
+      gerekceler.push(ortakIsim.length + " ortak özel isim: " + ortakIsim.slice(0, 4).join(", "));
+    }
+
+    if (tur === "konu") {
+      var eslesen = (aday.anahtarlar || []).filter(function (a) { return gecer(a, parmak.duz); });
+      if (eslesen.length) {
+        ham += 4 * eslesen.length;
+        gerekceler.push(eslesen.length + " konu anahtarı: " + eslesen.slice(0, 4).join(", "));
+      }
+    }
+
+    var adayEtiket = kokluKume(aday.etiketler || []);
+    var ortakEtiket = Object.keys(parmak.etiketler).filter(function (e) { return adayEtiket[e]; });
+    if (ortakEtiket.length) {
+      ham += 3 * ortakEtiket.length;
+      gerekceler.push(ortakEtiket.length + " ortak etiket");
+    }
+
+    if (parmak.kategori && parmak.kategori === aday.kategori) {
+      ham += 2; gerekceler.push("Aynı kategori: " + parmak.kategori);
+    }
+    if (parmak.ilce && parmak.ilce === aday.ilce) {
+      ham += 2; gerekceler.push("Aynı ilçe: " + parmak.ilce);
+    }
+
+    var sonTarih = aday.tarih || "";
+    if (tur === "konu" && (aday.maddeler || []).length) {
+      sonTarih = aday.maddeler.reduce(function (en, m) {
+        return (m.tarih || "") > en ? (m.tarih || "") : en;
+      }, "");
+    }
+    var fark = gunFarki(parmak.tarih, sonTarih);
+    if (fark !== null && fark <= 90) {
+      ham += fark <= 30 ? 2 : 1;
+      gerekceler.push("Son gelişme " + fark + " gün önce");
+    }
+
+    if (aday.durum === "kapali") {
+      ham *= 0.5;
+      gerekceler.push("Dosya kapalı — puan yarıya indirildi");
+    }
+
+    return { skor: Math.min(100, Math.round(ham * 100 / 25)), gerekceler: gerekceler };
+  }
+
+  function ilgiliBul(parmak, enFazla) {
+    enFazla = enFazla || 5;
+    var adaylar = [];
+
+    KONULAR.forEach(function (konu) {
+      var p = puanla(parmak, konu, "konu");
+      if (p.skor >= OLASI_ESIK) {
+        adaylar.push({
+          tur: "konu", id: konu.id, ad: konu.ad, skor: p.skor,
+          guclu: p.skor >= GUCLU_ESIK, gerekceler: p.gerekceler,
+          madde_sayisi: (konu.maddeler || []).length,
+          son_maddeler: (konu.maddeler || []).slice(-2),
+          hassas: konu.hassas || { var_mi: false }
+        });
+      }
+    });
+
+    ARSIV.forEach(function (haber) {
+      var p = puanla(parmak, haber, "haber");
+      if (p.skor >= OLASI_ESIK) {
+        adaylar.push({
+          tur: "haber", id: haber.slug, ad: haber.baslik, skor: p.skor,
+          guclu: p.skor >= GUCLU_ESIK, gerekceler: p.gerekceler,
+          tarih: haber.tarih || "", konu_id: haber.konu_id || null
+        });
+      }
+    });
+
+    adaylar.sort(function (a, b) {
+      if (b.skor !== a.skor) return b.skor - a.skor;
+      return (a.tur === "konu" ? 0 : 1) - (b.tur === "konu" ? 0 : 1);
+    });
+    return adaylar.slice(0, enFazla);
+  }
+
+  // Python karsiligi: konu_eslestirme._ad_turu
+  var YER_SONU = ["mahallesi", "caddesi", "sokağı", "sokak", "bulvarı", "meydanı",
+    "parkı", "çayı", "deresi", "barajı", "köyü", "ovası", "tepesi", "yolu", "kavşağı"];
+  var KURUM_SONU = ["belediyesi", "başkanlığı", "müdürlüğü", "bakanlığı", "üniversitesi",
+    "hastanesi", "genel müdürlüğü", "odası", "birliği", "derneği", "vakfı", "kulübü",
+    "a.ş.", "valiliği", "kaymakamlığı"];
+  var FIIL_SONU = ["ıyor", "iyor", "uyor", "üyor", "acak", "ecek", "mış", "miş", "muş",
+    "müş", "ldı", "ldi", "ldu", "ldü", "tı", "ti", "du", "dü", "yor"];
+
+  function biterMi(metin, sonlar) {
+    for (var i = 0; i < sonlar.length; i++) {
+      if (metin.slice(-sonlar[i].length) === sonlar[i]) return true;
+    }
+    return false;
+  }
+
+  function adTuru(ad) {
+    var k = kucuk(ad).trim();
+    if (biterMi(k, FIIL_SONU)) return "artik";
+    if (biterMi(k, KURUM_SONU)) return "kurum";
+    if (biterMi(k, YER_SONU)) return "yer";
+    return ad.split(/\s+/).length >= 2 ? "kisi" : "tekil";
+  }
+
+  function konuOnerisi(parmak, taslak) {
+    var gorulen = {};
+    var isimler = [];
+    Object.keys(parmak.isimler).forEach(function (k) {
+      if (parmak.zayif[k]) return;
+      var g = parmak.isimler[k];
+      if (gorulen[g]) return;           // ayni gosterimi tekrar uretme
+      gorulen[g] = true;
+      isimler.push(g);
+    });
+    isimler.sort(function (a, b) { return b.length - a.length; });
+
+    var turler = {};
+    isimler.forEach(function (i) { turler[i] = adTuru(i); });
+
+    // Dosya adi yer/kurum/kisi/tekil olabilir; fiil kalintisi ve ay adi olamaz.
+    var adaylar = isimler.filter(function (i) {
+      return turler[i] !== "artik" && AYLAR.indexOf(i) < 0;
+    });
+    var ad = adaylar[0] || taslak.kategori || "Yeni dosya";
+    var slug = slugla(ad);
+    return {
+      id: slug, ad: ad, slug: slug, durum: "acik",
+      kategori: taslak.kategori || "", ilce: taslak.ilce || "",
+      anahtarlar: (taslak.etiketler || []).slice(0, 5),
+      kisiler: isimler.filter(function (i) { return turler[i] === "kisi"; }).slice(0, 3),
+      kurumlar: isimler.filter(function (i) { return turler[i] === "kurum"; }).slice(0, 3),
+      hassas: taslak.hassas_konu || { var_mi: false, turu: "", uyari: "" },
+      not: "", maddeler: []
+    };
+  }
+
+  function konuyaBagla(konu, taslak, kaynak) {
+    var baslik = secilenBaslik(taslak) || kaynak.orijinal_baslik || "(başlık yazılmadı)";
+    var madde = {
+      tarih: (kaynak.yayin_tarihi || new Date().toISOString()).slice(0, 10),
+      baslik: baslik,
+      ozet: taslak.spot || "",
+      // Editor slug yazmadiysa basliktan turet; yoksa haber arsive dusmez
+      haber_slug: taslak.url_slug || slugla(baslik),
+      yeni: true
+    };
+    konu.maddeler = (konu.maddeler || []).concat([madde]);
+    konu.maddeler.sort(function (a, b) {
+      return (a.tarih || "") < (b.tarih || "") ? -1 : ((a.tarih || "") > (b.tarih || "") ? 1 : 0);
+    });
+    taslak.konu = { id: konu.id, ad: konu.ad, slug: konu.slug };
+    return madde;
+  }
+
+  function tarihYaz(tarih, gorunen) {
+    if (gorunen) return gorunen;
+    var m = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(tarih || "");
+    if (!m) return tarih || "";
+    return m[3] ? (parseInt(m[3], 10) + " " + AYLAR[+m[2] - 1] + " " + m[1])
+                : (AYLAR[+m[2] - 1] + " " + m[1]);
+  }
+
+  function kacir(m) {
+    return String(m == null ? "" : m).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function kronolojiHtml(konu) {
+    var satirlar = ['<ol class="zaman">'];
+    (konu.maddeler || []).forEach(function (m) {
+      satirlar.push("  <li>");
+      satirlar.push('    <time datetime="' + kacir(m.tarih) + '">' +
+                    kacir(tarihYaz(m.tarih, m.gorunen)) + "</time>");
+      satirlar.push("    <h3>" + kacir(m.baslik) + "</h3>");
+      if (m.ozet) satirlar.push("    <p>" + kacir(m.ozet) + "</p>");
+      satirlar.push("  </li>");
+    });
+    satirlar.push("</ol>");
+    if (konu.not) satirlar.push('<p class="zaman-not">' + kacir(konu.not) + "</p>");
+    return satirlar.join("\n");
+  }
+
+  /* Yapistirilan metinden ayiklayici ciktisina benzer bir kaynak nesnesi kurar. */
+  function metindenKaynak(alanlar) {
+    var govde = (alanlar.govde || "").replace(/\r/g, "").trim();
+    var satirlar = govde.split(/\n+/).map(function (s) { return s.trim(); })
+      .filter(function (s) { return s; });
+    var baslik = (alanlar.baslik || "").trim() || satirlar.shift() || "";
+    var spot = (alanlar.spot || "").trim();
+    if (!spot && satirlar.length > 1 && satirlar[0].length < 320) spot = satirlar.shift();
+    var tam = satirlar.join(" ");
+    var kelime = tam ? tam.split(/\s+/).length : 0;
+    var adres = (alanlar.adres || "").trim();
+    var alan = "";
+    try { if (adres) alan = new URL(adres).hostname.replace(/^www\./, ""); } catch (e) { alan = ""; }
+    return {
+      kaynak_url: adres, kaynak_alan: alan,
+      kaynak_adi: (alanlar.yayin || "").trim() || alan || "",
+      orijinal_baslik: baslik, orijinal_spot: spot, orijinal_govde: tam,
+      gorsel_url: "", gorsel_alt: "", yazar: "", yayin_tarihi: "", guncelleme_tarihi: "",
+      dil: "tr", kelime_sayisi: kelime,
+      ayiklama_yontemleri: ["elle-yapistirma"],
+      ayiklama_guveni: kelime >= 150 ? "yuksek" : (kelime >= 60 ? "orta" : "dusuk")
+    };
+  }
+
+  kok.BHMotor = {
+    kucuk: kucuk, sadelestir: sadelestir, slugla: slugla, ekEkle: ekEkle,
+    taslakUretKural: taslakUretKural, metindenKaynak: metindenKaynak,
+    parmakIzi: parmakIzi, ilgiliBul: ilgiliBul, konuOnerisi: konuOnerisi,
+    konuyaBagla: konuyaBagla, kronolojiHtml: kronolojiHtml, tarihYaz: tarihYaz,
+    konular: KONULAR, arsiv: ARSIV,
+    GUCLU_ESIK: GUCLU_ESIK, OLASI_ESIK: OLASI_ESIK
+  };
+})(window);
+/* === ÜRETİLMİŞ BLOK SONU === */
+</script>
 
 <script>
 /* Örnek paketler: arac/haber_taslak.py çıktısının birebir aynısı. */
@@ -413,7 +2516,7 @@ const ORNEKLER = {
     },
     {
      "tur": "paragraf",
-     "metin": "Aktarılan bilgiye göre Fiorentina'nın Icardi'yi gündemine almasının nedeni, forvet Moise Kean'in ayrılma ihtimali. Como'nun Kean için yaklaşık 40 milyon euroluk teklif hazırlığında olduğu belirtildi."
+     "metin": "Aktarılan bilgiye göre Fiorentina'nın Icardi'yi gündemine almasının nedeni, forvet Moise Kean'in ayrılma ihtimali. Como'nun Kean'e yaklaşık 40 milyon euro tutarında bir teklif üzerinde çalıştığı ifade edildi."
     },
     {
      "tur": "ara_baslik",
@@ -433,7 +2536,7 @@ const ORNEKLER = {
     },
     {
      "tur": "paragraf",
-     "metin": "Aynı habere göre Icardi'yle ilgilenen Lazio, rotasını Sassuolo'dan Andrea Pinamonti'ye çevirdi. Arjantinli golcü için nabız yoklayan Real Betis ise AZ Alkmaar'dan Troy Parrott'u tercih ederek transferden çekildi."
+     "metin": "Aynı habere göre Icardi'yi düşünen Lazio, tercihini Sassuolo'da forma giyen Andrea Pinamonti'den yana kullandı. Arjantinli oyuncu için temas kuran Real Betis de AZ Alkmaar'da oynayan Troy Parrott'ta karar kılarak yarıştan çekildi."
     },
     {
      "tur": "ara_baslik",
@@ -441,7 +2544,7 @@ const ORNEKLER = {
     },
     {
      "tur": "paragraf",
-     "metin": "Inter'den ayrılmasının üzerinden yedi yıl geçen Icardi, Fiorentina'ya transfer olması hâlinde Serie A'ya geri dönmüş olacak. Oyuncu İtalya kariyerinde çıktığı 219 lig maçında 121 gol attı."
+     "metin": "Icardi, Inter'den ayrılalı yedi yıl oldu; Fiorentina'ya imza atması durumunda yeniden Serie A'da forma giyecek. Arjantinli oyuncunun İtalya'daki lig karnesi 219 maçta 121 gol."
     }
    ],
    "kategori": "Spor",
@@ -540,7 +2643,7 @@ const ORNEKLER = {
     },
     {
      "tur": "paragraf",
-     "metin": "Belediye bürokratlarından oluşan heyet, Dereçavuş Mahallesi'nden Ovaakça Mahallesi'ne kadar uzanacak yaklaşık 2 kilometre uzunluğundaki hattın inşaatını yerinde gördü. Yetkililerden çalışmanın son durumu hakkında bilgi alındı."
+     "metin": "Şahin Biba başkanlığındaki belediye yöneticileri, Dereçavuş ile Ovaakça mahalleleri arasında uzanacak yaklaşık 2 kilometrelik hattın yapım alanında incelemede bulundu. Heyet, yetkililerden çalışmanın hangi aşamada olduğuna dair bilgi aldı."
     },
     {
      "tur": "ara_baslik",
@@ -548,7 +2651,7 @@ const ORNEKLER = {
     },
     {
      "tur": "paragraf",
-     "metin": "Başkan Vekili Biba, Osmangazi İlçesi Atıksu Kollektörleri İnşaatı Yapım İşi'nin BUSKİ tarafından yürütüldüğünü aktardı. Biba, projenin eksiksiz biçimde hizmete açılmasının hedeflendiğini söyledi."
+     "metin": "Başkan Vekili Biba, işin BUSKİ eliyle yürütüldüğünü belirtti; yatırımın resmî adı Osmangazi İlçesi Atıksu Kollektörleri İnşaatı Yapım İşi. Biba, hattın eksiksiz biçimde tamamlanıp hizmete açılmasının hedeflendiğini söyledi."
     },
     {
      "tur": "alinti",
@@ -656,11 +2759,11 @@ const ORNEKLER = {
    "govde": [
     {
      "tur": "paragraf",
-     "metin": "Nilüfer Belediyesi, 2026 yılında ihale süreçleri tamamlanan park projelerinde çalışmaları hızlandırdı. Bursa Söylem'in haberine göre yıl sonuna kadar yedi ayrı mahallede tamamlanacak projelerle ilçeye yaklaşık 24 bin metrekarelik yeni park alanı kazandırılacak."
+     "metin": "Nilüfer Belediyesi, ihale süreçleri 2026'da tamamlanan park yatırımlarında tempoyu artırdı. Bursa Söylem'in haberine göre yıl bitmeden yedi mahallede bitirilecek projelerle ilçeye yaklaşık 24 bin metrekare yeni park alanı eklenecek."
     },
     {
      "tur": "paragraf",
-     "metin": "Belediye, kişi başına düşen yeşil alan miktarını artırmayı ve mahallelere yeni yaşam alanları kazandırmayı hedefliyor. 2026 yatırım programı kapsamında ihaleleri tamamlanan projelerde saha uygulamalarına ağırlık verildi."
+     "metin": "Belediye, kişi başına düşen yeşil alanı büyütmeyi ve mahallelilere yeni yaşam alanları sunmayı amaçlıyor. İhalesi biten projelerde saha uygulamaları, 2026 yatırım programı doğrultusunda hızlandırıldı."
     },
     {
      "tur": "ara_baslik",
@@ -668,7 +2771,7 @@ const ORNEKLER = {
     },
     {
      "tur": "paragraf",
-     "metin": "30 Ağustos Zafer, Dumlupınar, Kayapa ve Esentepe mahallelerindeki düzenlemelerde son aşamaya gelindi. Akçalar, Yolçatı ve Demirci mahallelerindeki parklarda ise imalat çalışmaları sürüyor."
+     "metin": "Düzenlemelerde son aşamaya gelinen mahalleler 30 Ağustos Zafer, Dumlupınar, Kayapa ve Esentepe. Akçalar, Yolçatı ile Demirci mahallelerindeki parklarda ise imalatların kısa süre içinde başlaması bekleniyor."
     },
     {
      "tur": "ara_baslik",
@@ -750,29 +2853,29 @@ const ORNEKLER = {
   "taslak": {
    "baslik_secenekleri": [
     {
-     "metin": "BIST 100 haftayı yükselişle kapattı",
-     "gerekce": "Düz piyasa başlığı; günlük özet için yeterli."
+     "metin": "Piyasa özeti: dolar 48,06, euro 56,15 liradan işlem gördü",
+     "gerekce": "Düz haber başlığı: kaynağın doğruladığı iki temel rakamı verir."
     },
     {
-     "metin": "Borsada haftanın son işlem günü: BIST 100 yüzde 0,68 arttı",
-     "gerekce": "Rakamlı, arama dostu."
+     "metin": "Gram altın yüzde 2,03 arttı, 7.101,41 liraya çıktı",
+     "gerekce": "Etki odaklı: okurun cebini en doğrudan ilgilendiren kalem."
     },
     {
-     "metin": "Piyasalarda günün özeti",
-     "gerekce": "Kısa; ekonomi bandı için uygun ama ayırt edici değil."
+     "metin": "Piyasalarda günün tablosu",
+     "gerekce": "Kısa ve vurucu; tıklama tuzağı içermez."
     }
    ],
-   "onerilen_baslik_indeksi": 1,
-   "spot": "Borsa İstanbul 21 Ağustos Cuma gününü yükselişle tamamladı. BIST 100 endeksi yüzde 0,68 değer kazanarak 14.494,61 puandan kapandı; dolar ve euro günü sınırlı artışla bitirdi.",
+   "onerilen_baslik_indeksi": 0,
+   "spot": "BloombergHT'nin 21 Ağustos 2026 tarihli piyasa özetine göre dolar/TL 48,06, euro/TL ise 56,15 lira seviyesinde işlem gördü. Gram altın yüzde 2,03 artışla 7.101,41 liraya çıkarken Brent petrol 94,17 dolar seviyesinde bulundu.",
    "uc_madde": [
-    "BIST 100 endeksi yüzde 0,68 artışla 14.494,61 puandan kapandı.",
+    "Dolar/TL 48,06, euro/TL 56,15 lira seviyesinde işlem gördü.",
     "En çok işlem gören hisseler THYAO, ASELS ve AKBNK oldu.",
-    "Dolar/TL 48,06, Euro/TL 56,15 seviyesinde günü tamamladı."
+    "Gram altın yüzde 2,03 artışla 7.101,41 liradan alıcı buldu."
    ],
    "govde": [
     {
      "tur": "paragraf",
-     "metin": "Borsa İstanbul, 21 Ağustos Cuma gününü yükselişle tamamladı. BloombergHT'nin aktardığına göre BIST 100 endeksi yüzde 0,68 değer kazanarak 14.494,61 puandan kapandı."
+     "metin": "BloombergHT'nin aktardığına göre dolar/TL kuru 21 Ağustos 2026'da saat 18.30 itibarıyla yüzde 0,20 artışla 48,06 lirada, euro/TL ise yüzde 0,04 artışla 56,15 lirada işlem gördü."
     },
     {
      "tur": "paragraf",
@@ -787,8 +2890,12 @@ const ORNEKLER = {
      "metin": "Sektörel bazda madencilik, kimya-petrol-plastik ve metal eşya-makina yükselirken; bilişim, teknoloji ve orman-kâğıt-basım en çok gerileyen sektörler oldu."
     },
     {
+     "tur": "ara_baslik",
+     "metin": "Altın ve kripto"
+    },
+    {
      "tur": "paragraf",
-     "metin": "Döviz tarafında dolar/TL saat 18.30 itibarıyla yüzde 0,20 artışla 48,06 lira, euro/TL ise yüzde 0,04 artışla 56,15 lira seviyesinde bulunuyordu."
+     "metin": "Kapalı Çarşı'da gram altının fiyatı yüzde 2,03 yükselerek 7.101,41 liraya ulaştı; çeyrek altın 11.360,85 liradan alınıp 11.610,81 liradan satıldı. Brent petrol 94,17 dolar seviyesindeyken kripto tarafında Bitcoin 77.628, Ethereum 2.400,73 dolardan işlem gördü."
     }
    ],
    "kategori": "Ekonomi",
@@ -800,18 +2907,19 @@ const ORNEKLER = {
     "piyasalar",
     "kapanış"
    ],
-   "seo_baslik": "BIST 100 yüzde 0,68 artışla 14.494,61 puandan kapandı",
-   "seo_aciklama": "Borsa İstanbul 21 Ağustos Cuma gününü yükselişle tamamladı. BIST 100 yüzde 0,68 arttı; dolar 48,06, euro 56,15 lira seviyesinde.",
+   "seo_baslik": "Piyasa özeti: dolar 48,06, euro 56,15, gram altın 7.101,41",
+   "seo_aciklama": "21 Ağustos 2026 piyasa özeti: dolar 48,06, euro 56,15 lira; gram altın yüzde 2,03 artışla 7.101,41 liradan işlem gördü.",
    "url_slug": "bist-100-21-agustos-2026-kapanis",
    "gorsel_alt": "Borsa İstanbul işlem salonunda gösterge ekranları",
-   "gorsel_altyazi": "BIST 100 endeksi haftanın son işlem gününü yükselişle kapattı.",
-   "okuma_suresi_dk": 2,
+   "gorsel_altyazi": "Piyasalarda 21 Ağustos 2026 kapanış tablosu.",
+   "okuma_suresi_dk": 1,
    "onem": "normal",
    "kaynak_atfi": "BloombergHT'nin aktardığına göre",
    "dogrulanmasi_gerekenler": [
-    "Rakamlar kaynak yayının kapanış verisidir; yayına almadan önce Borsa İstanbul verisiyle karşılaştırın.",
-    "Dolar ve euro değerleri saat 18.30 itibarıyladır; yayın saatinde güncelliğini yitirebilir.",
-    "Kaynakta yer alan tablo alınmadı; hisse listesi eksik olabilir."
+    "Kaynak metninde BIST 100 endeks seviyesi ve günlük değişim oranı YOK; endeks rakamı kullanılacaksa Borsa İstanbul verisinden alınmalı.",
+    "Rakamlar kaynak yayının verisidir; yayına almadan önce Borsa İstanbul ve TCMB verisiyle karşılaştırın.",
+    "Dolar, euro, altın ve petrol değerleri saat 18.30 itibarıyladır; yayın saatinde güncelliğini yitirebilir.",
+    "Kaynakta yer alan BIST 30 tablosu alınmadı; hisse listesi eksik olabilir."
    ],
    "hassas_konu": {
     "var_mi": false,
@@ -822,7 +2930,7 @@ const ORNEKLER = {
     "var_mi": false,
     "aciklama": "Haber ulusal piyasa özeti; Bursa ile doğrudan bağı yok. Yerel açı isteniyorsa Bursa merkezli halka açık şirketlerin (ör. sanayi ve tekstil) o günkü performansı ayrıca araştırılmalı. Zorlama yerelleştirme önerilmez."
    },
-   "editor_notu": "Bu haber gazetenin yerel odağına uymuyor; ekonomi bandı veya piyasa sayfası için uygun, manşete çıkarmayın. Rakamlar hızla eskiyor — yayın saatinde teyit şart. Kaynağın tablosu alınmadığı için hisse listesi kısmi."
+   "editor_notu": "Bu haber gazetenin yerel odağına uymuyor; ekonomi bandı veya piyasa sayfası için uygun, manşete çıkarmayın. Önceki taslakta yer alan 'BIST 100 yüzde 0,68 artışla 14.494,61 puan' bilgisi kaynakta bulunmadığı için çıkarıldı — haber artık yalnızca kaynağın doğruladığı döviz, hisse, sektör, altın ve kripto verilerine dayanıyor. Rakamlar hızla eskiyor, yayın saatinde teyit şart."
   },
   "uretim": {
    "model": "claude-opus-5",
@@ -866,15 +2974,20 @@ const ORNEKLER = {
   function kaynakCiz(k){
     $("k-yayin").textContent = k.kaynak_adi || k.kaynak_alan || "—";
     $("k-yazar").textContent = k.yazar || "belirtilmemiş";
-    $("k-tarih").textContent = (k.yayin_tarihi || "belirtilmemiş").slice(0,10);
+    $("k-tarih").textContent = k.yayin_tarihi ? k.yayin_tarihi.slice(0,10) : "belirtilmemiş";
     $("k-uzunluk").textContent = k.kelime_sayisi + " kelime";
     $("k-baslik").textContent = k.orijinal_baslik || "—";
     $("k-govde").textContent = k.orijinal_govde || "(gövde ayıklanamadı)";
 
-    const a = document.createElement("a");
-    a.href = k.kaynak_url; a.textContent = k.kaynak_url;
-    a.target = "_blank"; a.rel = "noopener noreferrer";
-    $("k-adres").textContent = ""; $("k-adres").appendChild(a);
+    $("k-adres").textContent = "";
+    if (k.kaynak_url){
+      const a = document.createElement("a");
+      a.href = k.kaynak_url; a.textContent = k.kaynak_url;
+      a.target = "_blank"; a.rel = "noopener noreferrer";
+      $("k-adres").appendChild(a);
+    } else {
+      $("k-adres").textContent = "elle yapıştırıldı";
+    }
 
     const rozet = $("guven-rozet");
     rozet.textContent = "Ayıklama: " + (k.ayiklama_guveni || "—");
@@ -939,17 +3052,36 @@ const ORNEKLER = {
       const r = document.createElement("input");
       r.type = "radio"; r.name = "baslik"; r.value = i;
       r.checked = i === t.onerilen_baslik_indeksi;
-      const b = document.createElement("span"); b.className = "bas"; b.append(s.metin);
+      const b = document.createElement("span"); b.className = "bas";
+      const yazi = document.createElement("input");
+      yazi.type = "text"; yazi.className = "bas-yazi"; yazi.value = s.metin;
+      yazi.placeholder = "Başlığı buraya yazın";
+      yazi.setAttribute("aria-label", "Başlık seçeneği " + (i+1));
+      b.appendChild(yazi);
       const g = document.createElement("span"); g.className = "gerekce"; g.textContent = s.gerekce;
       const u = document.createElement("span"); u.className = "uzunluk";
-      u.textContent = s.metin.length + " karakter" + (i === t.onerilen_baslik_indeksi ? " · önerilen" : "");
+      function uzunlukYaz(){
+        u.textContent = yazi.value.length + " / 70 karakter" +
+          (i === secili ? " · seçili" : "");
+        u.classList.toggle("asti", yazi.value.length > 70);
+      }
+      uzunlukYaz();
       l.append(r, b, g, u);
+      yazi.addEventListener("input", function(){
+        s.metin = yazi.value;
+        uzunlukYaz();
+        if (i === secili){ seoOner(); onizlemeCiz(); }
+      });
       r.addEventListener("change", function(){
         secili = i;
         kap.querySelectorAll(".secenek").forEach(function(x, j){
           x.classList.toggle("secili", j === i);
         });
-        onizlemeCiz();
+        kap.querySelectorAll(".uzunluk").forEach(function(x, j){
+          const n = t.baslik_secenekleri[j].metin.length;
+          x.textContent = n + " / 70 karakter" + (j === i ? " · seçili" : "");
+        });
+        seoOner(); onizlemeCiz();
       });
       kap.appendChild(l);
     });
@@ -962,7 +3094,11 @@ const ORNEKLER = {
     t.uc_madde.forEach(function(m, i){
       const li = document.createElement("li");
       const n = document.createElement("span"); n.className = "no"; n.textContent = (i+1) + ".";
-      const s = document.createElement("span"); s.textContent = m;
+      const s = document.createElement("input");
+      s.type = "text"; s.className = "madde-yazi"; s.value = m;
+      s.placeholder = "Kısa madde";
+      s.setAttribute("aria-label", (i+1) + ". madde");
+      s.addEventListener("input", function(){ t.uc_madde[i] = s.value; onizlemeCiz(); });
       li.append(n, s); ml.appendChild(li);
     });
 
@@ -1018,7 +3154,9 @@ const ORNEKLER = {
 
     $("t-editor-notu").textContent = t.editor_notu;
     $("onem-rozet").textContent = ONEMLER[t.onem] || t.onem;
-    $("model-rozet").textContent = (paket.uretim && paket.uretim.model) || "—";
+    const u = paket.uretim || {};
+    $("model-rozet").textContent = u.saglayici === "kural"
+      ? "Kural motoru · modelsiz" : (u.model || "—");
   }
 
   /* ---- önizleme ---- */
@@ -1067,6 +3205,236 @@ const ORNEKLER = {
     kap.appendChild(gv);
   }
 
+  /* ---- SEO önerisi: başlık yazıldıkça boş alanları doldurur ---- */
+  function seoOner(){
+    if (!paket || !paket.taslak || !window.BHMotor) return;
+    const t = paket.taslak;
+    const bas = (t.baslik_secenekleri[secili] || {}).metin || "";
+    if (!bas) return;
+    if (!$("t-seo-baslik").value.trim()){
+      $("t-seo-baslik").value = bas.slice(0, 60);
+      t.seo_baslik = $("t-seo-baslik").value;
+      sayacYaz($("t-seo-baslik"), $("seo-baslik-sayac"), 60);
+    }
+    if (!$("t-slug").value.trim()){
+      $("t-slug").value = window.BHMotor.slugla(bas);
+      t.url_slug = $("t-slug").value;
+    }
+  }
+
+  /* ---- yazım tezgahı: kaynağın cümleleri, ham malzeme olarak ---- */
+  function tezgahCiz(p){
+    const kutu = $("tezgah"), liste = $("tezgah-liste");
+    const malzemeler = p.tezgah || [];
+    liste.textContent = "";
+    if (!malzemeler.length){ kutu.hidden = true; return; }
+    kutu.hidden = false;
+    malzemeler.forEach(function(m){
+      const d = document.createElement("button");
+      d.type = "button"; d.className = "malzeme";
+      const damga = document.createElement("span"); damga.className = "damga";
+      const tur = document.createElement("span"); tur.className = "tur"; tur.textContent = m.oneri;
+      const ham = document.createElement("span"); ham.textContent = "yeniden yaz";
+      const puan = document.createElement("span"); puan.className = "puan"; puan.textContent = m.puan;
+      damga.append(tur, ham, puan);
+      const metin = document.createElement("span");
+      metin.className = "metin"; metin.textContent = m.metin;
+      d.append(damga, metin);
+      d.addEventListener("click", function(){
+        // Metni kopyalamaz; yazılacak ilk boş bloğa götürür.
+        const alanlar = $("t-govde").querySelectorAll("textarea");
+        let hedef = null;
+        for (let i = 0; i < alanlar.length; i++){
+          if (!alanlar[i].value.trim()){ hedef = alanlar[i]; break; }
+        }
+        (hedef || alanlar[alanlar.length - 1] || d).focus();
+      });
+      liste.appendChild(d);
+    });
+  }
+
+  /* ---- konu bağlantısı: araç önerir, editör karar verir ---- */
+  function konuCiz(p){
+    const panel = $("konu-panel"), ic = $("konu-icerik"), acik = $("konu-aciklama");
+    ic.textContent = "";
+    if (!window.BHMotor || !p.taslak){ panel.hidden = true; return; }
+    panel.hidden = false;
+
+    if (p.taslak.konu){
+      const konu = window.BHMotor.konular.filter(function(k){
+        return k.id === p.taslak.konu.id;
+      })[0];
+      acik.textContent = "Bu haber bir dosyaya bağlandı.";
+      ic.appendChild(bagliKutu(konu, p));
+      return;
+    }
+
+    const parmak = window.BHMotor.parmakIzi(p.taslak, p.kaynak);
+    const adaylar = p.konu_adaylari || window.BHMotor.ilgiliBul(parmak);
+    p.konu_adaylari = adaylar;
+
+    if (!adaylar.length){
+      acik.textContent = "Arşivde bu haberle bağı olan bir dosya bulunamadı.";
+      const oneri = window.BHMotor.konuOnerisi(parmak, p.taslak);
+      const kutu = document.createElement("div");
+      kutu.className = "not-kutu bilgi";
+      const h = document.createElement("h3"); h.textContent = "Yeni dosya aç";
+      const s = document.createElement("div");
+      s.textContent = "Önerilen ad: “" + oneri.ad + "” · anahtarlar: " +
+        (oneri.anahtarlar.join(", ") || "—") + ". Bu haber sürecin ilk adımıysa dosyayı " +
+        "şimdi açın; değilse boş bırakın.";
+      const ey = document.createElement("div"); ey.className = "eylem";
+      const btn = document.createElement("button");
+      btn.type = "button"; btn.className = "btn"; btn.textContent = "Dosyayı aç ve bağla";
+      btn.addEventListener("click", function(){
+        window.BHMotor.konular.push(oneri);
+        window.BHMotor.konuyaBagla(oneri, p.taslak, p.kaynak);
+        konuCiz(p);
+      });
+      ey.appendChild(btn);
+      kutu.append(h, s, ey);
+      ic.appendChild(kutu);
+      return;
+    }
+
+    const guclu = adaylar.filter(function(a){ return a.guclu; }).length;
+    acik.textContent = guclu
+      ? guclu + " güçlü aday bulundu. Bağlama kararı sizindir — araç kendiliğinden bağlamaz."
+      : "Kesin bir eşleşme yok; aşağıdakiler olası adaylar. Bağlama kararı sizindir.";
+
+    adaylar.forEach(function(a){
+      ic.appendChild(adayKutusu(a, p));
+    });
+  }
+
+  function adayKutusu(a, p){
+    const d = document.createElement("div");
+    d.className = "aday" + (a.guclu ? " guclu" : "");
+
+    const bas = document.createElement("div"); bas.className = "aday-bas";
+    const tur = document.createElement("span"); tur.className = "tur";
+    tur.textContent = a.tur === "konu" ? "dosya" : "haber";
+    const ad = document.createElement("span"); ad.className = "ad"; ad.textContent = a.ad;
+    const skor = document.createElement("span");
+    skor.className = "skor" + (a.guclu ? " guclu" : "");
+    skor.textContent = a.skor + "/100";
+    bas.append(tur, ad, skor);
+
+    const ul = document.createElement("ul"); ul.className = "gerekce";
+    a.gerekceler.forEach(function(g){
+      const li = document.createElement("li"); li.textContent = g; ul.appendChild(li);
+    });
+
+    d.append(bas, ul);
+
+    if (a.tur === "konu" && a.son_maddeler && a.son_maddeler.length){
+      const son = document.createElement("div"); son.className = "son-maddeler";
+      son.textContent = "Dosyada " + a.madde_sayisi + " madde var. Son: " +
+        a.son_maddeler.map(function(m){
+          return window.BHMotor.tarihYaz(m.tarih, m.gorunen) + " — " + m.baslik;
+        }).join(" · ");
+      d.appendChild(son);
+    }
+
+    const ey = document.createElement("div"); ey.className = "eylem";
+    if (a.tur === "konu"){
+      const bagla = document.createElement("button");
+      bagla.type = "button"; bagla.className = "btn dolu"; bagla.textContent = "Bu konuya bağla";
+      bagla.addEventListener("click", function(){
+        const konu = window.BHMotor.konular.filter(function(k){ return k.id === a.id; })[0];
+        if (!konu) return;
+        window.BHMotor.konuyaBagla(konu, p.taslak, p.kaynak);
+        konuCiz(p);
+        onizlemeCiz();
+      });
+      ey.appendChild(bagla);
+    } else {
+      const not = document.createElement("span"); not.className = "not";
+      not.textContent = a.konu_id
+        ? "Bu haber “" + a.konu_id + "” dosyasında."
+        : "Bu haber henüz bir dosyaya bağlı değil.";
+      ey.appendChild(not);
+    }
+    const ilgisiz = document.createElement("button");
+    ilgisiz.type = "button"; ilgisiz.className = "btn"; ilgisiz.textContent = "İlgisiz";
+    ilgisiz.addEventListener("click", function(){
+      p.konu_adaylari = p.konu_adaylari.filter(function(x){ return x.id !== a.id; });
+      konuCiz(p);
+    });
+    ey.appendChild(ilgisiz);
+    d.appendChild(ey);
+    return d;
+  }
+
+  function bagliKutu(konu, p){
+    const d = document.createElement("div"); d.className = "bagli-kutu";
+    const h = document.createElement("h4");
+    h.textContent = "Bağlandı: " + konu.ad;
+    d.appendChild(h);
+
+    if (konu.hassas && konu.hassas.var_mi){
+      const u = document.createElement("div");
+      u.className = "not-kutu tehlike";
+      const uh = document.createElement("h3"); uh.textContent = "Hassas dosya · " + konu.hassas.turu;
+      const ut = document.createElement("div"); ut.textContent = konu.hassas.uyari;
+      u.append(uh, ut);
+      d.appendChild(u);
+    }
+
+    const ol = document.createElement("ul"); ol.className = "kronoloji";
+    konu.maddeler.forEach(function(m){
+      const li = document.createElement("li");
+      if (m.yeni) li.className = "yeni";
+      const t = document.createElement("time");
+      t.setAttribute("datetime", m.tarih || "");
+      t.textContent = window.BHMotor.tarihYaz(m.tarih, m.gorunen);
+      const b = document.createElement("span"); b.className = "bas"; b.textContent = m.baslik;
+      li.append(t, b);
+      if (m.ozet){
+        const o = document.createElement("div"); o.textContent = m.ozet; li.appendChild(o);
+      }
+      ol.appendChild(li);
+    });
+    d.appendChild(ol);
+
+    const ey = document.createElement("div"); ey.className = "eylem";
+    const kopyala = document.createElement("button");
+    kopyala.type = "button"; kopyala.className = "btn";
+    kopyala.textContent = "Kronoloji HTML’ini kopyala";
+    const kod = document.createElement("pre"); kod.className = "kod-kutu"; kod.hidden = true;
+    kopyala.addEventListener("click", function(){
+      const html = window.BHMotor.kronolojiHtml(konu);
+      kod.textContent = html; kod.hidden = false;
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(html).then(function(){
+          kopyala.textContent = "Kopyalandı ✓";
+        }, function(){
+          kopyala.textContent = "Kopyalanamadı — aşağıdan alın";
+        });
+      } else {
+        kopyala.textContent = "Aşağıdan kopyalayın";
+      }
+    });
+    const coz = document.createElement("button");
+    coz.type = "button"; coz.className = "btn"; coz.textContent = "Bağlantıyı kaldır";
+    coz.addEventListener("click", function(){
+      konu.maddeler = konu.maddeler.filter(function(m){ return !m.yeni; });
+      delete p.taslak.konu;
+      p.konu_adaylari = null;
+      konuCiz(p);
+    });
+    ey.append(kopyala, coz);
+    d.append(ey, kod);
+
+    const not = document.createElement("p");
+    not.className = "not"; not.style.marginTop = "8px";
+    not.textContent = "Bu blok tasarim-3 sayfalarındaki “Sürecin akışı” bölümüne yapıştırılır. " +
+      "Prototipte konular.json dosyasına yazılmaz; kalıcı kayıt için komut satırında " +
+      "--konu " + konu.id + " kullanın.";
+    d.appendChild(not);
+    return d;
+  }
+
   /* ---- paket yükleme ---- */
   function paketYukle(p){
     if (!p || !p.kaynak){ alert("Bu dosya araç çıktısına benzemiyor."); return; }
@@ -1077,10 +3445,15 @@ const ORNEKLER = {
     if (p.taslak){
       $("taslak-alanlari").hidden = false;
       taslakCiz(p.taslak);
+      tezgahCiz(p);
+      konuCiz(p);
       onizlemeCiz();
     } else {
       $("taslak-alanlari").hidden = true;
-      alert("Bu pakette yalnızca kaynak ayıklaması var (--yalniz-ayikla). Taslak üretmek için aracı anahtarla çalıştırın.");
+      $("tezgah").hidden = true;
+      $("konu-panel").hidden = true;
+      alert("Bu pakette yalnızca kaynak ayıklaması var (--yalniz-ayikla).\n\n" +
+            "Taslağı burada kurmak için: python arac/haber_taslak.py --kaynak-json <dosya>");
     }
     $("calisma").scrollIntoView({behavior: "smooth", block: "start"});
   }
@@ -1120,12 +3493,117 @@ const ORNEKLER = {
       akisOynat(function(){ paketYukle(JSON.parse(JSON.stringify(ORNEKLER[eslesen]))); });
       return;
     }
-    window.alert(
-      "Bu sayfa tarayıcıda çalıştığı için rastgele bir siteyi doğrudan çekemez " +
-      "(tarayıcı güvenlik kısıtı).\n\nCanlı çekim için komut satırında:\n\n" +
-      "  python arac/haber_taslak.py \"" + adres + "\"\n\n" +
-      "Çıkan JSON dosyasını bu sayfaya sürükleyip bırakın."
-    );
+    /* Tarayıcı rastgele bir siteyi çekemez (CORS). Yerel yayıncı açıksa kaynağı
+       o indirsin; kapalıysa elle yapıştırma yoluna düşülür. */
+    function yapistirmayaDus(mesaj){
+      window.alert(mesaj);
+      const kutu = $("yapistir-kutu");
+      kutu.open = true;
+      $("y-adres").value = adres;
+      $("y-govde").focus();
+    }
+
+    const secili = document.querySelector('input[name="yontem"]:checked');
+    const yontem = secili ? secili.value : "kural";
+    const adlar = {kural: "A · kural motoru",
+                   tarayici: "tarayıcı + kural motoru",
+                   skill: "B · skill zinciri (üret → denetle → düzelt)",
+                   yz: "C · yapay zekâ (çıplak)"};
+
+    const dugme = e.target.querySelector('button[type="submit"]');
+    const eskiYazi = dugme.textContent;
+    const baslangic = Date.now();
+    dugme.disabled = true;
+    const isaret = yontem === "yz" ? "Yapay zekâ yazıyor"
+                 : yontem === "skill" ? "Yazıyor, sonra denetliyor" : "İndiriliyor";
+    dugme.textContent = isaret + "…";
+    /* Model yolları dakikalarca sürebiliyor; sayaç olmayınca sayfa donmuş görünüyor. */
+    const sayac = window.setInterval(function(){
+      const sn = Math.round((Date.now() - baslangic) / 1000);
+      dugme.textContent = isaret + "… " + sn + " sn";
+    }, 1000);
+    function bitir(){
+      window.clearInterval(sayac);
+      dugme.disabled = false;
+      dugme.textContent = eskiYazi;
+    }
+    function sureYaz(){
+      const sn = Math.round((Date.now() - baslangic) / 1000);
+      $("yontem-not").textContent = "Bu taslağı üreten: " + adlar[yontem] + " · " + sn + " sn.";
+    }
+
+    fetch("http://127.0.0.1:8787/ayikla", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({adres: adres, yontem: yontem})
+    }).then(function(y){ return y.json(); }).then(function(c){
+      bitir();
+      if (!c.ok){
+        yapistirmayaDus(c.hata + "\n\nHaberin metnini “Metni yapıştır” kutusuna " +
+                        "bırakarak devam edebilirsiniz.");
+        return;
+      }
+      /* B yolunda sunucu yalnız ayıkladı; taslağı burada, tarayıcı motoru kurar. */
+      if (yontem === "tarayici"){
+        if (!window.BHMotor){
+          yapistirmayaDus("Tarayıcı motoru yüklenmedi.");
+          return;
+        }
+        const kurulan = window.BHMotor.taslakUretKural(c.paket.kaynak);
+        c.paket.taslak = kurulan.taslak;
+        c.paket.uretim = kurulan.uretim;
+        c.paket.tezgah = kurulan.tezgah;
+      }
+      sureYaz();
+      /* Skill zinciri kaç tur döndüğünü ve kalan bulguyu bildirir. */
+      const u = (c.paket || {}).uretim || {};
+      if (u.turlar){
+        const kalan = (u.kalan_bulgular || []).length;
+        $("yontem-not").textContent += " Denetim " + u.turlar.length + " tur döndü; " +
+          (kalan ? kalan + " bulgu kaldı: " + u.kalan_bulgular.join(" · ")
+                 : "sonuç temiz.");
+      }
+      akisOynat(function(){ paketYukle(c.paket); });
+    }).catch(function(){
+      bitir();
+      yapistirmayaDus(
+        "Bu sayfa tarayıcıda çalıştığı için rastgele bir siteyi doğrudan çekemez " +
+        "(tarayıcı güvenlik kısıtı) ve yerel yayıncı da kapalı.\n\nİki yol var:\n\n" +
+        "1) Yayıncıyı başlatın:\n     python arac/yayinci.py\n" +
+        "   Sonra adresi yeniden gönderin; kaynağı o indirir.\n\n" +
+        "2) Haberin metnini kopyalayıp aşağıdaki “Metni yapıştır” kutusuna bırakın — " +
+        "taslak burada, kural motoruyla kurulur."
+      );
+    });
+  });
+
+  /* ---- yapıştırılan metinden taslak: tarayıcıda, modelsiz ---- */
+  $("y-uret").addEventListener("click", function(){
+    if (!window.BHMotor){
+      window.alert("Kural motoru yüklenemedi. Sayfa eksik gömülmüş olabilir " +
+                   "(python arac/gomulu_uret.py).");
+      return;
+    }
+    const govde = $("y-govde").value.trim();
+    if (govde.length < 40){
+      window.alert("Gövde metni çok kısa. Kaynağın metnini yapıştırın.");
+      $("y-govde").focus();
+      return;
+    }
+    const kaynak = window.BHMotor.metindenKaynak({
+      baslik: $("y-baslik").value,
+      govde: govde,
+      yayin: $("y-yayin").value,
+      adres: $("y-adres").value
+    });
+    if (!kaynak.orijinal_baslik){
+      window.alert("Başlık okunamadı. Başlık alanını doldurun.");
+      $("y-baslik").focus();
+      return;
+    }
+    const p = window.BHMotor.taslakUretKural(kaynak);
+    p.kaynak = kaynak;
+    akisOynat(function(){ paketYukle(p); });
   });
 
   $("json-sec").addEventListener("click", function(){ $("json-dosya").click(); });
@@ -1174,18 +3652,8 @@ const ORNEKLER = {
     $(id).addEventListener("input", onizlemeCiz);
   });
 
-  $("yayin-btn").addEventListener("click", function(){
-    if (!paket) return;
-    const kalan = Array.prototype.filter.call(
-      document.querySelectorAll("#t-kontrol input"), function(c){ return !c.checked; }
-    ).length;
-    $("eylem-not").textContent = kalan
-      ? "Doğrulanacak " + kalan + " madde işaretlenmedi. Prototipte yayın yapılmaz; gerçek sistemde bu bir engeldir."
-      : "Tüm maddeler doğrulandı. Prototip olduğu için yayın yapılmadı.";
-  });
-
-  $("indir-btn").addEventListener("click", function(){
-    if (!paket) return;
+  /* Başlık ve gövde zaten yazıldıkça pakete işleniyor; kalan alanlar burada toplanır. */
+  function duzenlemeleriAl(){
     paket.taslak.spot = $("t-spot").value;
     paket.taslak.seo_baslik = $("t-seo-baslik").value;
     paket.taslak.seo_aciklama = $("t-seo-aciklama").value;
@@ -1196,6 +3664,49 @@ const ORNEKLER = {
     paket.taslak.ilce = $("t-ilce").value;
     paket.taslak.onem = $("t-onem").value;
     paket.taslak.onerilen_baslik_indeksi = secili;
+  }
+
+  /* Yayın, yerel yayıncıya yazdırır: python arac/yayinci.py
+     Sunucu kapalıyken sayfa aynen çalışır, yalnızca düğme uyarı verir. */
+  const YAYIN_UCU = "http://127.0.0.1:8787/yayinla";
+
+  $("yayin-btn").addEventListener("click", function(){
+    if (!paket) return;
+    const kalan = Array.prototype.filter.call(
+      document.querySelectorAll("#t-kontrol input"), function(c){ return !c.checked; }
+    ).length;
+    if (kalan){
+      $("eylem-not").textContent = "Doğrulanacak " + kalan +
+        " madde işaretlenmedi. Yayın yapılmadı — bu bir engeldir.";
+      return;
+    }
+    duzenlemeleriAl();
+    $("eylem-not").textContent = "Yayınlanıyor…";
+    fetch(YAYIN_UCU, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(paket)
+    }).then(function(y){ return y.json(); }).then(function(c){
+      const not = $("eylem-not");
+      not.textContent = "";
+      if (!c.ok){ not.textContent = "Yayınlanmadı: " + c.hata; return; }
+      not.appendChild(document.createTextNode("Üç tasarıma da yayınlandı: "));
+      c.yayinlar.forEach(function(y, i){
+        if (i) not.appendChild(document.createTextNode(" · "));
+        const a = document.createElement("a");
+        a.href = y.sayfa; a.target = "_blank"; a.rel = "noopener";
+        a.textContent = "tasarım " + y.tasarim;
+        not.appendChild(a);
+      });
+    }).catch(function(){
+      $("eylem-not").textContent =
+        "Yayın sunucusu kapalı. Terminalde çalıştırın: python arac/yayinci.py";
+    });
+  });
+
+  $("indir-btn").addEventListener("click", function(){
+    if (!paket) return;
+    duzenlemeleriAl();
     $("eylem-not").textContent =
       "Tarayıcı bu sayfadan dosya indirmeyi engelliyor olabilir. Düzenlenmiş taslak konsola yazıldı (F12).";
     try { console.log(JSON.stringify(paket, null, 2)); } catch(e){}

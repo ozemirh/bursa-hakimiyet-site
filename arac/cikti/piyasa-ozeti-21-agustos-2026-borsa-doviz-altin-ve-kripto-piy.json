@@ -24,29 +24,29 @@
   "taslak": {
     "baslik_secenekleri": [
       {
-        "metin": "BIST 100 haftayı yükselişle kapattı",
-        "gerekce": "Düz piyasa başlığı; günlük özet için yeterli."
+        "metin": "Piyasa özeti: dolar 48,06, euro 56,15 liradan işlem gördü",
+        "gerekce": "Düz haber başlığı: kaynağın doğruladığı iki temel rakamı verir."
       },
       {
-        "metin": "Borsada haftanın son işlem günü: BIST 100 yüzde 0,68 arttı",
-        "gerekce": "Rakamlı, arama dostu."
+        "metin": "Gram altın yüzde 2,03 arttı, 7.101,41 liraya çıktı",
+        "gerekce": "Etki odaklı: okurun cebini en doğrudan ilgilendiren kalem."
       },
       {
-        "metin": "Piyasalarda günün özeti",
-        "gerekce": "Kısa; ekonomi bandı için uygun ama ayırt edici değil."
+        "metin": "Piyasalarda günün tablosu",
+        "gerekce": "Kısa ve vurucu; tıklama tuzağı içermez."
       }
     ],
-    "onerilen_baslik_indeksi": 1,
-    "spot": "Borsa İstanbul 21 Ağustos Cuma gününü yükselişle tamamladı. BIST 100 endeksi yüzde 0,68 değer kazanarak 14.494,61 puandan kapandı; dolar ve euro günü sınırlı artışla bitirdi.",
+    "onerilen_baslik_indeksi": 0,
+    "spot": "BloombergHT'nin 21 Ağustos 2026 tarihli piyasa özetine göre dolar/TL 48,06, euro/TL ise 56,15 lira seviyesinde işlem gördü. Gram altın yüzde 2,03 artışla 7.101,41 liraya çıkarken Brent petrol 94,17 dolar seviyesinde bulundu.",
     "uc_madde": [
-      "BIST 100 endeksi yüzde 0,68 artışla 14.494,61 puandan kapandı.",
+      "Dolar/TL 48,06, euro/TL 56,15 lira seviyesinde işlem gördü.",
       "En çok işlem gören hisseler THYAO, ASELS ve AKBNK oldu.",
-      "Dolar/TL 48,06, Euro/TL 56,15 seviyesinde günü tamamladı."
+      "Gram altın yüzde 2,03 artışla 7.101,41 liradan alıcı buldu."
     ],
     "govde": [
       {
         "tur": "paragraf",
-        "metin": "Borsa İstanbul, 21 Ağustos Cuma gününü yükselişle tamamladı. BloombergHT'nin aktardığına göre BIST 100 endeksi yüzde 0,68 değer kazanarak 14.494,61 puandan kapandı."
+        "metin": "BloombergHT'nin aktardığına göre dolar/TL kuru 21 Ağustos 2026'da saat 18.30 itibarıyla yüzde 0,20 artışla 48,06 lirada, euro/TL ise yüzde 0,04 artışla 56,15 lirada işlem gördü."
       },
       {
         "tur": "paragraf",
@@ -61,8 +61,12 @@
         "metin": "Sektörel bazda madencilik, kimya-petrol-plastik ve metal eşya-makina yükselirken; bilişim, teknoloji ve orman-kâğıt-basım en çok gerileyen sektörler oldu."
       },
       {
+        "tur": "ara_baslik",
+        "metin": "Altın ve kripto"
+      },
+      {
         "tur": "paragraf",
-        "metin": "Döviz tarafında dolar/TL saat 18.30 itibarıyla yüzde 0,20 artışla 48,06 lira, euro/TL ise yüzde 0,04 artışla 56,15 lira seviyesinde bulunuyordu."
+        "metin": "Kapalı Çarşı'da gram altının fiyatı yüzde 2,03 yükselerek 7.101,41 liraya ulaştı; çeyrek altın 11.360,85 liradan alınıp 11.610,81 liradan satıldı. Brent petrol 94,17 dolar seviyesindeyken kripto tarafında Bitcoin 77.628, Ethereum 2.400,73 dolardan işlem gördü."
       }
     ],
     "kategori": "Ekonomi",
@@ -74,18 +78,19 @@
       "piyasalar",
       "kapanış"
     ],
-    "seo_baslik": "BIST 100 yüzde 0,68 artışla 14.494,61 puandan kapandı",
-    "seo_aciklama": "Borsa İstanbul 21 Ağustos Cuma gününü yükselişle tamamladı. BIST 100 yüzde 0,68 arttı; dolar 48,06, euro 56,15 lira seviyesinde.",
+    "seo_baslik": "Piyasa özeti: dolar 48,06, euro 56,15, gram altın 7.101,41",
+    "seo_aciklama": "21 Ağustos 2026 piyasa özeti: dolar 48,06, euro 56,15 lira; gram altın yüzde 2,03 artışla 7.101,41 liradan işlem gördü.",
     "url_slug": "bist-100-21-agustos-2026-kapanis",
     "gorsel_alt": "Borsa İstanbul işlem salonunda gösterge ekranları",
-    "gorsel_altyazi": "BIST 100 endeksi haftanın son işlem gününü yükselişle kapattı.",
-    "okuma_suresi_dk": 2,
+    "gorsel_altyazi": "Piyasalarda 21 Ağustos 2026 kapanış tablosu.",
+    "okuma_suresi_dk": 1,
     "onem": "normal",
     "kaynak_atfi": "BloombergHT'nin aktardığına göre",
     "dogrulanmasi_gerekenler": [
-      "Rakamlar kaynak yayının kapanış verisidir; yayına almadan önce Borsa İstanbul verisiyle karşılaştırın.",
-      "Dolar ve euro değerleri saat 18.30 itibarıyladır; yayın saatinde güncelliğini yitirebilir.",
-      "Kaynakta yer alan tablo alınmadı; hisse listesi eksik olabilir."
+      "Kaynak metninde BIST 100 endeks seviyesi ve günlük değişim oranı YOK; endeks rakamı kullanılacaksa Borsa İstanbul verisinden alınmalı.",
+      "Rakamlar kaynak yayının verisidir; yayına almadan önce Borsa İstanbul ve TCMB verisiyle karşılaştırın.",
+      "Dolar, euro, altın ve petrol değerleri saat 18.30 itibarıyladır; yayın saatinde güncelliğini yitirebilir.",
+      "Kaynakta yer alan BIST 30 tablosu alınmadı; hisse listesi eksik olabilir."
     ],
     "hassas_konu": {
       "var_mi": false,
@@ -96,7 +101,7 @@
       "var_mi": false,
       "aciklama": "Haber ulusal piyasa özeti; Bursa ile doğrudan bağı yok. Yerel açı isteniyorsa Bursa merkezli halka açık şirketlerin (ör. sanayi ve tekstil) o günkü performansı ayrıca araştırılmalı. Zorlama yerelleştirme önerilmez."
     },
-    "editor_notu": "Bu haber gazetenin yerel odağına uymuyor; ekonomi bandı veya piyasa sayfası için uygun, manşete çıkarmayın. Rakamlar hızla eskiyor — yayın saatinde teyit şart. Kaynağın tablosu alınmadığı için hisse listesi kısmi."
+    "editor_notu": "Bu haber gazetenin yerel odağına uymuyor; ekonomi bandı veya piyasa sayfası için uygun, manşete çıkarmayın. Önceki taslakta yer alan 'BIST 100 yüzde 0,68 artışla 14.494,61 puan' bilgisi kaynakta bulunmadığı için çıkarıldı — haber artık yalnızca kaynağın doğruladığı döviz, hisse, sektör, altın ve kripto verilerine dayanıyor. Rakamlar hızla eskiyor, yayın saatinde teyit şart."
   },
   "uretim": {
     "model": "claude-opus-5",

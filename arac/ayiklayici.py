@@ -19,6 +19,7 @@ import urllib.parse
 import urllib.request
 from html import unescape
 from html.parser import HTMLParser
+from pathlib import Path
 
 TARAYICI = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -247,6 +248,55 @@ def _etiketsiz(metin: str) -> str:
 
 # -- ana giris --------------------------------------------------------
 
+_KAYNAK_SATIRI = re.compile(
+    r"[Kk]aynak\s*[:\-–]\s*([A-Za-z0-9ÇĞİÖŞÜçğıöşü .\'&/]{2,40})")
+_PARANTEZ_AJANS = re.compile(r"[(\[]\s*([A-ZÇĞİÖŞÜ]{2,6})\s*[)\]]")
+
+
+def _ajanslar() -> list[str]:
+    """Sozlukteki ajans listesi. Sozluk okunamazsa bos doner, akis durmaz."""
+    try:
+        yol = Path(__file__).resolve().parent / "sozluk.json"
+        return json.loads(yol.read_text(encoding="utf-8")).get("ajanslar", [])
+    except Exception:
+        return []
+
+
+def asil_kaynak_bul(html: str, govde: str, yazar: str) -> str:
+    """Sayfanin KENDI belirttigi kaynak. Bulunamazsa bos doner.
+
+    Haber siteleri kaynagi uc bicimde yaziyor: acik "Kaynak: AA" satiri, govde
+    sonunda parantezli ajans kodu "(DHA)", ya da yazar alanina ajans adi. Ucu de
+    aranir; ajans listesiyle eslesen kanonik ada cevrilir.
+    """
+    ajanslar = _ajanslar()
+    kucuk_ajans = {a.lower(): a for a in ajanslar}
+
+    def kanon(deger: str) -> str:
+        d = " ".join((deger or "").split()).strip(" .,:;-")
+        if not d:
+            return ""
+        if d.lower() in kucuk_ajans:
+            return kucuk_ajans[d.lower()]
+        for a in ajanslar:                      # "AA muhabirine gore" gibi
+            if a.lower() in d.lower().split():
+                return a
+        return d
+
+    for kaynak_metni in (govde, html):
+        esle = _KAYNAK_SATIRI.search(kaynak_metni or "")
+        if esle:
+            bulunan = kanon(esle.group(1))
+            if bulunan:
+                return bulunan
+
+    esle = _PARANTEZ_AJANS.search(govde or "")
+    if esle and esle.group(1).lower() in kucuk_ajans:
+        return kucuk_ajans[esle.group(1).lower()]
+
+    return kanon(yazar) if kanon(yazar) in ajanslar else ""
+
+
 def ayikla(html: str, url: str) -> dict:
     """Sayfa kaynagindan yapilandirilmis haber verisi cikarir."""
     ayristirici = _Toplayici()
@@ -328,6 +378,7 @@ def ayikla(html: str, url: str) -> dict:
             (g["alt"] for g in ayristirici.gorseller if g.get("alt")), ""
         ),
         "yazar": yazar,
+        "asil_kaynak": asil_kaynak_bul(html, govde, yazar),
         "yayin_tarihi": tarih,
         "guncelleme_tarihi": guncelleme,
         "dil": meta.get("og:locale", "") or "tr",

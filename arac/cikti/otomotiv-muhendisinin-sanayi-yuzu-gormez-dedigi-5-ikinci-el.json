@@ -1,0 +1,205 @@
+{
+  "kaynak": {
+    "kaynak_url": "https://www.sozcu.com.tr/otomotiv-muhendisinin-sanayi-yuzu-gormez-dedigi-5-ikinci-el-otomobil-p352095",
+    "kaynak_alan": "sozcu.com.tr",
+    "kaynak_adi": "Sözcü",
+    "orijinal_baslik": "Otomotiv mühendisinin 'sanayi yüzü görmez' dediği 5 ikinci el otomobil",
+    "orijinal_spot": "İkinci el otomobil pazarında yükselen yedek parça ve bakım maliyetleri alıcıları daha temkinli davranmaya zorlarken, bir otomotiv uzmanından ezber bozan bir tavsiye listesi geldi. İşte mekanik aksamların sadeliği, kronik sorunsuzluk ve düşük işletme giderleri kriter alınarak hazırlanan listede, sanayi yüzü göstermeyecek en dayanıklı 5 model...",
+    "orijinal_govde": "İkinci el otomobil piyasasında doğru aracı seçmek, özellikle artan bakım ve yedek parça maliyetleri nedeniyle her zamankinden daha kritik hale geldi. Bir otomotiv mühendisi, mekanik aksamların sadeliği, yüksek dayanıklılık ve düşük işletme giderlerini dikkate alarak sanayi yüzü göstermeyen ve sorunsuz sürüş sunan 5 ikinci el otomobil modelini sıraladı. İşte uzman gözüyle güvenilirliği kanıtlanmış o modeller: Toyota Corolla Hybrid (1. Sırada): Mühendisin kişisel favorisi olan bu model, özellikle şehir içi kullanımlarda hibrit teknolojisi sayesinde ciddi yakıt tasarrufu sağlıyor. Minimum arıza riski ve yüksek güvenilirliğiyle listenin zirvesinde yer alıyor. Mazda 3 (2.0 Benzinli): Piyasada hak ettiği ilgiyi görmese de yüksek kalitesiyle öne çıkan bir alternatif. Dengeli yol tutuşu, kaliteli iç mekanı ve çok nadir arıza yapmasıyla standartların dışına çıkmak isteyen sürücülere hitap ediyor. Honda Civic (1.8 VTEC): Aracın kırılması güç sağlamlığının temel kaynağı olan efsanevi 1.8 VTEC motoru, geniş iç mekan ve pratiklikle birleşiyor. Kronik arıza riskini minimumda tutmak isteyenler için ideal bir seçenek. Lexus CT 200h (1.8 Hibrit): Konfor ve yakıt ekonomisini bir arada sunan kompakt hibrit model. Karmaşık ve narin teknolojilerden uzak tutulan 1.8 litrelik motor mimarisi, düzenli bakımla uzun yıllar masrafsız kullanım vaat ediyor. Suzuki Vitara (1.6 Benzinli): Listenin en büyük kozu mekanik sadelik. Yalın motor yapısı olası tamir süreçlerini basitleştirirken bakım maliyetlerini de oldukça düşük seviyelerde tutuyor.",
+    "gorsel_url": "https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/8/ikinci-elpng-TGrFM08MwUWE-oRs3OASlA.png?w=1200&h=900&mode=crop&scale=both",
+    "gorsel_alt": "Otomotiv mühendisinin 'sanayi yüzü görmez' dediği 5 ikinci el otomobil",
+    "yazar": "Haber Merkezi",
+    "asil_kaynak": "",
+    "yayin_tarihi": "2026-08-24T08:51:01+03:00",
+    "guncelleme_tarihi": "2026-08-24T08:51:01+03:00",
+    "dil": "tr",
+    "kelime_sayisi": 209,
+    "ayiklama_yontemleri": [
+      "jsonld:headline",
+      "jsonld:description",
+      "jsonld:articleBody",
+      "jsonld:image"
+    ],
+    "ayiklama_guveni": "yuksek"
+  },
+  "taslak": {
+    "baslik_secenekleri": [
+      {
+        "metin": "Otomotiv mühendisinden ikinci elde 5 model tavsiyesi",
+        "gerekce": "Haberin konusunu ve niteliğini nötr biçimde özetliyor, doğrudan haber diliyle yazıldı; tıklama tuzağı içermiyor."
+      },
+      {
+        "metin": "İkinci elde bakım masrafını azaltacak 5 model önerisi",
+        "gerekce": "Okuyucuya doğrudan fayda vurgusu yapıyor; haberin pratik değerini öne çıkarıyor."
+      },
+      {
+        "metin": "Sanayi yüzü görmeyen 5 ikinci el otomobil",
+        "gerekce": "Kısa, akılda kalıcı ve kaynaktaki özgün ifadeyi koruyor; ancak biraz jargon içerdiğinden ana başlık olarak önerilmiyor."
+      }
+    ],
+    "onerilen_baslik_indeksi": 0,
+    "spot": "Bir otomotiv mühendisi, mekanik yapının sadeliği ve düşük arıza riskini öne çıkararak ikinci el pazarında dikkat çeken beş modeli sıraladı; listede hibrit ve benzinli araçlar bir arada yer alıyor.",
+    "uc_madde": [
+      "Otomotiv mühendisi, ikinci el pazarında sanayiye az giden beş modeli sıraladı.",
+      "Listenin başında hibrit teknolojisiyle düşük yakıt tüketimi sunan Toyota Corolla Hybrid yer alıyor.",
+      "Diğer modeller arasında Mazda 3, Honda Civic, Lexus CT 200h ve Suzuki Vitara bulunuyor."
+    ],
+    "govde": [
+      {
+        "tur": "paragraf",
+        "metin": "İkinci el otomobil piyasasında yedek parça ve bakım giderlerinin artması, alıcıları daha temkinli seçim yapmaya yöneltiyor. Bir otomotiv mühendisi, mekanik aksamın sadeliği, dayanıklılık ve düşük işletme maliyeti kriterlerine göre sanayiye az giden beş ikinci el modeli sıraladı."
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": "Zirvede hibrit bir model var"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Mühendisin kişisel favorisi olarak öne çıkardığı Toyota Corolla Hybrid, özellikle şehir içi kullanımda hibrit sistemiyle yakıt tasarrufu sağlıyor. Modelin arıza riskinin düşük olduğu belirtiliyor."
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Listede ikinci sırada yer alan Mazda 3'ün 2.0 litrelik benzinli versiyonu, dengeli yol tutuşu ve kaliteli iç mekanıyla dikkat çekiyor. Modelin nadiren arıza yaptığı ifade ediliyor."
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Honda Civic'in 1.8 VTEC motorlu versiyonu da listede yer buluyor. Motorun sağlamlığı ve geniş iç mekanıyla öne çıkan model, kronik arıza riskinin düşük olmasıyla tercih ediliyor."
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Kompakt hibrit segmentinde Lexus CT 200h de listeye giriyor. 1.8 litrelik hibrit motor mimarisinin karmaşık olmadığı, düzenli bakımla uzun yıllar düşük maliyetli kullanım sunduğu belirtiliyor."
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Listeyi tamamlayan Suzuki Vitara'nın 1.6 litrelik benzinli versiyonu, mekanik sadeliğiyle öne çıkıyor. Yalın motor yapısının tamir süreçlerini kolaylaştırdığı ve bakım maliyetlerini düşürdüğü aktarılıyor."
+      }
+    ],
+    "kategori": "Ekonomi",
+    "ilce": "Bursa dışı",
+    "etiketler": [
+      "ikinci el otomobil",
+      "otomotiv",
+      "bakım maliyeti",
+      "Toyota Corolla Hybrid",
+      "Mazda 3",
+      "Honda Civic",
+      "Suzuki Vitara"
+    ],
+    "seo_baslik": "Sanayi Yüzü Görmeyen 5 İkinci El Otomobil",
+    "seo_aciklama": "Bir otomotiv mühendisi, mekanik sadelik ve düşük arıza riskine göre ikinci el pazarında öne çıkan beş dayanıklı modeli sıraladı.",
+    "url_slug": "otomotiv-muhendisinin-sanayi-yuzu-gormez-dedigi-5-ikinci-el-otomobil",
+    "gorsel_alt": "İkinci el satış alanında yan yana sıralanmış otomobiller",
+    "gorsel_altyazi": "Habere konu olan modellerden birine ait temsili görsel; çekim yeri ve tarihi doğrulanmadı.",
+    "okuma_suresi_dk": 1,
+    "onem": "normal",
+    "kaynak_atfi": "Sözcü haberine göre",
+    "dogrulanmasi_gerekenler": [
+      "Görüşüne başvurulan otomotiv mühendisinin adı, unvanı ve kurumu kaynak sayfada belirtilmemiş; teyit edilip mümkünse habere eklenmeli.",
+      "Habere eşlik edecek görselin hak durumu ve kaynağı doğrulanmadı; gerçek görsel bulunmadan yayınlanmamalı.",
+      "Modellerin önerilen üretim yılı aralığı veya donanım paketi kaynakta netleştirilmemiş; teyit edilmeli."
+    ],
+    "hassas_konu": {
+      "var_mi": false,
+      "turu": "",
+      "uyari": ""
+    },
+    "bursa_ilgisi": {
+      "var_mi": false,
+      "aciklama": "Haberin konusu Bursa ile doğrudan ilgili değil; ulusal ölçekte genel bir otomotiv/tüketici tavsiyesi içeriği. Zorla yerelleştirme yapılmadı."
+    },
+    "editor_notu": "Kaynak haberde Bursa bağlantısı yok, bu nedenle ilçe alanı 'Bursa dışı' işaretlendi ve bursa_ilgisi alanında durum açıkça belirtildi. Görüşüne başvurulan mühendisin kimliği kaynak sayfada verilmediği için doğrulanmasi_gerekenler listesine eklendi. Kaynak sayfada görsele dair bilgi olmadığından gorsel_alt/altyazi temsili yazıldı; gerçek ve hak durumu doğrulanmış bir görsel bulunmadan yayına alınmamalı."
+  },
+  "tezgah": [
+    {
+      "metin": "Honda Civic (1.8 VTEC): Aracın kırılması güç sağlamlığının temel kaynağı olan efsanevi 1.8 VTEC motoru, geniş iç mekan ve pratiklikle birleşiyor.",
+      "puan": 78,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Lexus CT 200h (1.8 Hibrit): Konfor ve yakıt ekonomisini bir arada sunan kompakt hibrit model.",
+      "puan": 73,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Suzuki Vitara (1.6 Benzinli): Listenin en büyük kozu mekanik sadelik.",
+      "puan": 71,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Bir otomotiv mühendisi, mekanik aksamların sadeliği, yüksek dayanıklılık ve düşük işletme giderlerini dikkate alarak sanayi yüzü göstermeyen ve sorunsuz sürüş sunan 5 ikinci el otomobil modelini sıraladı.",
+      "puan": 67,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Mazda 3 (2.0 Benzinli): Piyasada hak ettiği ilgiyi görmese de yüksek kalitesiyle öne çıkan bir alternatif.",
+      "puan": 66,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "İşte uzman gözüyle güvenilirliği kanıtlanmış o modeller: Toyota Corolla Hybrid (1.",
+      "puan": 64,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "Karmaşık ve narin teknolojilerden uzak tutulan 1.8 litrelik motor mimarisi, düzenli bakımla uzun yıllar masrafsız kullanım vaat ediyor.",
+      "puan": 61,
+      "oneri": "rakam"
+    },
+    {
+      "metin": "İkinci el otomobil piyasasında doğru aracı seçmek, özellikle artan bakım ve yedek parça maliyetleri nedeniyle her zamankinden daha kritik hale geldi.",
+      "puan": 42,
+      "oneri": "giriş"
+    },
+    {
+      "metin": "Sırada): Mühendisin kişisel favorisi olan bu model, özellikle şehir içi kullanımlarda hibrit teknolojisi sayesinde ciddi yakıt tasarrufu sağlıyor.",
+      "puan": 42,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "Dengeli yol tutuşu, kaliteli iç mekanı ve çok nadir arıza yapmasıyla standartların dışına çıkmak isteyen sürücülere hitap ediyor.",
+      "puan": 40,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "Yalın motor yapısı olası tamir süreçlerini basitleştirirken bakım maliyetlerini de oldukça düşük seviyelerde tutuyor.",
+      "puan": 39,
+      "oneri": "gelişme"
+    },
+    {
+      "metin": "Minimum arıza riski ve yüksek güvenilirliğiyle listenin zirvesinde yer alıyor.",
+      "puan": 36,
+      "oneri": "gelişme"
+    }
+  ],
+  "uretim": {
+    "saglayici": "cli",
+    "model": "claude-code-cli",
+    "surum": "1.0",
+    "sema_uyarilari": []
+  },
+  "konu_adaylari": [],
+  "konu_onerisi": {
+    "id": "ekonomi",
+    "ad": "Ekonomi",
+    "slug": "ekonomi",
+    "durum": "acik",
+    "kategori": "Ekonomi",
+    "ilce": "Bursa dışı",
+    "anahtarlar": [
+      "ikinci el otomobil",
+      "otomotiv",
+      "bakım maliyeti",
+      "Toyota Corolla Hybrid",
+      "Mazda 3"
+    ],
+    "kisiler": [],
+    "kurumlar": [],
+    "hassas": {
+      "var_mi": false,
+      "turu": "",
+      "uyari": ""
+    },
+    "not": "",
+    "maddeler": []
+  }
+}
