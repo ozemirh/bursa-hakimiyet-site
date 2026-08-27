@@ -1,0 +1,82 @@
+{% extends "panel/taban.html" %}
+{% load static %}
+
+{% comment %}Ortak liste kabuğu — mevcut panelin on liste ekranı tek bir
+DataTables kabuğunu paylaşıyordu; burada da tek şablon var. Hücreler
+görünümde tipleriyle üretiliyor, bu yüzden şablon modelden bağımsız.
+
+Toplu işlem bağlamı (`toplu`) verilirse tablo bir POST formuna sarılır ve
+seçim sütunu çizilir. Verilmezse seçim kutusu **hiç yoktur** — fiili
+olmayan seçim kutusu, mevcut panelin tekrarlanmaması gereken hatasıdır.
+
+Django'da `{# … #}` TEK SATIRLIKTIR; çok satırlı yorum `{% comment %}` ile
+yazılır. Bu hatanın panelin yerleşimini bir kez bozduğu kayıtlı
+(URUN-PLANI.md §12).{% endcomment %}
+
+{% block icerik %}
+  {% include "panel/parca/suzgec.html" %}
+
+  {% if uyari %}<div class="kutu uyari serit" role="status">{{ uyari }}</div>{% endif %}
+  {% if ust_bilgi or ek_baglantilar %}
+    <p class="alt-not serit">
+      {{ ust_bilgi }}
+      {% for adres, ad in ek_baglantilar %}<a class="dugme ufak" href="{{ adres }}">{{ ad }}</a>{% endfor %}
+    </p>
+  {% endif %}
+
+  <p class="alt-not serit">
+    {{ sayfa.paginator.count }} kayıt · sayfa {{ sayfa.number }}/{{ sayfa.paginator.num_pages }}
+  </p>
+
+  {% if toplu %}<form method="post" action="{% if toplu.aile %}{% url 'panel-medya-toplu' aile=toplu.aile %}{% else %}{% url 'panel-toplu' %}{% endif %}">{% csrf_token %}{% endif %}
+
+  {% if toplu %}{% include "panel/parca/toplu_serit.html" %}{% endif %}
+
+  <div class="tablo-kaydir">
+    <table class="liste">
+      <caption class="gorsel-gizli">{{ tablo_adi }}</caption>
+      <thead>
+        <tr>
+          {% if toplu %}
+            <th scope="col" class="secim">
+              <label class="gorsel-gizli" for="t-hepsi">Sayfadaki kayıtların hepsini seç</label>
+              <input type="checkbox" id="t-hepsi" data-toplu-hepsi>
+            </th>
+          {% endif %}
+          {% for b in basliklar %}<th scope="col">{{ b }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for satir in satirlar %}
+          <tr>
+            {% if toplu %}
+              <td class="secim">
+                <label class="gorsel-gizli" for="s-{{ satir.kimlik }}">{{ satir.hucreler.0.metin }} kaydını seç</label>
+                <input type="checkbox" id="s-{{ satir.kimlik }}" name="kimlikler" value="{{ satir.kimlik }}" data-toplu-kutu>
+              </td>
+            {% endif %}
+            {% for h in satir.hucreler %}<td>{% include "panel/parca/hucre.html" %}</td>{% endfor %}
+            <td class="islem">
+              <a class="dugme ufak" href="{{ satir.duzenle }}">Düzenle</a>
+              {% if satir.adres %}<a class="dugme ufak" href="{{ satir.adres }}">Sayfada gör</a>{% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="{{ sutun_sayisi }}" class="alt-not">Bu süzgeçle kayıt yok.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if toplu %}</form>{% endif %}
+
+  {% include "panel/parca/sayfalama.html" %}
+
+  {% if notlar %}
+    <ul class="olcum-notu serit">
+      {% for n in notlar %}<li>{{ n }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if toplu %}<script src="{% static 'betik/panel.js' %}" defer></script>{% endif %}
+{% endblock %}

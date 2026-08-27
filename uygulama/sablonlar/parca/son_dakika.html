@@ -1,0 +1,17 @@
+{% comment %}Şerit kesintisiz kayar: liste iki kez basılır, ikinci kopya ekran
+   okuyucudan gizlenir (aria-hidden). Tasarımdaki davranış budur.{% endcomment %}
+<div class="sondakika" id="son-dakika">
+  <div class="sondakika-ic">
+    <span class="rozet">SON DAKİKA</span>
+    <div class="akis">
+      <ul>
+        {% for h in son_dakika %}
+          <li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|date:'H:i' }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
+        {% endfor %}
+        {% for h in son_dakika %}
+          <li aria-hidden="true"><time>{{ h.yayin_zamani|date:'H:i' }}</time>{{ h.baslik }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>

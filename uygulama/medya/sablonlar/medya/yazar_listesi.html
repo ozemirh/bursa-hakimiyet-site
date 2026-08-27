@@ -1,0 +1,42 @@
+{% extends "taban.html" %}
+{% load site_etiket %}
+{% comment %}
+Yazar dizini. Veri gelmeden de doğru çalışır: boş liste "henüz göç etmedi"
+diye karşılanır, böylece bu sayfa bekleme sayfasının yerini erkenden alabilir.
+{% endcomment %}
+
+{% block baslik %}Yazarlar — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}Bursa Hakimiyet köşe yazarları ve son yazıları.{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Yazarlar</span>
+      </nav>
+
+      <section class="kutu">
+        <div class="kutu-bas vurgu">
+          <h1>YAZARLAR</h1>
+          <span class="tumu">{{ yazarlar|length }} yazar</span>
+        </div>
+        <div class="kutu-ic">
+          <h2 class="gorsel-gizli">Yazar dizini</h2>
+          <div class="yazarlar">
+            {% for y in yazarlar %}
+            <div class="yazar">
+              {% if y.gorsel_yolu %}
+                <span class="foto vesika"><img src="{{ y.gorsel_yolu }}" alt="{{ y.ad }}" width="58" height="58" loading="lazy"></span>
+              {% else %}
+                <span class="vesika" aria-hidden="true">{{ y.basharfler }}</span>
+              {% endif %}
+              <span>
+                <b><a href="{{ y.get_absolute_url }}">{{ y.ad }}</a></b>
+                {% if y.son_yazi %}<p>{{ y.son_yazi }}</p>{% endif %}
+              </span>
+            </div>
+            {% empty %}
+            <p class="bos">Yazar dizini henüz göç etmedi.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+{% endblock %}

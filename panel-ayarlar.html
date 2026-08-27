@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Ayarlar — Bursa Hakimiyet Yönetim Paneli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===== değişkenler — yapay-zeka-editor.html araç dilinden miras ===== */
+:root{
+  --murekkep:#12181F;--gri:#5B6672;--gri-acik:#8B97A3;
+  --kirmizi:#D51C24;--lacivert:#1B2A6B;--deniz:#0E6E6E;
+  --cizgi:#E3E8EC;--yuzey:#FFFFFF;--zemin:#F4F6F8;
+  --artis:#0B6E3B;
+  --uyari-zemin:#FFF8E6;--uyari-cizgi:#E8C766;--uyari-yazi:#6B4E00;
+  --tehlike-zemin:#FDECEC;--tehlike-cizgi:#F0A9A9;--tehlike-yazi:#8C1D1D;
+  --bilgi-zemin:#EAF4F4;--bilgi-cizgi:#A8CFCF;--bilgi-yazi:#0B4A4A;
+  --tezgah-zemin:#FBF7EF;--tezgah-cizgi:#E4D9C4;--tezgah-yazi:#6B5A38;
+  --guclu-zemin:#ECF6F0;--guclu-cizgi:#9BC9AE;--guclu-yazi:#0B5A32;
+  /* panel kabuğuna özgü */
+  --kenar-zemin:#12181F;--kenar-yazi:#AEB8C2;--kenar-aktif:#FFFFFF;--kenar-cizgi:#232C36;
+  --beyaz:#FFFFFF;--etiket-vurgu:rgba(11,74,74,.14);
+  --toplu-cizgi:rgba(255,255,255,.28);--toplu-vurgu:rgba(255,255,255,.12);
+  --toplu-ayrac:rgba(255,255,255,.2);
+  --serif:"Source Serif 4",Georgia,serif;
+  --sans:"Inter",-apple-system,Segoe UI,Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --golge:0 1px 2px rgba(18,24,31,.05),0 8px 24px rgba(18,24,31,.06);
+  --duyuru-golge:0 8px 30px rgba(18,24,31,.28);
+  --kenar-genislik:212px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--zemin);color:var(--murekkep);font-family:var(--sans);font-size:15px;line-height:1.5}
+a{color:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--deniz);outline-offset:2px}
+
+.atla{position:absolute;left:-9999px;top:0;background:var(--yuzey);padding:12px 18px;z-index:60;border-radius:0 0 8px 0;font-weight:600}
+.atla:focus{left:0}
+
+/* ===== üst bant ===== */
+.bant{background:var(--yuzey);border-bottom:1px solid var(--cizgi);position:sticky;top:0;z-index:30;
+  display:flex;align-items:center;gap:16px;padding:11px 20px;flex-wrap:wrap}
+.logo-img{height:30px;width:auto;display:block}
+.arac-ad{font-family:var(--serif);font-weight:700;font-size:17px;letter-spacing:-.3px;
+  border-left:1px solid var(--cizgi);padding-left:16px}
+.rozet{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  border:1px solid var(--cizgi);border-radius:999px;padding:4px 10px;color:var(--gri);white-space:nowrap}
+.rozet.demo{border-color:var(--uyari-cizgi);background:var(--uyari-zemin);color:var(--uyari-yazi)}
+.bant .sag{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13.5px;color:var(--gri)}
+.kim{display:flex;align-items:center;gap:8px}
+.kim .bas-harf{width:28px;height:28px;border-radius:50%;background:var(--lacivert);color:var(--beyaz);
+  display:grid;place-items:center;font-size:12px;font-weight:600}
+
+/* ===== kabuk ===== */
+.panel{display:flex;align-items:flex-start;min-height:calc(100vh - 53px)}
+.kenar{width:var(--kenar-genislik);flex:0 0 var(--kenar-genislik);background:var(--kenar-zemin);
+  align-self:stretch;padding:16px 0;position:sticky;top:53px;height:calc(100vh - 53px);overflow-y:auto}
+.kenar-bas{font-family:var(--mono);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--gri-acik);padding:0 18px 10px}
+.kenar ul{list-style:none}
+.kenar a{display:flex;align-items:center;gap:10px;padding:9px 18px;color:var(--kenar-yazi);
+  text-decoration:none;font-size:14px;border-left:3px solid transparent}
+.kenar a:hover{color:var(--kenar-aktif);background:var(--kenar-cizgi)}
+.kenar a[aria-current="page"]{color:var(--kenar-aktif);border-left-color:var(--kirmizi);
+  background:var(--kenar-cizgi);font-weight:600}
+.kenar .alt{list-style:none;padding-left:0}
+.kenar .alt a{padding-left:40px;font-size:13.5px}
+.kenar .im{width:16px;text-align:center;flex:0 0 16px;font-size:13px;opacity:.75}
+.kenar .say{margin-left:auto;font-family:var(--mono);font-size:10.5px;background:var(--kirmizi);
+  color:var(--beyaz);border-radius:999px;padding:1px 6px}
+
+.calisma{flex:1;min-width:0;padding:0 0 60px}
+
+/* ===== sayfa başlığı ===== */
+.sayfa-bas{background:var(--yuzey);border-bottom:1px solid var(--cizgi);padding:16px 26px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:53px;z-index:20}
+.sayfa-bas h1{font-family:var(--serif);font-size:22px;letter-spacing:-.4px;font-weight:700}
+.iz{font-size:12.5px;color:var(--gri-acik);width:100%;margin-bottom:-4px}
+.iz a{text-decoration:none}
+.iz a:hover{text-decoration:underline}
+.sayfa-bas .eylem{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+.btn{border:1px solid var(--cizgi);background:var(--yuzey);border-radius:9px;padding:9px 15px;
+  font:inherit;font-size:14px;font-weight:600;cursor:pointer;color:var(--murekkep);white-space:nowrap}
+.btn:hover{border-color:var(--deniz);color:var(--deniz)}
+.btn.dolu{background:var(--lacivert);border-color:var(--lacivert);color:var(--beyaz)}
+.btn.dolu:hover{background:var(--deniz);border-color:var(--deniz);color:var(--beyaz)}
+.btn.ufak{padding:6px 11px;font-size:13px;border-radius:7px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:disabled:hover{border-color:var(--cizgi);color:var(--murekkep)}
+
+/* ===== iki sütun ===== */
+.duzen{display:grid;grid-template-columns:minmax(0,1fr) 316px;gap:22px;padding:22px 26px;align-items:start}
+
+/* ===== form blokları ===== */
+.blok{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:12px;
+  padding:20px 22px;margin-bottom:18px;box-shadow:var(--golge)}
+.blok-bas{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.blok-bas h2{font-family:var(--serif);font-size:17px;font-weight:700;letter-spacing:-.2px}
+.blok-bas .no{font-family:var(--mono);font-size:11px;color:var(--gri-acik);
+  border:1px solid var(--cizgi);border-radius:6px;padding:2px 7px}
+.blok-not{color:var(--gri);font-size:13.5px;margin-bottom:16px;max-width:78ch}
+
+.alan{margin-bottom:16px}
+.alan:last-child{margin-bottom:0}
+.alan>label,.alan .etiket{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.alan .zorunlu{color:var(--kirmizi);margin-left:2px}
+.ipucu{color:var(--gri);font-size:12.5px;margin-top:5px;line-height:1.45}
+input[type=text],input[type=url],input[type=datetime-local],textarea,select{
+  width:100%;border:1px solid var(--cizgi);border-radius:9px;padding:10px 12px;font:inherit;
+  font-size:14.5px;background:var(--zemin);color:var(--murekkep)}
+textarea{resize:vertical;line-height:1.55}
+select{cursor:pointer}
+input:disabled,textarea:disabled,select:disabled{opacity:.55;cursor:not-allowed}
+.ikili{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.uclu{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:760px){.ikili,.uclu{grid-template-columns:1fr}}
+
+.sayac{float:right;font-family:var(--mono);font-size:11.5px;color:var(--gri-acik);font-weight:400}
+.sayac.dolmak-uzere{color:var(--uyari-yazi)}
+.sayac.tasti{color:var(--tehlike-yazi);font-weight:600}
+
+/* onay kutuları */
+.kutucuk{display:flex;align-items:flex-start;gap:9px;margin-bottom:10px;font-size:14px;cursor:pointer}
+.kutucuk:last-child{margin-bottom:0}
+.kutucuk input{margin-top:2.5px;width:16px;height:16px;flex:0 0 16px;accent-color:var(--lacivert);cursor:pointer}
+.kutucuk .yazi b{display:block;font-weight:600}
+.kutucuk .yazi span{color:var(--gri);font-size:12.5px}
+fieldset{border:0}
+legend{font-weight:600;font-size:14px;margin-bottom:6px}
+.yatay{display:flex;gap:18px;flex-wrap:wrap}
+
+/* ===== rozet / uyarı kutuları ===== */
+.bekleme{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.6px;text-transform:uppercase;background:var(--uyari-zemin);
+  border:1px solid var(--uyari-cizgi);color:var(--uyari-yazi);border-radius:999px;padding:2px 8px;
+  vertical-align:middle;margin-left:6px}
+.yeni{display:inline-flex;font-family:var(--mono);font-size:10px;letter-spacing:.6px;text-transform:uppercase;
+  background:var(--guclu-zemin);border:1px solid var(--guclu-cizgi);color:var(--guclu-yazi);
+  border-radius:999px;padding:2px 8px;vertical-align:middle;margin-left:6px}
+.kutu{border-radius:10px;padding:12px 14px;font-size:13.5px;line-height:1.5;margin-top:12px}
+.kutu.uyari{background:var(--uyari-zemin);border:1px solid var(--uyari-cizgi);color:var(--uyari-yazi)}
+.kutu.tehlike{background:var(--tehlike-zemin);border:1px solid var(--tehlike-cizgi);color:var(--tehlike-yazi)}
+.kutu.bilgi{background:var(--bilgi-zemin);border:1px solid var(--bilgi-cizgi);color:var(--bilgi-yazi)}
+.kutu.tezgah{background:var(--tezgah-zemin);border:1px solid var(--tezgah-cizgi);color:var(--tezgah-yazi)}
+.kutu b{font-weight:600}
+
+/* ===== kaynak bloğu ===== */
+.adres-satir{display:flex;gap:9px;flex-wrap:wrap}
+.adres-satir input{flex:1 1 340px;min-width:0}
+.yollar{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;align-items:center}
+.yollar .baslik{font-size:12px;color:var(--gri-acik);font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+.cip{border:1px solid var(--cizgi);background:var(--zemin);border-radius:999px;padding:6px 13px;
+  font:inherit;font-size:13px;cursor:pointer;color:var(--gri)}
+.cip[aria-pressed="true"]{background:var(--lacivert);border-color:var(--lacivert);color:var(--beyaz);font-weight:600}
+.kaynak-bolme{margin-top:14px;border:1px solid var(--cizgi);border-radius:10px;overflow:hidden}
+.kaynak-bolme dl{display:grid;grid-template-columns:130px 1fr;font-size:13.5px}
+.kaynak-bolme dt{padding:9px 13px;background:var(--zemin);font-weight:600;border-bottom:1px solid var(--cizgi);color:var(--gri)}
+.kaynak-bolme dd{padding:9px 13px;border-bottom:1px solid var(--cizgi);word-break:break-word}
+.kaynak-bolme dl>:nth-last-child(-n+2){border-bottom:0}
+
+/* ===== etiket çipleri ===== */
+.etiketler{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px;min-height:2px}
+.etiket-cip{display:inline-flex;align-items:center;gap:6px;background:var(--bilgi-zemin);
+  border:1px solid var(--bilgi-cizgi);color:var(--bilgi-yazi);border-radius:999px;
+  padding:4px 6px 4px 11px;font-size:13px;font-weight:500}
+.etiket-cip button{border:0;background:transparent;cursor:pointer;color:inherit;font-size:15px;
+  line-height:1;padding:0 3px;border-radius:50%}
+.etiket-cip button:hover{background:var(--etiket-vurgu)}
+
+/* ===== adres önizleme ===== */
+.adres-onizleme{font-family:var(--mono);font-size:13px;background:var(--zemin);
+  border:1px solid var(--cizgi);border-radius:9px;padding:11px 13px;word-break:break-all;line-height:1.7}
+.adres-onizleme .kok{color:var(--gri-acik)}
+.adres-onizleme .kat{background:var(--uyari-zemin);border-bottom:2px solid var(--uyari-cizgi);
+  color:var(--uyari-yazi);font-weight:500;padding:1px 2px}
+.adres-onizleme .slug{color:var(--murekkep)}
+.adres-onizleme .kimlik{color:var(--gri-acik)}
+
+/* ===== görsel bırakma alanı ===== */
+.gorsel-alan{border:2px dashed var(--cizgi);border-radius:11px;padding:26px;text-align:center;
+  background:var(--zemin);color:var(--gri)}
+.gorsel-alan .oran{font-family:var(--mono);font-size:11.5px;color:var(--gri-acik);margin-top:7px}
+.gorsel-eylem{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;justify-content:center}
+
+/* ===== yan sütun ===== */
+.yan{position:sticky;top:125px;display:flex;flex-direction:column;gap:16px}
+.yan-kart{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:12px;
+  padding:16px 17px;box-shadow:var(--golge)}
+.yan-kart h2{font-family:var(--serif);font-size:15.5px;font-weight:700;margin-bottom:11px;
+  display:flex;align-items:center;gap:8px}
+.yan-kart h2 .oran-yazi{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--gri-acik);font-weight:400}
+
+.kontrol{list-style:none;font-size:13.5px}
+.kontrol li{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--cizgi)}
+.kontrol li:last-child{border-bottom:0}
+.kontrol .im{flex:0 0 17px;font-family:var(--mono);font-size:13px;text-align:center;line-height:1.45}
+.kontrol li[data-durum="tamam"] .im{color:var(--artis)}
+.kontrol li[data-durum="tamam"] .ad{color:var(--gri)}
+.kontrol li[data-durum="eksik"] .im{color:var(--tehlike-yazi)}
+.kontrol li[data-durum="eksik"] .ad{font-weight:600}
+.kontrol li[data-durum="istege-bagli"] .im{color:var(--gri-acik)}
+.kontrol li[data-durum="istege-bagli"] .ad{color:var(--gri-acik)}
+.kontrol .not{display:block;font-size:12px;color:var(--gri-acik);font-weight:400}
+
+.olcer{height:6px;background:var(--zemin);border:1px solid var(--cizgi);border-radius:999px;
+  overflow:hidden;margin-bottom:12px}
+.olcer i{display:block;height:100%;background:var(--artis);width:0;transition:width .25s ease}
+
+.konu-kart .aday{border:1px solid var(--cizgi);border-radius:10px;padding:12px;background:var(--zemin)}
+.konu-kart .aday h3{font-size:14px;font-weight:600;margin-bottom:5px}
+.konu-kart .gerekce{font-size:12.5px;color:var(--gri);line-height:1.5}
+.konu-kart .gerekce b{color:var(--murekkep)}
+.konu-kart .eylem{display:flex;gap:7px;margin-top:11px}
+.bagli-konu{background:var(--guclu-zemin);border:1px solid var(--guclu-cizgi);color:var(--guclu-yazi);
+  border-radius:10px;padding:12px;font-size:13.5px}
+.bagli-konu b{display:block;margin-bottom:3px}
+
+.manset-liste{list-style:none;font-size:13.5px}
+.manset-liste li{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--cizgi)}
+.manset-liste li:last-child{border-bottom:0}
+.manset-liste .yer{font-family:var(--mono);font-size:11px;color:var(--gri-acik);
+  border:1px solid var(--cizgi);border-radius:5px;padding:1px 6px;flex:0 0 auto}
+.manset-liste .dolu-ad{color:var(--gri);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ===== hata durumu ===== */
+.hatali input,.hatali textarea,.hatali select,.hatali .etiket-girdi{border-color:var(--tehlike-cizgi);background:var(--tehlike-zemin)}
+.hata-yazi{display:none;color:var(--tehlike-yazi);font-size:12.5px;margin-top:5px;font-weight:500}
+.hatali .hata-yazi{display:block}
+
+/* ===== duyuru bölgesi ===== */
+.duyuru{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;z-index:50;
+  background:var(--murekkep);color:var(--beyaz);border-radius:10px;padding:12px 18px;font-size:14px;
+  box-shadow:var(--duyuru-golge);max-width:min(560px,92vw);display:none}
+.duyuru.gorunur{display:block}
+.gizli-ama-okunur{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ===== kırılma noktaları ===== */
+@media(max-width:1180px){
+  .duzen{grid-template-columns:minmax(0,1fr)}
+  .yan{position:static;flex-direction:row;flex-wrap:wrap}
+  .yan-kart{flex:1 1 280px}
+}
+@media(max-width:880px){
+  :root{--kenar-genislik:60px}
+  .kenar a span:not(.im):not(.say){display:none}
+  .kenar-bas,.kenar .alt a{display:none}
+  .kenar a{justify-content:center;padding:11px 0}
+  .kenar .im{font-size:16px}
+}
+@media(max-width:620px){
+  .duzen{padding:16px 14px}
+  .blok{padding:16px 15px}
+  .sayfa-bas{padding:13px 15px;position:static}
+  .bant{padding:10px 14px}
+  .arac-ad{padding-left:12px;font-size:15px}
+  .yan{flex-direction:column}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important}
+}
+
+/* ===== liste / kuyruk ortak ===== */
+.kutu-kart{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:12px;
+  box-shadow:var(--golge);margin-bottom:18px;overflow:hidden}
+.kutu-kart>h2{font-family:var(--serif);font-size:16px;font-weight:700;padding:15px 18px 12px;
+  display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--cizgi);flex-wrap:wrap}
+.kutu-kart>h2 .sag-not{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--gri-acik);font-weight:400}
+.kutu-govde{padding:15px 18px}
+
+/* sekmeler */
+.sekmeler{display:flex;gap:4px;border-bottom:1px solid var(--cizgi);padding:0 26px;background:var(--yuzey)}
+.sekmeler button{border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;
+  padding:12px 16px;cursor:pointer;color:var(--gri);border-bottom:3px solid transparent;margin-bottom:-1px}
+.sekmeler button:hover{color:var(--murekkep)}
+.sekmeler button[aria-selected="true"]{color:var(--murekkep);border-bottom-color:var(--kirmizi)}
+.sekmeler .say-cip{font-family:var(--mono);font-size:10.5px;background:var(--zemin);
+  border:1px solid var(--cizgi);border-radius:999px;padding:1px 7px;margin-left:7px;color:var(--gri)}
+
+/* daralt-ve-bul baslangic */
+.baslangic{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:12px;
+  padding:26px;box-shadow:var(--golge);text-align:center}
+.baslangic h2{font-family:var(--serif);font-size:19px;font-weight:700;margin-bottom:7px}
+.baslangic p{color:var(--gri);font-size:13.5px;max-width:64ch;margin:0 auto 18px}
+.hizli{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+
+/* suzgec seridi */
+.suzgec{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:12px;
+  padding:14px 16px;margin-bottom:16px;box-shadow:var(--golge)}
+.suzgec-satir{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end}
+.suzgec-alan{display:flex;flex-direction:column;gap:4px;min-width:0}
+.suzgec-alan label{font-size:11.5px;font-weight:600;color:var(--gri);text-transform:uppercase;letter-spacing:.4px}
+.suzgec-alan select,.suzgec-alan input{padding:7px 10px;font-size:13.5px;border-radius:8px;min-width:132px}
+.suzgec-alan.genis input{min-width:210px}
+.suzgec .sag-eylem{margin-left:auto;display:flex;gap:7px;align-items:flex-end}
+.etkin-suzgec{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;align-items:center}
+.etkin-suzgec .baslik{font-size:11.5px;color:var(--gri-acik);font-weight:600;text-transform:uppercase}
+.suzgec-cip{display:inline-flex;align-items:center;gap:6px;background:var(--bilgi-zemin);
+  border:1px solid var(--bilgi-cizgi);color:var(--bilgi-yazi);border-radius:999px;
+  padding:3px 6px 3px 11px;font-size:12.5px;font-weight:500}
+.suzgec-cip button{border:0;background:transparent;cursor:pointer;color:inherit;font-size:14px;
+  line-height:1;padding:0 3px;border-radius:50%}
+.suzgec-cip button:hover{background:var(--etiket-vurgu)}
+
+/* toplu islem seridi */
+.toplu{position:sticky;top:118px;z-index:15;background:var(--murekkep);color:var(--beyaz);
+  border-radius:11px;padding:11px 15px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  margin-bottom:14px;box-shadow:var(--duyuru-golge)}
+.toplu .sayi{font-weight:700;font-size:14.5px;white-space:nowrap}
+.toplu .btn{background:transparent;border-color:var(--toplu-cizgi);color:var(--beyaz);
+  padding:6px 12px;font-size:13px}
+.toplu .btn:hover{background:var(--toplu-vurgu);border-color:var(--beyaz);color:var(--beyaz)}
+.toplu .btn.kilitli{opacity:.4;cursor:not-allowed}
+.toplu .btn.kilitli:hover{background:transparent;border-color:var(--toplu-cizgi)}
+.toplu .ayrac{width:1px;height:22px;background:var(--toplu-ayrac)}
+.toplu .sag{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+/* tablo */
+.tablo-sar{overflow-x:auto}
+table.veri{width:100%;border-collapse:collapse;font-size:13.5px;min-width:900px}
+table.veri th,table.veri td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--cizgi);vertical-align:middle}
+table.veri thead th{background:var(--zemin);font-size:11.5px;font-weight:600;color:var(--gri);
+  text-transform:uppercase;letter-spacing:.4px}
+table.veri tbody tr:hover{background:var(--zemin)}
+table.veri tbody tr.secili{background:var(--bilgi-zemin)}
+table.veri tbody tr.secili:hover{background:var(--bilgi-zemin)}
+table.veri td.orta,table.veri th.orta{text-align:center;width:38px}
+table.veri input[type=checkbox]{width:16px;height:16px;accent-color:var(--lacivert);cursor:pointer}
+.satir-bas{font-weight:500;line-height:1.35;display:block;max-width:52ch}
+.satir-alt{font-size:11.5px;color:var(--gri-acik);margin-top:3px;font-family:var(--mono)}
+
+.tur-cip{font-family:var(--mono);font-size:10px;letter-spacing:.5px;text-transform:uppercase;
+  border:1px solid var(--cizgi);border-radius:5px;padding:1px 6px;color:var(--gri);white-space:nowrap}
+.tur-cip.foto{background:var(--tezgah-zemin);border-color:var(--tezgah-cizgi);color:var(--tezgah-yazi)}
+.tur-cip.video{background:var(--bilgi-zemin);border-color:var(--bilgi-cizgi);color:var(--bilgi-yazi)}
+
+.durum-etiket{font-family:var(--mono);font-size:10px;letter-spacing:.5px;text-transform:uppercase;
+  border-radius:999px;padding:2px 8px;border:1px solid var(--cizgi);color:var(--gri);white-space:nowrap}
+.durum-etiket.aktif{background:var(--guclu-zemin);border-color:var(--guclu-cizgi);color:var(--guclu-yazi)}
+.durum-etiket.pasif{background:var(--zemin)}
+.durum-etiket.arsiv{background:var(--zemin);color:var(--gri-acik)}
+.durum-etiket.taslak{background:var(--tezgah-zemin);border-color:var(--tezgah-cizgi);color:var(--tezgah-yazi)}
+.durum-etiket.incelemede{background:var(--uyari-zemin);border-color:var(--uyari-cizgi);color:var(--uyari-yazi)}
+.durum-etiket.hazir{background:var(--guclu-zemin);border-color:var(--guclu-cizgi);color:var(--guclu-yazi)}
+
+.sayfalama{display:flex;gap:8px;align-items:center;justify-content:center;padding:14px 0 2px;
+  font-size:13px;color:var(--gri);flex-wrap:wrap}
+
+kbd{font-family:var(--mono);font-size:11px;background:var(--zemin);border:1px solid var(--cizgi);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--murekkep)}
+.gizli-ama-okunur{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* rol kilidi seridi — tum ekranlarda ayni */
+.yetki-serit{background:var(--uyari-zemin);border:1px solid var(--uyari-cizgi);border-left-width:5px;
+  color:var(--uyari-yazi);border-radius:10px;padding:14px 16px;margin-bottom:18px;
+  display:flex;gap:11px;align-items:flex-start}
+.yetki-serit .im{flex:0 0 auto;font-size:16px}
+.yetki-serit b{font-weight:700}
+.yetki-serit a{font-weight:600}
+
+/* ===== Ayarlar / Taksonomi ===== */
+.bolme-izgara{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}
+@media(max-width:980px){.bolme-izgara{grid-template-columns:1fr}}
+.bolme-kutu{border:1px solid var(--cizgi);border-radius:11px;background:var(--yuzey);overflow:hidden}
+.bolme-kutu>h3{padding:12px 14px;border-bottom:1px solid var(--cizgi);background:var(--zemin);
+  font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.bolme-kutu>h3 .adet{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--gri-acik)}
+.bolme-kutu .liste{padding:11px 14px;display:flex;flex-direction:column;gap:5px;font-size:13px}
+.bolme-kutu .liste span{color:var(--gri)}
+.bolme-kutu .dip{padding:10px 14px;border-top:1px solid var(--cizgi);font-size:12px;color:var(--gri-acik)}
+
+.sorun-blok{border:1px solid var(--uyari-cizgi);background:var(--uyari-zemin);border-radius:11px;
+  padding:14px 16px;margin-bottom:13px}
+.sorun-blok h4{font-size:14px;font-weight:700;color:var(--uyari-yazi);margin-bottom:7px;
+  display:flex;align-items:center;gap:8px}
+.sorun-blok h4 .adet{font-family:var(--mono);font-size:11px;border:1px solid var(--uyari-cizgi);
+  border-radius:999px;padding:1px 8px}
+.sorun-blok ul{list-style:none;font-size:13px;color:var(--uyari-yazi)}
+.sorun-blok li{padding:2px 0 2px 15px;position:relative;line-height:1.5}
+.sorun-blok li::before{content:"·";position:absolute;left:4px;font-weight:700}
+.sorun-blok .cozum{margin-top:9px;font-size:12.5px;color:var(--uyari-yazi);
+  border-top:1px solid var(--uyari-cizgi);padding-top:9px}
+.sorun-blok .cozum b{font-weight:700}
+
+
+.baglanti-kart{display:flex;gap:13px;align-items:center;padding:14px 16px;border:1px solid var(--cizgi);
+  border-radius:11px;background:var(--yuzey);margin-bottom:11px;text-decoration:none}
+.baglanti-kart:hover{border-color:var(--deniz)}
+.baglanti-kart .im{font-size:20px;flex:0 0 auto;opacity:.6}
+.baglanti-kart .govde b{display:block;font-size:14.5px;font-weight:600;margin-bottom:2px}
+.baglanti-kart .govde span{font-size:12.5px;color:var(--gri);line-height:1.45}
+.baglanti-kart .ok{margin-left:auto;color:var(--gri-acik);font-size:16px}
+
+.kat-kullanim{display:inline-block;height:6px;background:var(--lacivert);border-radius:999px;
+  vertical-align:middle;min-width:2px}
+.kat-zemin{display:inline-block;width:66px;height:6px;background:var(--zemin);border:1px solid var(--cizgi);
+  border-radius:999px;overflow:hidden;vertical-align:middle;margin-right:7px}
+.tur-imi{font-family:var(--mono);font-size:11px;color:var(--gri)}
+.tur-imi .yok{color:var(--cizgi)}
+
+.karar-verildi{border:1px solid var(--guclu-cizgi);background:var(--guclu-zemin);
+  border-left-width:5px;border-radius:11px;padding:16px 18px;margin-bottom:18px;color:var(--guclu-yazi)}
+.karar-verildi h3{font-size:15.5px;font-weight:700;margin-bottom:9px;display:flex;
+  align-items:center;gap:9px;flex-wrap:wrap}
+.karar-verildi .durum-cip{font-family:var(--mono);font-size:10px;letter-spacing:.5px;
+  text-transform:uppercase;border:1px solid var(--guclu-cizgi);border-radius:999px;padding:2px 9px}
+.karar-verildi p{font-size:13.5px;line-height:1.6;margin-bottom:8px}
+.karar-verildi ul{font-size:13.5px;line-height:1.6;padding-left:19px;margin-bottom:8px}
+.karar-verildi li{margin-bottom:3px}
+.karar-verildi b{font-weight:700}
+
+.kilitli-slug{font-family:var(--mono);font-size:12px;background:var(--zemin);
+  border:1px solid var(--cizgi);border-radius:5px;padding:1px 6px}
+.kilit-im{margin-left:5px;font-size:10px;opacity:.65}
+.olculmedi{font-family:var(--mono);font-size:11px;color:var(--uyari-yazi);
+  background:var(--uyari-zemin);border:1px solid var(--uyari-cizgi);border-radius:4px;padding:1px 6px}
+.karar-eylem{display:flex;gap:11px;align-items:center;flex-wrap:wrap;margin:12px 0 10px}
+.karar-eylem .btn.kilitli{opacity:.5;cursor:not-allowed}
+.karar-eylem .eylem-not{font-size:12.5px;color:var(--guclu-yazi);opacity:.85}
+.birlesme-cip{font-family:var(--mono);font-size:10px;letter-spacing:.3px;
+  background:var(--bilgi-zemin);border:1px solid var(--bilgi-cizgi);color:var(--bilgi-yazi);
+  border-radius:4px;padding:1px 7px;white-space:nowrap}
+</style>
+</head>
+<body>
+<a class="atla" href="#ana">İçeriğe atla</a>
+
+<header class="bant">
+  <img class="logo-img" src="logo-seffaf.png" alt="Bursa Hakimiyet" width="406" height="120">
+  <span class="arac-ad">Yönetim Paneli</span>
+  <span class="rozet demo">Demo</span>
+  <div class="sag">
+    <span class="rozet">v2 taslak</span>
+    <span class="kim"><span class="bas-harf" aria-hidden="true">CS</span> Coşkun SAİTOĞLU</span>
+  </div>
+</header>
+
+<div class="panel">
+  <nav class="kenar" aria-label="Panel bölümleri">
+    <p class="kenar-bas">Bölümler</p>
+    <ul>
+      <li>
+        <a href="panel-bugun.html"><span class="im" aria-hidden="true">◵</span><span>Bugün</span></a>
+      </li>
+      <li>
+        <a href="panel-akis.html"><span class="im" aria-hidden="true">▤</span><span>İçerik</span></a>
+        <ul class="alt">
+          <li><a href="panel-haber-ekle.html"><span>Haber Ekle</span></a></li>
+          <li><a href="panel-akis.html"><span>Akış</span></a></li>
+          <li><a href="panel-akis.html#kose"><span>Köşe</span></a></li>
+        </ul>
+      </li>
+      <li>
+        <a href="panel-sayfa-duzeni.html"><span class="im" aria-hidden="true">▦</span><span>Sayfa Düzeni</span></a>
+      </li>
+      <li>
+        <a href="panel-konu-takibi.html"><span class="im" aria-hidden="true">◈</span><span>Konu Takibi</span></a>
+      </li>
+      <li>
+        <a href="panel-etkilesim.html"><span class="im" aria-hidden="true">◍</span><span>Etkileşim</span><span class="say"><span class="gizli-ama-okunur">, </span>7<span class="gizli-ama-okunur"> bekleyen yorum</span></span></a>
+      </li>
+      <li>
+        <a href="panel-ilan-reklam.html"><span class="im" aria-hidden="true">▧</span><span>İlan &amp; Reklam</span></a>
+      </li>
+      <li>
+        <a href="panel-ayarlar.html" aria-current="page"><span class="im" aria-hidden="true">⚙</span><span>Ayarlar</span></a>
+        <ul class="alt">
+          <li><a href="panel-ayarlar.html" aria-current="page"><span>Taksonomi</span></a></li>
+          <li><a href="panel-roller.html"><span>Roller</span></a></li>
+          <li><a href="panel-kullanicilar.html"><span>Kullanıcılar</span></a></li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+  <main id="ana" class="calisma">
+    <div class="sayfa-bas">
+      <p class="iz">Panel › Ayarlar</p>
+      <h1>Ayarlar</h1>
+      <span class="rozet">Yönetici ekranı</span>
+    </div>
+
+    <div class="sekmeler" role="tablist" aria-label="Ayarlar bölümleri">
+      <button type="button" role="tab" id="sek-taksonomi" aria-selected="true"
+              aria-controls="bolme-taksonomi">Taksonomi</button>
+      <button type="button" role="tab" id="sek-kullanici" aria-selected="false"
+              aria-controls="bolme-kullanici">Kullanıcılar &amp; Roller</button>
+      <button type="button" role="tab" id="sek-hesap" aria-selected="false"
+              aria-controls="bolme-hesap">Hesap</button>
+    </div>
+
+    <div style="padding:22px 26px">
+
+      <div class="yetki-serit" role="note">
+        <span class="im" aria-hidden="true">&#128274;</span>
+        <span><b>Bu bölüm salt okunur.</b> Taksonomi düzenleme, kullanıcı ve rol yönetimi yetkisi <b>Yayın Yönetmeni</b> rolünde.
+        Oturumdaki rol: <b>Editör</b>. Kayıtları görebilir, değiştiremezsiniz.
+        <a href="panel-roller.html">Yetki dağılımı</a></span>
+      </div>
+
+      <!-- ============ TAKSONOMİ ============ -->
+      <div id="bolme-taksonomi" role="tabpanel" aria-labelledby="sek-taksonomi">
+
+        <h2 style="font-family:var(--serif);font-size:18px;font-weight:700;margin-bottom:6px">Kaynaklar</h2>
+        <p style="font-size:13.5px;color:var(--gri);margin-bottom:16px;max-width:82ch;line-height:1.55">
+          Mevcut panelde tek liste ve <b>348 kayıt</b> var. Liste üç farklı şeyi karıştırıyor;
+          çoklu seçim olmadığı için her kombinasyon ayrı kayıt açılmış.
+        </p>
+
+        <div class="bolme-izgara">
+        <div class="bolme-kutu">
+          <h3>Ajans<span class="adet">4 kalem</span></h3>
+          <div class="liste"><span>Haber Merkezi</span><span>İHA</span><span>DHA</span><span>AA</span></div>
+          <div class="dip">Haber ajansları. Kapalı liste; nadiren değişir.</div>
+        </div>
+        <div class="bolme-kutu">
+          <h3>Dış yayın<span class="adet">~263 kalem</span></h3>
+          <div class="liste"><span>Kanal 16</span><span>Bursa Şehir Gazetesi</span><span>Merhaba Gazetesi</span><span>Gemlik Körfez Gazetesi</span><span>Halk TV</span><span>Nefes.com.tr</span><span>bursaport</span><span>…</span></div>
+          <div class="dip">Başka gazete, site, TV. Uzun kuyruk burada.</div>
+        </div>
+        <div class="bolme-kutu">
+          <h3>Kendi muhabirimiz<span class="adet">~75 kalem</span></h3>
+          <div class="liste"><span>Ceren Sümbül</span><span>Coşkun Saitoğlu</span><span>Barış Yalım</span><span>Burak Acar</span><span>Onur Genç</span><span>Uğur Dinar</span><span>…</span></div>
+          <div class="dip">Gazetenin kendi kadrosu. Kullanıcı tablosuyla eşleşmeli.</div>
+        </div>
+        </div>
+
+        <div class="kutu uyari" style="margin-top:0;margin-bottom:18px">
+          <b>Bölme tam otomatik yapılamıyor.</b> 348 kaydı ad kalıbına göre ayırmayı denedim;
+          iki kelimeli özel adlar kişi sanılıyor ama bir kısmı yayın:
+          <b>Çağdaş Kocaeli</b>, <b>Bursa Tanık</b>, <b>Kocaeli Gündem</b>, <b>Gemlik Basın</b>
+          gibi. Bu yüzden dış yayın ve muhabir sayıları <b>yaklaşık</b> verildi —
+          son ayrımı editör onaylamalı. Ajans tarafı kesin.
+        </div>
+
+        <div class="sorun-blok">
+          <h4>Birebir tekrar <span class="adet">6 kayıt</span></h4>
+          <ul>
+            <li>CNBC-E</li>
+            <li>Star Gazetesi</li>
+            <li>Nesine TV</li>
+            <li>Patronlar Dünyası</li>
+            <li>Uğur Dinar</li>
+            <li>Gerçek Gündem</li>
+          </ul>
+          <p class="cozum"><b>Çözüm:</b> tekrarlar birleştirilir; haberlerdeki bağlantı
+          kalan kayda taşınır.</p>
+        </div>
+
+        <div class="sorun-blok">
+          <h4>Birleşik kayıt <span class="adet">7 kayıt</span></h4>
+          <ul>
+            <li><code>İHA, DHA</code></li>
+            <li><code>İHA - DHA - AA</code></li>
+            <li><code>Haber Merkezi / İHA</code></li>
+            <li><code>Patronlar Dünyası - İHA - DHA - AA</code></li>
+            <li><code>Coşkun Saitoğlu - İsmail Karaduman</code></li>
+            <li><code>Simlanur İnce İzci / Ceren Sümbül</code></li>
+            <li><code>Recep Saka-Metin Araç</code></li>
+          </ul>
+          <p class="cozum"><b>Çözüm:</b> <b>çoklu seçim</b> gelince bu kayıtlara gerek kalmıyor.
+          <code>İHA, DHA</code> yerine İHA <i>ve</i> DHA işaretlenir;
+          <code>Haber Merkezi / İHA</code> yerine ikisi birden seçilir. Kombinasyon sayısı
+          kadar kayıt açma ihtiyacı ortadan kalkar.</p>
+        </div>
+
+        <div class="sorun-blok">
+          <h4>Muhabir ve yayın karışıklığı <span class="adet">iki tablo</span></h4>
+          <ul>
+            <li><b>Coşkun Saitoğlu</b> hem kaynak listesinde hem editör listesinde
+              (“Coşkun SAİTOĞLU”) — aynı insan, iki tablo, iki yazım</li>
+            <li>Muhabir adları yayın adlarıyla aynı açılır listede duruyor</li>
+          </ul>
+          <p class="cozum"><b>Çözüm:</b> “Kendi muhabirimiz” seçenekleri
+          <a href="panel-kullanicilar.html">kullanıcı tablosundan</a> beslenir;
+          ayrı bir kaynak kaydı tutulmaz. Böylece tek yazım kalır.</p>
+        </div>
+
+        <hr style="border:0;border-top:1px solid var(--cizgi);margin:26px 0">
+
+        <h2 style="font-family:var(--serif);font-size:18px;font-weight:700;margin-bottom:6px">Kategoriler</h2>
+
+
+        <div class="karar-verildi">
+          <h3>
+            <span aria-hidden="true">&#10003;</span>
+            Karar: adları birleştir, slug'ları dondur
+            <span class="durum-cip">verildi</span>
+          </h3>
+          <p>
+            Panelde <b>tek paylaşımlı taksonomi</b> kurulur: “BURSA” üç ayrı kayıt değil,
+            <b>bir kategori</b> olur. İçerik türü kategorinin özelliği değil,
+            <b>kaydın</b> özelliğidir — aynı kategori hem haberde hem fotoda hem videoda kullanılır.
+          </p>
+          <p>
+            <b>Her kategorinin mevcut URL slug'ı olduğu gibi kalır.</b> Hiçbir adres değişmez,
+            yönlendirme tablosu gerekmez, sitemap yenilenmez. Slug düzensizliği
+            (<code>bursa-da-spor</code> yanında <code>bursada-spor</code> gibi) <b>veri olarak durur</b> —
+            temizlenmez, çünkü temizliğin bedeli <b>556.824 adresi kırmak</b>.
+          </p>
+          <ul>
+            <li>Mevcut kategorilerde <b>slug salt okunur</b> — düzenlenemez</li>
+            <li>Yeni açılan kategoride slug serbest, <b>kaydedildikten sonra kilitlenir</b></li>
+            <li>Foto ve video kategori kimlikleri (<code>{slug}-{katid}</code>) olduğu gibi taşınır</li>
+          </ul>
+          <div class="karar-eylem">
+            <button type="button" class="btn kilitli" id="btn-birlestir" aria-disabled="true">
+              Birleştirmeyi uygula</button>
+            <span class="eylem-not">37 kayıt → 15 ad · slug'lara dokunulmaz</span>
+          </div>
+          <p style="margin-bottom:0">
+            Reddedilen iki seçenek: <b>tam temizlik + 301 yönlendirme</b> (556 bin adresi
+            riske atıyor) ve <b>hiç dokunmama</b> (37 kayıtlık kopyalanmış taksonomi kalıyordu).
+          </p>
+        </div>
+
+        <div class="kutu tehlike" style="margin-top:0;margin-bottom:16px">
+          <b>Birleştirmede kaybolmaması gereken parça: <code>katid</code>.</b>
+          Foto ve video adresleri <code>/galeriler/{slug}-{katid}/…</code> deseninde;
+          adresi taşıyan şey slug değil, <b>slug + kategori kimliği</b>.
+          Birleşme adları toplarken bu kimlikler tür bazında korunmalı.
+          <br><br>
+          <b>Ölçüm sınırı:</b> panel dökümünden yalnız <b>ikisi</b> okunabildi —
+          foto <code>bursa-208</code> ve video <code>bursa-308</code>. Diğer kategorilerin
+          <code>katid</code> değerleri dökümde yok; tabloda <span class="olculmedi">ölçülmedi</span>
+          diye işaretli ve <b>göç öncesi veritabanından okunmalı</b>.
+          (İki örnek 2xx/3xx düzenine benziyor ama tek gözlemden kural çıkarılmadı.)
+        </div>
+
+        <div class="kutu-kart">
+          <h2>Birleşme haritası <span class="sag-not">37 kayıt → 15 ad</span></h2>
+          <div class="tablo-sar">
+            <table class="veri" style="min-width:940px">
+              <caption class="gizli-ama-okunur">Kategoriler ve yayındaki haber sayıları</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Kategori</th>
+                  <th scope="col">Tür <span class="gizli-ama-okunur">(Haber, Foto, Video)</span></th>
+                  <th scope="col">Haber slug'ı</th>
+                  <th scope="col">Foto kimliği</th>
+                  <th scope="col">Video kimliği</th>
+                  <th scope="col">Yayındaki haber</th>
+                  <th scope="col">Birleşme</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td><span class="satir-bas">GÜNDEM</span></td>
+                <td class="tur-imi"><span>H</span> <span class="yok">F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/gundem/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span style="color:var(--cizgi)">yok</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:60px"></span></span><span style="font-family:var(--mono);font-size:12px">211.205</span></td>
+                <td><span class="birlesme-cip">2 → 1</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">SPOR</span></td>
+                <td class="tur-imi"><span>H</span> <span>F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/spor/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:23px"></span></span><span style="font-family:var(--mono);font-size:12px">81.342</span></td>
+                <td><span class="birlesme-cip">3 → 1</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">BURSA</span></td>
+                <td class="tur-imi"><span>H</span> <span>F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/bursa/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><code class="kilitli-slug">bursa-208</code></td>
+                <td><code class="kilitli-slug">bursa-308</code></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:23px"></span></span><span style="font-family:var(--mono);font-size:12px">81.336</span></td>
+                <td><span class="birlesme-cip">3 → 1</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">DÜNYA</span></td>
+                <td class="tur-imi"><span>H</span> <span>F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/dunya/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:20px"></span></span><span style="font-family:var(--mono);font-size:12px">68.680</span></td>
+                <td><span class="birlesme-cip">3 → 1</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">EKONOMİ</span></td>
+                <td class="tur-imi"><span>H</span> <span>F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/ekonomi/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:15px"></span></span><span style="font-family:var(--mono);font-size:12px">54.215</span></td>
+                <td><span class="birlesme-cip">3 → 1</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">MAGAZİN</span></td>
+                <td class="tur-imi"><span>H</span> <span>F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/magazin/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:8px"></span></span><span style="font-family:var(--mono);font-size:12px">28.845</span></td>
+                <td><span class="birlesme-cip">3 → 1</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">BURSASPOR</span></td>
+                <td class="tur-imi"><span>H</span> <span>F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/bursaspor/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:3px"></span></span><span style="font-family:var(--mono);font-size:12px">11.577</span></td>
+                <td><span class="birlesme-cip">3 → 1</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">SAĞLIK</span></td>
+                <td class="tur-imi"><span>H</span> <span>F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/saglik/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:2px"></span></span><span style="font-family:var(--mono);font-size:12px">6.752</span></td>
+                <td><span class="birlesme-cip">3 → 1</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">TEKNOLOJİ</span></td>
+                <td class="tur-imi"><span>H</span> <span>F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/teknoloji/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:2px"></span></span><span style="font-family:var(--mono);font-size:12px">4.705</span></td>
+                <td><span class="birlesme-cip">3 → 1</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">YAŞAM</span></td>
+                <td class="tur-imi"><span>H</span> <span>F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/yasam/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:2px"></span></span><span style="font-family:var(--mono);font-size:12px">3.495</span></td>
+                <td><span class="birlesme-cip">3 → 1</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">BURSA'DA SPOR</span></td>
+                <td class="tur-imi"><span>H</span> <span>F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/bursa-da-spor/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:2px"></span></span><span style="font-family:var(--mono);font-size:12px">3.331</span></td>
+                <td><span class="birlesme-cip">3 → 1</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">AKTÜALİTE</span></td>
+                <td class="tur-imi"><span>H</span> <span class="yok">F</span> <span class="yok">V</span> </td>
+                <td><code class="kilitli-slug">/aktualite/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span style="color:var(--cizgi)">yok</span></td>
+                <td><span style="color:var(--cizgi)">yok</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:2px"></span></span><span style="font-family:var(--mono);font-size:12px">859</span></td>
+                <td><span style="color:var(--gri-acik)">tek kayıt</span></td>
+              </tr>
+              <tr>
+                <td><span class="satir-bas">SAVUNMA SANAYİ</span></td>
+                <td class="tur-imi"><span>H</span> <span class="yok">F</span> <span>V</span> </td>
+                <td><code class="kilitli-slug">/savunma-sanayi/</code><span class="kilit-im" title="Dondurulmuş slug" aria-hidden="true">🔒</span><span class="gizli-ama-okunur">dondurulmuş</span></td>
+                <td><span style="color:var(--cizgi)">yok</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span class="kat-zemin"><span class="kat-kullanim" style="width:2px"></span></span><span style="font-family:var(--mono);font-size:12px">478</span></td>
+                <td><span class="birlesme-cip">2 → 1</span></td>
+              </tr>
+              <tr class="dikkat">
+                <td><span class="satir-bas">HABER</span></td>
+                <td class="tur-imi"><span class="yok">H</span> <span>F</span> <span class="yok">V</span> </td>
+                <td><span style="color:var(--gri-acik)">—</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td><span style="color:var(--cizgi)">yok</span></td>
+                <td style="white-space:nowrap"><span style="font-family:var(--mono);font-size:12px">—</span></td>
+                <td><span class="sorun-cip">çöp kayıt</span></td>
+              </tr>
+              <tr class="dikkat">
+                <td><span class="satir-bas">Video Galeri Arşivi</span></td>
+                <td class="tur-imi"><span class="yok">H</span> <span class="yok">F</span> <span>V</span> </td>
+                <td><span style="color:var(--gri-acik)">—</span></td>
+                <td><span style="color:var(--cizgi)">yok</span></td>
+                <td><span class="olculmedi">ölçülmedi</span></td>
+                <td style="white-space:nowrap"><span style="font-family:var(--mono);font-size:12px">—</span></td>
+                <td><span class="sorun-cip">çöp kayıt</span></td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="ipucu" style="margin-top:12px">
+            <b>H / F / V</b> = kategorinin haber, foto galeri ve video listelerinde tanımlı olması.
+            <b>Birleşme</b> sütunu kaç ayrı kaydın tek ada toplandığını söyler —
+            “3 → 1” demek, aynı ad üç türde ayrı kayıt olarak duruyordu demektir.
+            Haber sayıları sitemap dökümünden sayıldı (556.824 adres).
+            Kilit işareti taşıyan slug'lar <b>dondurulmuştur</b>, düzenlenemez.
+          </p>
+        </div>
+      </div>
+
+      <!-- ============ KULLANICILAR & ROLLER ============ -->
+      <div id="bolme-kullanici" role="tabpanel" aria-labelledby="sek-kullanici" hidden>
+        <p style="font-size:13.5px;color:var(--gri);margin-bottom:16px;max-width:78ch;line-height:1.55">
+          Rol tanımları ve hesaplar kendi ekranlarında duruyor.
+        </p>
+        <a class="baglanti-kart" href="panel-roller.html">
+          <span class="im" aria-hidden="true">▦</span>
+          <span class="govde">
+            <b>Roller</b>
+            <span>5 rol · 14 yetki. Kim haber girer, kim yayınlar, kim manşet atar.</span>
+          </span>
+          <span class="ok" aria-hidden="true">›</span>
+        </a>
+        <a class="baglanti-kart" href="panel-kullanicilar.html">
+          <span class="im" aria-hidden="true">◍</span>
+          <span class="govde">
+            <b>Kullanıcılar</b>
+            <span>17 hesap. Dördü “Administrator” adını paylaşıyor — adlandırılmalı.</span>
+          </span>
+          <span class="ok" aria-hidden="true">›</span>
+        </a>
+      </div>
+
+      <!-- ============ HESAP ============ -->
+      <div id="bolme-hesap" role="tabpanel" aria-labelledby="sek-hesap" hidden>
+        <div class="kutu-kart">
+          <h2>Parola</h2>
+          <div class="kutu-govde">
+            <div class="alan">
+              <label for="h-mevcut">Mevcut parola</label>
+              <input type="password" id="h-mevcut" autocomplete="current-password">
+            </div>
+            <div class="ikili">
+              <div class="alan">
+                <label for="h-yeni">Yeni parola</label>
+                <input type="password" id="h-yeni" autocomplete="new-password">
+              </div>
+              <div class="alan">
+                <label for="h-yeni2">Yeni parola tekrar</label>
+                <input type="password" id="h-yeni2" autocomplete="new-password">
+              </div>
+            </div>
+            <button type="button" class="btn dolu" data-git="Parola değiştirme">Kaydet</button>
+          </div>
+        </div>
+
+        <div class="kutu-kart">
+          <h2>İki faktörlü doğrulama <span class="sag-not">2FA</span></h2>
+          <div class="kutu-govde">
+            <p style="font-size:13.5px;color:var(--gri);line-height:1.55;margin-bottom:12px">
+              Mevcut panelde iki yöntem var: <b>Google Authenticator</b> ve <b>SMS</b>.
+              İkisi de korundu.
+            </p>
+            <div class="kutu uyari" style="margin-top:0">
+              <b>Öneri:</b> yayınlama, manşet ve resmi ilan yetkisi olan rollerde
+              2FA <b>zorunlu</b> tutulmalı. Şu an isteğe bağlı.
+              Ayrıca oturum tarayıcı parmak iziyle bağlanıyor
+              (<code>/panel/api/is_user_valid</code>) — bu davranış korundu.
+            </div>
+            <button type="button" class="btn" data-git="2FA kurulumu" style="margin-top:12px">Kur</button>
+          </div>
+        </div>
+
+        <div class="kutu-kart">
+          <h2>Oturum kayıtları</h2>
+          <div class="kutu-govde">
+            <div class="tablo-sar">
+              <table class="veri" style="min-width:460px">
+                <caption class="gizli-ama-okunur">Son oturum kayıtları</caption>
+                <thead>
+                  <tr><th scope="col">IP</th><th scope="col">Tarayıcı</th>
+                      <th scope="col">Durum</th><th scope="col">Tarih</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td style="font-family:var(--mono)">78.189.195.68</td><td>Chrome / Windows</td>
+                      <td><span class="durum-etiket hazir">Başarılı</span></td>
+                      <td style="font-family:var(--mono)">25-08 08:02</td></tr>
+                  <tr><td style="font-family:var(--mono)">78.189.195.68</td><td>Chrome / Windows</td>
+                      <td><span class="durum-etiket hazir">Başarılı</span></td>
+                      <td style="font-family:var(--mono)">24-08 08:14</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="ipucu" style="margin-top:12px">
+              Mevcut paneldeki Log Kayıtları ekranı buraya alındı — ayrı menü maddesi olacak
+              kadar sık bakılan bir yer değil.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<div class="duyuru" id="duyuru" role="status" aria-live="polite"></div>
+<script>
+(function(){
+  "use strict";
+  var z = null;
+  function duyur(m){
+    var d = document.getElementById('duyuru');
+    d.textContent = m; d.classList.add('gorunur');
+    if (z) clearTimeout(z);
+    z = setTimeout(function(){ d.classList.remove('gorunur'); }, 4000);
+  }
+  function el(i){ return document.getElementById(i); }
+
+  var SEKME = ['taksonomi','kullanici','hesap'];
+  function sekmeAc(hangi){
+    SEKME.forEach(function(s){
+      el('sek-' + s).setAttribute('aria-selected', String(s === hangi));
+      el('bolme-' + s).hidden = s !== hangi;
+    });
+  }
+  SEKME.forEach(function(s){
+    el('sek-' + s).addEventListener('click', function(){ sekmeAc(s); });
+  });
+
+  var bb = el('btn-birlestir');
+  if (bb) bb.addEventListener('click', function(e){
+    e.preventDefault();
+    duyur('Taksonomi düzenleme yetkiniz yok. Bu yetki Yayın Yönetmeni rolünde.');
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-git]'), function(b){
+    b.addEventListener('click', function(){
+      duyur('Demo: “' + this.dataset.git + '” henüz yapılmadı.');
+    });
+  });
+})();
+</script>
+</body>
+</html>

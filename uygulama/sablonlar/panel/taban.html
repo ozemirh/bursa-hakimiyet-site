@@ -1,0 +1,96 @@
+{% load static %}<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>{{ baslik }} — Yönetim Paneli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'stil/panel.css' %}">
+</head>
+<body>
+<a class="atla" href="#ana">İçeriğe atla</a>
+
+<header class="bant">
+  <img class="logo-gorsel" src="{% static 'logo-seffaf.png' %}" alt="Bursa Hakimiyet" width="406" height="120">
+  <span class="arac-ad">Yönetim Paneli</span>
+  <div class="sag">
+    <span class="kim">
+      <span class="bas-harf" aria-hidden="true">{{ user.get_username|slice:":2"|upper }}</span>
+      {{ user.get_full_name|default:user.get_username }}
+    </span>
+    <form action="{% url 'panel-cikis' %}" method="post" class="cikis-form">
+      {% csrf_token %}<button type="submit" class="dugme ufak">Çıkış</button>
+    </form>
+  </div>
+</header>
+
+<div class="panel">
+  {% comment %}Menüde görünmeyen bağlantı yetki denetimi DEĞİLDİR; her görünüm
+     yetkisini ayrıca denetler. Buradaki gizleme yalnızca kalabalık
+     azaltmak içindir.{% endcomment %}
+  <nav class="kenar" aria-label="Panel bölümleri">
+    <p class="kenar-bas">Bölümler</p>
+    <ul>
+      <li><a href="{% url 'panel-bugun' %}"{% if bolum == 'bugun' %} aria-current="page"{% endif %}><span class="im" aria-hidden="true">◵</span><span>Bugün</span></a></li>
+      <li>
+        <a href="{% url 'panel-akis' %}"{% if ust_bolum == 'icerik' %} aria-current="true"{% endif %}><span class="im" aria-hidden="true">▤</span><span>İçerik</span></a>
+        <ul class="alt">
+          {% if haber_girebilir %}<li><a href="{% url 'panel-haber-ekle' %}">Haber Ekle</a></li>{% endif %}
+          <li><a href="{% url 'panel-akis' %}"{% if bolum == 'akis' %} aria-current="page"{% endif %}>Tüm Haberler</a></li>
+          {% if mansete_alabilir %}<li><a href="{% url 'panel-mansetler' %}"{% if bolum == 'mansetler' %} aria-current="page"{% endif %}>Manşetler</a></li>{% endif %}
+          {% if kose_yonetir %}
+            <li><a href="{% url 'panel-kose' %}"{% if bolum == 'kose' %} aria-current="page"{% endif %}>Köşe Yazıları</a></li>
+            <li><a href="{% url 'panel-yazarlar' %}"{% if bolum == 'yazarlar' %} aria-current="page"{% endif %}>Köşe Yazarları</a></li>
+          {% endif %}
+          {% if haber_girebilir %}
+            <li><a href="{% url 'panel-galeriler' %}"{% if bolum == 'galeriler' %} aria-current="page"{% endif %}>Foto Galeri</a></li>
+            <li><a href="{% url 'panel-videolar' %}"{% if bolum == 'videolar' %} aria-current="page"{% endif %}>Videolar</a></li>
+          {% endif %}
+        </ul>
+      </li>
+      {% comment %}Ayarlar bölümü HERKESE görünür: içindeki Şifre maddesi
+         yetkiye bağlı değil, herkes kendi parolasını değiştirebilmeli.
+         Bölüm bağlantısı, kullanıcının girebildiği ilk maddeye gider.{% endcomment %}
+      <li>
+        <a href="{% if taksonomi_duzenler %}{% url 'panel-kategoriler' %}{% elif kullanici_yonetir %}{% url 'panel-roller' %}{% else %}{% url 'panel-sifre' %}{% endif %}"{% if ust_bolum == 'ayarlar' %} aria-current="true"{% endif %}><span class="im" aria-hidden="true">⚙</span><span>Ayarlar</span></a>
+        <ul class="alt">
+          {% if taksonomi_duzenler %}
+            <li><a href="{% url 'panel-kategoriler' %}"{% if bolum == 'kategoriler' %} aria-current="page"{% endif %}>Kategoriler</a></li>
+            <li><a href="{% url 'panel-kaynaklar' %}"{% if bolum == 'kaynaklar' %} aria-current="page"{% endif %}>Kaynaklar</a></li>
+          {% endif %}
+          {% if kullanici_yonetir %}
+            <li><a href="{% url 'panel-kullanicilar' %}"{% if bolum == 'kullanicilar' %} aria-current="page"{% endif %}>Kullanıcılar</a></li>
+            <li><a href="{% url 'panel-roller' %}"{% if bolum == 'roller' %} aria-current="page"{% endif %}>Roller</a></li>
+          {% endif %}
+          <li><a href="{% url 'panel-sifre' %}"{% if bolum == 'sifre' %} aria-current="page"{% endif %}>Şifre</a></li>
+        </ul>
+      </li>
+    </ul>
+    {% comment %}Sayfa Düzeni, İlan & Reklam, Etkileşim, Konu Takibi ve Log
+       Kayıtları menüde YOK: karşılıkları olan model henüz kurulmadı. Bugün'e
+       giden sahte bağlantı bırakmak menüyü yalancı yapardı.{% endcomment %}
+  </nav>
+
+  <main id="ana" class="calisma">
+    <div class="sayfa-bas">
+      <p class="iz">Panel › {{ baslik }}</p>
+      <h1>{{ baslik }}</h1>
+    </div>
+    {% block icerik %}{% endblock %}
+  </main>
+</div>
+
+{% comment %}Toplu işlem sonucu. `.duyuru` kabuğu ve stili panel-bugun.html'den
+   geliyordu ama hiç kullanılmıyordu; toplu fiillerin sonucu buraya düşüyor.
+   Betikle gizlenmiyor: mesaj sayfa yenilendiğinde zaten kaybolur ve
+   `role="status"` ekran okuyucuya okutur.{% endcomment %}
+{% if messages %}
+  {% for mesaj in messages %}
+    <p class="duyuru gorunur{% if mesaj.level >= 40 %} hata{% endif %}" role="status">{{ mesaj }}</p>
+  {% endfor %}
+{% endif %}
+</body>
+</html>

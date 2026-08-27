@@ -1,9 +1,7 @@
-Thumbs.db
-desktop.ini
-.DS_Store
-_o_*.html
-_olcum*.html
-_dump.html
-_d.html
+.venv/
 __pycache__/
 *.pyc
+uygulama/db.sqlite3
+canli-veri/veri/
+
+canli-veri/gizli.json

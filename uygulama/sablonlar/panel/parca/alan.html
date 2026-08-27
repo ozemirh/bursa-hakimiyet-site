@@ -1,0 +1,16 @@
+{% comment %}Tek form alanı: etiket · girdi · ipucu · hata.
+
+İpucu `<p>` değil `<div>` içinde: Django'nun `PasswordChangeForm`'u parola
+politikasını `<ul><li>…</li></ul>` olarak veriyor ve `<ul>`, `<p>` içine
+konamaz. Tarayıcı paragrafı erkenden kapatıyor, liste `.sag-not` stilinin
+DIŞINDA kalıp iri ve koyu çiziliyordu. Ekran görüntüsüne bakılmasa fark
+edilmezdi — şablon hatası sessizdir.{% endcomment %}
+{% if alan %}
+<div class="alan{% if alan.errors %} hatali{% endif %}">
+  {{ alan.label_tag }}
+  {{ alan }}
+  {% if ipucu %}<div class="sag-not">{{ ipucu }}</div>
+  {% elif alan.help_text %}<div class="sag-not">{{ alan.help_text }}</div>{% endif %}
+  {% if alan.errors %}<p class="hata" role="alert">{{ alan.errors|join:" " }}</p>{% endif %}
+</div>
+{% endif %}

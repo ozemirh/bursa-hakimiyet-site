@@ -1,0 +1,77 @@
+{% extends "taban.html" %}
+{% load site_etiket %}
+{% comment %}
+Foto galeri detayı.
+
+`kareler_eksik` doğruysa sayfa bunu okura **açıkça söyler**. Ölçüm: kareler
+kaynağın statik HTML'inde yok, JavaScript ile geliyor ve bir ajax ucu
+bulunamadı (arşivleyicinin notu). Kapak alınabildiği için galeri boş
+görünmüyor; eksik olanın ne olduğunu gizlemek yerine yazıyoruz.
+{% endcomment %}
+
+{% block baslik %}{{ galeri.baslik }} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ galeri.spot|striptags|truncatechars:300|default:galeri.baslik }}{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ galeri.get_absolute_url }}">{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Kırıntı navigasyonu">
+        <ol>
+          <li><a href="/">Anasayfa</a></li>
+          <li><a href="/galeriler">Foto galeri</a></li>
+          {% if galeri.kategori %}<li><a href="/{{ galeri.kategori.slug_al }}">{{ galeri.kategori.ad|baslikla }}</a></li>{% endif %}
+          <li><span aria-current="page">{{ galeri.baslik|truncatechars:60 }}</span></li>
+        </ol>
+      </nav>
+
+      <article class="detay">
+        <span class="rozet-k">FOTO GALERİ</span>
+        <h1>{{ galeri.baslik }}</h1>
+        {% if galeri.spot %}<p class="spot">{{ galeri.spot }}</p>{% endif %}
+
+        <div class="detay-kunye">
+          <span>Haber Merkezi</span>
+          {% if galeri.yayin_zamani %}<span><time datetime="{{ galeri.yayin_zamani|date:'c' }}">{{ galeri.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
+          {% if kareler %}<span>{{ kareler|length }} fotoğraf</span>{% endif %}
+        </div>
+
+        {% if galeri.gorsel_yolu %}
+          <div class="foto ana-gorsel">
+            <img src="{{ galeri.gorsel_yolu }}" alt="{{ galeri.gorsel_alt|default:galeri.baslik }}" width="1280" height="720" decoding="async">
+          </div>
+          {% if galeri.gorsel_alt %}<p class="foto-alt">{{ galeri.gorsel_alt }}</p>{% endif %}
+        {% else %}
+          <div class="foto ana-gorsel {{ galeri|kart_rengi }}">
+            <svg role="img" aria-label="{{ galeri.baslik }} galerisini temsil eden çizim"><use href="#{{ galeri.kategori|simge_adi }}"/></svg>
+          </div>
+          <p class="foto-alt">Görsel temsilîdir: bu galerinin kapağı kaynaktan alınamadı.</p>
+        {% endif %}
+
+        {% if kareler %}
+          <h2 class="gorsel-gizli">Galeri kareleri</h2>
+          <div class="galeri-izgara">
+            {% for kare in kareler %}
+            <figure class="galeri-kart">
+              <div class="foto"><img src="{{ kare.gorsel_yolu }}" alt="{{ kare.alt|default:galeri.baslik }}" loading="lazy"></div>
+              {% if kare.aciklama %}<figcaption class="adet">{{ kare.aciklama }}</figcaption>{% endif %}
+            </figure>
+            {% endfor %}
+          </div>
+        {% elif galeri.kareler_eksik %}
+          <p class="yer-not">{{ galeri.kareler_notu|default:"Galerinin kareleri kaynaktan alınamadı; yalnız kapak arşivlendi." }}</p>
+        {% endif %}
+      </article>
+
+      <section class="kutu">
+        <div class="kutu-bas">
+          <h2>BENZER GALERİLER</h2>
+          <span class="tumu"><a href="/galeriler">Tüm galeriler &rarr;</a></span>
+        </div>
+        <div class="kutu-ic">
+          <div class="galeri-izgara">
+            {% for g in digerleri %}{% include "medya/parca/galeri_kart.html" with g=g %}
+            {% empty %}<p class="bos">Bu bölümde başka galeri yok.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+{% endblock %}

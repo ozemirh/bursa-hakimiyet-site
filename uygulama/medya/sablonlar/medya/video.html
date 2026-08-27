@@ -1,0 +1,69 @@
+{% extends "taban.html" %}
+{% load site_etiket %}
+{% comment %}
+Video detayı.
+
+Sayfa videoyu **kendiliğinden gömmez**. Gömülü oynatıcı dış adrese bağlanır ve
+bu, sayfaların internetsiz de açılması kuralına aykırıdır; ayrıca göçte gelen
+`gomulu_url` değerlerinin yaşayıp yaşamadığı ölçülmedi. Bunun yerine yerel
+kapak ve kaynağa giden açık bir bağlantı gösteriliyor. Gömme kararı ayrı bir
+iştir (oynatıcı seçimi, çerez/izleme, yaş sınırı).
+{% endcomment %}
+
+{% block baslik %}{{ video.baslik }} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ video.spot|striptags|truncatechars:300|default:video.baslik }}{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ video.get_absolute_url }}">{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Kırıntı navigasyonu">
+        <ol>
+          <li><a href="/">Anasayfa</a></li>
+          <li><a href="/videolar">Videolar</a></li>
+          {% if video.kategori %}<li><a href="/{{ video.kategori.slug_al }}">{{ video.kategori.ad|baslikla }}</a></li>{% endif %}
+          <li><span aria-current="page">{{ video.baslik|truncatechars:60 }}</span></li>
+        </ol>
+      </nav>
+
+      <article class="detay">
+        <span class="rozet-k">VİDEO</span>
+        <h1>{{ video.baslik }}</h1>
+        {% if video.spot %}<p class="spot">{{ video.spot }}</p>{% endif %}
+
+        <div class="detay-kunye">
+          <span>Haber Merkezi</span>
+          {% if video.yayin_zamani %}<span><time datetime="{{ video.yayin_zamani|date:'c' }}">{{ video.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
+          {% if video.sure_yazi %}<span>Süre: {{ video.sure_yazi }}</span>{% endif %}
+        </div>
+
+        <div class="foto ana-gorsel {{ video|kart_rengi }}">
+          {% if video.gorsel_yolu %}
+            <img src="{{ video.gorsel_yolu }}" alt="{{ video.gorsel_alt|default:video.baslik }}" width="1280" height="720" decoding="async">
+          {% else %}
+            <svg role="img" aria-label="{{ video.baslik }} videosunu temsil eden çizim"><use href="#{{ video.kategori|simge_adi }}"/></svg>
+          {% endif %}
+          <span class="oynat" aria-hidden="true"><span>&#9654;</span></span>
+        </div>
+
+        {% if video.oynatma_adresi %}
+          <p class="foto-alt">
+            <a href="{{ video.oynatma_adresi }}" rel="noopener">Videoyu oynatıcıda aç &rarr;</a>
+          </p>
+        {% else %}
+          <p class="foto-alt">Bu kaydın oynatma adresi arşivde bulunamadı; yalnız kapak ve künye alındı.</p>
+        {% endif %}
+      </article>
+
+      <section class="kutu">
+        <div class="kutu-bas">
+          <h2>BENZER VİDEOLAR</h2>
+          <span class="tumu"><a href="/videolar">Tüm videolar &rarr;</a></span>
+        </div>
+        <div class="kutu-ic">
+          <div class="video-izgara">
+            {% for v in digerleri %}{% include "medya/parca/video_kart.html" with v=v %}
+            {% empty %}<p class="bos">Bu bölümde başka video yok.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+{% endblock %}

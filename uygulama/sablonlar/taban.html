@@ -1,0 +1,58 @@
+{% load static %}<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block baslik %}Bursa Hakimiyet — Bursa'nın günlük haber gazetesi{% endblock %}</title>
+<meta name="description" content="{% block aciklama %}Bursa Hakimiyet: Bursa gündemi, ilçe haberleri, ekonomi, Bursaspor, hava durumu, namaz vakitleri, nöbetçi eczane, resmî ilanlar.{% endblock %}">
+{% block kanonik %}{% endblock %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'stil/site.css' %}">
+</head>
+<body>
+<a class="atla" href="#ana-icerik">İçeriğe atla</a>
+{% include "parca/simgeler.html" %}
+{% include "parca/ust_bant.html" %}
+
+<div class="sayfa">
+
+  <aside class="yan-reklam" aria-label="Sol reklam alanı">
+    <div class="reklam"><span><b>REKLAM ALANI</b><span class="olcu">-Sol pageskin1- 160x600</span></span></div>
+  </aside>
+
+  <div class="orta">
+
+    <header class="bant">
+      <a href="/"{% if anasayfa_mi %} aria-current="page"{% endif %}>
+        <img class="logo-gorsel" width="406" height="120" src="{% static 'logo-seffaf.png' %}" alt="Bursa Hakimiyet">
+      </a>
+      {% comment %}Site adi yalniz anasayfada h1; ic sayfalarda h1 sayfanin kendi
+         basligidir, yoksa her sayfada iki h1 olur.{% endcomment %}
+      {% if anasayfa_mi %}<h1 class="gorsel-gizli">Bursa Hakimiyet — Bursa'nın günlük haber gazetesi</h1>
+      {% else %}<p class="gorsel-gizli">Bursa Hakimiyet</p>{% endif %}
+    </header>
+
+    {% include "parca/kategori_bandi.html" %}
+    {% include "parca/son_dakika.html" %}
+
+    <div class="reklam tam"><span><b>REKLAM ALANI</b><span class="olcu">1100x150</span></span></div>
+
+    <main id="ana-icerik" tabindex="-1">
+{% block icerik %}{% endblock %}
+    </main>
+  </div>
+
+  <aside class="yan-reklam" aria-label="Sağ reklam alanı">
+    <div class="reklam"><span><b>REKLAM ALANI</b><span class="olcu">-Sağ pageskin1- 160x600</span></span></div>
+  </aside>
+
+</div>
+
+{% include "parca/kunye.html" %}
+
+<script src="{% static 'betik/site.js' %}"></script>
+{% block betik %}{% endblock %}
+</body>
+</html>

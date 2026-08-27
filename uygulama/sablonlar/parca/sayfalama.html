@@ -1,0 +1,15 @@
+{% comment %}
+Sayfalama. Arama sayfasında `q` parametresi korunmalı, yoksa ikinci sayfada
+sorgu kaybolur; bu yüzden bağlantılara sorgu da eklenir.
+{% endcomment %}
+{% if sayfa.paginator.num_pages > 1 %}
+<nav class="sayfalama" aria-label="Sayfalar">
+  {% if sayfa.has_previous %}
+    <a href="?{% if sorgu %}q={{ sorgu|urlencode }}&amp;{% endif %}sayfa={{ sayfa.previous_page_number }}" rel="prev">&larr; Önceki</a>
+  {% endif %}
+  <span class="konum">{{ sayfa.number }} / {{ sayfa.paginator.num_pages }}</span>
+  {% if sayfa.has_next %}
+    <a href="?{% if sorgu %}q={{ sorgu|urlencode }}&amp;{% endif %}sayfa={{ sayfa.next_page_number }}" rel="next">Sonraki &rarr;</a>
+  {% endif %}
+</nav>
+{% endif %}

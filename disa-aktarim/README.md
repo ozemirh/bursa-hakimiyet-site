@@ -96,6 +96,88 @@ Get-Content bursa-arsiv-devir.tar.gz.sha256
 
 ---
 
+## Tarama bu makinede neden yavaş?
+
+```powershell
+.\disa-aktarim\tani.ps1
+```
+
+Hiçbir şeyi değiştirmez, taramayı başlatmaz — yedi şeyi ölçüp yazar: log'daki
+gerçek hız, güç durumu, hedef diskin türü, antivirüs, ağ/DNS, gerçek sayfa ve
+görsel indirme süresi, küçük dosya yazma hızı. **İki makinede de çalıştırıp
+çıktıyı yan yana koyun.**
+
+İşin doğası gereği **CPU hiçbir şeyi hızlandırmaz.** On iş parçacığı var ve her
+sayfa/görsel için ayrı bir TLS bağlantısı açılıyor; hız kabaca
+
+```
+hız ≈ 10 / (sayfa süresi + görsel süresi × 3)
+```
+
+Ölçüm (25 Ağustos 2026, bu laptop): sayfa 0,62 sn + görsel 0,26 sn × ~3 →
+öngörülen 7,1 url/sn, gerçekleşen **6,3 url/sn**. Yani süreyi belirleyen tek
+şey **bağlantı gecikmesi**. Daha güçlü işlemci, daha çok RAM fark etmez;
+Wi-Fi yerine kablo, VPN'i kapatmak, antivirüsün klasörü taramasını durdurmak
+eder.
+
+---
+
+## İçerik aileleri — ÖNEMLİ
+
+26 Ağustos 2026'da bulundu: tarayıcı uzun süre sitemap indeksindeki **beş içerik
+ailesinden yalnızca birini** alıyordu. Süzgeç `news_` ile sınırlıydı, diğer dört
+ailenin göçte kaynağı yoktu.
+
+| Aile | `--aile` | Sitemap'te | Panelde | Adres deseni |
+|---|---|---|---|---|
+| Haber | `haber` *(varsayılan)* | 556.824 | 1.044.757 | `/{kategori}/{slug}-{id}` |
+| Video | `video` | 32.006 | 49.164 | `/videolar/{kategori}-{katid}/{slug}-{id}` |
+| Köşe yazısı | `kose` | 6.903 | 24.111 | `/yazarlar/{yazar}-{yid}/{slug}-{id}` |
+| Foto galeri | `galeri` | 4.042 | 8.815 | `/galeriler/{kategori}-{katid}/{slug}-{id}` |
+| Yazar sayfası | `yazar` | 18 | 71 | `/yazarlar/{slug}-{id}` |
+
+**Sitemap sayıları panel sayılarından düşük.** Sitemap yalnızca yayında olan ve
+görece yeni içeriği listeliyor; aradaki fark kazımayla kurtarılamaz, sağlayıcıdan
+veritabanı dökümü ister.
+
+### Çalıştırma
+
+Her aile kendi dosyalarına yazar, birbirini etkilemez:
+
+```
+python site_arsivleyici.py                 # haber (eskisiyle birebir aynı)
+python site_arsivleyici.py --aile kose
+python site_arsivleyici.py --aile video
+python site_arsivleyici.py --aile galeri
+python site_arsivleyici.py --aile yazar
+```
+
+`haber` ailesinin dosya yolları **hiç değişmedi** — süren bir tarama varken
+diğer aileleri başlatmak güvenlidir:
+
+| Aile | Url listesi | Veri | İlerleme |
+|---|---|---|---|
+| `haber` | `tum-urller.jsonl` | `veri/` | `ilerleme.json` |
+| diğerleri | `tum-urller-<aile>.jsonl` | `veri-<aile>/` | `ilerleme-<aile>.json` |
+
+### Ailelere özgü bilinmesi gerekenler
+
+- **Köşe yazısı** haberle aynı `NewsArticle` şemasını taşır; gövde tam gelir.
+  Başlıktaki `- Yazar - Bursa Hakimiyet` eki temizlenir, yazar ayrı alandadır.
+- **Video**: `embedUrl` bazen komple `<iframe>` HTML'i döner, `src` ayıklanır.
+  Sonuç `bursahakimiyet.web.tv/embed/...` adresidir. Video **dosyası indirilmez**,
+  yalnızca gömme adresi ve küçük resim saklanır.
+- **Foto galeri — kareler alınamıyor.** Galeri sayfasındaki tek `ItemList`
+  sitenin "son galeriler" kutusudur, o galerinin fotoğrafları değil; kareler
+  JavaScript ile yükleniyor ve sayfada ajax/api ucu yok. Bu yüzden yalnızca
+  **kapak** ve künye alınır, kayda `kareler_eksik: true` düşülür. Kareler için
+  ya JS çalıştıran bir tarayıcı ya da veritabanı dökümü gerekir.
+- **Yazar sayfası**: `Person` şeması yok; ad `<h1>`den, **portre `og:image`den**
+  gelir — yazar fotoğraflarının tek kaynağı budur. Sitemap ölü adres içerir
+  (örn. `abdullah-basay-134` → 404); bunlar `basarisiz-yazar.txt`e düşer, normaldir.
+  Yazar kimliklerinin daha eksiksiz kaynağı köşe yazısı adresleridir
+  (`/yazarlar/{slug}-{id}/...` içinde yazar kimliği geçer).
+
 ## Çıktı
 
 ```

@@ -1,0 +1,15 @@
+{% comment %}
+Köşe yazısı kartı.
+
+`parca/kart.html` yerine ayrı duruyor çünkü köşe yazısında görsel yoktur
+(yazının kendi fotoğrafı değil, yazarın portresi vardır) ve kartta anlamlı
+olan ikinci bilgi kategori değil **tarih**tir. Görselsiz kart, olmayan
+fotoğraf için boş kutu çizmez.
+{% endcomment %}
+<article class="kart">
+  <div class="ic">
+    {% if y.yayin_zamani %}<div class="ust"><time datetime="{{ y.yayin_zamani|date:'c' }}">{{ y.yayin_zamani|date:'j F Y' }}</time></div>{% endif %}
+    <h3><a href="{{ y.get_absolute_url }}">{{ y.baslik }}</a></h3>
+    {% if y.spot %}<p>{{ y.spot|truncatechars:140 }}</p>{% endif %}
+  </div>
+</article>

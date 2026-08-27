@@ -1,0 +1,21 @@
+{% load site_etiket %}
+{% comment %}
+Video kartı — tasarımdaki `.video-kart` + `.oynat` yapısı birebir.
+
+Oynat düğmesi bir **işaret**, bağlantı değil (`pointer-events:none`); kartın
+tamamı başlıktan bağlanıyor. Süre bilinmiyorsa (`sure_saniye = 0`) hiç
+yazılmaz — "0:00" uydurma değer olurdu.
+{% endcomment %}
+<article class="video-kart">
+  <div class="foto {{ v|kart_rengi }}">
+    {% if v.gorsel_yolu %}
+      <img src="{{ v.gorsel_yolu }}" alt="{{ v.gorsel_alt|default:v.baslik }}" loading="lazy">
+    {% else %}
+      <svg role="img" aria-label="{{ v.baslik }} videosunu temsil eden çizim"><use href="#{{ v.kategori|simge_adi }}"/></svg>
+    {% endif %}
+    <span class="oynat" aria-hidden="true"><span>&#9654;</span></span>
+  </div>
+  <h3><a href="{{ v.get_absolute_url }}">{{ v.baslik }}</a></h3>
+  {% if v.sure_yazi %}<span class="sure">{{ v.sure_yazi }}</span>
+  {% elif v.yayin_zamani %}<span class="sure"><time datetime="{{ v.yayin_zamani|date:'c' }}">{{ v.yayin_zamani|date:'j F Y' }}</time></span>{% endif %}
+</article>

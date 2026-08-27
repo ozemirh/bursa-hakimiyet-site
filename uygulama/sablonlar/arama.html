@@ -1,0 +1,37 @@
+{% extends "taban.html" %}
+
+{% block baslik %}{{ baslik }} — Bursa Hakimiyet{% endblock %}
+{% block kanonik %}<meta name="robots" content="noindex,follow">{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Arama</span>
+      </nav>
+
+      <section class="kutu">
+        <div class="kutu-bas vurgu">
+          <h1>ARAMA</h1>
+          {% if sorgu %}<span class="tumu">{{ toplam }} sonuç</span>{% endif %}
+        </div>
+        <div class="kutu-ic">
+          <form class="ara-sayfa" role="search" action="/ara" method="get">
+            <label class="gorsel-gizli" for="ara-sayfa-kutu">Haberlerde ara</label>
+            <input id="ara-sayfa-kutu" name="q" type="search" value="{{ sorgu }}" placeholder="Haberlerde ara" autofocus>
+            <button type="submit">Ara</button>
+          </form>
+
+          {% if sorgu %}
+            <h2 class="gorsel-gizli">Haberler</h2>
+            <div class="kutu-izgara">
+              {% for h in sayfa %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 %}
+              {% empty %}<p class="bos">“{{ sorgu }}” için sonuç bulunamadı.</p>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="bos">Aramak istediğiniz kelimeyi yazın.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      {% include "parca/sayfalama.html" %}
+{% endblock %}

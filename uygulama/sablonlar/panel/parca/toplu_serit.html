@@ -1,0 +1,86 @@
+{% comment %}Toplu işlem şeridi — PANEL-NOTLARI.md §12.
+
+Mevcut panelin hatası "seçim kutusu var, fiil yok"tu. Burada ikisi birlikte:
+şerit yalnızca kullanıcının GERÇEKTEN yapabildiği fiilleri çiziyor
+(`kullanilabilir_fiiller`), yetkisi olmayan fiil hiç görünmüyor. Sunucu
+ayrıca denetliyor — görünmemek yetki denetimi değildir.
+
+Betik olmadan da çalışır: tek tek kutular işaretlenip düğmeye basılabilir.
+Betik yalnızca "hepsini seç"i ve canlı sayacı ekler.{% endcomment %}
+
+<div class="toplu-serit" data-toplu data-toplu-sayi="{{ toplu.suzgec_sayisi }}">
+  <p class="toplu-durum">
+    <span class="sayac" data-toplu-sayac aria-live="polite">0 kayıt seçili</span>
+    <label class="toplu-tumu">
+      <input type="checkbox" name="tumu" value="1" data-toplu-suzgec>
+      Süzgeçteki <b>{{ toplu.suzgec_sayisi }}</b> kaydın tamamını seç
+    </label>
+  </p>
+
+  <input type="hidden" name="suzgec" value="{{ toplu.suzgec }}">
+
+  {% if "durum" in toplu.gruplar %}
+    <div class="toplu-grup">
+      {% for f in toplu.fiiller %}{% if f.grup == "durum" %}
+        <button type="submit" name="fiil" value="{{ f.kod }}" class="dugme ufak">{{ f.ad }}</button>
+      {% endif %}{% endfor %}
+    </div>
+  {% endif %}
+
+  {% if "hazirlik" in toplu.gruplar %}
+    <div class="toplu-grup">
+      <label class="gorsel-gizli" for="t-hazirlik">Hazırlık değeri</label>
+      <select id="t-hazirlik" name="hazirlik_degeri">
+        {% for deger, ad in toplu.hazirliklar %}<option value="{{ deger }}">{{ ad }}</option>{% endfor %}
+      </select>
+      <button type="submit" name="fiil" value="hazirlik" class="dugme ufak">Hazırlık ata</button>
+    </div>
+  {% endif %}
+
+  {% if "ilce" in toplu.gruplar %}
+    <div class="toplu-grup">
+      <label class="gorsel-gizli" for="t-ilce">İlçe</label>
+      <select id="t-ilce" name="ilce_degeri">
+        {% for i in toplu.ilceler %}<option value="{{ i.pk }}">{{ i.ad }}</option>{% endfor %}
+      </select>
+      <button type="submit" name="fiil" value="ilce" class="dugme ufak">İlçe ata</button>
+    </div>
+  {% endif %}
+
+  {% if "etiket" in toplu.gruplar %}
+    <div class="toplu-grup">
+      <label class="gorsel-gizli" for="t-etiket">Etiket</label>
+      <select id="t-etiket" name="etiket_degeri">
+        {% for e in toplu.etiketler %}<option value="{{ e.pk }}">{{ e.ad }}</option>{% endfor %}
+      </select>
+      <button type="submit" name="fiil" value="etiket" class="dugme ufak">Etiket ekle</button>
+    </div>
+  {% endif %}
+
+  {% if "manset" in toplu.gruplar %}
+    <div class="toplu-grup">
+      <label class="gorsel-gizli" for="t-manset">Manşet türü</label>
+      <select id="t-manset" name="manset_slot">
+        {% for deger, ad in toplu.manset_slotlari %}<option value="{{ deger }}">{{ ad }}</option>{% endfor %}
+      </select>
+      <button type="submit" name="fiil" value="mansete_al" class="dugme ufak">Manşete al</button>
+      <button type="submit" name="fiil" value="mansetten_cikar" class="dugme ufak">Manşetten çıkar</button>
+    </div>
+  {% endif %}
+
+  {% if "kategori" in toplu.gruplar %}
+    <div class="toplu-grup tehlikeli">
+      <label class="gorsel-gizli" for="t-kategori">Hedef kategori</label>
+      <select id="t-kategori" name="kategori_degeri">
+        {% for k in toplu.kategoriler %}<option value="{{ k.pk }}">{{ k.ad }}</option>{% endfor %}
+      </select>
+      <button type="submit" name="fiil" value="kategori" class="dugme ufak">Kategori değiştir</button>
+      <span class="toplu-not">Adresi değiştirir — onay ekranı açılır.</span>
+    </div>
+  {% endif %}
+
+  <p class="toplu-not">
+    Tek işlemde en çok <b>{{ toplu.ust_sinir }}</b> kayıt işlenebilir.
+    Yetkiniz olmayan fiiller bu şeritte görünmez.
+  </p>
+</div>

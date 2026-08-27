@@ -56,13 +56,33 @@ def kok_ayarla(yol: str | Path) -> None:
     """
     global KOK, VERI_KOK, GORSEL_KOK, URL_LISTESI, ILERLEME_DOSYA, LOG_DOSYA, BASARISIZ_DOSYA
     KOK = Path(yol).expanduser()
-    VERI_KOK = KOK / "veri"
-    GORSEL_KOK = KOK / "gorseller"
-    URL_LISTESI = KOK / "tum-urller.jsonl"
-    ILERLEME_DOSYA = KOK / "ilerleme.json"
-    LOG_DOSYA = KOK / "log.txt"
-    BASARISIZ_DOSYA = KOK / "basarisiz.txt"
+    # "haber" ailesi eski yollari BIREBIR korur; calisan tarama etkilenmez.
+    # Diger aileler kendi dosyalarina yazar, boylece ayni kok altinda yan yana
+    # calisabilirler.
+    ek = "" if AILE == "haber" else f"-{AILE}"
+    VERI_KOK = KOK / f"veri{ek}"
+    GORSEL_KOK = KOK / f"gorseller{ek}"
+    URL_LISTESI = KOK / f"tum-urller{ek}.jsonl"
+    ILERLEME_DOSYA = KOK / f"ilerleme{ek}.json"
+    LOG_DOSYA = KOK / f"log{ek}.txt"
+    BASARISIZ_DOSYA = KOK / f"basarisiz{ek}.txt"
 
+
+# Sitemap indeksinde bes icerik ailesi var; tarayici uzun sure yalnizca
+# "news" ailesini aliyordu. Digerlerinin gocte kaynagi yoktu.
+#   news            556.824  haber
+#   articles         24.111  kose yazisi   /yazarlar/{yazar}-{yid}/{slug}-{id}
+#   videoGalleries   49.164  video         /videolar/{kat}-{katid}/{slug}-{id}
+#   photoGalleries    8.815  foto galeri   /galeriler/{kat}-{katid}/{slug}-{id}
+#   authors              71  yazar sayfasi /yazarlar/{slug}-{id}
+AILELER = {
+    "haber":  {"onek": "news",           "ad": "haber"},
+    "kose":   {"onek": "articles",       "ad": "kose yazisi"},
+    "video":  {"onek": "videoGalleries", "ad": "video"},
+    "galeri": {"onek": "photoGalleries", "ad": "foto galeri"},
+    "yazar":  {"onek": "authors",        "ad": "yazar sayfasi"},
+}
+AILE = "haber"
 
 kok_ayarla(os.environ.get("BH_ARSIV_KOK", VARSAYILAN_KOK))
 
@@ -132,9 +152,11 @@ def _getir_ham(url: str, zaman_asimi: int = 30) -> bytes:
 
 
 def sitemap_ay_dosyalari() -> list[str]:
+    onek = AILELER[AILE]["onek"]
     ham = _getir_ham(SITEMAP_INDEX).decode("utf-8", errors="replace")
     tumu = re.findall(r"<loc>([^<]+)</loc>", ham)
-    return sorted(u for u in tumu if re.search(r"/news_\d{4}-\d{2}\.xml$", u))
+    desen = re.compile(r"/%s_\d{4}-\d{2}\.xml$" % re.escape(onek))
+    return sorted(u for u in tumu if desen.search(u))
 
 
 def sitemap_url_kur(zorla: bool = False) -> int:
@@ -145,12 +167,12 @@ def sitemap_url_kur(zorla: bool = False) -> int:
 
     log("Sitemap indeksi indiriliyor...")
     aylar = sitemap_ay_dosyalari()
-    log(f"{len(aylar)} aylik haber sitemap'i bulundu.")
+    log(f"{len(aylar)} aylik {AILELER[AILE]['ad']} sitemap'i bulundu.")
 
     gorulen: set[str] = set()
     with open(URL_LISTESI, "w", encoding="utf-8") as cikti:
         for i, ay_url in enumerate(aylar, 1):
-            ay_adi = re.search(r"news_(\d{4}-\d{2})\.xml$", ay_url).group(1)
+            ay_adi = re.search(r"_(\d{4}-\d{2})\.xml$", ay_url).group(1)
             try:
                 ham = _getir_ham(ay_url).decode("utf-8", errors="replace")
             except Exception as e:
@@ -169,19 +191,31 @@ def sitemap_url_kur(zorla: bool = False) -> int:
                     ensure_ascii=False,
                 ) + "\n")
                 yeni += 1
-            log(f"  [{i}/{len(aylar)}] {ay_adi}: {yeni} haber")
+            log(f"  [{i}/{len(aylar)}] {ay_adi}: {yeni} adres")
 
-    log(f"Sitemap tarama tamamlandi: {len(gorulen)} benzersiz haber adresi.")
+    log(f"Sitemap tarama tamamlandi: {len(gorulen)} benzersiz adres.")
     return len(gorulen)
 
 
 # -- tek haber isleme -------------------------------------------------------
 
+_SON_ID = re.compile(r"-(\d+)/?$")
+
+
 def id_kategori_cikar(url: str) -> tuple[int | None, str]:
-    esle = _ID_KATEGORI.search(url)
+    if AILE == "haber":
+        esle = _ID_KATEGORI.search(url)
+        if not esle:
+            return None, ""
+        return int(esle.group(2)), esle.group(1)
+    # kose/video/galeri/yazar: kimlik her zaman yolun son sayisi.
+    # Kategori/yazar dilimi ayrica ayiklayicida saklanir.
+    esle = _SON_ID.search(url.rstrip("/"))
     if not esle:
         return None, ""
-    return int(esle.group(2)), esle.group(1)
+    dilim = url.rstrip("/").split("/")
+    ust = dilim[-2] if len(dilim) >= 2 else ""
+    return int(esle.group(1)), ust
 
 
 def zaten_islendi_mi(ay: str, id_: int) -> bool:
@@ -281,6 +315,174 @@ _TARIHLI_GORSEL = re.compile(r"/static/\d{4}/\d{2}/\d{2}/")
 TUM_GORSELLERI_DENE = False
 
 
+# -- haber disi aileler -----------------------------------------------------
+
+def _ld_dugumleri(html: str) -> list:
+    """Sayfadaki tum JSON-LD dugumlerini duz liste olarak dondurur."""
+    ayristirici = ayiklayici._Toplayici()
+    try:
+        ayristirici.feed(html)
+    except Exception:
+        pass
+    cikti = []
+    for ham in ayristirici.jsonld:
+        try:
+            veri = json.loads(ham)
+        except Exception:
+            continue
+        for dugum in (veri if isinstance(veri, list) else [veri]):
+            if isinstance(dugum, dict):
+                cikti.append(dugum)
+    return cikti
+
+
+def _ld_tur(html: str, tur: str) -> dict:
+    for dugum in _ld_dugumleri(html):
+        if dugum.get("@type") == tur:
+            return dugum
+    return {}
+
+
+_H1 = re.compile(r"(?is)<h1[^>]*>(.*?)</h1>")
+_OG_BASLIK = re.compile(r'(?is)<meta[^>]+property="og:title"[^>]+content="([^"]*)"')
+_SITE_EKI = re.compile(r"\s*[-|]\s*Bursa Hakimiyet\s*$", re.I)
+_IFRAME_SRC = re.compile(r'(?is)<iframe[^>]+src="([^"]+)"')
+
+
+def _og_baslik(html: str) -> str:
+    """Galeri ve video sayfalarinda <h1> bos; gercek baslik og:title'da.
+    Site eki ve (kose yazilarinda) yazar eki temizlenir."""
+    esle = _OG_BASLIK.search(html)
+    ham = ayiklayici._etiketsiz(esle.group(1)).strip() if esle else ""
+    return _SITE_EKI.sub("", ham).strip()
+
+
+def _baslik_temizle(baslik: str, yazar: str = "") -> str:
+    temiz = _SITE_EKI.sub("", (baslik or "").strip()).strip()
+    if yazar:
+        temiz = re.sub(r"\s*-\s*%s\s*$" % re.escape(yazar), "", temiz).strip()
+    # "... - Namik GOZ" gibi kalan tek yazar ekini de dusur
+    temiz = re.sub(r"\s*-\s*[A-ZÇĞİÖŞÜ][\wçğıöşü]+(?:\s+[A-ZÇĞİÖŞÜ]{2,}[\wçğıöşü]*)+\s*$", "", temiz).strip()
+    return temiz
+_OG_GORSEL = re.compile(r'(?is)<meta[^>]+property="og:image"[^>]+content="([^"]*)"')
+
+
+def _h1_metni(html: str) -> str:
+    esle = _H1.search(html)
+    return ayiklayici._etiketsiz(esle.group(1)).strip() if esle else ""
+
+
+def _og_gorsel(html: str) -> str:
+    esle = _OG_GORSEL.search(html)
+    return esle.group(1).strip() if esle else ""
+
+
+def _ust_dilim(url: str) -> str:
+    """/videolar/bursa-308/... -> 'bursa-308' (kategori slug + katid)."""
+    parcalar = url.rstrip("/").split("/")
+    return parcalar[-2] if len(parcalar) >= 2 else ""
+
+
+def _gomulu_cikar(deger) -> str:
+    """embedUrl bazen komple <iframe> HTML'i donuyor; src'yi ayikla."""
+    ham = ayiklayici._duz(deger)
+    if "<iframe" in ham.lower():
+        esle = _IFRAME_SRC.search(ham)
+        return esle.group(1).strip() if esle else ""
+    return ham
+
+
+def _mutlak_gorsel(deger) -> str:
+    ham = ayiklayici._duz(deger)
+    if not ham:
+        return ""
+    if ham.startswith("http"):
+        return ham
+    return ""  # goreli parca: guvenilir degil, og:image'a birak
+
+
+def videoyu_ayikla(html: str, url: str, lastmod: str = "") -> dict:
+    ld = _ld_tur(html, "VideoObject")
+    kucuk = ld.get("thumbnailUrl") or ""
+    if isinstance(kucuk, list):
+        kucuk = kucuk[0] if kucuk else ""
+    return {
+        "tur": "video",
+        "url": url,
+        "baslik": _baslik_temizle(ayiklayici._duz(ld.get("name")) or _og_baslik(html)),
+        "spot": ayiklayici._duz(ld.get("description")),
+        "yayin_tarihi": (ayiklayici._duz(ld.get("uploadDate")) or lastmod)[:19],
+        "video_url": ayiklayici._duz(ld.get("contentUrl")),
+        "gomulu_url": _gomulu_cikar(ld.get("embedUrl")),
+        "sure": ayiklayici._duz(ld.get("duration")),
+        "kategori_dilimi": _ust_dilim(url),
+        # thumbnailUrl bazen uzantisiz goreli parca donuyor; og:image guvenilir.
+        "gorsel_url": _mutlak_gorsel(kucuk) or _og_gorsel(html),
+        "ek_gorseller": [],
+    }
+
+
+def galeriyi_ayikla(html: str, url: str, lastmod: str = "") -> dict:
+    """DIKKAT: galeri kareleri statik HTML'de YOK.
+
+    Olculdu (26 Agustos 2026): galeri sayfasindaki tek ItemList, sitenin
+    "son galeriler" kutusudur -- o galerinin fotograflari degil. Kareler
+    JavaScript ile geliyor ve sayfada bir ajax/api ucu bulunamadi.
+    Bu yuzden buradan yalnizca KAPAK ve kunye alinir; kareler icin ya
+    JS calistiran bir tarayici ya da saglayicidan veritabani dokumu gerekir.
+    """
+    koleksiyon = _ld_tur(html, "CollectionPage")
+    aciklama = ayiklayici._duz(koleksiyon.get("description"))
+    if aciklama.lower().startswith("description of my image"):
+        aciklama = ""  # sitenin kendi sablon yer tutucusu
+    return {
+        "tur": "galeri",
+        "url": url,
+        "baslik": _baslik_temizle(_h1_metni(html) or _og_baslik(html)),
+        "spot": aciklama,
+        "yayin_tarihi": lastmod[:19],
+        "kategori_dilimi": _ust_dilim(url),
+        "kareler": [],
+        "kareler_eksik": True,
+        "kareler_notu": "Kareler statik HTML'de yok (JS ile yukleniyor); kapak disi gorseller alinamadi.",
+        "gorsel_url": _og_gorsel(html),
+        "ek_gorseller": [],
+    }
+
+
+def yazari_ayikla(html: str, url: str, lastmod: str = "") -> dict:
+    """Yazar sayfasinda Person semasi yok; ad h1'de, portre og:image'da.
+    Kose yazisi listesi JS ile geliyor, statik HTML'de yok."""
+    return {
+        "tur": "yazar",
+        "url": url,
+        "ad": _h1_metni(html),
+        "yazar_dilimi": url.rstrip("/").split("/")[-1],
+        "yayin_tarihi": lastmod[:19],
+        "gorsel_url": _og_gorsel(html),
+        "ek_gorseller": [],
+    }
+
+
+def ayikla_dagit(html: str, url: str, lastmod: str = "") -> dict:
+    """Aileye gore dogru ayiklayiciyi cagirir.
+    'kose' ailesi NewsArticle semasi tasidigi icin haber yolunu kullanir."""
+    if AILE in ("haber", "kose"):
+        veri = haberi_ayikla(html, url, lastmod)
+        if AILE == "kose":
+            veri["tur"] = "kose"
+            veri["yazar_dilimi"] = _ust_dilim(url)
+            # kose basliklari "<baslik> - <Yazar> - Bursa Hakimiyet" bicimindeydi
+            veri["baslik"] = _baslik_temizle(veri.get("baslik", ""),
+                                             ayiklayici._duz(veri.get("yazar")))
+        return veri
+    if AILE == "video":
+        return videoyu_ayikla(html, url, lastmod)
+    if AILE == "galeri":
+        return galeriyi_ayikla(html, url, lastmod)
+    return yazari_ayikla(html, url, lastmod)
+
+
 def gorsel_denenmeli_mi(url: str) -> bool:
     """Indirmeye deger mi: tarihsiz /static/ adresleri bos yere denenmez."""
     if TUM_GORSELLERI_DENE or "/static/" not in url:
@@ -322,7 +524,7 @@ def haberi_isle_ve_kaydet(kayit: dict) -> str:
     if html is None:
         return "basarisiz"
 
-    veri = haberi_ayikla(html, url, kayit.get("lastmod", ""))
+    veri = ayikla_dagit(html, url, kayit.get("lastmod", ""))
     gercek_ay = (veri.get("yayin_tarihi") or "")[:7] or ay
     if not re.match(r"^\d{4}-\d{2}$", gercek_ay):
         gercek_ay = ay
@@ -365,7 +567,7 @@ def calistir(sitemap_yenile: bool, sinirla: int | None) -> None:
         klasor.mkdir(parents=True, exist_ok=True)
 
     toplam = sitemap_url_kur(zorla=sitemap_yenile)
-    log(f"Toplam {toplam} haber adresi ile calisiliyor (esazamanlilik={ESZAMANLILIK}).")
+    log(f"[{AILE}] Toplam {toplam} adres ile calisiliyor (esazamanlilik={ESZAMANLILIK}).")
 
     kayitlar = []
     with open(URL_LISTESI, "r", encoding="utf-8-sig") as f:
@@ -409,6 +611,8 @@ def calistir(sitemap_yenile: bool, sinirla: int | None) -> None:
 
 if __name__ == "__main__":
     ayristi = argparse.ArgumentParser(description=__doc__)
+    ayristi.add_argument("--aile", default="haber", choices=sorted(AILELER),
+                         help="hangi icerik ailesi taranacak (varsayilan: haber)")
     ayristi.add_argument("--sitemap-yenile", action="store_true", help="url listesini yeniden kurar")
     ayristi.add_argument("--sinirla", type=int, default=None, help="yalnizca ilk N haberi isler (deneme icin)")
     ayristi.add_argument("--tum-gorselleri-dene", action="store_true",
@@ -417,12 +621,14 @@ if __name__ == "__main__":
                          help=f"cikti kokunu degistirir (varsayilan: {VARSAYILAN_KOK}, ortam: BH_ARSIV_KOK)")
     argumanlar = ayristi.parse_args()
 
-    if argumanlar.kok:
-        kok_ayarla(argumanlar.kok)
+    # Aile YOLLARI belirledigi icin kok_ayarla'dan ONCE kurulmali.
+    AILE = argumanlar.aile
+    kok_ayarla(argumanlar.kok or os.environ.get("BH_ARSIV_KOK", VARSAYILAN_KOK))
     TUM_GORSELLERI_DENE = argumanlar.tum_gorselleri_dene
 
     KOK.mkdir(parents=True, exist_ok=True)
-    print(f"Cikti koku: {KOK}")
+    print(f"Cikti koku: {KOK}   aile: {AILE} ({AILELER[AILE]['ad']})")
+    print(f"Url listesi: {URL_LISTESI.name}   veri: {VERI_KOK.name}")
     try:
         calistir(argumanlar.sitemap_yenile, argumanlar.sinirla)
     except KeyboardInterrupt:

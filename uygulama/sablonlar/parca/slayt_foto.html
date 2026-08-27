@@ -1,0 +1,8 @@
+{% load site_etiket %}{% comment %}
+Manşet ve mini slayt görseli. `.karart` sınıfı yazının okunması için
+fotoğrafın üstüne koyu geçiş bindirir; görsel yokken de aynı sınıf durur,
+yoksa yazı SVG'nin üstünde okunmaz olur.
+{% endcomment %}<div class="foto karart{% if not h.gorsel_yolu %} {{ h|kart_rengi }}{% endif %}">
+  {% if h.gorsel_yolu %}<img src="{{ h.gorsel_yolu }}" alt="{{ h.gorsel_alt|default:h.baslik }}" width="1280" height="720" loading="lazy" decoding="async">
+  {% else %}<svg role="img" aria-label="{{ h.kategori.ad|baslikla }} haberini temsil eden çizim"><use href="#{{ h.kategori|simge_adi }}"/></svg>{% endif %}
+</div>

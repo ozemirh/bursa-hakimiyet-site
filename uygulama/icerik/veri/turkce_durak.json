@@ -1,0 +1,17 @@
+{
+  "_not": "Türkçe durak kelimeleri — arama sorgusundan düşürülür. KOD DEĞİL VERİ: elle düzenlenebilir olsun diye ayrı dosyada ve doğal yazımıyla duruyor; normalizasyon yüklenirken uygulanır. PostgreSQL'e geçildiğinde onun kendi 'turkish' durak listesi gelir ve bu dosya yerini ona bırakır.",
+  "gerekce": "27 Ağustos 2026 ölçümü: 56 sorgunun en yavaş üçü 'bir' (424 ms), 've' (412 ms) ve 'in' (299 ms) idi. Üçü de içerik taşımayan işlev kelimesi; sonuçları da anlamsız (162.275 kayıt). Durak listesi bunları sorgudan düşürür.",
+  "kapsam": "Kısa ve muhafazakâr tutuldu: yalnız içerik taşımadığı tartışmasız işlev kelimeleri. Bir kelimeyi listeye almak onu ARANAMAZ yapar, o yüzden şüpheli olan eklenmedi.",
+  "kelimeler": [
+    "acaba", "ama", "ancak", "artık", "aslında", "az",
+    "bazı", "belki", "ben", "beri", "bile", "bir", "birçok", "biri", "birkaç",
+    "biz", "bu", "buna", "bunda", "bundan", "bunu", "bunun", "burada",
+    "çok", "çünkü", "da", "daha", "de", "defa", "diğer", "diye",
+    "eğer", "en", "gibi", "hem", "henüz", "hep", "hepsi", "her", "hiç",
+    "için", "ile", "ise", "kez", "ki", "kim",
+    "mı", "mi", "mu", "mü",
+    "nasıl", "ne", "neden", "nerede",
+    "o", "olarak", "oldu", "olduğu", "olur", "ona", "ondan", "onlar", "onu", "onun",
+    "öyle", "sanki", "şey", "şu", "tüm", "ve", "veya", "ya", "yani", "yine"
+  ]
+}

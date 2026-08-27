@@ -1,0 +1,50 @@
+{% load site_etiket %}
+<footer id="kunye">
+  <div class="kunye-ic">
+    <div class="kunye-ust">
+      <div>
+        <h2>BURSA HAKİMİYET</h2>
+        <p>Bursa'nın yerel gündemini takip ediyor. Haber merkezi 7/24 açıktır.</p>
+        <p>Haber ihbar hattı: <strong>0224 000 00 00</strong> <span>(yer tutucu)</span></p>
+        <div class="sosyal">
+          <a href="#">X</a><a href="#">INSTAGRAM</a><a href="#">YOUTUBE</a><a href="#">WHATSAPP</a><a href="#">RSS</a>
+        </div>
+      </div>
+      <div><h2>KATEGORİLER</h2><ul>
+        <li><a href="/yazarlar">Yazarlar</a></li>
+        {% for k in tum_kategoriler|slice:":6" %}<li><a href="/{{ k.slug }}">{{ k.ad|baslikla }}</a></li>{% endfor %}
+      </ul></div>
+      <div><h2>SERVİSLER</h2><ul>
+        <li><a href="#panel-hava">Hava durumu</a></li><li><a href="#panel-vakit">Namaz vakitleri</a></li>
+        <li><a href="#panel-eczane">Nöbetçi eczane</a></li><li><a href="#resmi-ilan">Resmî ilanlar</a></li>
+        <li><a href="#">E-gazete</a></li><li><a href="/galeriler">Foto galeri</a></li><li><a href="#vizyon">Vizyon</a></li>
+      </ul></div>
+      <div><h2>KURUMSAL</h2><ul>
+        <li><a href="#kunye">Künye</a></li><li><a href="#kunye">İletişim</a></li><li><a href="#">Reklam</a></li>
+        <li><a href="#">Yayın ilkeleri</a></li><li><a href="#">Düzeltme ve cevap</a></li><li><a href="#">Gizlilik</a></li><li><a href="#">KVKK</a></li>
+      </ul></div>
+      <div><h2>TAKİP EDİN</h2><ul>
+        <li><a href="#">E-bülten</a></li><li><a href="#">WhatsApp kanalı</a></li><li><a href="#">YouTube</a></li>
+        <li><a href="#">Instagram</a></li><li><a href="#">RSS</a></li><li><a href="#">Mobil uygulama</a></li>
+      </ul></div>
+    </div>
+
+    <nav class="kunye-ilce" aria-label="İlçe sayfaları">
+      <b>İLÇELER</b>
+      {% for i in ilceler %}<a href="/ilce/{{ i.slug }}">{{ i.ad }}</a>{% endfor %}
+    </nav>
+
+    <div class="kunye-alt">
+      <b>KÜNYE</b> &middot; İmtiyaz sahibi: Yer tutucu &middot; Sorumlu yazı işleri müdürü: Yer tutucu &middot;
+      Yayın türü: Yerel süreli yayın &middot; Adres: Bursa &middot; Tel: 0224 000 00 00 &middot;
+      Reklam ve ilan: reklam@ornek.local
+    </div>
+
+    {% comment %}Bu satır sitenin okura verdiği beyandır; yanlış kalması
+       yanlış bilgi yaymak olur. 27 Ağustos 2026'da düzeltildi: haber
+       başlıkları artık demo derlemesi değil gazetenin kendi arşivinden
+       geliyor, ve canlı veri kalemlerinin beşi kaynağa bağlandı — bağlı
+       olmayan tek kalem vizyon takvimi.{% endcomment %}
+    <div class="kunye-alt">© 2026 Bursa Hakimiyet · Haber, köşe yazısı, galeri ve videolar gazetenin kendi arşivinden gelir; arşiv fotoğrafı bulunmayan kayıtlarda kategori temsilî çizimi kullanılır, kırık görsel gösterilmez. Döviz, altın ve borsa TCMB'den, hava durumu MGM'den, nöbetçi eczane Bursa Eczacı Odası'ndan, puan durumu TFF'den alınır; namaz vakitleri Diyanet ölçütleriyle hesaplanır. Vizyon takvimi için doğrulanmış bir kaynak henüz yoktur.</div>
+  </div>
+</footer>

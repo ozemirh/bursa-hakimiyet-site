@@ -1,0 +1,24 @@
+{% load site_etiket %}
+{% comment %}
+Tek haber kartı. Tasarımdaki `.kart` yapısı birebir korunur.
+
+Görsel: arşivin büyük bölümünde yerel dosya YOK (URUN-PLANI.md F3 notu).
+`gorsel_var` yanlışsa uzak adrese bağlanmak yerine kategori temsilî SVG'si
+çizilir — sayfa internetsiz de açılmalı ve kırık görsel görünmemeli.
+{% endcomment %}
+<article class="kart">
+  {% if goster_foto %}
+    <div class="foto {{ h|kart_rengi }}">
+      {% if h.gorsel_yolu %}
+        <img src="{{ h.gorsel_yolu }}" alt="{{ h.gorsel_alt|default:h.baslik }}" loading="lazy">
+      {% else %}
+        <svg role="img" aria-label="{{ h.kategori.ad|baslikla }} haberini temsil eden çizim"><use href="#{{ h.kategori|simge_adi }}"/></svg>
+      {% endif %}
+    </div>
+  {% endif %}
+  <div class="ic">
+    <div class="ust">{{ h.ilce.ad|default:h.kategori.ad|baslikla }}</div>
+    <h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3>
+    {% if goster_spot and h.spot %}<p>{{ h.spot|truncatechars:120 }}</p>{% endif %}
+  </div>
+</article>

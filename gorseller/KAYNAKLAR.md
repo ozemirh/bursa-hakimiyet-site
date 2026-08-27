@@ -36,3 +36,23 @@ Tümü Wikimedia Commons'tan, telifsiz veya Creative Commons lisanslı. `genis/`
 - `gorseller/kaynak/fiorentina-icardi-transfer-listesi.jpg` — Sözcü, https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/2/icardiaa3684275jpeg-hKhKV0_k106qyXresW7bIQ.jpeg?w=1200&h=900&mode=crop&scale=both (demo için indirildi, 23.08.2026)
 - `gorseller/kaynak/kalibaf-baski-politikasi-abd-ekonomisine-de-donecek.jpg` — Sözcü, https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/8/kalibafjpg-FHj_SY_gj0qrJY8tbxeq2g.jpg?w=1200&h=900&mode=crop&scale=both (demo için indirildi, 23.08.2026)
 - `gorseller/kaynak/otomotiv-muhendisinin-sanayi-yuzu-gormez-dedigi-5-ikinci-el-otomobil.webp` — Sözcü, https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/8/ikinci-elpng-TGrFM08MwUWE-oRs3OASlA.png?w=1200&h=900&mode=crop&scale=both (demo için indirildi, 24.08.2026)
+
+## Dosya adı içerikle uyuşmayanlar
+
+25 Ağustos 2026'da fark edildi: üç dosyanın adı içeriğini yanlış tanıtıyordu ve
+sayfalardaki `alt` metinleri buna göre yazılmıştı. Metinler düzeltildi; dosya
+adları **bilerek değiştirilmedi** (çok sayıda sayfa bu adlara bağlı).
+
+| Dosya | Adının çağrıştırdığı | Gerçekte ne |
+|---|---|---|
+| `baraj.jpg` | Baraj gövdesi, su seviyesi | Barajı besleyen **dere yatağı** ve kıyısındaki toprak yol |
+| `itfaiye.jpg` | İtfaiye aracı / ekibi | Sokakta duran **itfaiye ihbar dolabı** (110) |
+| `yesil.jpg` | Yeşil alan, park | **Yeşil Cami minaresi** |
+| `tekstil.jpg` | Tekstil üretim hattı, iplik makineleri | İki katlı **fabrika binasının dış cephesi** — makine görünmüyor |
+| `sanayi.jpg` | Organize sanayi, bacalar, borsa salonu | Karayolu kenarında tek bir **fabrika binası** ("Avşar Emaye") |
+
+**`orman.jpg` haber görseli olarak kullanılmamalı.** Fotoğraf değil; Avrupa
+Komisyonu'nun 2021 Antalya/Muğla/Adana yangınlarını gösteren **İngilizce bilgi
+grafiği** (ölü ve tahliye sayılarıyla). Bursa ile ilgisi yok ve haber kapağı
+olarak yanıltıcı. Sayfalardaki tüm kullanımları `mudanya.jpg` ve `itfaiye.jpg`
+ile değiştirildi; dosya arşiv olarak duruyor.

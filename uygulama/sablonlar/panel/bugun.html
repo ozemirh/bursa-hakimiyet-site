@@ -1,0 +1,28 @@
+{% extends "panel/taban.html" %}
+
+{% block icerik %}
+  <div class="sayi-kutu-sira">
+    <div class="sayi-kutu"><span class="sayi">{{ kuyruk_sayisi }}</span><span class="k">masada bekleyen</span></div>
+    <div class="sayi-kutu"><span class="sayi">{{ benim_taslaklarim }}</span><span class="k">benim taslağım</span></div>
+    <div class="sayi-kutu"><span class="sayi">{{ bugun_yayinlanan }}</span><span class="k">bugün yayımlanan</span></div>
+  </div>
+
+  <p class="alt-not">
+    Kuyruk tanımı: durum <b>Pasif</b> ve hazırlık <b>Taslak</b> ya da
+    <b>İncelemede</b>. Yayına alınan haberin hazırlığı örtük olarak hazırdır.
+  </p>
+
+  <div class="kutu-kart">
+    <div class="bas"><h2>Taslaklar</h2><span class="damga">{{ taslaklar|length }}</span></div>
+    <div class="kutu-govde">
+      {% include "panel/parca/is_listesi.html" with liste=taslaklar bos_metin="Taslak yok." %}
+    </div>
+  </div>
+
+  <div class="kutu-kart">
+    <div class="bas"><h2>İncelemede</h2><span class="damga">{{ incelemedekiler|length }}</span></div>
+    <div class="kutu-govde">
+      {% include "panel/parca/is_listesi.html" with liste=incelemedekiler bos_metin="İncelemede haber yok." %}
+    </div>
+  </div>
+{% endblock %}

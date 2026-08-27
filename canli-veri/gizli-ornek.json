@@ -1,0 +1,4 @@
+{
+  "_not": "Bu ORNEK dosyadir. Kopyasini 'gizli.json' adiyla ayni klasore koyun ve degerleri doldurun. gizli.json .gitignore'dadir, depoya girmez.",
+  "TMDB_ANAHTAR": "buraya themoviedb.org > Ayarlar > API bolumunden alinan v3 anahtari yazilir"
+}

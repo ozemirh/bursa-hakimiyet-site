@@ -1,0 +1,82 @@
+{% extends "panel/taban.html" %}
+
+{% block icerik %}
+  {# Alan sırası PANEL-NOTLARI.md §4'teki sözleşmeyi izler. #}
+  <form method="post" class="haber-form" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="uyari" role="alert">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    {% if haber %}
+      <p class="alt-not">
+        Adres: <code>{{ haber.get_absolute_url }}</code>
+        {% if not kendisinin %}· bu haberi <b>{{ haber.olusturan.get_username|default:"başkası" }}</b> girdi{% endif %}
+      </p>
+    {% endif %}
+
+    <fieldset>
+      <legend>Metin</legend>
+      {% include "panel/parca/alan.html" with alan=form.baslik ipucu="En çok 60 karakter." %}
+      {% include "panel/parca/alan.html" with alan=form.ikinci_baslik ipucu="İsteğe bağlı." %}
+      {% include "panel/parca/alan.html" with alan=form.spot ipucu="En çok 160 karakter. Yayına almak için zorunlu." %}
+      {% include "panel/parca/alan.html" with alan=form.govde ipucu="Yayına almak için en az iki paragraf." %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Sınıflandırma</legend>
+      {% include "panel/parca/alan.html" with alan=form.kategori ipucu="Kategori haberin ADRESİNİ belirler. Değiştirirseniz eski adres otomatik yönlendirilir." %}
+      {% include "panel/parca/alan.html" with alan=form.ilce ipucu="İsteğe bağlı, tek seçim." %}
+      {% include "panel/parca/alan.html" with alan=form.etiketler ipucu="Yayına almak için en az bir etiket zorunlu." %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Kaynak ve sorumluluk</legend>
+      {% include "panel/parca/alan.html" with alan=form.kaynak_turu ipucu="Meta Yazar Bilgisi bundan türetilir." %}
+      {% include "panel/parca/alan.html" with alan=form.muhabir ipucu="Kaynak türü 'Kendi muhabirimiz' ise zorunlu." %}
+      {% include "panel/parca/alan.html" with alan=form.kaynaklar %}
+      {% include "panel/parca/alan.html" with alan=form.meta_yazar ipucu="Yasal sonuç doğurur. Boş bırakırsanız kaynak türünden türetilir." %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Görsel</legend>
+      {% include "panel/parca/alan.html" with alan=form.gorsel_url %}
+      {% include "panel/parca/alan.html" with alan=form.gorsel_alt ipucu="Ekran okuyucu için. Eski panelde bu alan hiç yoktu." %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Yayın</legend>
+      {% include "panel/parca/alan.html" with alan=form.durum %}
+      {% include "panel/parca/alan.html" with alan=form.hazirlik ipucu="Yalnız durum Pasif iken anlamlıdır." %}
+      {% include "panel/parca/alan.html" with alan=form.yayin_zamani %}
+      {% include "panel/parca/alan.html" with alan=form.guncelleme_zamani %}
+    </fieldset>
+
+    {% if mansete_alabilir %}
+      <fieldset>
+        <legend>Manşet</legend>
+        <p class="alt-not">Manşete alma ayrı yetkidir: anasayfanın sırasını değiştirmek yayımlamaktan farklı bir karardır.</p>
+        {% include "panel/parca/alan.html" with alan=form.manset_ana %}
+        {% include "panel/parca/alan.html" with alan=form.manset_tepe %}
+        {% include "panel/parca/alan.html" with alan=form.manset_kare %}
+      </fieldset>
+    {% endif %}
+
+    <fieldset>
+      <legend>Seçenekler ve SEO</legend>
+      {% include "panel/parca/alan.html" with alan=form.rss %}
+      {% include "panel/parca/alan.html" with alan=form.yorumlar_acik %}
+      {% include "panel/parca/alan.html" with alan=form.yonlendirme_url %}
+      {% include "panel/parca/alan.html" with alan=form.gomulu_kod %}
+      {% include "panel/parca/alan.html" with alan=form.odak_kelime %}
+      {% include "panel/parca/alan.html" with alan=form.seo_baslik %}
+      {% include "panel/parca/alan.html" with alan=form.ilgili_haberler %}
+    </fieldset>
+
+    <div class="eylem">
+      <button type="submit" class="dugme">Kaydet</button>
+      <a class="dugme ufak" href="{% url 'panel-akis' %}">Vazgeç</a>
+    </div>
+  </form>
+{% endblock %}

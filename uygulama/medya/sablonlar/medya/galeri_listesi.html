@@ -1,0 +1,27 @@
+{% extends "taban.html" %}
+
+{% block baslik %}Foto galeri — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}Bursa Hakimiyet foto galeri arşivi.{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Foto galeri</span>
+      </nav>
+
+      <section class="kutu">
+        <div class="kutu-bas vurgu">
+          <h1>FOTO GALERİ</h1>
+          <span class="tumu">{{ sayfa.paginator.count }} galeri</span>
+        </div>
+        <div class="kutu-ic">
+          <h2 class="gorsel-gizli">Galeriler</h2>
+          <div class="galeri-izgara">
+            {% for g in sayfa %}{% include "medya/parca/galeri_kart.html" with g=g %}
+            {% empty %}<p class="bos">Foto galeri arşivi henüz göç etmedi.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      {% include "parca/sayfalama.html" %}
+{% endblock %}

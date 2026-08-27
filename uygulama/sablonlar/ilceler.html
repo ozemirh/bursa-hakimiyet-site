@@ -1,0 +1,20 @@
+{% extends "taban.html" %}
+
+{% block baslik %}İlçeler — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}Bursa'nın 17 ilçesinden haberler — Bursa Hakimiyet.{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">İlçeler</span>
+      </nav>
+
+      <section class="kutu">
+        <div class="kutu-bas vurgu"><h1>İLÇELER</h1><span class="tumu">{{ ilceler|length }} ilçe</span></div>
+        <div class="kutu-ic">
+          <ul class="ilce-izgara">
+            {% for i in ilceler %}<li><a href="/ilce/{{ i.slug }}">{{ i.ad }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "taban.html" %}
+{% load site_etiket %}
+
+{% block baslik %}{{ baslik }} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ baslik }} başlığındaki son haberler — Bursa Hakimiyet.{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">{{ baslik }}</span>
+      </nav>
+
+      <section class="kutu">
+        <div class="kutu-bas vurgu">
+          <h1>{{ baslik|buyult }}</h1>
+          <span class="tumu">{{ sayfa.paginator.count }} haber</span>
+        </div>
+        <div class="kutu-ic">
+          <h2 class="gorsel-gizli">Haberler</h2>
+          <div class="kutu-izgara">
+            {% for h in sayfa %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 %}
+            {% empty %}<p class="bos">Bu listede henüz haber yok.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      {% include "parca/sayfalama.html" %}
+{% endblock %}

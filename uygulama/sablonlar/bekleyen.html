@@ -1,0 +1,25 @@
+{% extends "taban.html" %}
+{% load site_etiket %}
+
+{% block baslik %}{{ baslik }} — Bursa Hakimiyet{% endblock %}
+{% block kanonik %}<meta name="robots" content="noindex,follow">{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">{{ baslik }}</span>
+      </nav>
+
+      <section class="kutu">
+        <div class="kutu-bas vurgu"><h1>{{ baslik|buyult }}</h1></div>
+        <div class="kutu-ic">
+          <p class="bos">{{ aile_adi }} henüz göç etmedi.</p>
+          <p class="yer-not">
+            {% if not_metni %}{{ not_metni }}
+            {% else %}Arşiv taraması şu ana kadar yalnızca haber ailesini aldı.
+            {% if beklenen_adet %}Bu bölüm için beklenen kayıt sayısı {{ beklenen_adet }}.{% endif %}
+            Tarama tamamlandığında sayfa aynı şablonla dolacak; adresler şimdiden geçerli.{% endif %}
+          </p>
+          <p><a href="/">Anasayfaya dön &rarr;</a></p>
+        </div>
+      </section>
+{% endblock %}

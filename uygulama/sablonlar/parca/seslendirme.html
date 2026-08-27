@@ -1,0 +1,27 @@
+          <div class="seslendirme" id="seslendirme" data-seslendirme role="group" aria-label="Haber seslendirme"
+               data-kaynak=".detay h1, .detay .spot, .metin > p, .metin > h2, .metin > .alinti, .metin > .kaynak-bolmesi > p">
+            <div class="ses-satir">
+              <button type="button" class="ses-oynat" aria-pressed="false"><span class="ses-simge" aria-hidden="true">▶</span><span class="ses-yazi">Sesli dinle</span></button>
+              <div class="ses-gezin">
+                <button type="button" class="ses-geri" aria-label="Önceki paragraf" title="Önceki paragraf">◀◀</button>
+                <button type="button" class="ses-ileri" aria-label="Sonraki paragraf" title="Sonraki paragraf">▶▶</button>
+                <button type="button" class="ses-dur" aria-label="Durdur ve başa dön" title="Durdur" disabled>■</button>
+              </div>
+              <div class="ses-sag">
+                <label class="ses-secim-alan" hidden>Ses
+                  <select class="ses-secim"></select>
+                </label>
+                <label class="ses-hiz-alan">Hız
+                  <select class="ses-hiz">
+                    <option value="0.8">0,8&times;</option>
+                    <option value="1" selected>1,0&times;</option>
+                    <option value="1.25">1,25&times;</option>
+                    <option value="1.5">1,5&times;</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div class="ses-cubuk" aria-hidden="true"><span></span></div>
+            <p class="ses-durum" role="status" aria-live="polite">Haber, tarayıcınızın ses motoruyla okunur; ses dosyası indirilmez.</p>
+            <p class="ses-not" hidden></p>
+          </div>

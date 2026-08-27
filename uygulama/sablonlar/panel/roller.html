@@ -1,0 +1,33 @@
+{% extends "panel/taban.html" %}
+
+{% block icerik %}
+  <p class="alt-not">
+    Matris <code>PANEL-NOTLARI.md</code> §11'den gelir ve
+    <code>icerik/yetkiler.py</code> içinde tek kaynaktan tutulur.
+    Değişiklik için önce belge güncellenir.
+  </p>
+
+  <div class="tablo-kaydir">
+  <table class="liste">
+    <caption class="gorsel-gizli">Rol yetki matrisi</caption>
+    <thead>
+      <tr><th scope="col">Yetki</th>{% for rol in roller %}<th scope="col">{{ rol }}</th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+      {% for satir in matris %}
+        <tr>
+          <th scope="row">{{ satir.ad }}</th>
+          {% for var in satir.roller %}
+            <td class="ortala">{% if var %}<span aria-label="var">●</span>{% else %}<span aria-label="yok">–</span>{% endif %}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <p class="alt-not">
+    <b>2FA önerisi:</b> yayımlama, manşet ve resmî ilan yetkisi olan rollerde
+    iki adımlı doğrulama zorunlu olmalı — {{ iki_adimli|join:", " }}.
+  </p>
+{% endblock %}

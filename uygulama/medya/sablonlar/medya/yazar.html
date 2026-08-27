@@ -1,0 +1,62 @@
+{% extends "taban.html" %}
+{% load site_etiket %}
+{% comment %}
+Yazar sayfası — künye + köşe yazıları listesi.
+
+Portresi olmayan yazarda uzak adrese bağlanmak yerine baş harfli `.vesika`
+kutusu çiziliyor; sayfa internetsiz de açılmalı ve kırık görsel görünmemeli
+(kart şablonundaki kararla aynı).
+{% endcomment %}
+
+{% block baslik %}{{ yazar.ad }} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ yazar.ad }} köşe yazıları — Bursa Hakimiyet.{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ yazar.get_absolute_url }}">{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <ol>
+          <li><a href="/">Anasayfa</a></li>
+          <li><a href="/yazarlar">Yazarlar</a></li>
+          <li><span aria-current="page">{{ yazar.ad }}</span></li>
+        </ol>
+      </nav>
+
+      <section class="kutu">
+        <div class="kutu-bas vurgu">
+          <h1>{{ yazar.ad|buyult }}</h1>
+          <span class="tumu">{{ sayfa.paginator.count }} yazı</span>
+        </div>
+        <div class="kutu-ic">
+          <div class="yazarlar">
+            <div class="yazar">
+              {% if yazar.gorsel_yolu %}
+                <span class="foto vesika"><img src="{{ yazar.gorsel_yolu }}" alt="{{ yazar.ad }}" width="58" height="58"></span>
+              {% else %}
+                <span class="vesika" aria-hidden="true">{{ yazar.basharfler }}</span>
+              {% endif %}
+              <span>
+                <b>{{ yazar.ad }}</b>
+                {% if yazar.unvan %}<span class="sutun-ad">{{ yazar.unvan }}</span>{% endif %}
+                {% if yazar.ozgecmis %}<p>{{ yazar.ozgecmis }}</p>{% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+        {% if not yazar.sayfasi_tarandi %}
+        <p class="yer-not">Bu yazarın künyesi henüz arşivden alınmadı; kayıt köşe yazılarından türetildi.</p>
+        {% endif %}
+      </section>
+
+      <section class="kutu">
+        <div class="kutu-bas"><h2>KÖŞE YAZILARI</h2></div>
+        <div class="kutu-ic">
+          <div class="kutu-izgara">
+            {% for y in sayfa %}{% include "medya/parca/yazi_kart.html" with y=y %}
+            {% empty %}<p class="bos">Bu yazarın arşivde yazısı yok.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      {% include "parca/sayfalama.html" %}
+{% endblock %}

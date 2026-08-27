@@ -1,0 +1,321 @@
+{% extends "taban.html" %}
+{% load site_etiket %}
+
+{% block icerik %}
+
+      <p class="suz-bilgi" role="status" aria-live="polite"></p>
+
+      <section class="doviz" id="doviz" aria-label="Döviz, altın ve borsa">
+        <h2 class="gorsel-gizli">Piyasa</h2>
+        {% comment %}Beş kalem sabittir (URUN-PLANI.md §1, bileşen 9). Kaynağı
+        bulunamayan kalem (gram altın · BIST 100) çizgiyle gösterilir —
+        uydurma değer basmaktansa "veri yok" demek doğru.{% endcomment %}
+        {% if doviz %}
+        <div class="doviz-ic">
+          <span class="etiket">PİYASA</span>
+          <dl>
+            {% for k in doviz.kalemler %}
+              <div>
+                <dt>{{ k.ad }}</dt>
+                <dd>
+                  {% if k.deger %}{{ k.deger|floatformat:2 }}{% if k.birim == "TL" %} &#8378;{% endif %}
+                    {% if k.degisim_yuzde %}<span class="fark {% if k.yon == 'yukari' %}artis{% else %}azalis{% endif %}" aria-label="yüzde {{ k.degisim_yuzde|mutlak|floatformat:2 }} {% if k.yon == 'yukari' %}yükseldi{% else %}geriledi{% endif %}">{% if k.yon == 'yukari' %}&#9650;{% else %}&#9660;{% endif %} %{{ k.degisim_yuzde|mutlak|floatformat:2 }}</span>{% endif %}
+                  {% else %}<span class="veri-yok" title="Kaynak bulunamadı, panelden elle girilir">&ndash;</span>{% endif %}
+                </dd>
+              </div>
+            {% endfor %}
+          </dl>
+          <span class="tarih">{{ doviz.guncelleme|slice:"11:16" }}{% if doviz.bayat %} · güncel değil{% endif %}</span>
+        </div>
+        {% endif %}
+      </section>
+
+      <section class="dortlu" aria-label="Öne çıkan haberler">
+        <h2 class="gorsel-gizli">Öne çıkanlar</h2>
+        {% for h in dortlu %}{% include "parca/kart.html" with h=h goster_foto=1 %}{% endfor %}
+      </section>
+
+      <div class="manset-alani">
+        <section class="slayt-kap manset-slayt" aria-roledescription="manşet galerisi" aria-label="Manşet haberleri">
+          <h2 class="gorsel-gizli">Manşet</h2>
+          <div class="slayt-pencere">
+{% for h in manset %}
+            <article class="slayt" role="group" aria-roledescription="slayt" aria-label="{{ forloop.counter }} / {{ manset|length }}"{% if forloop.first %} data-aktif="true"{% endif %}>
+              {% include "parca/slayt_foto.html" with h=h %}
+              <div class="yazi">
+                <span class="rozet-k">{{ h.kategori.ad }}</span>
+                <h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3>
+                {% if h.spot %}<p>{{ h.spot|truncatechars:200 }}</p>{% endif %}
+                <a class="dinle-bag" href="{{ h.get_absolute_url }}#seslendirme"><span aria-hidden="true">&#9654;</span> SESLİ DİNLE</a>
+              </div>
+            </article>{% endfor %}
+            <button type="button" class="slayt-ok geri" aria-label="Önceki manşet"><span aria-hidden="true">&#8249;</span></button>
+            <button type="button" class="slayt-ok ileri" aria-label="Sonraki manşet"><span aria-hidden="true">&#8250;</span></button>
+          </div>
+          <div class="slayt-denetim">
+            <span class="slayt-sayac" aria-hidden="true">1 / {{ manset|length }}</span>
+            <p class="slayt-durum gorsel-gizli" role="status" aria-live="polite"></p>
+            <div class="slayt-noktalar" role="group" aria-label="Manşet seçimi">
+{% for h in manset %}              <button type="button" data-sira="{{ forloop.counter0 }}"{% if forloop.first %} aria-current="true"{% endif %} aria-label="{{ forloop.counter }}. haber: {{ h.baslik }}">{{ forloop.counter }}</button>
+{% endfor %}            </div>
+          </div>
+        </section>
+
+        <div class="manset-yan">
+          <div class="reklam kare-300"><span><b>REKLAM ALANI</b><span class="olcu">-Manşet yanı- 300x250</span></span></div>
+          <section class="slayt-kap mini-slayt" aria-roledescription="haber galerisi" aria-label="Günün diğer haberleri">
+            <h2 class="gorsel-gizli">Günün diğer haberleri</h2>
+            <div class="slayt-pencere">
+{% for h in ikincil %}
+              <article class="slayt" role="group" aria-roledescription="slayt" aria-label="{{ forloop.counter }} / {{ ikincil|length }}"{% if forloop.first %} data-aktif="true"{% endif %}>
+                {% include "parca/slayt_foto.html" with h=h %}
+                <div class="yazi">
+                  <span class="rozet-k">{{ h.kategori.ad }}</span>
+                  <h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3>
+                </div>
+              </article>{% endfor %}
+              <button type="button" class="slayt-ok geri" aria-label="Önceki haber"><span aria-hidden="true">&#8249;</span></button>
+              <button type="button" class="slayt-ok ileri" aria-label="Sonraki haber"><span aria-hidden="true">&#8250;</span></button>
+            </div>
+            <div class="slayt-denetim">
+              <span class="slayt-sayac" aria-hidden="true">1 / {{ ikincil|length }}</span>
+              <p class="slayt-durum gorsel-gizli" role="status" aria-live="polite"></p>
+              <div class="slayt-noktalar" role="group" aria-label="Haber seçimi">
+{% for h in ikincil %}                <button type="button" data-sira="{{ forloop.counter0 }}"{% if forloop.first %} aria-current="true"{% endif %} aria-label="{{ forloop.counter }}. haber: {{ h.baslik }}">{{ forloop.counter }}</button>
+{% endfor %}              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+
+
+      <div class="ana-izgara">
+        <div>
+          <div class="kutu">
+            <div class="kutu-bas"><h2>SON HABERLER</h2><span class="tumu"><a href="/gundem">Tümü &rarr;</a></span></div>
+            <div class="kutu-ic">
+              <div class="kutu-izgara">
+{% for h in kutular %}                {% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 %}
+{% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="ray" aria-label="Şehir servisleri ve listeler">
+          <div class="servis-kutu">
+            <h2 class="gorsel-gizli">Şehir servisleri</h2>
+            <div class="sek" role="tablist" aria-label="Şehir servisleri">
+              <button type="button" role="tab" id="sek-hava" aria-selected="true" aria-controls="panel-hava" tabindex="0">HAVA</button>
+              <button type="button" role="tab" id="sek-vakit" aria-selected="false" aria-controls="panel-vakit" tabindex="-1">NAMAZ</button>
+              <button type="button" role="tab" id="sek-eczane" aria-selected="false" aria-controls="panel-eczane" tabindex="-1">ECZANE</button>
+            </div>
+            <div class="panel" id="panel-hava" role="tabpanel" aria-labelledby="sek-hava" data-acik="true" tabindex="0">
+              {% if hava %}
+                <div class="hava-ana">
+                  <span class="derece">{{ hava.son_durum.sicaklik|floatformat:0 }}°</span>
+                  <span class="aciklama">{{ hava.gunler.0.hadise.ad }}<br>
+                    En düşük {{ hava.gunler.0.en_dusuk|floatformat:0 }}° &middot; en yüksek {{ hava.gunler.0.en_yuksek|floatformat:0 }}°</span>
+                </div>
+                <div class="gunler">
+                  {% for g in hava.gunler|slice:"1:5" %}<div>{{ g.tarih|kisa_gun }}<b>{{ g.en_yuksek|floatformat:0 }}°</b></div>{% endfor %}
+                </div>
+              {% else %}<p class="bos">Hava durumu şu an alınamıyor.</p>{% endif %}
+            </div>
+            <div class="panel" id="panel-vakit" role="tabpanel" aria-labelledby="sek-vakit" tabindex="0">
+              {% if namaz %}
+                <ul class="vakit">
+                  {% for anahtar, ad in namaz.vakit_adlari.items %}
+                    <li{% if anahtar == namaz_simdiki %} class="simdi"{% endif %}><span>{{ ad }}</span><span>{{ namaz.gunler.0.vakitler|sozluk:anahtar }}</span></li>
+                  {% endfor %}
+                </ul>
+              {% else %}<p class="bos">Namaz vakitleri şu an alınamıyor.</p>{% endif %}
+            </div>
+            <div class="panel" id="panel-eczane" role="tabpanel" aria-labelledby="sek-eczane" tabindex="0">
+              {% if eczane %}
+                <div class="eczane">
+                  <b>{{ eczane.eczane_sayisi }} nöbetçi eczane</b>
+                  <span>{{ eczane.gun }} &middot; {{ eczane.ilceler|length }} ilçe</span>
+                  <hr class="ayirac">
+                  {% for e in eczane.eczaneler|slice:":3" %}
+                    <b>{{ e.ad|baslikla }}</b><span>{{ e.ilce|baslikla }} &middot; {{ e.telefon }}</span>
+                  {% endfor %}
+                </div>
+              {% else %}<p class="bos">Nöbetçi eczane listesi şu an alınamıyor.</p>{% endif %}
+            </div>
+            <p class="yer-not">Hava MGM'den, nöbetçi eczane Bursa Eczacı Odası'ndan; namaz vakitleri Diyanet ölçütleriyle hesaplanır (yayımlanan tabloya karşı azami sapma 1 dakika).</p>
+          </div>
+
+          <div class="kutu">
+            <div class="kutu-bas"><h2>YAZARLAR</h2><span class="tumu"><a href="/yazarlar">Tüm yazarlar &rarr;</a></span></div>
+            <div class="kutu-ic">
+              <ul class="yazar-ray">
+{% for y in yazarlar %}                <li><a href="{{ y.yol }}"><span class="vesika" aria-hidden="true">{{ y.basharfler }}</span><span><b>{{ y.ad }}</b><span class="yazi-bas">{{ y.son_yazi }}</span></span></a></li>
+{% empty %}                <li class="bos">Yazar dizini henüz göç etmedi.</li>
+{% endfor %}              </ul>
+            </div>
+            <p class="yer-not">{% if yazar_adedi is not None %}Arşivden gelen {{ yazar_adedi }} yazar ve {{ kose_adedi }} köşe yazısı. {% endif %}Son yazı başlığı yazarın en yeni yazısından okunur.</p>
+          </div>
+
+          <div class="kutu">
+            <div class="kutu-bas vurgu"><h2>EN ÇOK OKUNANLAR</h2></div>
+            <div class="kutu-ic">
+              <ol class="sira">
+{% for h in en_cok %}                <li><span class="no">{{ forloop.counter }}</span><h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3></li>
+{% endfor %}              </ol>
+            </div>
+            <p class="yer-not">Şimdilik editör seçkisi: okunma sayacı yeni sistemde sıfırdan başlıyor, eski okunma verisi göçte kurtarılamadı.</p>
+          </div>
+
+          <div class="reklam kare-300"><span><b>REKLAM ALANI</b><span class="olcu">-Haber arası1- 300x250</span></span></div>
+        </aside>
+      </div>
+
+      <section class="ilan" id="resmi-ilan" aria-labelledby="resmi-ilan-bas">
+        <div class="ilan-bas">
+          <h2 id="resmi-ilan-bas">RESMÎ İLANLAR</h2>
+          <span class="dayanak">Basın İlan Kurumu aracılığıyla yayımlanır</span>
+          <a class="tumu" href="#">TÜM İLANLAR &rarr;</a>
+        </div>
+        <ul class="ilan-liste">
+          <li>
+            <span class="tur ihale">İHALE</span>
+            <a class="ilan-adi" href="#">ELEKTRİK VE MEKANİK YANGIN RAPORU EKSİKLİKLERİ YAPIM İŞİ</a>
+            <span class="kayit"><time datetime="2026-08-24">24.08.2026</time><span>&middot; İlan no 1718</span></span>
+          </li>
+          <li>
+            <span class="tur ihale">İHALE</span>
+            <a class="ilan-adi" href="#">TOPRAK İŞLEME VE ARAZİ HAZIRLIĞI HİZMETİ ALINACAK</a>
+            <span class="kayit"><time datetime="2026-08-22">22.08.2026</time><span>&middot; İlan no 1715</span></span>
+          </li>
+          <li>
+            <span class="tur tebligat">TEBLİGAT</span>
+            <a class="ilan-adi" href="#">YILDIRIM'DA TAŞINMAZ SATIŞI</a>
+            <span class="kayit"><time datetime="2026-08-21">21.08.2026</time><span>&middot; İlan no 1712</span></span>
+          </li>
+          <li>
+            <span class="tur ihale">İHALE</span>
+            <a class="ilan-adi" href="#">MİLLİ EMLAK ŞEFLİĞİ'NDEN TAŞINMAZ SATIŞI</a>
+            <span class="kayit"><time datetime="2026-08-21">21.08.2026</time><span>&middot; İlan no 1688</span></span>
+          </li>
+          <li>
+            <span class="tur ihale">İHALE</span>
+            <a class="ilan-adi" href="#">AR-GE MERKEZİNE 2 ADET CİHAZ ALIMI</a>
+            <span class="kayit"><time datetime="2026-08-19">19.08.2026</time><span>&middot; İlan no 1709</span></span>
+          </li>
+          <li>
+            <span class="tur ihale">İHALE</span>
+            <a class="ilan-adi" href="#">TIBBİ CİHAZ VE DEMİRBAŞ SATIN ALINACAK</a>
+            <span class="kayit"><time datetime="2026-08-19">19.08.2026</time><span>&middot; İlan no 1706</span></span>
+          </li>
+        </ul>
+        <p class="ilan-turler">
+          <b>İLAN TÜRLERİ</b>
+          <span class="tur ihale">İHALE</span><span class="tur tebligat">TEBLİGAT</span><span class="tur bos">İCRA</span><span class="tur bos">PERSONEL ALIMI</span>
+          <span class="tur-not">Dört tür tanımlıdır; İCRA ve PERSONEL ALIMI türünde şu an yayımlanmış ilan yok.</span>
+        </p>
+        <p class="yer-not">Başlıklar, türler ve tarihler gazetenin ilan modülündeki gerçek kayıtlardır. İlan metinlerinin tam hali ve detay sayfaları yayın sistemi bağlanınca açılacak; TÜM İLANLAR bağlantısı henüz boştur.</p>
+      </section>
+
+      <section class="kutu" id="bursaspor">
+        <div class="kutu-bas vurgu"><h2>BURSASPOR</h2><span class="tumu"><a href="/bursaspor">Tüm spor &rarr;</a></span></div>
+        <div class="kutu-ic">
+          <div class="bursaspor-izgara">
+
+            <div class="puan-kutu">
+              <h3 class="gorsel-gizli">Puan durumu ve haftanın maçı</h3>
+              <div class="sek" role="tablist" aria-label="Lig seçimi">
+                {% for lig in puan.ligler %}<button type="button" role="tab" id="sek-{{ lig.anahtar }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="puan-{{ lig.anahtar }}" tabindex="{% if forloop.first %}0{% else %}-1{% endif %}">{{ lig.ad|kisa_lig }}</button>{% endfor %}
+              </div>
+
+              {% comment %}Dört lig tek döngüden. 2. ve 3. Lig grup usulü oynanıyor;
+              hangi grubun gösterileceği karara bağlanmadığı için şimdilik
+              **ilk grup** gösteriliyor ve grup adı başlıkta yazıyor —
+              okur hangi gruba baktığını bilsin.{% endcomment %}
+              {% for lig in puan.ligler %}
+                <div class="panel" id="puan-{{ lig.anahtar }}" role="tabpanel" aria-labelledby="sek-{{ lig.anahtar }}"{% if forloop.first %} data-acik="true"{% endif %} tabindex="0">
+                  <table class="puan">
+                    <caption>{{ lig.ad }}{% with grup=lig.gruplar.0 %}{% if grup.ad %} &middot; {{ grup.ad }}{% endif %}{% endwith %}{% if lig.hafta %} &middot; {{ lig.hafta }}. hafta{% endif %}</caption>
+                    <thead><tr><th scope="col">#</th><th scope="col">Takım</th><th scope="col">O</th><th scope="col">P</th></tr></thead>
+                    <tbody>
+                      {% for t in lig.gruplar.0.takimlar|slice:":5" %}
+                        <tr><td class="sira-no">{{ t.sira }}</td><td>{{ t.ad|baslikla }}</td><td>{{ t.oynadi }}</td><td>{{ t.puan }}</td></tr>
+                      {% empty %}
+                        <tr><td colspan="4">Tablo alınamadı.</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% endfor %}
+
+              <p class="yer-not">Puan durumu TFF'nin açık sayfalarından çekilir. 2. ve 3. Lig grup usulü oynanıyor; hangi grubun gösterileceği kararlaşmadığı için ilk grup gösteriliyor, grup adı tablo başlığında yazıyor.</p>
+            </div>
+
+            <div>
+              <div class="bursaspor-haber">
+{% for h in bursaspor_haberleri %}                {% include "parca/kart.html" with h=h goster_foto=1 %}
+{% empty %}                <p class="bos">Bu kategoride henüz haber yok.</p>
+{% endfor %}              </div>
+              <p class="yer-not">Bursaspor kategorisinden en yeni haberler. Puan durumu ve haftanın maçı <code>canli-veri/puan_durumu.py</code> çıktısına bağlanacak.</p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <section class="kutu">
+        <div class="kutu-bas"><h2>GALERİLER</h2><span class="tumu"><a href="/galeriler">Tüm galeriler &rarr;</a></span></div>
+        <p class="yer-not">{% if galeri_adedi is not None %}Arşivden gelen {{ galeri_adedi }} galeri. {% endif %}Kare sayısı kaynağın statik sayfasında yok; bilinmeyince yazılmıyor.</p>
+        <div class="kutu-ic">
+          <div class="galeri-izgara">
+            {% for g in galeriler %}{% include "medya/parca/galeri_kart.html" with g=g %}
+            {% empty %}<p class="bos">Foto galeri arşivi henüz göç etmedi.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <section class="kutu">
+        <div class="kutu-bas"><h2>VİDEOLAR</h2><span class="tumu"><a href="/videolar">Tüm videolar &rarr;</a></span></div>
+        <div class="kutu-ic">
+          <div class="video-izgara">
+            {% for v in videolar %}{% include "medya/parca/video_kart.html" with v=v %}
+            {% empty %}<p class="bos">Video arşivi henüz göç etmedi.</p>
+            {% endfor %}
+          </div>
+        </div>
+        <p class="yer-not">{% if video_adedi is not None %}Arşivden gelen {{ video_adedi }} video; tarama sürdükçe artıyor. {% endif %}Oynatıcı henüz bağlı değil.</p>
+      </section>
+
+      <section class="kutu" id="vizyon">
+        <div class="kutu-bas"><h2>VİZYONDA NELER VAR</h2><span class="tumu">Haftanın vizyonu &rarr;</span></div>
+        {% comment %}Bölüm canlı veriden çizilir (`icerik/canli.py`,
+           `vizyon_filmleri`). Afiş **basılmaz**: dosyanın kendi notu afişlerin
+           telifli olduğunu ve dosyanın afiş taşımadığını söylüyor, ayrıca dış
+           adrese bağlanmak sayfanın internetsiz açılması kuralına aykırı.
+           Kaynakta olmayan alan (tür, yaş sınırı, dağıtımcı) hiç basılmaz —
+           uydurma değer yazmaktansa boş bırakmak doğru.{% endcomment %}
+        <div class="kutu-ic">
+          {% if vizyon_filmler %}
+          <div class="vizyon-izgara">
+            {% for f in vizyon_filmler %}
+            <article class="film">
+              <div class="afis" aria-hidden="true"><span>AFİŞ</span></div>
+              <h3>{{ f.ad }}</h3>
+              <p class="film-meta">
+                {% if f.tur %}{{ f.tur }}{% endif %}
+                {% if f.tur and f.yas_siniri %} &middot; {% endif %}{% if f.yas_siniri %}{{ f.yas_siniri }}{% endif %}
+                {% if f.tarih %}{% if f.tur or f.yas_siniri %} &middot; {% endif %}<time datetime="{{ f.tarih|date:'Y-m-d' }}">{{ f.tarih|date:'j F Y' }}</time>{% endif %}
+              </p>
+            </article>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="bos">Vizyon takvimi şu an alınamıyor.</p>
+          {% endif %}
+        </div>
+        <p class="yer-not">Vizyon takvimi için doğrulanmış bir kaynak henüz yok; kart yapısı hazır, içerik API bağlanınca gelecek.{% if vizyon.kaynak.ad %} Şu anki liste {{ vizyon.kaynak.ad }} kaynaklıdır ve eksiktir.{% endif %} Afişler telifli olduğu için basılmaz.</p>
+      </section>
+
+{% endblock %}

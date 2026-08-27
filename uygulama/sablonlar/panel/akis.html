@@ -1,0 +1,74 @@
+{% comment %}KULLANILMIYOR — 27 Ağustos 2026.
+
+Akış ekranı ortak liste kabuğuna (`panel/liste.html`) taşındı; yedi liste
+ekranının hepsi tek şablonu paylaşıyor. Bu dosya hiçbir görünümden
+çağrılmıyor. Silinmedi çünkü dosya silmek geri alınamaz bir işlem ve
+kullanıcının kararı; kaldırılması bir sonraki temizlik turuna bırakıldı.
+{% endcomment %}
+{% extends "panel/taban.html" %}
+
+{% block icerik %}
+  {# §12 daralt-ve-bul: süzgeçler birleşik, tek sorguda daraltır. #}
+  <form class="suzgec" method="get" role="search">
+    <label class="gorsel-gizli" for="s-q">Ara</label>
+    <input id="s-q" type="search" name="q" value="{{ secili.q }}" placeholder="Başlık ya da spotta ara">
+
+    <label class="gorsel-gizli" for="s-kategori">Kategori</label>
+    <select id="s-kategori" name="kategori">
+      <option value="">Tüm kategoriler</option>
+      {% for k in kategoriler %}<option value="{{ k.pk }}"{% if secili.kategori == k.pk|stringformat:"s" %} selected{% endif %}>{{ k.ad }}</option>{% endfor %}
+    </select>
+
+    <label class="gorsel-gizli" for="s-durum">Durum</label>
+    <select id="s-durum" name="durum">
+      <option value="">Tüm durumlar</option>
+      {% for deger, ad in durumlar %}<option value="{{ deger }}"{% if secili.durum == deger|stringformat:"s" %} selected{% endif %}>{{ ad }}</option>{% endfor %}
+    </select>
+
+    <label class="gorsel-gizli" for="s-hazirlik">Hazırlık</label>
+    <select id="s-hazirlik" name="hazirlik">
+      <option value="">Tüm hazırlıklar</option>
+      {% for deger, ad in hazirliklar %}<option value="{{ deger }}"{% if secili.hazirlik == deger %} selected{% endif %}>{{ ad }}</option>{% endfor %}
+    </select>
+
+    <button type="submit" class="dugme">Daralt</button>
+    <a class="dugme ufak" href="{% url 'panel-akis' %}">Temizle</a>
+  </form>
+
+  <p class="alt-not">{{ sayfa.paginator.count }} kayıt · sayfa {{ sayfa.number }}/{{ sayfa.paginator.num_pages }}</p>
+
+  <div class="tablo-kaydir">
+  <table class="liste">
+    <caption class="gorsel-gizli">Haber listesi</caption>
+    <thead>
+      <tr>
+        <th scope="col">Başlık</th><th scope="col">Kategori</th>
+        <th scope="col">Durum</th><th scope="col">Hazırlık</th>
+        <th scope="col">Yayın</th><th scope="col">Giren</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in sayfa %}
+        <tr>
+          <td><a href="{% url 'panel-haber-duzenle' kimlik=h.pk %}">{{ h.baslik }}</a></td>
+          <td>{{ h.kategori.ad }}</td>
+          <td>{{ h.get_durum_display }}</td>
+          <td>{{ h.get_hazirlik_display }}</td>
+          <td>{% if h.yayin_zamani %}{{ h.yayin_zamani|date:"d.m.Y H:i" }}{% else %}—{% endif %}</td>
+          <td>{% if h.olusturan %}{{ h.olusturan.get_username }}{% else %}—{% endif %}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="alt-not">Bu süzgeçle kayıt yok.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  {% if sayfa.has_other_pages %}
+    <nav class="sayfalama" aria-label="Sayfalar">
+      {% if sayfa.has_previous %}<a class="dugme ufak" href="?{{ request.GET.urlencode }}&amp;sayfa={{ sayfa.previous_page_number }}">← Önceki</a>{% endif %}
+      <span class="konum">{{ sayfa.number }} / {{ sayfa.paginator.num_pages }}</span>
+      {% if sayfa.has_next %}<a class="dugme ufak" href="?{{ request.GET.urlencode }}&amp;sayfa={{ sayfa.next_page_number }}">Sonraki →</a>{% endif %}
+    </nav>
+  {% endif %}
+{% endblock %}

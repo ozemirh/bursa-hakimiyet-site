@@ -1,0 +1,51 @@
+{% extends "panel/taban.html" %}
+
+{% comment %}Parola değiştirme. Form Django'nun `PasswordChangeForm`'u;
+alanları ortak `parca/alan.html` ile basılıyor ki panelin form dili
+bozulmasın. Parola politikası `AUTH_PASSWORD_VALIDATORS`tan gelir ve
+hata metinleri alanın altında görünür.{% endcomment %}
+
+{% block icerik %}
+  <div class="kayit-duzen">
+    <form method="post" class="kayit-form" novalidate>
+      {% csrf_token %}
+
+      {% if degisti %}
+        <div class="kutu bilgi" role="status">Parolanız değiştirildi. Oturumunuz açık kaldı.</div>
+      {% endif %}
+
+      {% if form.non_field_errors %}
+        <div class="kutu tehlike" role="alert">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      {% for alan in form %}
+        {% include "panel/parca/alan.html" with alan=alan ipucu="" %}
+      {% endfor %}
+
+      <div class="eylem">
+        <button type="submit" class="dugme dolu">Parolayı değiştir</button>
+        <a class="dugme ufak" href="{% url 'panel-bugun' %}">Vazgeç</a>
+      </div>
+    </form>
+
+    <aside class="kayit-yan" aria-label="Hesap künyesi">
+      <div class="yan-kart">
+        <h2>Hesap</h2>
+        <dl class="kunye-liste">
+          <dt>Kullanıcı adı</dt><dd>{{ user.get_username }}</dd>
+          <dt>Görünen ad</dt><dd>{{ user.get_full_name|default:"—" }}</dd>
+          <dt>Roller</dt><dd>{% for g in user.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</dd>
+        </dl>
+        <p class="alt-not">
+          Parolanızı yalnız siz değiştirebilirsiniz. Yönetici, Kullanıcılar
+          ekranından hesabınızı kapatabilir ama parolanızı belirleyemez.
+        </p>
+        <p class="alt-not">
+          <b>İki adımlı doğrulama</b> henüz kurulmadı. Yayımlama, manşet ve
+          resmî ilan yetkisi olan rollerde zorunlu olması öneriliyor
+          (<code>PANEL-NOTLARI.md</code> §11).
+        </p>
+      </div>
+    </aside>
+  </div>
+{% endblock %}

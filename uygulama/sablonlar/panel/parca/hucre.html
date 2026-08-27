@@ -1,0 +1,9 @@
+{% comment %}Tek hücre. Tip görünümde belirlenir; şablon modele bakmaz.
+
+`yok` tipi bilerek var: eksik veriyi boş bırakmak yerine tire basıp NEDEN
+eksik olduğunu hücrenin üstünde taşıyor. Sütunu silmek eksikliği gizlerdi.
+{% endcomment %}{% if h.tur == "bag" %}<a href="{{ h.url }}">{{ h.metin }}</a>
+{% elif h.tur == "gorsel" %}<img class="kucuk-gorsel" src="{{ h.yol }}" alt="{{ h.alt }}" width="64" height="42" loading="lazy">
+{% elif h.tur == "rozet" %}<span class="durum-etiket {{ h.sinif }}">{{ h.metin }}</span>
+{% elif h.tur == "yok" %}<span class="olculmedi" title="{{ h.baslik }}">—</span>
+{% else %}<span class="{{ h.sinif }}">{{ h.metin }}</span>{% endif %}

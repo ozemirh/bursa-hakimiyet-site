@@ -1,0 +1,80 @@
+{% extends "taban.html" %}
+{% load static site_etiket %}
+{% comment %}
+Köşe yazısı detayı. İskelet `haber_detay.html` ile bilerek aynı: seslendirme
+betiği `.detay h1`, `.detay .spot` ve `.metin > p` seçicilerine bağlı, bu
+sınıflar değişirse sesli okuma sessizce susar.
+
+Haber detayından tek farkı künyedir: köşe yazısında sorumluluk kaynakta değil
+**yazardadır**, o yüzden künyede "Haber Merkezi" değil yazarın adı ve sayfasına
+bağlantı durur.
+{% endcomment %}
+
+{% block baslik %}{{ yazi.baslik }} — {{ yazar.ad }} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ yazi.spot|striptags|truncatechars:300 }}{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ yazi.get_absolute_url }}">{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Kırıntı navigasyonu">
+        <ol>
+          <li><a href="/">Anasayfa</a></li>
+          <li><a href="/yazarlar">Yazarlar</a></li>
+          <li><a href="{{ yazar.get_absolute_url }}">{{ yazar.ad }}</a></li>
+          <li><span aria-current="page">{{ yazi.baslik|truncatechars:60 }}</span></li>
+        </ol>
+      </nav>
+
+      <div class="izgara">
+        <div>
+          <article class="detay">
+            <span class="rozet-k">KÖŞE YAZISI</span>
+            <h1>{{ yazi.baslik }}</h1>
+            {% if yazi.spot %}<p class="spot">{{ yazi.spot }}</p>{% endif %}
+
+            <div class="detay-kunye">
+              <span class="yazan"><a href="{{ yazar.get_absolute_url }}">{{ yazar.ad }}</a></span>
+              {% if yazi.yayin_zamani %}<span><time datetime="{{ yazi.yayin_zamani|date:'c' }}">{{ yazi.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
+              {% if yazi.kategori %}<span>{{ yazi.kategori.ad|baslikla }}</span>{% endif %}
+              <div class="arac">
+                <button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button>
+                <button type="button" class="yazi-kucult" aria-label="Yazı boyutunu küçült">A&minus;</button>
+                <button type="button" class="yazi-buyut" aria-label="Yazı boyutunu büyüt">A+</button>
+                <button type="button" class="yazdir">YAZDIR</button>
+              </div>
+            </div>
+
+            {% comment %}Köşe sayfasının kendi görseli yazının fotoğrafı değil,
+               o tarihteki YAZAR PORTRESİDİR (ölçüldü: gorsel_alt yazarın adını
+               taşıyor). Yazının kendi kaydı öncelikli, yoksa yazarın güncel
+               portresine düşülür; ikisi de yoksa görsel hiç basılmaz — boş
+               kutu çizmektense yok saymak doğru.{% endcomment %}
+            {% if yazi.gorsel_yolu or yazar.gorsel_yolu %}
+              <div class="foto ana-gorsel">
+                <img src="{{ yazi.gorsel_yolu|default:yazar.gorsel_yolu }}" alt="{{ yazar.ad }}" width="1280" height="720" decoding="async">
+              </div>
+              <p class="foto-alt">{{ yazar.ad }}</p>
+            {% endif %}
+
+            {% include "parca/seslendirme.html" %}
+
+            <div class="metin">{{ yazi.govde_guvenli }}</div>
+          </article>
+
+          <div class="kutu">
+            <div class="kutu-bas">
+              <h2>{{ yazar.ad|buyult }} — DİĞER YAZILARI</h2>
+              <span class="tumu"><a href="{{ yazar.get_absolute_url }}">Tümü &rarr;</a></span>
+            </div>
+            <div class="kutu-ic">
+              <div class="kutu-izgara">
+                {% for y in digerleri %}{% include "medya/parca/yazi_kart.html" with y=y %}
+                {% empty %}<p class="bos">Bu yazarın arşivde başka yazısı yok.</p>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+{% endblock %}
+
+{% block betik %}<script src="{% static 'betik/seslendirme.js' %}"></script>{% endblock %}

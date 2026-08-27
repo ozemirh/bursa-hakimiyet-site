@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel girişi — Bursa Hakimiyet</title>
+{% load static %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'stil/panel.css' %}">
+</head>
+<body class="giris-sayfa">
+  <main class="giris-kutu">
+    <h1>Yönetim Paneli</h1>
+    {% if form.errors %}<p class="hata" role="alert">Kullanıcı adı ya da parola hatalı.</p>{% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="alan"><label for="id_username">Kullanıcı adı</label>{{ form.username }}</div>
+      <div class="alan"><label for="id_password">Parola</label>{{ form.password }}</div>
+      <button type="submit" class="dugme">Giriş</button>
+    </form>
+  </main>
+</body>
+</html>

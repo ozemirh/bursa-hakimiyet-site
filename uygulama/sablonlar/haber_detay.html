@@ -1,0 +1,78 @@
+{% extends "taban.html" %}
+{% load static site_etiket %}
+
+{% block baslik %}{{ haber.baslik }} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ haber.spot|striptags|truncatechars:300 }}{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ haber.get_absolute_url }}">{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Kırıntı navigasyonu">
+        <ol>
+          <li><a href="/">Anasayfa</a></li>
+          <li><a href="/{{ haber.kategori.slug_al }}">{{ haber.kategori.ad|baslikla }}</a></li>
+          {% if haber.ilce %}<li><a href="/ilce/{{ haber.ilce.slug }}">{{ haber.ilce.ad }}</a></li>{% endif %}
+          <li><span aria-current="page">{{ haber.baslik|truncatechars:60 }}</span></li>
+        </ol>
+      </nav>
+
+      <div class="izgara">
+        <div>
+          <article class="detay">
+            <span class="rozet-k">{{ haber.kategori.ad }}</span>
+            <h1>{{ haber.baslik }}</h1>
+            {% if haber.spot %}<p class="spot">{{ haber.spot }}</p>{% endif %}
+
+            <div class="detay-kunye">
+              <span>Haber Merkezi</span>
+              {% if haber.yayin_zamani %}<span><time datetime="{{ haber.yayin_zamani|date:'c' }}">{{ haber.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
+              {% if haber.guncelleme_zamani %}<span>Güncelleme: {{ haber.guncelleme_zamani|date:'H:i' }}</span>{% endif %}
+              <div class="arac">
+                <button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button>
+                <button type="button" class="yazi-kucult" aria-label="Yazı boyutunu küçült">A&minus;</button>
+                <button type="button" class="yazi-buyut" aria-label="Yazı boyutunu büyüt">A+</button>
+                <button type="button" class="yazdir">YAZDIR</button>
+              </div>
+            </div>
+
+            {% if haber.gorsel_yolu %}
+              <div class="foto ana-gorsel">
+                <img src="{{ haber.gorsel_yolu }}" alt="{{ haber.gorsel_alt|default:haber.baslik }}" width="1280" height="720" decoding="async">
+              </div>
+              {% if haber.gorsel_alt %}<p class="foto-alt">{{ haber.gorsel_alt }}</p>{% endif %}
+            {% else %}
+              {% comment %}2023-07 öncesi görseller sağlayıcı tarafından silindi ve
+                 kurtarılamıyor (URUN-PLANI.md F3 notu). Kırık görsel yerine
+                 kategori temsilî çizimi konur.{% endcomment %}
+              <div class="foto ana-gorsel {{ haber|kart_rengi }}">
+                <svg role="img" aria-label="{{ haber.kategori.ad|baslikla }} haberini temsil eden çizim"><use href="#{{ haber.kategori|simge_adi }}"/></svg>
+              </div>
+              <p class="foto-alt">Görsel temsilîdir: bu haberin arşiv fotoğrafı kaynak sunucudan silinmiş.</p>
+            {% endif %}
+
+            {% include "parca/seslendirme.html" %}
+
+            <div class="metin">{{ haber.govde_guvenli }}</div>
+
+            {% if haber.kaynaklar.all %}
+              <div class="kaynak-bolmesi">
+                <b>KAYNAK</b>
+                {% for k in haber.kaynaklar.all %}<p>{{ k.ad }}</p>{% endfor %}
+              </div>
+            {% endif %}
+          </article>
+
+          <div class="kutu">
+            <div class="kutu-bas"><h2>İLGİLİ HABERLER</h2><span class="tumu"><a href="/{{ haber.kategori.slug_al }}">Tümü &rarr;</a></span></div>
+            <div class="kutu-ic">
+              <div class="kutu-izgara">
+                {% for h in ilgili %}{% include "parca/kart.html" with h=h goster_foto=1 %}
+                {% empty %}<p class="bos">Bu kategoride başka haber yok.</p>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+{% endblock %}
+
+{% block betik %}<script src="{% static 'betik/seslendirme.js' %}"></script>{% endblock %}

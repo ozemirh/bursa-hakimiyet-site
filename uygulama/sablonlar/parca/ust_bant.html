@@ -1,0 +1,19 @@
+{% comment %}
+Üst servis şeridi. Tarih sunucudan gelir.
+
+Hava durumu ve baraj doluluğu **canlı veri** kalemleridir (URUN-PLANI.md §1,
+"Canlı veri gerektiren bileşenler"); kaynakları F6'da bağlanacak. Uydurma
+değer basmamak için kaynak bağlanana kadar gösterilmezler — tasarımdaki
+sabit "34°C" ve "%81" değerleri 25 Ağustos 2026 demosuna aitti.
+{% endcomment %}
+<div class="servis">
+  <div class="servis-ic">
+    <strong>{% now "j F Y, l" %}</strong>
+    {% if hava.son_durum.sicaklik %}<span class="ayrac"></span><span>Bursa {{ hava.son_durum.sicaklik|floatformat:0 }}°C · {{ hava.gunler.0.hadise.ad }}</span>{% endif %}
+    <span class="sag">
+      <a href="#kunye">Künye</a>
+      <span class="ayrac"></span><a href="#kunye">İletişim</a>
+      <span class="ayrac"></span><a href="#">E-Gazete</a>
+    </span>
+  </div>
+</div>

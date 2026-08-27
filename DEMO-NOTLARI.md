@@ -155,6 +155,20 @@ Mevcut semboller:
 
 Renkler symbol içinde `var(--s1)` … `var(--s5)` ile geliyor; `.t-*` sınıfı bunları belirliyor. Yeni sembol eklerken aynı 5 slotu kullan.
 
+**Gökyüzü dolgusu (25 Ağustos 2026 düzeltmesi).** Semboller eskiden gökyüzünü
+`url(#gsky)` gradyanıyla dolduruyordu; gradyanın durakları `var(--s1)/var(--s2)`
+kullanıyordu. Bir `<symbol>` `<use>` ile örneklendiğinde gradyan öğesi gölge
+ağacın dışında kaldığı için bu değişkenler **çözülmüyor** ve gökyüzü **siyah**
+çıkıyordu — koyu şekiller siyah zemin üzerinde kayboluyordu. Başsız Chrome'da
+ölçülerek doğrulandı.
+
+Çözüm: gökyüzü dikdörtgeni `class="gok"` aldı, CSS'e `.gok{fill:var(--s2)}`
+kuralı eklendi. `var()` `fill` niteliğinde sorunsuz çözülüyor — yalnız gradyan
+duraklarında çözülmüyor. Gradyan yerine düz tema rengi kullanılıyor; `gsky`
+tanımı dosyalarda duruyor ama artık hiçbir yerden çağrılmıyor.
+
+**Yeni sembol eklerken gökyüzü için `url(#gsky)` kullanma, `class="gok"` kullan.**
+
 ### Görsel oranları
 
 Gerçek fotoğraf geldiğinde aynı kutulara oturacak:
@@ -244,6 +258,34 @@ Haber başlıkları 18-21 Ağustos 2026 Bursa gündeminden derlenip yeniden yaz�
 
 ---
 
+
+### Sunum öncesi doğrulanacak tek başlık
+
+"Prof. Dr. Okan Tüysüz'den uyarı: Binaların arasından faylar geçiyor" başlığı
+anasayfa, ilçe ve kategori sayfalarında duruyor ve **adı verilen gerçek bir
+kişiye bir uyarı atfediyor**, ama sitede hiçbir yerde kaynağı gösterilmiyor ve
+tıklanabilir bir detay sayfası yok. Başlık 18-21 Ağustos gündeminden derlenen
+mevcut içeriğin parçası, bu oturumda üretilmedi.
+
+Sunumdan önce ya kaynağı eklenmeli ya da başlık çıkarılmalı. Karar
+kullanıcınındır — içerik değişikliği sorulmadan yapılmaz.
+
+### Gerçek gazeteciler — değişmez kural
+
+25 Ağustos 2026'da köşe yazarı kadrosu gazetenin kendi yönetim panelinden alındı;
+sayfalardaki adlar artık **gerçek kişiler**. Yazı başlıkları, tarihleri ve okunma
+sayıları da gerçek.
+
+**Bu isimlerin ağzından tek kelime yazılmaz.** Köşe yazısı metni, spot, özet,
+alıntı — hiçbiri uydurulmaz. Yazı listeleri başlık + tarih + okunma sayısıyla
+kalır; tasarım spot alanı istiyorsa alan boş bırakılmaz, tasarım spotsuz kurulur.
+
+Özgeçmiş, portre ve iletişim bilgisi elimizde yok; açıkça "Yer tutucu" duruyor.
+Manzara fotoğrafları yazar portresi yerine kullanılmaz.
+
+Haber künyesindeki `Yazar adı` yer tutucuları da **bilerek** duruyor: gerçek bir
+editöre yazmadığı haberi atfetmemek için.
+
 ## 4b. Yapay zekâ editör
 
 Haber masası aracı prototipi. Bir haber adresi verilir; araç kaynağı indirir,
@@ -273,18 +315,30 @@ ve şemasına birebir uyularak elle hazırlandı; anahtar tanımlanınca araç a
 
 ---
 
+### Demonun günü: 25 Ağustos 2026, Salı
+
+Kabuktaki üst şerit bu tarihi gösterir. 25 Ağustos'a çekilme sebebi: panelden
+gelen gerçek köşe yazısı verisi o güne kadar uzanıyor ve daha eski bir "bugün"
+gelecek tarihli yazı listelemek anlamına geliyordu.
+
+Haber içerikleri 18-21 Ağustos gündeminden; anasayfada birkaç günlük haber
+bulunması normaldir. **Makale künyelerindeki yayın tarihleri değiştirilmedi** —
+yalnız kabuktaki "bugün" şeridi taşındı. Tasarım 3'ün kabuğunda tarih şeridi yok.
+
 ## 5. Bilinen eksikler
 
 | Eksik | Not |
 |---|---|
 | Logo vektörel değil | Elimizde JPEG var; gazeteden SVG/AI sürümü istenmeli. Retina ekranlarda kenarlar yumuşak görünüyor |
-| Kategori / ilçe / yazar sayfaları yok | Anasayfa ve haber detay hazır; kalan şablonlar seçim sonrası çıkarılacak |
+| Alt konu ve arşiv sayfaları yok | Anasayfa, haber detay, ilçe, yazar ve kategori sayfaları üç yön için de hazır. `/ekonomi/piyasalar` gibi alt konu sayfaları ve tarih arşivi yok; sayfalama bileşenleri görüntüdür, çalışmaz |
 | Fotoğraflar gazetenin değil | `gorseller/` içindekiler Commons kaynaklı yer tutucu. Canlıya geçerken gazete arşiviyle değişecek; CC BY / CC BY-SA olanlar künye ister |
 | Google Fonts dışa bağımlı | İnternetsiz açılınca yedek fontlara düşer, düzen bozulmaz |
 | Arama sayfa içiyle sınırlı | Yazdıkça o sayfadaki başlıkları süzüyor; gerçek arşiv araması arka uç ister |
 | Menü içerikleri örnek | Açılır alt menüler çalışıyor, ama içindeki linkler `#` — hedef sayfalar henüz yok |
 | Döviz bandı statik | Sekiz kalemin tamamı **gerçek veri** (aşağıdaki tabloya bakın), ama sayfaya gömülü ve kendiliğinden güncellenmez. Canlıda bir piyasa servisine bağlanması gerekir; `.doviz` bileşeninin yapısı buna hazır, yalnızca `<dd>` içerikleri beslenecek |
 | "Arşive sor" arka planı yok | Tasarım 3'teki kutu görsel; gerçek arama altyapısı gerektirir |
+| Yazar sayfasında sayfalama çalışmıyor | `tasarim-1-yazar.html` içindeki `1 2 3 … 115 Sonraki` şeridi yalnızca görüntü. Sayfada Namık GÖZ'ün son **4** yazısı var; kalan arşiv (toplam 2.288 yazı) yayın sistemine bağlanınca gelecek. Sayfa başına 20 yazı varsayımıyla 115 sayfa yazıldı |
+| Köşe yazısı detay sayfası yok | Yazı **metinleri** elimizde olmadığı için yazar sayfasındaki başlıklar bilerek bağlantısız. Gerçek kişinin ağzından metin üretilmedi; özgeçmiş, köşe adı, portre ve iletişim alanları "Yer tutucu" olarak duruyor |
 | Seslendirme cihaza bağlı | Ses, tarayıcının/işletim sisteminin Türkçe ses paketiyle üretilir; kalite makineden makineye değişir, bazı cihazlarda Türkçe ses hiç bulunmaz. Yayın kalitesinde tek tip ses isteniyorsa sunucu tarafında ses dosyası üreten bir servis gerekir |
 
 ---
@@ -318,12 +372,17 @@ Ekstra kurulum gerekmiyor. Klasörü VS Code'da aç, dosyaya sağ tıkla → tar
 
 ### Sıradaki işler
 
-1. **Tasarım yönünü seç** — yayın ekibiyle üç anasayfayı ve üç detay sayfasını birlikte gez
-2. **İlçe sayfası** — 17 ilçenin şablonu; yerel arama görünürlüğünün merkezi burası
-3. **Kategori ve yazar sayfaları** — seçilen yönün stiliyle
-4. **Yazar isimlerini gerçekle değiştir**
-5. **Fotoğrafları gazete arşiviyle değiştir** — `gorseller/` içindekiler yer tutucu
-6. **Vektörel logo** — gazeteden iste, base64'ü güncelle
+1. **Tasarım yönünü seç** — yayın ekibiyle üç yönün beşer sayfasını birlikte gez
+2. ~~İlçe sayfası~~ — **yapıldı** (`tasarim-*-ilce.html`, örnek ilçe Nilüfer, 17 ilçe gezinmede)
+3. ~~Yazar sayfası~~ — **yapıldı** (`tasarim-*-yazar.html`, örnek yazar Namık GÖZ)
+4. ~~Yazar isimlerini gerçekle değiştir~~ — **yapıldı**, kadro gazetenin panelinden alındı
+5. ~~Kategori sayfası~~ — **yapıldı** (`tasarim-*-kategori.html`, örnek kategori Ekonomi, 13 kategori gerçek slug'larıyla)
+6. **Fotoğrafları gazete arşiviyle değiştir** — `gorseller/` içindekiler yer tutucu; ayrıca `KAYNAKLAR.md`de beş dosyanın adı içeriğiyle uyuşmuyor
+7. **Vektörel logo** — gazeteden iste, base64'ü güncelle
+
+**Vefat ve anma ilanları kapsam dışı** — kullanıcı istemedi, önerme.
+
+**Sayfa ailesi tamam:** her yön için anasayfa · haber detay · ilçe · yazar · kategori.
 
 ### Dikkat
 

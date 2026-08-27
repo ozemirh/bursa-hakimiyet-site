@@ -204,9 +204,11 @@ FOTO_ALT = {
     "adliye": "Adliye binası", "belediye": "Bursa Büyükşehir Belediyesi hizmet binası",
     "kent": "Bursa kent merkezinden görünüm", "sanayi": "Sanayi bölgesinden görünüm",
     "hastane": "Hastane binası", "okul": "Okul binası ve bahçesi",
-    "baraj": "Baraj gövdesi ve su seviyesi", "tramvay": "Kent içi raylı sistem aracı",
+    "baraj": "Barajı besleyen dere yatağı", "tramvay": "Kent içi raylı sistem aracı",
     "spor": "Spor tesisinden görünüm", "muze": "Müze binası",
     "carsi": "Tarihi çarşıdan görünüm", "tarim": "Tarım arazisi",
+    "itfaiye": "Sokakta duran itfaiye ihbar dolabı",
+    "mudanya": "Mudanya sahilinden genel görünüm",
 }
 
 
@@ -424,6 +426,14 @@ def detay_2(sablon: str, v: dict) -> str:
             '<p class="spot">%s</p>' % kacir(v["spot"]), "spot")
     s = tek(s, r'<div class="etiket-k">.*?</div>',
             '<div class="etiket-k">%s</div>' % kacir(v["kategori"].upper()), "etiket-k")
+    # "3 MADDEDE NE OLDU" kutusu: sablondan ornek haberin maddeleri geliyordu.
+    # Taslak zaten `uc_madde` uretiyor (SEMA'da bu kutu icin tanimli); baglanmamisti.
+    madde = v["taslak"].get("uc_madde") or []
+    yer = s.find('<div class="ozet">')
+    if madde and yer != -1:
+        ic = "\n".join(
+            "            <li>%s</li>" % kacir(m) for m in madde)
+        s = ic_degistir(s, "<ul>", "ul", "\n" + ic + "\n          ", yer)
     s = ic_degistir(s, '<div class="govde" id="govde">', "div",
                     govde_html(v["taslak"]["govde"], "2", " " * 10,
                                son_blok=kaynak_bolmesi(v, " " * 10)))
