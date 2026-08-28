@@ -64,6 +64,11 @@ KENDI_YAYINIMIZ = frozenset({
     "bu rsahakimiyet",
 })
 
+# Panelin açılır listesinden sızan SEÇİLMEMİŞ durum. ÖLÇÜM (28 Ağustos 2026):
+# `Seçiniz` 47 habere, `Diğer` 2 habere kaynak diye bağlanmıştı. İkisi de
+# editörün bir şey seçmediğini gösterir; kaynak adı değildir.
+YER_TUTUCULAR = frozenset({"seçiniz", "seciniz", "diğer", "diger", "-", "—"})
+
 # Ayıklayıcının üst sınırı; tam bu uzunluk kesilmişliğin imzasıdır.
 KESME_UZUNLUGU = 40
 
@@ -95,6 +100,8 @@ def kaynak_kabul(ad: str) -> tuple[bool, str]:
         return False, "meta yazar degeri"
     if k in KENDI_YAYINIMIZ:
         return False, "kendi yayinimiz"
+    if k in YER_TUTUCULAR:
+        return False, "yer tutucu (secilmemis)"
     if d.isdigit():
         return False, "salt sayi"
     if " " not in d and _ALAN_ADI.match(d):

@@ -10,6 +10,9 @@ kategori değildir: "Yazarlar" ve "İlçeler" kendi bölümlerine, "Resmî İlan
 ise BİK yükümlülüğü olan editoryal bölüme gider.
 """
 
+import time
+
+from django.db import DatabaseError
 from django.db.models import Count
 
 from taksonomi.models import Ilce, Kategori
@@ -58,13 +61,50 @@ def site(request):
     }
 
 
+# Menü sıralaması ÖNBELLEKLENİR.
+#
+# Ölçüm (27 Ağustos 2026, 308.602 haber): `annotate(Count("haberler"))`
+# tek başına **1.113 ms** sürüyordu ve bu bağlam işlemcisi **her sayfada**
+# çalıştığı için sitenin tamamı — anasayfa, kategori, ilçe, haber detay,
+# 404 — bu bedeli ödüyordu. Sayfa kabuğunun ölçülen 1.138 ms'sinin
+# neredeyse tamamı buydu.
+#
+# Sorgu planı: `SCAN taksonomi_kategori` + her kategori için haber
+# tablosunda indeks araması + sıralama için geçici B-ağacı.
+#
+# `adet` **ekranda hiç gösterilmiyor**; yalnız menüyü çok haberliden aza
+# sıralamak için var. Bu sıralama saatler içinde değişmez, o yüzden
+# önbellek doğru araç — `views.arsiv_sayilari` ile aynı düzen.
+MENU_BELLEK_SANIYE = 300
+_menu_bellek: tuple[float, list] | None = None
+
+
 def _tum_kategoriler():
-    """Tam menüdeki liste: haber taşıyan kategoriler, çok haberliden aza."""
+    """Tam menüdeki liste: haber taşıyan kategoriler, çok haberliden aza.
+
+    Kısa süre önbelleklenir; sayım kilide takılırsa son bilinen liste
+    döner, o da yoksa **sayımsız** sıralamaya düşülür — menü her hâlükârda
+    çizilmeli, sayfa bir sıralama yüzünden düşmemeli.
+    """
+    global _menu_bellek
+    simdi = time.monotonic()
+    if _menu_bellek and simdi - _menu_bellek[0] < MENU_BELLEK_SANIYE:
+        return _menu_bellek[1]
+
+    try:
+        kategoriler = list(Kategori.objects.filter(aktif=True)
+                           .prefetch_related("turler")
+                           .annotate(adet=Count("haberler")).order_by("-adet"))
+    except DatabaseError:
+        # Kilit ya da başka bir veritabanı hatası MENÜYÜ DÜŞÜRMEZ. Yedek yolda
+        # ikinci bir sorgu denenmiyor: kilitliyken o da düşerdi. Son bilinen
+        # liste yoksa menünün kategori sütunu boş çizilir, sayfa ayakta kalır.
+        return _menu_bellek[1] if _menu_bellek else []
+
     cikti = []
-    for k in (Kategori.objects.filter(aktif=True)
-              .annotate(adet=Count("haberler")).order_by("-adet")
-              .prefetch_related("turler")):
+    for k in kategoriler:
         slug = k.slug_al()
         if slug:
             cikti.append({"ad": k.ad, "slug": slug, "adet": k.adet})
+    _menu_bellek = (simdi, cikti)
     return cikti

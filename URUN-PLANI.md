@@ -1423,3 +1423,513 @@ bir yayın. Bu, §2'deki BİK ve Meta Yazar teyitleriyle, §12'deki TCMB ve MGM
 teyitleriyle ve §15'teki Google Hizmet Şartları maddesiyle **aynı listeye**
 girer. Film afişleri ayrıca telifli; §9 kararı gereği afiş **indirilmiyor**,
 sayfada yerel yer tutucu duruyor.
+
+
+---
+
+## 21. 28 Ağustos — F7 arama: ölçüldü, eşik karşılanmadı, **site geneli hızlandı**
+
+### Kesinti — önce bu
+
+27 Ağustos akşamı üç ajan da **API oturum limitine** takılıp yarıda kesildi.
+İki iz bıraktı: (a) bitmiş ama raporlanmamış işler, (b) **duran tarama** —
+oturum kesilince arka plandaki tarama süreci de öldü ve 18:01'den 10:39'a
+kadar **16 saat** boş geçti. Log temiz, hata yok, disk 350 GB boş; betiğin
+kendi hatası değil.
+
+**Alınan önlem:** tarama artık `calistir.ps1` ile **bağımsız süreç** olarak
+koşuyor (makineyi uyanık tutuyor, düşerse kaldığı yerden devam ediyor).
+Oturuma bağlı arka plan görevi olarak başlatılmayacak.
+
+**Kural:** uzun işi arka planda yürüten ajan **biten her adımı ara rapor
+olarak yazacak.** Bir ajan ölçümü bitirmiş ama raporlamadan kesildiği için
+durum elle yeniden ölçülmek zorunda kalındı.
+
+### F7(a) ölçüldü — eşiğin 5,8 katı
+
+56 sorgu × 5-9 tur, dönüşümlü (aynı veritabanı durumu, aynı çekişme):
+
+| | p50 | **p95** | en kötü |
+|---|---|---|---|
+| ESKİ (tam sayım + `govde`) | 920 ms | **1.759 ms** | 1.936 ms |
+| YENİ (sınırlı sayım + kapı) | **475 ms** | **1.768 ms** | 1.885 ms |
+| YENİ, tam HTTP yanıtı | **486 ms** | **1.748 ms** | 1.914 ms |
+
+**Sorgu p50 yarılandı (−%48), p95 hiç kıpırdamadı.** Eşik 300 ms → **5,8 kat**.
+
+**Neden:** sınırlı sayım yalnız 1.000'den çok sonuç dönen sorguyu hızlandırıyor
+(50 sorgunun 28'i). p95'i belirleyenler **az/hiç sonuç dönenler** — sınıra
+ulaşmadıkları için tam taramayı sonuna kadar yapıyorlar. Sınıf bazında:
+tek kelime −%84 · Türkçe −%72 · uzun tümce **%0** · sonuçsuz **%0**.
+
+### Beş yol karşılaştırıldı — kazanan önek araması
+
+Sessiz kopyada (308.602 satır), aynı 56 sorgu:
+
+| Yol | p50 | **p95** | 300 ms | Türkçe tutarlı |
+|---|---|---|---|---|
+| V1 `LIKE` (bugünkü) | 328 | **732** | ✗ | ✗ |
+| V2 FTS5 `unicode61` | 14 | **188** | ✓ | ✓ |
+| V3 FTS5 + Türkçe, tam kelime | 14 | **216** | ✓ | ✓ |
+| V4 FTS5 `trigram` | 71 | **275** | ✓ | ✓ |
+| **V6 FTS5 + Türkçe + önek (≥3)** | **35** | **235** | ✓ | ✓ |
+
+**Trigram elendi — ilk bakışta kazanan görünüyordu.** `ışık` sorgusunda 6.458
+sonuç dönüyor ama eşleşen kelimeler dökülünce **%83'ü rastlantı** çıktı:
+`değişikliği` 793 · `bisiklet` 566 · `bağışıklık` 284. **Ve bu kusur bugünkü
+`LIKE`'ta da var** — "ışık" arayan okur bugün "değişiklik" haberleri alıyor.
+
+**Önek araması tam ortada:** Türkçe'de ekler sona geldiği için `token*` fiilen
+kök bulma yerine geçiyor. Tam kelime eşlemesi ek almış biçimlerin
+**%61-89'unu** kaçırıyordu (`ışık` 688 → önekle 1.171; `öğrenci` 1.285 → 5.412).
+Disk: kelime indeksi **+47 MB**, trigram +253 MB.
+
+### Türkçe harf kusuru — p95'ten önce gelen kusur
+
+| kelime | küçük | Başlık | BÜYÜK |
+|---|---|---|---|
+| ışık | 1.880 | 428 | **0** |
+| çağrı | 3.647 | 249 | **0** |
+| öğrenci | 5.236 | 565 | **0** |
+| bursa (ASCII) | 39.752 | — | 40.817 ✓ |
+
+`__icontains` harf duyarsızlık **vaat ediyor**; SQLite'ın `LIKE`'ı bunu yalnız
+ASCII'de yapıyor. **BÜYÜK HARFLE yazan Türk okur sıfır sonuç alıyor.** Arama
+235 ms'ye insin ya da inmesin, bu ayrı ve daha ciddi bir kusurdur.
+`test_turkce_kusuru_HENUZ_DURUYOR` bunu kilitliyor — düzeltildiğinde kırılıp
+bilinçli güncellenecek.
+
+### Yapılanlar — indekssiz, migration'sız
+
+**Normalizasyon çekirdeği** (`icerik/arama_metni.py`): Türkçe-doğru küçültme +
+ASCII katlama + minimum uzunluk + önek kuralı. **Motordan bağımsız** — sanal
+tablo, tetikleyici, `MATCH`/`to_tsquery` yok; kaynak taramasıyla doğrulanıyor.
+Durak listesi `icerik/veri/turkce_durak.json`, **veri olarak** (71 kelime +
+`cikarilanlar` gerekçeleri), koda gömülü değil.
+
+**Durak listesinden çıkarılan üç kelime**, arşivle (son 60.000 başlık)
+doğrulanarak: `kim` (93 başlık, çoğu **özel ad**: "Kim Milyoner Olmak İster") ·
+`artık` (isim anlamı: "artık yıl", "nükleer artık") · `az` (nicelik: "en az 10
+kişi"). Şüphelenilen `son` (838) ve `büyük` (545) listede hiç yoktu.
+
+**Çok kelimeli kenar durumu:** durak ve kısa terimler **atılır**, kalanla
+aranır; red **yalnız geriye hiç terim kalmayınca**. `bursa ve çevresi` →
+aranır. Aksi hâlde düzeltilen kusurdan kötüsü üretilirdi.
+
+**Okur ne görüyor:** 1.000 üstü sonuçta "1.000+ sonuç" (altında kesin sayı) ·
+`ve` → "çok genel kelimelerle arama yapılamıyor" · `a` → "en az 3 harflik bir
+kelime yazın".
+
+### Planlanmamış üçüncü kazanım — **en büyüğü, ve tüm siteye**
+
+Kapıda reddedilen sorguda arama maliyeti 0 ms olmasına rağmen HTTP yanıtının
+1.200 ms sürmesine takılıp kabuk ölçüldü:
+
+```
+/ara?q=a  (arama YOK)          1.138 ms
+/ilceler  (en yalın sayfa)     1.129 ms
+bağlam işlemcisi tek başına    1.129 ms
+  -> _tum_kategoriler()        1.118 ms   <- kabuğun tamamı
+```
+
+`icerik/baglam.py`'deki `annotate(adet=Count("haberler"))` her istekte 308 bin
+satırlık tabloyu tarıyordu — ve bağlam işlemcisi **her sayfada** çalışıyor.
+Üstelik `adet` **hiçbir şablonda basılmıyor**, yalnız menüyü sıralıyor.
+**Site, okura gösterilmeyen bir sayı için sayfa başına 1,1 saniye ödüyordu.**
+
+300 sn önbelleğe alındı (kilit gelirse son bilinen liste, o da yoksa boş menü —
+sayfa düşmez): **HTTP p50 1.674 → 486 ms (−%71) · p95 2.954 → 1.748 (−%41).**
+Artık HTTP (486) ile sorgu (475) neredeyse eşit: **kabuk darboğaz değil, arama
+sorgusu.**
+
+> **Bu bulgunun F4 turunda yakalanmamış olması öğretici.** O tur yerleşim ·
+> kontrast · taşma · odak ölçüyordu; hepsi doğruydu, hepsi geçti — ama
+> **hiçbiri süre ölçmüyordu.** Sayfa görsel olarak kusursuz olup yüklenmesi
+> saniyeler sürebilir. Ölçüm turlarına **süre ve sorgu sayısı** eklendi.
+
+### Site geneli tur — 14 sayfa, 9 tur
+
+| sayfa | önce | sonra | sorgu |
+|---|---|---|---|
+| **kategori** | 405 ms | **21 ms** | 12 → 12 |
+| **yazar listesi** | 50 ms | **32 ms** | **83 → 46** |
+| **ilçe** | 734 ms | 745 ms | düzeltilmedi (veri sorunu) |
+| **TOPLAM** | **1.425 ms** | **1.035 ms** | **246 → 209** |
+
+Sonuç: **p50 17 ms · p95 291 ms**; ilçe hariç en kötü **47 ms**.
+
+### Üç ders — ikisi olumsuz sonuçtan
+
+1. **Az sorgu her zaman hızlı değil.** Yazar listesindeki N+1 tek sorguya
+   çevrildi, sonra ölçüldü: yazar başına sorgu **19,0 ms**, tek sorgu
+   **42,9 ms**, pencere fonksiyonu 41,0 ms. 37 sorgunun her biri indeksten ilk
+   satırı alıyor (0,5 ms); "düzeltme" 37 başlık için **6.713 satır** çekiyor.
+   Düzeltme **geri alındı**, yalnız şablonun aynı veriyi iki kez çağırması
+   giderildi (83 → 46 sorgu).
+2. **`defer("govde")` ölçüldü, çalışmıyor, kaldırıldı.** Medyan 4,14 → 3,77 ms
+   ama **en iyi değer kötüleşti** (2,86 → 3,33); kazanç gürültü içinde. Buna
+   karşılık ertelenmiş alan sessiz bir tuzak: gövdeye erişen kod satır başına
+   sorgu açar. **Ölçülemeyen kazanç için tuzak taşınmaz.**
+3. **Önbellek yalnız değişmeyene.** Kategori menüsü ve arşiv sayıları gün
+   içinde değişmiyor → önbellek. **Haber listelerine önbellek konmadı** —
+   gazetede beş dakika eski manşet kabul edilemez; kategori sayfasının
+   maliyeti önbellekle değil **sayımı sınırlayarak** indirildi.
+
+### F7'nin durumu
+
+**(a) karşılanmadı** — p95 1.748 ms, eşiğin 5,8 katı. Neden değişmedi:
+`LIKE '%…%'` indeks kullanamıyor. Türkçe harf kusuru da duruyor. **İkisini de
+indeks çözecek**; kurulumu göç sonrasına ve PostgreSQL kararına bağlı.
+
+**(b) ölçüldü, otomatik taşıma mümkün değil** — bkz. §22 ve
+`PANEL-NOTLARI.md` §24: 50 yuvanın yalnız **6'sı** konum+ölçü+cihaz olarak
+ayrışıyor, cihaz bilgisi **43'ünde hiç yok**. Elle eşleme kalemi.
+
+### PostgreSQL — muhakeme, ölçüm değil
+
+**Normalizasyon işi boşa gitmiyor.** PostgreSQL'in `lower()`'ı da veritabanı
+derlemine bağlı; Türkçe olmayan bir derlemde `lower('I') = 'i'`, yani **aynı
+i/I tuzağı orada da var**. Atılacak olan yalnız motora özgü ~30 satır (sanal
+tablo, üç tetikleyici, `MATCH` kurucusu); karşılığı `to_tsvector` + GIN + `:*`.
+
+**PostgreSQL'in gerçek üstünlüğü** ölçülen iki zayıf noktayı kapatıyor:
+`turkish` yapılandırması **gerçek Snowball kök bulucu** (önek numarasına gerek
+kalmaz) ve **hazır Türkçe durak listesi** (`bir`/`ve`/`in` sorunu biter).
+
+**Önerilen sıra:** (a) normalizasyon şimdi — taşınabilir, yapıldı;
+(b) FTS5 indeksi göç bitene kadar ertelendi — tetikleyiciler göçü 7×
+yavaşlatır, indeks sonradan **5 saniyede** kurulur; (c) PostgreSQL yakınsa
+indeksi doğrudan orada kurup FTS5 adımını atlayın. **Karar kullanıcıda.**
+
+
+---
+
+## 22. 28 Ağustos — F3 kapandı: göç arşive yetişti
+
+| Aile | Diskte | Veritabanında | Oran | Görselli |
+|---|---|---|---|---|
+| **haber** | 357.099 | **356.839** | **%99,93** | %18,0 |
+| video | 31.084 | 31.084 | %100 | %99,5 |
+| köşe | 6.713 | 6.713 | %100 | %100 |
+| galeri | 4.040 | 4.040 | %100 | %99,9 |
+
+Kalan 280 dosya **taramanın göçün önünde olması**; hepsi az önce kazınmış
+2024-02 kayıtları, kategorileri geçerli.
+
+### Düşen kayıt: **sıfır**, neden bazında
+
+| Neden | Sayı |
+|---|---|
+| Bozuk / yarım JSON | **0** |
+| Adres çözülemedi | **0** |
+| Yinelenen kimlik | **0** |
+| Kategori tanınmadı | **4 → 0 (düzeltildi)** |
+
+O dört kayıt 2022-01'deki `bursada-spor` slug sapmasıydı — F2(d)'nin 301 ile
+çözdüğü tam o dört adres. **Adres katmanı biliyordu, göç bilmiyordu.**
+`goc_al` artık slug'ı `Yonlendirme` tablosundan okuyor; koda slug gömülmedi,
+tek doğruluk kaynağı korundu.
+
+### Asıl bulgu: kaynak **2023-11'de başlıyor**
+
+Ay bazında "gerçek dış kaynak adı" oranı (300 örnek/ay, arşivden doğrudan):
+
+| Dönem | Oran |
+|---|---|
+| 2021-04 … 2023-08 | **%0,0 – %2,0** |
+| 2023-09 | %4,7 |
+| 2023-10 | %2,3 |
+| **2023-11** | **%82,3** |
+
+2023-11 örneği (600 kayıt): TRT Haber 104 · Haber Merkezi 100 · İHA 99 ·
+DHA 81 · MyNet 66 · AA 65 · TRT Spor 25 · Milliyet 10.
+
+**Arşiv JSON'unda ayrı künye alanı yok:** 22 alanın hiçbiri kaynak taşımıyor,
+`yazar` %100 "Bursa Hakimiyet", `yayinci` %100 "Bursa Hakimiyet" (3.857
+örnek). Gövde sonu ajans imzası %0,2, gövdede "Kaynak:" satırı %0,1.
+
+> **Yorum tersine döndü.** "Arşivin %99,8'i kaynaksız" bir göç kusuru değil:
+> **2023-10 öncesi kaynaksızlık verinin gerçeğidir** — gazete kendi yazdığına
+> "Haber Merkezi" damgalıyordu. Kaynağı olmayan habere kaynak üretilemez.
+>
+> Gerçek kusur başkaydı: `asil_kaynak_bul` **gövdeyi html'den önce** tarıyor
+> ve gövdedeki "kaynak suyu / kaynak-kodu" tamlaması sayfanın gerçek alanını
+> yeniyordu. Kaynak kapısı (`icerik/goc_kaynak.py`) bunu kesiyor.
+
+Tarama 2023-11'e girdikçe oran **kendiliğinden** yükseldi:
+**721 → 19.149 bağ**, kaynak kaydı **148 → 237**.
+
+`kaynak_denetle` komutu daha önce kurulmuş **yanlış bağları kopardı**;
+`Kaynak` kayıtlarının kendisi **silinmedi** — kaydı silmek izi de siler,
+hangi haberin hangi yanlış değere bağlandığı bilgisi kaybolur.
+
+### İlçe alanı — **türetildi**, kaynakta yok
+
+Ölçüm: `ilce_id` **309.882 kaydın hepsinde NULL**'du ve `goc_al` bu alandan
+hiç söz etmiyordu. Sonucu: **17 ilçe sayfasının tamamı boştu**; menüde ve
+künyede 17 bağlantı boş sayfaya gidiyordu. F4 turunun "ilçe sayfası
+veritabanından render ediliyor" ölçümü **yanlış değildi** — ediyordu, veri
+yoktu.
+
+Arşivde ilçe alanı **yok**: `kategori_etiketi` yalnız 12 kategori adı veriyor,
+klasik "İNEGÖL (İHA) -" tarih satırı 8.512 kayıtta **5** kez geçiyor. Tek yol
+başlık+spotta ilçe adı aramak: **%5,5 tek eşleşme**, %0,2 belirsiz (elendi).
+
+**Mahalle ipuçları bilerek kullanılmadı.** `sozluk.json`daki ipuçları %0,7 ek
+kayıt getiriyor ama neredeyse tamamı yanlış:
+*"Şeyh Cerrah'ta Filistinlilere müdahale" → İnegöl* ·
+*"Denizli'de tarihi eser" → Osmangazi* (heykel=yontu) ·
+*"Alerjik Rinit" → İnegöl* (cerrah=hekim).
+**Yanlış ilçe etiketi boş sayfadan kötüdür.**
+
+Sonuç: **20.366 haber ilçe aldı, 17 ilçenin hepsi doldu** (İnegöl 3.929 ·
+Yıldırım 3.269 · Nilüfer 2.693 … Büyükorhan 62). Doldurma tamamen veritabanı
+içinde çalışıyor (başlık/spot zaten kolonda), arşiv okunmuyor — **saniyeler**.
+
+> **KARAR (28 Ağustos): çıkarım kalıyor, ama GÖRÜNÜR olacak.**
+> Gerekçe: alternatif 17 boş sayfa ve menüde 17 ölü bağlantı; %5,5 muhafazakâr
+> bir oran; editör panelden düzeltebiliyor ("İlçe ata" toplu fiili); geri
+> alınabilir (`ilce_doldur --uzerine-yaz`).
+>
+> **Şart:** ilçe bilgisi **kaynakta yoktur, başlık/spot eşlemesiyle
+> türetilmiştir** ve bu belgelerde yazılıdır. Türetilmiş bir değeri kaynaktan
+> gelen olgu gibi sunmak, bu turda düzeltilen kaynak hatasının ta kendisidir
+> (`articleAuthor` alanının kaynak sanılması).
+
+### `ANALYZE` — standart adım oldu
+
+SQLite istatistikleri **bayattı**: `sqlite_stat1` tabloda **92.666** satır
+sanıyordu, gerçekte 356.839 vardı. Planlayıcı bu yüzden `ilce_id` indeksini
+işe yaramaz sayıp **tam tarama** seçiyordu: ilçe sayfası **745 ms**, indeks
+zorlanınca aynı sorgu **0,2 ms** — **3.600 kat**.
+
+`ANALYZE` (2,0 sn) sonrası plan `SEARCH ... USING INDEX` oldu ve sayfa
+**745 → 26 ms**'ye indi.
+
+> **Kural:** `ANALYZE` göç sonrası **ve migration sonrası** standart adımdır.
+> SQLite şema değişikliklerinin çoğu tabloyu kopyalar ve istatistikleri
+> yeniden bayatlatır; migration paketinin sonunda `ANALYZE` yoksa ilçe sayfası
+> 26 ms'den 745 ms'ye **sessizce** geri düşer.
+
+### Maliyet sorusu — yeniden işleme gerekmiyor
+
+Kazıyıcı her adresi bir kez yazıyor, JSON'lar değişmiyor; tam koşu aynı veriyi
+okur. Kaynak bağları için de gerek yok — `kaynak_denetle` ara tabloda düzeltti.
+Tam koşu **~65 dk**, `--yalniz-yeni` **~2 dk**.
+
+### Sıradaki iki iş (model turu sonrasına bırakıldı)
+
+1. **`meta_yazar` backfill** — migration istemiyor, alanlar duruyor:
+   "Haber Merkezi" → `haber_merkezi`, "Bülten" → `bulten`; gerçek ajans →
+   `kaynak_turu="ajans"`, diğerleri `dis_yayin`. Kapıdan elenen bilgi böylece
+   çöpe gitmez. Açık nokta: `bulk_create` `save()` çağırmıyor ve
+   `meta_yazar_elle` semantiği panelin.
+2. **`Index(fields=["ilce", "-yayin_zamani"])`** — `ANALYZE` sonrası kalan
+   `USE TEMP B-TREE FOR ORDER BY` maliyetini kaldırır. Migration gerektirdiği
+   için model turunun paketine dahil edildi.
+
+
+---
+
+## 23. 28 Ağustos — menü sidebar'a çevrildi (kullanıcı isteği)
+
+Kullanıcı: *"menüyü de küçült ve daha kompakt bir hale getir, ilçeleri menü
+içerisinde de açılır kapanır bir liste yap, gerekirse menüyü sidebar yap"*.
+Sidebar kararı koordinatörde bırakıldı ve **sidebar yapıldı** — dikey yapı
+katlanır bölümlerle doğal uyuşuyor ve ekranı kaplamıyor.
+
+### Ölçülen kompaktlık
+
+| | önce | sonra |
+|---|---|---|
+| Menü içerik yüksekliği | **780 px** | **489 px** (−%37) |
+| Tüm bölümler açıkken | 780 px | 1.349 px → katlanınca 489 (−%64) |
+| Panel genişliği | 340–1100 px | **320 px** sabit |
+| Ekranın kapladığı oran @1280 | %74 | **%25** |
+| Kaydırma gerekiyor mu | evet | **hayır** |
+| Konum | banda yapışık, tam genişlik | sağ kenara yaslı, tepeden tabana |
+
+Kazancın kaynağı iki şey: dört bölümün katlanması **ve** uzun listelerin
+(13 kategori, 18 ilçe) iki sütuna inmesi. Yalnız katlamayla 717 px'de kalıyordu.
+
+**Yapı:** 5 `<details>`/`<summary>`, yalnız **KATEGORİLER `open`**. Başlıklar
+`<summary><h2>` içinde — belge başlık düzeni bozulmadı (atlama 0). Perde ayrı
+öğe değil, `0 0 0 100vmax` yayılımlı ikinci gölge; gölge tıklama yakalamadığı
+için "dışarı tıkla kapat" davranışı olduğu gibi çalışıyor.
+
+**Korunanlar:** bant **10 kalem** · arama ve menü düğmesinin bant içindeki yeri
+· menüdeki **50 bağlantı** · **17 ilçe + "Tüm ilçeler" = 18** — hepsi DOM'da,
+`hidden` yok, sonradan yükleme yok.
+
+### Bulunan iki gerçek kusur
+
+1. **`summary` odak halkası kuralında yoktu.** Kural `a,button,input,select`
+   sayıyordu; katlanır başlıklar tarayıcının soluk varsayılan halkasına
+   düşüyordu. `summary:focus-visible` eklendi.
+2. **Odak tuzağı kırıktı — 70 Tab'ın 53'ü menüden kaçıyordu.** Sebep ince:
+   kapalı `<details>` içeriği Chrome'da `display:none` değil,
+   **`content-visibility`** ile atlanıyor — kutu döndürüyor ama **odak
+   alamıyor**. Tuzak "son öğe" olarak asla odaklanamayan bir bağlantıyı
+   seçiyor, sarma koşulu hiç gerçekleşmiyordu. Bu kusur menü sidebar'a
+   çevrilmeseydi de vardı.
+
+### Doğrulama
+
+Yatay taşma menü **kapalıyken 0/40**, **açıkken 0/40** (5 sayfa × 8 genişlik) ·
+kontrast eşiği altında **0** (2.587 metin öğesi) · odak kaçışı **0** (70 Tab +
+20 Shift+Tab, katlı ve açık hâlde) · bant kalemi **10** · h1 **1**, başlık
+atlaması **0**. Testler **454/454** (15'i bu turda).
+
+**Ölçüm artefaktı — beşinci kez.** İlk turda "37 öğede odak halkası yok"
+çıktı; 37 = 6+18+6+7, yani tam olarak **katlı bölümlerdeki** bağlantılar. Odak
+alamadıkları için hesaplanan stil değişmiyor. Tüm bölümler açıkken **0/212**.
+§18'deki gizli menü artefaktının aynısı; halka kuralı **bu bulguya dayanarak
+değiştirilmedi**, gerçek kusur olan `summary` ayrıca doğrulanıp düzeltildi.
+
+
+---
+
+## 24. 28 Ağustos — panel başarımı: **32 saniyeden 31 ms'ye**
+
+Kullanıcı: *"panel çok ağır çalışıyor, bunu çok daha optimize etmemiz lazım,
+bir de haber ekle sayfasını tekrar gözden geçir orada geliştirilebilecek
+alanlar var"*. Şikâyet **ölçüldü ve doğru çıktı**.
+
+### Teşhis — tek bir form alanı
+
+Gerçek HTTP üzerinden, giriş yapılmış oturumla, 3 tekrar:
+
+| sayfa | en iyi | boyut |
+|---|---|---|
+| **`/panel/haber/ekle`** | **32.702 ms** | **36.544.411 B** |
+| `/panel/mansetler` | 3.851 ms | 6.428 B |
+| `/panel/` (Bugün) | 2.287 ms | 4.798 B |
+| diğer 10 ekran | 12–130 ms | |
+
+Form alanı bazında ölçüm kök nedeni verdi:
+
+```
+select name=ilgili_haberler   option= 356.839   boyut= 34.826.896   <- sayfanın %99,9'u
+select name=kaynaklar         option=     237   boyut=      10.200
+diğer 28 alan                                   toplam ~12 KB
+```
+
+`ModelMultipleChoiceField` queryset'in **tamamını** `<option>` diye basıyordu.
+Editör bir haber eklemek için **36 MB indirip 48 saniye** bekliyordu. Bu, §19'un
+"akış 9 ms" tablosunda görünmedi çünkü o tur **liste** ekranlarını ölçmüştü;
+**form ekranları hiç ölçülmemişti**.
+
+### Sonuçlar — üç hedef de tuttu
+
+| sayfa | önce | sonra (DEBUG=0) | bağımsız doğrulama |
+|---|---|---|---|
+| **Haber ekle** | 32.702 ms / 36,5 MB | **45 ms / 24 KB** | **31 ms / 24.365 B** |
+| **Manşetler** | 3.851 ms | **15 ms** | **11 ms** |
+| **Bugün** | 2.287 ms | **9 ms** | **9 ms** |
+
+Sonuçlar koordinatör tarafından **sunucu yeniden başlatılıp bağımsız ölçüldü**;
+ajanın sayılarıyla uyuştu.
+
+**Çözüm:** `SecilenlerWidget` yalnız **seçili** olanları basıyor; yenisi
+`/panel/haber-ara` JSON ucundan geliyor ve uç **`arama_metni.sorgu_coz`**
+kullanıyor — ikinci bir arama mantığı yazılmadı, sitenin durak-kelime ve
+en-az-uzunluk kapısı aynen geçerli. Doğrulama tüm haberleri kabul etmeye devam
+ediyor (`pk__in` ucuz). **Betiksiz çalışıyor:** JS kapalıyken bağlı haberler
+görünür, kaldırılabilir, **haber kaydedilebilir**; testle kilitli.
+
+### Bugün'ün kök nedeni — iki tahmin de yanlıştı
+
+Koordinatör "muhtemelen `Count` içeren annotate" dedi, ajanın ilk tahmini de
+başkaydı. **Ölçüm ikisini de çürüttü:** sorun **veri dağılımı**.
+
+`icerik_haber`in **356.839 satırının tamamı `durum=1, hazirlik=''`**.
+`sqlite_stat1` bu yüzden `356839 356839 356839` diyor — "bu alanlar hiçbir şeyi
+daraltmıyor". SQLite `LIMIT 20` sorgusunda indeksi bırakıp tam tarama seçiyor
+ve eşleşen kayıt olmadığı için taramayı **sonuna kadar** sürdürüyor. Aynı
+indeks `COUNT`ta **örtücü** kullanılıp 0,1 ms sürüyor.
+
+**Çözüm kod tarafında:** kuyruk sayımı (0,1 ms) boşsa üç pahalı liste sorgusu
+hiç çalıştırılmıyor. Aynı denemede `durum<>1` **kısmi indeksi işe yaramadı**
+(738 ms) — denenip başarısız olan yol da raporlandı.
+
+### Manşet indeksi — ilk deneme başarısız oldu, ve bu kayda değer
+
+Django'nun `Index(condition=Q(manset_ana=True))`'i `WHERE "manset_ana"`
+(**çıplak sütun**) üretiyor; ORM tek filtrede de OR'da da yine çıplak yazıyor —
+ama **SQLite çıplak koşullu kısmi indeksi OR içinde eşleştirmiyor.** İndeksler
+kuruldu ve **hiçbir işe yaramadı** (749 ms, plan hâlâ `SCAN`).
+
+Yalıtılmış tabloda 3 indeks biçimi × 5 sorgu biçimi ölçüldü:
+
+| indeks koşulu | tek çıplak | tek `=1` | OR çıplak | OR `=1` | OR `>0` |
+|---|---|---|---|---|---|
+| `WHERE "x"` | **KULLANDI** | hayır | hayır | hayır | hayır |
+| `WHERE "x" = 1` | hayır | **KULLANDI** | hayır | **KULLANDI** | hayır |
+| `WHERE "x" > 0` | hayır | hayır | hayır | hayır | **KULLANDI** |
+
+ORM'in yazdığı biçimle eşleşen tek çalışan hücre: **çıplak indeks + tek
+sütunlu sorgu**. Çözüm indeksi zorlamak değil, **görünümü OR yerine üç ayrı
+indeksli sorguya çevirmek** oldu (`.order_by()` şart — Meta sıralaması
+planlayıcıyı başka indekse çekiyordu). Sonuç: **752 ms → 0,69 ms**.
+
+### Haber formu — §4'e karşı denetim
+
+| Kalem | §4/§21 | Not |
+|---|---|---|
+| Başlık/spot **karakter sayacı** | alan 2, 4 | `data-sayac` işareti vardı, karşılığı yoktu |
+| **Paragraf sayacı** | alan 5 | 2 altında kırmızı |
+| **Adres önizlemesi** | alan 14 | slug kuralı §8'in ölçülmüş kuralı |
+| **Hazırlık yalnız Pasif'te** | §9 | kural yazılıydı, **üründe uygulanmıyordu** |
+| **İkinci başlık varsayılan kapalı** | alan 3 | `<details>` — betiksiz de çalışır |
+| **Bağlı galeriler** | alan 27 | eksikti; **aynı `SecilenlerWidget`** kullanıldı |
+| **Doğrulama sonrası odak** | §21 | `<details>` kapalıysa açıp odaklıyor |
+| **Dokuz alanın Türkçe etiketi yoktu** | proje kuralı | ekranda "Gorsel url", "Gomulu kod", "Seo baslik" |
+
+Son kalem **ekran görüntüsünden** bulundu; hiçbir sayısal ölçüm göremezdi.
+Dokuzuncusu testi yazarken çıktı: `ilgili_haberler` ve `etiketler` formda
+açıktan tanımlı olduğu için `Meta.labels` onlara hiç uygulanmıyordu.
+
+**Yapılmayanlar:** etiket çip arayüzü (orta ölçekli JS) · konu bağlama (konu
+modeli yok) · **görsel yükleme** (§4 alan 8 — depolama, kırpma ve boyut
+politikası kararı gerektiriyor, `MEDIA_ROOT` yok; **kullanıcıya soruldu,
+cevap bekleniyor**).
+
+### Migration'lar
+
+- **`0006`** üç kısmi manşet indeksi (koordinatör onayladı; ölçülen kazanç
+  752 ms → 0,69 ms, migrate **4,26 sn**)
+- **`0007`** bağlı galeriler M2M (**izin manşet indeksleri içindi**; ajan
+  uyguladı, bildirdi ve geri alma yolunu yazdı — koordinatör onayladı,
+  belirsizlik koordinatördeydi: galeri seçicisi istenmişti ve migration
+  gerektiriyordu)
+
+İkisinde de `sqlmigrate` **uygulamadan önce** okundu ve `icerik_haber`in
+yeniden kurulmadığı doğrulandı (`new__icerik_haber` 0 · `DROP TABLE` 0 ·
+`INSERT INTO` 0); paket sonunda **`ANALYZE`**; `integrity_check` **ok**,
+356.839 haber değişmedi.
+
+### Ölçüm aracı altıncı kez yanılttı
+
+Yerleşim turu **14 bulgu** verdi: "Haber ekle, tüm genişlikler: odak halkası
+yok". Araç hangi öğe olduğunu söylemiyordu; kimlik yazdırma eklenince
+`#id_ikinci_baslik` çıktı — yani `<details>` içine alınan alan.
+
+**Araç yeşile boyanmadan önce iddia sınandı:** 60 Tab basıldı, öğeye **hiç
+ulaşılmadı**; `offsetParent` ise dolu (Chrome kapalı details içeriğini
+sayfa-içi aramaya açık tutuyor). Kusur sayfada değil **ölçüm süzgecindeydi**.
+`test_kapali_details_klavye_sirasinda_mi` kalıcı kanıt olarak duruyor — bir gün
+tarayıcı davranışı değişirse test kırılır.
+
+### Bilinen sınır
+
+`/panel/haber-ara` yaygın terimde **7 ms**, nadir terimde **772–789 ms**
+(`icontains` tam tarama). Aynı kusur sitenin kendi aramasında da var (§21);
+çözümü F7'nin normalize alan + indeksi ve o göç sonrasına + PostgreSQL
+kararına bağlı. Tip-ahead için ideal değil ama **eskisi 32 saniyeydi ve hiç
+arama yoktu**.
+
+### Not — ölçüm hijyeni
+
+Ajan ölçüm için `yonetmen` parolasını değiştirdi ve **bunu bildirdi**;
+koordinatör geri aldı (üç deneme hesabı da yine `deneme1234`). Kural: ölçüm
+için parola değiştiren, turun sonunda kendisi geri alır.

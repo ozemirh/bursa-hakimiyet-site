@@ -1,0 +1,70 @@
+{% extends "panel/taban.html" %}
+
+{% comment %}2FA durumu — kurulum akışı BİLEREK yok.
+
+Gizli anahtarın nasıl saklanacağı bir güvenlik kararıdır ve kullanıcıya
+soruldu (28 Ağustos 2026); cevap gelmeden kurulum açılmıyor. Yarım bir 2FA,
+olmayan 2FA'dan tehlikelidir: kullanıcı korunduğunu sanır.{% endcomment %}
+
+{% block icerik %}
+  <div class="kayit-duzen">
+    <div class="kayit-form">
+      <div class="kutu uyari" role="status">
+        <p><b>Kurulum akışı henüz açılmadı.</b></p>
+        <p>
+          İki adımlı doğrulamanın gizli anahtarı şifrelenerek saklanmalı;
+          şifreleme anahtarının nerede duracağı bir güvenlik kararıdır ve
+          kullanıcıya soruldu. Karar gelmeden kurulum açılmıyor — <b>yarım bir
+          2FA, olmayan 2FA'dan tehlikelidir</b>, çünkü korunduğunuzu
+          sanırsınız.
+        </p>
+      </div>
+
+      <dl class="kunye-liste">
+        <dt>Hesap</dt><dd>{{ user.get_username }}</dd>
+        <dt>Durum</dt>
+        <dd>{% if kayit.kurulu_mu %}Kurulu{% else %}Kurulu değil{% endif %}</dd>
+        <dt>Yöntem</dt>
+        <dd>{% if kayit %}{{ kayit.get_yontem_display }}{% else %}—{% endif %}</dd>
+        <dt>Son kullanım</dt>
+        <dd>{% if kayit.son_kullanim %}{{ kayit.son_kullanim|date:"d.m.Y H:i" }}{% else %}—{% endif %}</dd>
+      </dl>
+
+      <h2 class="onay-bas">Kurulacak iki yöntem</h2>
+      <ul class="olcum-notu">
+        {% for deger, ad in yontemler %}<li>{{ ad }}</li>{% endfor %}
+      </ul>
+      <p class="alt-not">
+        İkisi de sağlayıcının panelinde vardı (dökümde <code>secret_key</code>,
+        QR ve SMS alanları ölçüldü).
+      </p>
+
+      <div class="eylem">
+        <a class="dugme ufak" href="{% url 'panel-sifre' %}">Parola ekranı</a>
+      </div>
+    </div>
+
+    <aside class="kayit-yan" aria-label="2FA notu">
+      <div class="yan-kart">
+        <h2>Rolünüz</h2>
+        {% if zorunlu_mu %}
+          <p class="alt-not">
+            Rolünüz, iki adımlı doğrulamanın <b>zorunlu olması önerilen</b>
+            gruptadır.
+          </p>
+        {% else %}
+          <p class="alt-not">Rolünüz için zorunlu tutulması önerilmiyor.</p>
+        {% endif %}
+        <p class="alt-not">
+          Öneri (<code>PANEL-NOTLARI.md</code> §11): yayımlama, manşet ve resmî
+          ilan yetkisi olan roller — {{ zorunlu_roller|join:", " }}.
+        </p>
+        <p class="alt-not">
+          <b>Çelişki kayıtlı (§24.10):</b> §11 “isteğe bağlı” diyor, sağlayıcı
+          panelindeki ekran metni “zorunludur” diyor; hangisinin fiilen
+          uygulandığı <b>ölçülemedi</b>.
+        </p>
+      </div>
+    </aside>
+  </div>
+{% endblock %}

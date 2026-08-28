@@ -20,6 +20,7 @@
   --saha:#0E5C36; --afis-zemin:#243044; --afis-yazi:#A3B2C6;
   --bant-golge:rgba(17,27,71,.28); --afis-cizik:rgba(255,255,255,.07);
   --bant-ara-cizgi:rgba(255,255,255,.34); --bant-dugme:rgba(255,255,255,.10); --menu-bas:#94A6D9;
+  --perde:rgba(6,14,28,.55);
   /* Piyasa bandı ve kart gölgeleri — doğrudan hex/rgba yazılmaz (§3.1 madde 10) */
   --artis-yazi:#7EF0AE; --artis-zemin:rgba(126,240,174,.14);
   --azalis-yazi:#FF9C9C; --azalis-zemin:rgba(255,156,156,.15);
@@ -32,7 +33,11 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--zemin);color:var(--murekkep);font-family:var(--govde);font-size:15px;line-height:1.45}
 a{color:inherit;text-decoration:none}
-a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--kirmizi);outline-offset:2px}
+/* `summary` de listede: menü bölümleri <details> ile katlanıyor ve
+   katlanır başlıklar klavyeyle geziliyor. Listede olmasaydı tarayıcının
+   kendi soluk halkasına düşerlerdi — sitenin geri kalanıyla tutarsız. */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,
+summary:focus-visible{outline:3px solid var(--kirmizi);outline-offset:2px}
 img{max-width:100%}
 .gorsel-gizli{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 /* içeriğe atla: .gorsel-gizli'nin odakta görünen biçimi — sayfanın ilk odaklanabilir öğesi */
@@ -102,14 +107,47 @@ main:focus-visible{outline:3px solid var(--kirmizi);outline-offset:-3px}
 .menu-dugme:hover,.menu-dugme[aria-expanded="true"]{background:var(--kirmizi)}
 
 /* tam menü: banda sığmayan kategoriler ve bölümler */
-.tam-menu{position:absolute;top:100%;left:0;right:0;background:var(--lacivert-koyu);color:var(--kagit);border-top:2px solid var(--kirmizi);box-shadow:0 12px 26px var(--bant-golge);max-height:calc(100vh - 120px);overflow-y:auto;z-index:41}
+/* --- Tam menü: sağdan kayan SIDEBAR ------------------------------------
+   28 Ağustos 2026: tam genişlikte beş sütunlu levhadan dikey panele geçildi.
+   Ölçüm: eski hâli açıkken 780 px yüksekliğinde ve ekranın %60-85'ini
+   kaplıyordu.
+
+   Perde ayrı bir öğe DEĞİL: `0 0 0 100vmax` yayılımlı ikinci bir gölge
+   ekranı karartıyor. Gölge tıklamayı yakalamaz, o yüzden dışarı tıklayınca
+   kapanma davranışı (site.js) olduğu gibi çalışır. */
+.tam-menu{position:fixed;top:0;right:0;bottom:0;width:320px;max-width:88vw;
+  background:var(--lacivert-koyu);color:var(--kagit);
+  border-left:2px solid var(--kirmizi);
+  box-shadow:-14px 0 30px var(--bant-golge),0 0 0 100vmax var(--perde);
+  overflow-y:auto;overscroll-behavior:contain;z-index:60;
+  animation:menu-kay .22s ease}
 .tam-menu[hidden]{display:none}
-.tam-menu-ic{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0 18px;padding:15px 14px 16px}
-.menu-sutun h2{font-family:var(--display);font-size:13px;letter-spacing:1.4px;color:var(--menu-bas);border-bottom:1px solid var(--kunye-cizgi);padding-bottom:6px;margin-bottom:7px}
-.menu-sutun ul{list-style:none}
-.menu-sutun a{display:block;color:var(--kagit);font-size:13.5px;padding:5px 7px}
-.menu-sutun a:hover{background:var(--kirmizi)}
-.menu-not{grid-column:1/-1;border-top:1px solid var(--kunye-cizgi);margin-top:12px;padding-top:9px;font-size:12px;color:var(--kunye-yazi)}
+@keyframes menu-kay{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.tam-menu-ic{display:block;padding:0 0 4px}
+
+.menu-bolum{border-bottom:1px solid var(--kunye-cizgi)}
+/* `list-style:none` + `::-webkit-details-marker` ikisi birden gerekiyor:
+   tarayıcılar üçgen işaretini iki ayrı yoldan çiziyor. */
+.menu-bolum>summary{display:flex;align-items:center;justify-content:space-between;
+  gap:10px;cursor:pointer;padding:10px 14px;list-style:none}
+.menu-bolum>summary::-webkit-details-marker{display:none}
+.menu-bolum>summary::after{content:"BE";font-size:11px;line-height:1;
+  color:var(--menu-bas);transition:transform .18s ease}
+.menu-bolum[open]>summary::after{transform:rotate(180deg)}
+.menu-bolum>summary:hover{background:var(--bant-dugme)}
+.menu-bolum>summary h2{font-family:var(--display);font-size:13px;
+  letter-spacing:1.4px;color:var(--menu-bas)}
+.menu-bolum[open]>summary h2{color:var(--kagit)}
+.menu-bolum ul{list-style:none;padding:0 0 8px}
+.menu-bolum a{display:block;color:var(--kagit);font-size:13.5px;padding:5px 14px 5px 24px}
+/* Uzun listeler (13 kategori, 18 ilçe) iki sütuna iniyor: 13 satır 7'ye,
+   18 satır 9'a düşüyor. Çok sütunda görsel sıra DOM sırasıyla aynıdır
+   (önce birinci sütun dolar), o yüzden odak sırası görsel sırayı izler. */
+.menu-iki-sutun ul{columns:2;column-gap:2px}
+.menu-iki-sutun a{padding-left:16px;padding-right:8px;break-inside:avoid}
+.menu-bolum a:hover{background:var(--kirmizi)}
+.menu-not{border-top:1px solid var(--kunye-cizgi);margin:0;
+  padding:10px 14px;font-size:11.5px;line-height:1.45;color:var(--kunye-yazi)}
 
 /* --- son dakika --- */
 .sondakika{background:var(--kirmizi);color:var(--kagit);overflow:hidden}
@@ -367,7 +405,6 @@ footer strong{color:var(--kagit)}
   .kategori-liste{display:none}
   .ara{flex:1 1 auto;margin:6px 8px}
   .ara input{width:auto}
-  .tam-menu-ic{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
   .slayt-pencere{height:360px}
   .reklam.tam{height:120px}
 }
@@ -387,7 +424,6 @@ footer strong{color:var(--kagit)}
   .servis-ic{gap:9px;padding:6px 12px}
   .servis .sag{margin-left:0;flex-basis:100%}
   .logo-gorsel{height:44px}
-  .tam-menu-ic{grid-template-columns:minmax(0,1fr)}
   .dortlu{grid-template-columns:minmax(0,1fr)}
   .kutu-izgara{grid-template-columns:minmax(0,1fr)}
   .bursaspor-haber{grid-template-columns:minmax(0,1fr)}
@@ -679,3 +715,9 @@ footer .kapsa{grid-template-columns:repeat(2,minmax(0,1fr))}
    yer tutucusunun üstündeki dekoratif %7 beyaz çizgi şeridi zemini
    #333E51'e açıyor ve orada oran 4,15'e düşüyordu. #A3B2C6 ile iki
    şeritte de eşik aşılıyor (5,00 ve 6,16). */
+
+/* Sidebar hareketi: hareket azaltma isteyen kullanıcıda anında açılır. */
+@media(prefers-reduced-motion:reduce){
+  .tam-menu{animation:none}
+  .menu-bolum>summary::after{transition:none}
+}

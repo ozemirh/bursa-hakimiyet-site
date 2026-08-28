@@ -31,9 +31,10 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
+from icerik.goc_ilce import ilce_bul, kaliplar as ilce_kaliplari
 from icerik.goc_kaynak import kaynak_kabul
 from icerik.models import Haber
-from taksonomi.models import Kategori, KategoriTur, Kaynak
+from taksonomi.models import Ilce, Kategori, KategoriTur, Kaynak, Yonlendirme
 
 VARSAYILAN = Path("D:/bursa-hakimiyet-arsiv/veri")
 
@@ -85,6 +86,20 @@ class Command(BaseCommand):
             for kt in KategoriTur.objects.filter(tur=Kategori.TUR_HABER).select_related("kategori")
         }
         kaynak_onbellek = {k.ad.casefold(): k for k in Kaynak.objects.all()}
+        # Ilce arsivde YOK; baslik ve spottan turetiliyor (icerik/goc_ilce.py).
+        ilceler = {i.ad: i for i in Ilce.objects.all()}
+        ilce_kalip = ilce_kaliplari(ilceler)
+
+        # Taninmayan kategori slug'i icin YONLENDIRME tablosuna bak. Olculdu
+        # (28 Agustos 2026): arsivde dusen tek kalem 2022-01'deki 4 haberdi;
+        # slug'lari `bursada-spor`, kanonigi `bursa-da-spor`. Adres katmani
+        # bunu 301 ile zaten cozuyordu (F2-d), goc bilmiyordu. Slug'i buraya
+        # elle yazmak yerine ayni tablodan okunuyor: tek dogruluk kaynagi.
+        yonlendirme = {}
+        for y_ in Yonlendirme.objects.all():
+            eski, yeni = y_.eski_yol.strip("/"), y_.yeni_yol.strip("/")
+            if eski and yeni and "/" not in eski and "/" not in yeni:
+                yonlendirme[eski] = yeni
 
         dosyalar = sorted(kok.glob("*/*.json"))
         sayac = Counter()
@@ -124,7 +139,7 @@ class Command(BaseCommand):
                 Haber.objects.bulk_create(
                     yigin, batch_size=1000,
                     update_conflicts=True,
-                    update_fields=["slug", "baslik", "spot", "govde", "kategori",
+                    update_fields=["slug", "baslik", "spot", "govde", "kategori", "ilce",
                                    "yayin_zamani", "guncelleme_zamani", "gorsel_url",
                                    "gorsel_alt", "gorsel_var", "gorsel_dosya", "kelime_sayisi",
                                    "eski_url", "goc_guveni"],
@@ -146,19 +161,30 @@ class Command(BaseCommand):
 
             kimlik = int(adres.group("id"))
             slug = adres.group("slug")
-            kategori = slug_kategori.get((d.get("kategori") or "").strip())
+            ham_kategori = (d.get("kategori") or "").strip()
+            kategori = slug_kategori.get(ham_kategori)
+            if kategori is None and ham_kategori in yonlendirme:
+                kategori = slug_kategori.get(yonlendirme[ham_kategori])
+                if kategori is not None:
+                    sayac["kategori yonlendirmeyle cozuldu"] += 1
             if kategori is None:
                 sayac["kategori taninmadi"] += 1
                 continue
 
             yerel = d.get("yerel_gorseller") or []
+            baslik = (d.get("baslik") or "")[:300]
+            spot = d.get("spot") or ""
+            ilce_adi = ilce_bul(baslik, spot, ilce_kalip)
+            if ilce_adi:
+                sayac["ilce turetildi"] += 1
             yigin.append(Haber(
                 id=kimlik,
                 slug=slug[:220],
-                baslik=(d.get("baslik") or "")[:300],
-                spot=d.get("spot") or "",
+                baslik=baslik,
+                spot=spot,
                 govde=d.get("govde_html") or "",
                 kategori=kategori,
+                ilce=ilceler.get(ilce_adi) if ilce_adi else None,
                 durum=Haber.DURUM_AKTIF,   # sitemap yalniz yayindakileri listeler
                 yayin_zamani=_zaman(d.get("yayin_tarihi") or ""),
                 guncelleme_zamani=_zaman(d.get("guncelleme_tarihi") or ""),
@@ -218,7 +244,9 @@ class Command(BaseCommand):
         y("")
         y(f"Kaynak klasör : {kok}")
         y(f"Dosya         : {len(dosyalar):,}".replace(",", "."))
-        for anahtar in ("alindi", "gorselsiz", "kaynak bagi", "atlandi (zaten var)",
+        for anahtar in ("alindi", "gorselsiz", "ilce turetildi", "kaynak bagi",
+                        "kategori yonlendirmeyle cozuldu",
+                        "atlandi (zaten var)",
                         "kategori taninmadi", "adres cozulemedi", "okunamadi"):
             if sayac.get(anahtar):
                 y(f"  {anahtar:20} {sayac[anahtar]:>9,}".replace(",", "."))

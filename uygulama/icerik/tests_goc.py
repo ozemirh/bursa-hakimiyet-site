@@ -62,3 +62,64 @@ class KaynakKabulKapisi(SimpleTestCase):
 
     def test_bosluk_normalize_edilir(self):
         self.assertTrue(kaynak_kabul("  TRT   Haber ")[0])
+
+
+class IlceTuretimi(SimpleTestCase):
+    """28 Ağustos 2026 ölçümünden: yalnız ilçe adı, gövdeye bakılmaz."""
+
+    def setUp(self):
+        from .goc_ilce import kaliplar
+        self.k = kaliplar([
+            "Osmangazi", "Nilüfer", "Yıldırım", "İnegöl", "Gemlik", "Mudanya",
+            "Mustafakemalpaşa", "Karacabey", "İznik", "Orhangazi", "Kestel",
+            "Gürsu", "Yenişehir", "Orhaneli", "Keles", "Büyükorhan", "Harmancık"])
+
+    def _bul(self, baslik, spot=""):
+        from .goc_ilce import ilce_bul
+        return ilce_bul(baslik, spot, self.k)
+
+    def test_baslikta_gecen_ilce_bulunur(self):
+        self.assertEqual(self._bul("Bursa Nilüfer'de su kesintisi"), "Nilüfer")
+        self.assertEqual(self._bul("İnegöl'de trafik kazası"), "İnegöl")
+
+    def test_spotta_gecen_ilce_bulunur(self):
+        self.assertEqual(self._bul("Su kesintisi", "Osmangazi ilçesinde"),
+                         "Osmangazi")
+
+    def test_birden_cok_ilce_varsa_yazilmaz(self):
+        """Belirsizi boş bırakmak, yanlış ilçe yazmaktan iyidir."""
+        self.assertIsNone(self._bul("Gemlik ve Mudanya'da sis"))
+
+    def test_ilce_yoksa_none(self):
+        self.assertIsNone(self._bul("Bursa'da hava durumu"))
+
+    def test_mahalle_ipucu_KULLANILMAZ(self):
+        """Ölçülmüş yanlış pozitifler: heykel/cerrah/fethiye ilçe getirmez."""
+        for baslik in ("İsrail polisi Şeyh Cerrah'ta müdahale etti",
+                       "Denizli'de 276 parça tarihi eser ele geçirildi",
+                       "Fethiye'de tekne turu"):
+            with self.subTest(baslik=baslik):
+                self.assertIsNone(self._bul(baslik))
+
+    def test_govdeye_bakilmaz(self):
+        """İmza gövde almıyor; geçerken anılan ilçe haberin ilçesi değildir."""
+        from .goc_ilce import ilce_bul
+        import inspect
+        self.assertEqual(
+            list(inspect.signature(ilce_bul).parameters),
+            ["baslik", "spot", "kaliplar_"])
+
+
+class YerTutucuKaynak(SimpleTestCase):
+    """Açılır listenin seçilmemiş hâli kaynak sanılmıştı (47 + 2 haber)."""
+
+    def test_yer_tutucular_reddedilir(self):
+        for ad in ("Seçiniz", "seçiniz", "Diğer", "-"):
+            with self.subTest(ad=ad):
+                self.assertEqual(
+                    kaynak_kabul(ad)[1], "yer tutucu (secilmemis)")
+
+    def test_gercek_kaynak_etkilenmedi(self):
+        for ad in ("AA", "Milliyet", "TRT Haber"):
+            with self.subTest(ad=ad):
+                self.assertTrue(kaynak_kabul(ad)[0])

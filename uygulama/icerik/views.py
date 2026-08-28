@@ -12,6 +12,7 @@ manşet **15**, ikinci alan **5**, dörtlü kutucuk **4**, haber kutuları
 import time
 
 from django.core.paginator import Paginator
+from django.utils.functional import cached_property
 from django.db import DatabaseError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
@@ -22,6 +23,7 @@ from .templatetags.site_etiket import baslikla
 
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 
+from .arama_metni import sorgu_coz
 from .canli import anasayfa_verisi
 from .models import Haber
 
@@ -83,6 +85,14 @@ def _liste(sinirsiz=False):
     `kategori__turler` prefetch'i şart: `get_absolute_url` kategorinin
     slug'ını oradan okuyor, yoksa haber başına bir sorgu daha açılıyor.
     """
+    # NOT — `.defer("govde")` DENENDİ VE GERİ ALINDI (28 Ağustos 2026).
+    # Gerekçe kâğıt üzerinde sağlamdı: gövde ortalama 1.481 karakter ve liste
+    # şablonlarının hiçbiri onu basmıyor. Ölçüm gerekçeyi doğrulamadı —
+    # 20 satırlık kategori listesinde medyan 4,14 → 3,77 ms (0,38 ms), en iyi
+    # değer ise 2,86 → 3,33 ms ile KÖTÜLEŞTİ; kazanç gürültü içinde kaldı.
+    # Buna karşılık ertelenmiş alan sessiz bir tuzak taşıyor: gövdeye
+    # yanlışlıkla erişen bir kod satır başına ek sorgu açar ve bu fark
+    # edilmez. Ölçülemeyen kazanç için tuzak taşınmaz.
     return (Haber.yayindakiler()
             .select_related("kategori", "ilce")
             .prefetch_related("kategori__turler"))
@@ -115,6 +125,7 @@ def anasayfa(request):
     # değişir. Şablondaki yer-not bunu okura da söylüyor.
     en_cok = havuz[:5]
 
+    yazarlar = list(Yazar.listedekiler()[:5])
     bursaspor = Kategori.objects.filter(ad="BURSASPOR").first()
     bursaspor_haberleri = []
     if bursaspor:
@@ -132,7 +143,7 @@ def anasayfa(request):
         # Medya aileleri göç etti; sağ ray ve alt bloklar artık gerçek
         # veriden besleniyor. Şablonlar boş listeyi yine de karşılıyor —
         # tarama sürerken bir aile boş kalabilir.
-        "yazarlar": Yazar.listedekiler()[:5],
+        "yazarlar": yazarlar,
         **arsiv_sayilari(),
         **anasayfa_verisi(),
         "galeriler": FotoGaleri.yayindakiler()
@@ -148,7 +159,7 @@ def kategori(request, slug):
     """Kategori listesi. Slug **tür satırından** gelir, kategori adından değil."""
     kategori = get_object_or_404(Kategori, turler__tur=Kategori.TUR_HABER,
                                  turler__slug=slug, aktif=True)
-    sayfa = _sayfala(request, _liste().filter(kategori=kategori))
+    sayfa = _sayfala(request, _liste().filter(kategori=kategori), sinirli=True)
     return render(request, "kategori.html", {
         "kategori": kategori,
         "baslik": baslikla(kategori.ad),
@@ -158,7 +169,7 @@ def kategori(request, slug):
 
 def ilce(request, slug):
     ilce = get_object_or_404(Ilce, slug=slug)
-    sayfa = _sayfala(request, _liste().filter(ilce=ilce))
+    sayfa = _sayfala(request, _liste().filter(ilce=ilce), sinirli=True)
     return render(request, "kategori.html", {
         "baslik": f"{ilce.ad} haberleri",
         "ilce": ilce,
@@ -205,26 +216,92 @@ def resmi_ilan(request):
     })
 
 
+# Aranacak en kısa terim. Ölçüm (27 Ağustos 2026): 1-2 harflik sorgular
+# ("a" 308.596 sonuç · "e" · "i" · "in" · "ve") hem en yavaşlarıydı hem de
+# okura işe yaramaz bir liste veriyordu. Kısa terim aramak bilgi taşımıyor.
+ARAMA_EN_AZ = 3
+
+
 def arama(request):
     """Başlık ve spot üzerinde arama.
 
-    SQLite üzerinde `icontains` ile çalışıyor; tam metin araması ve p95
-    ölçümü F7'nin işi (PostgreSQL'e geçince). Burada amaç sayfanın
-    veritabanından render edilmesi.
+    **Hâlâ `icontains`, yani tam tarama.** Türkçe büyük/küçük harf kusuru
+    da duruyor (`IŞIK` → 0 sonuç): ikisini de indeks çözecek ve indeks göç
+    bittikten sonra kurulacak (URUN-PLANI.md F7 ölçüm turu). Bu görünümde
+    yapılanlar migration gerektirmeyen iki kazanımdır:
+
+    1. `_liste()` artık `govde` çekmiyor,
+    2. sayım üst sınırla kesiliyor (`SinirliSayfalayici`).
+
+    `arama_metni.sorgu_coz` burada **yalnız kapıda** kullanılıyor: sorgunun
+    aranmaya değip değmediğine karar veriyor. Sorgunun kendisi hâlâ ham
+    metinle çalışıyor — normalizasyonun sorguya girmesi için normalize
+    edilmiş bir alan, yani migration gerekiyor.
     """
     sorgu = (request.GET.get("q") or "").strip()
+    cozum = sorgu_coz(sorgu)
+    uyari = ""
+
+    if sorgu and not cozum:
+        if cozum.sebep == "hepsi_durak":
+            gecen = ", ".join(f"“{k}”" for k in cozum.dusen_durak)
+            uyari = (f"{gecen} gibi çok genel kelimelerle arama yapılamıyor. "
+                     "Daha belirgin bir kelime deneyin.")
+        else:
+            uyari = "Aramak istediğiniz kelimeyi yazın."
+    elif sorgu and max(len(t.kelime) for t in cozum.terimler) < ARAMA_EN_AZ:
+        uyari = f"Aramak için en az {ARAMA_EN_AZ} harflik bir kelime yazın."
+
+    aranacak = bool(sorgu) and not uyari
     sonuc = _liste().filter(
         Q(baslik__icontains=sorgu) | Q(spot__icontains=sorgu)
-    ) if sorgu else Haber.objects.none()
-    sayfa = _sayfala(request, sonuc)
+    ) if aranacak else Haber.objects.none()
+    sayfa = _sayfala(request, sonuc, sinirli=aranacak)
     return render(request, "arama.html", {
         "baslik": f"“{sorgu}” için arama sonuçları" if sorgu else "Arama",
         "sorgu": sorgu,
+        "uyari": uyari,
         "sayfa": sayfa,
-        "toplam": sayfa.paginator.count if sorgu else 0,
+        "toplam": sayfa.paginator.count if aranacak else 0,
     })
 
 
-def _sayfala(request, sorgu):
+class SinirliSayfalayici(Paginator):
+    """Sayımı ÜST SINIRA bağlayan sayfalayıcı.
+
+    Ölçüm (27 Ağustos 2026, 308.602 kayıt): arama sorgu başına **iki tam
+    tarama** yapıyordu — biri `Paginator.count` için, biri sayfa dilimi
+    için. Tam sayım okura pek bir şey katmıyor ("41.074 sonuç" ile
+    "1.000+ sonuç" arasındaki fark okurun kararını değiştirmiyor) ama
+    yaygın terimlerde taramanın yarısı ona gidiyordu.
+
+    Karar: sayım en çok `UST_SINIR + 1` kayda kadar yapılır ve orada
+    kesilir. Yaygın terimde tarama erken biter; nadir terimde zaten sınıra
+    ulaşılmaz, o yüzden **nadir terimi hızlandırmaz** (ölçüldü — asıl
+    çözüm indeks).
+
+    `order_by()` bilerek boşaltılıyor: sayım için sıralama gereksiz ve
+    sıralı sayım `yayin_zamani` indeksini baştan sona yürütüyordu.
+    """
+
+    UST_SINIR = 1000
+
+    @cached_property
+    def _ham_sayim(self) -> int:
+        return len(self.object_list.order_by()
+                   .values_list("pk", flat=True)[:self.UST_SINIR + 1])
+
+    @property
+    def count(self) -> int:
+        return min(self._ham_sayim, self.UST_SINIR)
+
+    @property
+    def kesildi_mi(self) -> bool:
+        """Sonuç sınırdan çok mu — şablon "1.000+" yazsın diye."""
+        return self._ham_sayim > self.UST_SINIR
+
+
+def _sayfala(request, sorgu, sinirli=False):
     numara = request.GET.get("sayfa") or 1
-    return Paginator(sorgu, SAYFA_BOYU).get_page(numara)
+    sinif = SinirliSayfalayici if sinirli else Paginator
+    return sinif(sorgu, SAYFA_BOYU).get_page(numara)

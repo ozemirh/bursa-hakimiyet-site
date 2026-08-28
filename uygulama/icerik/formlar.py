@@ -33,7 +33,8 @@ from django.utils import timezone
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 from taksonomi.models import Etiket, Ilce, Kategori, Kaynak, Yonlendirme
 
-from .models import Haber
+from .models import (Bildirim, Gazete, Haber, ReklamKampanyasi,
+                     ReklamYuvasi, ResmiIlan, SonDakika, Yorum)
 from .yetkiler import ROLLER
 
 BASLIK_SINIR = 60      # §4 alan 2 — ekranda sayaç görünür
@@ -41,13 +42,112 @@ SPOT_SINIR = 160       # §4 alan 4
 EN_AZ_PARAGRAF = 2     # §4 alan 5
 
 
+# ===========================================================================
+# İlgili haberler — 36 MB'lık `<select>` sorunu (28 Ağustos 2026)
+#
+# ÖLÇÜLDÜ: `/panel/haber/ekle` sayfası **36.544.411 bayt** indiriyordu ve
+# en iyi hâlde **32,7 sn** sürüyordu. Sayfanın %99,9'u tek bir alandı:
+#
+#     select name=ilgili_haberler   option=356.839   boyut=34.826.896
+#
+# `ModelMultipleChoiceField` varsayılan olarak queryset'in TAMAMINI
+# `<option>` diye basıyor. 356 bin haberde bu hiçbir koşulda doğru değil.
+#
+# Çözüm: alan doğrulama için tüm haberleri kabul etmeye devam ediyor
+# (`pk__in` araması ucuz), ama **widget yalnız SEÇİLİ olanları** basıyor.
+# Yeni haber eklemek arama ucundan (`/panel/haber-ara`) geliyor.
+#
+# **Betik kapalıyken form yine çalışır:** bağlı haberler görünür, kaldırma
+# yapılabilir, haber kaydedilebilir. Yalnız yeni ilgili haber eklenemez.
+# Panelin kuralı bu — `panel.js` kolaylık ekler, kural uygulamaz.
+# ===========================================================================
+
+
+class SecilenlerWidget(forms.SelectMultiple):
+    """Yalnız seçili değerleri `<option>` olarak basan çoklu seçim.
+
+    Django'nun varsayılan davranışı queryset'i baştan sona gezip her kayıt
+    için bir `<option>` üretmek. Bu widget o gezinmeyi hiç yapmıyor: elinde
+    yalnız seçili kimlikler var, etiketlerini tek sorguda alıyor.
+    """
+
+    def __init__(self, *args, etiketleyici=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.etiketleyici = etiketleyici
+
+    def optgroups(self, name, value, attrs=None):
+        secili = [v for v in (value or []) if v not in ("", None)]
+        if not secili:
+            return []
+        etiketler = self.etiketleyici(secili) if self.etiketleyici else {}
+        gruplar = []
+        for sira, deger in enumerate(secili):
+            etiket = etiketler.get(str(deger), str(deger))
+            secenek = self.create_option(name, deger, etiket, True, sira,
+                                         attrs=attrs)
+            gruplar.append((None, [secenek], sira))
+        return gruplar
+
+
+def _haber_etiketleri(kimlikler) -> dict:
+    """Seçili kimliklerin okunur etiketleri — TEK sorgu, en çok seçili kadar."""
+    temiz = []
+    for k in kimlikler:
+        try:
+            temiz.append(int(k))
+        except (TypeError, ValueError):
+            continue
+    if not temiz:
+        return {}
+    bulunan = Haber.objects.filter(pk__in=temiz).only("id", "baslik")
+    return {str(h.pk): f"[{h.pk}] {h.baslik[:70]}" for h in bulunan}
+
+
+def _galeri_etiketleri(kimlikler) -> dict:
+    """Bağlı galerilerin etiketleri — aynı desen, aynı gerekçe.
+
+    4.040 galeriyi `<option>` diye basmak, `ilgili_haberler`de düzelttiğimiz
+    356 bin seçenek hatasının küçük ölçekte tekrarı olurdu.
+    """
+    from medya.models import FotoGaleri
+    temiz = []
+    for k in kimlikler:
+        try:
+            temiz.append(int(k))
+        except (TypeError, ValueError):
+            continue
+    if not temiz:
+        return {}
+    bulunan = FotoGaleri.objects.filter(pk__in=temiz).only("id", "baslik")
+    return {str(g.pk): f"[{g.pk}] {g.baslik[:70]}" for g in bulunan}
+
+
 class HaberForm(forms.ModelForm):
     """Panelin haber ekle/düzenle formu."""
 
     etiketler = forms.ModelMultipleChoiceField(
-        queryset=Etiket.objects.all(), required=False,
+        queryset=Etiket.objects.all(), required=False, label="Etiketler",
         widget=forms.SelectMultiple(attrs={"data-cip": "1"}),
         help_text="Çip arayüzü. Yayına alırken en az bir etiket şart.")
+
+    # 356 bin seçenekli `<select>` yerine arama tabanlı seçim. Doğrulama
+    # tüm haberleri kabul eder (`pk__in` ucuz), widget yalnız seçilileri
+    # basar. Ayrıntı: bu dosyanın sonundaki SecilenlerWidget notu.
+    ilgili_haberler = forms.ModelMultipleChoiceField(
+        queryset=Haber.objects.all(), required=False,
+        label="İlgili haberler",
+        widget=SecilenlerWidget(attrs={"data-ilgili": "1", "size": "6"},
+                                etiketleyici=_haber_etiketleri),
+        help_text="Aramayla ekleyin. Betik kapalıysa yeni ekleme yapılamaz "
+                  "ama bağlı haberler görünür ve kaldırılabilir.")
+
+    # §4 alan 27 — mevcut panelde `galleriesSelect2` vardı, bizde eksikti.
+    bagli_galeriler = forms.ModelMultipleChoiceField(
+        queryset=None, required=False,
+        widget=SecilenlerWidget(attrs={"data-galeri": "1", "size": "6"},
+                                etiketleyici=_galeri_etiketleri),
+        label="Bağlı galeriler",
+        help_text="Aramayla ekleyin. Aynı desen: yalnız bağlı olanlar basılır.")
 
     class Meta:
         model = Haber
@@ -60,7 +160,7 @@ class HaberForm(forms.ModelForm):
             "yayin_zamani", "guncelleme_zamani",
             "manset_ana", "manset_tepe", "manset_kare",
             "rss", "yorumlar_acik", "yonlendirme_url", "gomulu_kod",
-            "ilgili_haberler", "odak_kelime", "seo_baslik",
+            "ilgili_haberler", "bagli_galeriler", "odak_kelime", "seo_baslik",
         ]
         widgets = {
             "baslik": forms.TextInput(attrs={"maxlength": BASLIK_SINIR,
@@ -82,6 +182,16 @@ class HaberForm(forms.ModelForm):
             "guncelleme_zamani": "Güncelleme zamanı",
             "manset_ana": "Ana manşet", "manset_tepe": "Tepe manşet",
             "manset_kare": "Kare manşet",
+            # Bu sekizinin etiketi yoktu ve Django alan adından türetiyordu:
+            # ekranda "Gorsel url", "Gomulu kod", "Seo baslik" yazıyordu.
+            # Türkçe karakter alan adında olamayacağı için etiket zorunlu.
+            "gorsel_url": "Görsel adresi (URL)",
+            "rss": "RSS beslemesine dâhil et",
+            "yorumlar_acik": "Yorumlara açık",
+            "yonlendirme_url": "Yönlendirme adresi",
+            "gomulu_kod": "Gömülü kod",
+            "odak_kelime": "Odak kelime",
+            "seo_baslik": "SEO başlığı",
         }
 
     def __init__(self, *args, kullanici=None, **kwargs):
@@ -93,6 +203,10 @@ class HaberForm(forms.ModelForm):
         self.fields["kaynaklar"].queryset = Kaynak.objects.filter(
             aktif=True, birlesti_ile__isnull=True)
         self.fields["ilce"].queryset = Ilce.objects.all()
+        # Queryset burada bağlanıyor: modül yüklenirken `medya`yı içe
+        # aktarmak dairesel içe aktarma riski taşır.
+        from medya.models import FotoGaleri
+        self.fields["bagli_galeriler"].queryset = FotoGaleri.objects.all()
         self.fields["ilce"].required = False
 
         # §7: değer kaynak türünden türetilir, editör isterse ezer.
@@ -578,3 +692,215 @@ class KaynakForm(forms.ModelForm):
             hedef.haberler.add(*dilim)
         kaynak.haberler.clear()
         return len(kimlikler)
+
+
+# ===========================================================================
+# Model turu formları — PANEL-NOTLARI.md §24
+#
+# Alan sözleşmesi olan kalemlerde sıra dökümden geliyor; olmayanlarda modelin
+# kendi sırası ve bu §24'te açıkça etiketli.
+# ===========================================================================
+
+
+class YorumForm(forms.ModelForm):
+    """Yorum düzenleme — §13'ün üç şartı burada uygulanıyor.
+
+    Mevcut panelde editör okurun yorumunu **izsiz** değiştirebiliyordu.
+    Kaldırılmadı (hakaret ve kişisel veri çıkarmak gerçek bir moderasyon
+    ihtiyacı) ama üç şarta bağlandı: gerekçe zorunlu · "düzenlendi" işareti
+    görünür · özgün metin saklanır.
+    """
+
+    class Meta:
+        model = Yorum
+        fields = ["okur_adi", "metin", "durum", "duzenleme_gerekcesi"]
+        labels = {"okur_adi": "Yorumu yapan", "metin": "Yorum metni",
+                  "durum": "Durum", "duzenleme_gerekcesi": "Düzenleme gerekçesi"}
+        help_texts = {
+            "metin": "Metni değiştirirseniz gerekçe zorunludur; özgün hâli "
+                     "kayıtta saklanır ve okur “düzenlendi” işaretini görür.",
+            "duzenleme_gerekcesi": "Kişisel veri · hakaret · reklam.",
+        }
+        widgets = {"metin": forms.Textarea(attrs={"rows": 6})}
+
+    def __init__(self, *args, kullanici=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.kullanici = kullanici
+        self._ilk_metin = self.instance.metin if self.instance.pk else ""
+
+    def clean(self):
+        veri = super().clean()
+        yeni = (veri.get("metin") or "").strip()
+        if self.instance.pk and yeni != (self._ilk_metin or "").strip():
+            if not (veri.get("duzenleme_gerekcesi") or "").strip():
+                raise forms.ValidationError(
+                    "Yorum metnini değiştirmek için gerekçe zorunludur "
+                    "(kişisel veri · hakaret · reklam). Gerekçesiz "
+                    "kaydedilmiyor.")
+            veri["_metin_degisti"] = True
+        return veri
+
+    def save(self, commit=True):
+        yorum = super().save(commit=False)
+        if self.cleaned_data.get("_metin_degisti"):
+            if not yorum.ozgun_metin:
+                yorum.ozgun_metin = self._ilk_metin
+            yorum.duzenlendi_mi = True
+            yorum.duzenleyen = self.kullanici
+        if commit:
+            yorum.save()
+        return yorum
+
+
+class ReklamYuvasiForm(forms.ModelForm):
+    """Reklam yuvası — konum + ölçü + cihaz (F7(b))."""
+
+    class Meta:
+        model = ReklamYuvasi
+        fields = ["ad", "konum", "genislik", "yukseklik", "cihaz", "aktif",
+                  "yer_tutucu_mu"]
+        labels = {"ad": "Yuva adı", "konum": "Konum", "genislik": "Genişlik",
+                  "yukseklik": "Yükseklik", "cihaz": "Cihaz", "aktif": "Aktif",
+                  "yer_tutucu_mu": "Yer tutucu"}
+        help_texts = {
+            "ad": "Anasayfa şablonları yuvayı BU ADLA arıyor; değiştirmek "
+                  "bağı koparır (F1 ölçütü 3).",
+            "yer_tutucu_mu": "Dökümdeki 6 kayıt yuva değil, boş yuvanın "
+                             "görünen hâliydi.",
+        }
+
+    def clean(self):
+        veri = super().clean()
+        g, y = veri.get("genislik"), veri.get("yukseklik")
+        if bool(g) != bool(y):
+            raise forms.ValidationError(
+                "Ölçü ya tam verilmeli ya hiç: genişlik ve yükseklik birlikte.")
+        return veri
+
+
+class ReklamKampanyasiForm(forms.ModelForm):
+    class Meta:
+        model = ReklamKampanyasi
+        fields = ["baslik", "yuva", "gorsel_dosya", "gorsel_alt",
+                  "hedef_adres", "baslangic", "bitis", "durum"]
+        labels = {"baslik": "Kampanya başlığı", "yuva": "Reklam alanı",
+                  "gorsel_dosya": "Görsel dosyası", "gorsel_alt": "Görsel alt metni",
+                  "hedef_adres": "Hedef adres", "baslangic": "Başlangıç",
+                  "bitis": "Bitiş", "durum": "Durum"}
+        help_texts = {
+            "gorsel_dosya": "Yerel yol. Sayfa internetsiz de açılmalı.",
+            "yuva": "Reklamverenin adı YUVAYA değil buraya yazılır (§14).",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["yuva"].queryset = ReklamYuvasi.objects.filter(aktif=True)
+
+    def clean(self):
+        veri = super().clean()
+        bas, bit = veri.get("baslangic"), veri.get("bitis")
+        if bas and bit and bit < bas:
+            raise forms.ValidationError("Bitiş tarihi başlangıçtan önce olamaz.")
+        return veri
+
+
+class GazeteForm(forms.ModelForm):
+    class Meta:
+        model = Gazete
+        fields = ["ad", "bik_kodu", "sira", "aktif", "bizim_mi"]
+        labels = {"ad": "Gazete adı", "bik_kodu": "BIK kodu", "sira": "Sıra",
+                  "aktif": "Aktif", "bizim_mi": "Bizim yayınımız"}
+        help_texts = {
+            "bik_kodu": "YYN-000132 Bursa Hakimiyet'in kendi kodudur; resmî "
+                        "ilan yükümlülüklerinin dayanağı, değiştirilmemeli.",
+        }
+
+
+class ResmiIlanForm(forms.ModelForm):
+    """Resmî ilan.
+
+    **Alan sözleşmesi ölçülemedi** (§24.3): dökümde ekleme formu yok. Alanlar
+    modelimizden; döküm gelirse gözden geçirilmeli.
+    """
+
+    class Meta:
+        model = ResmiIlan
+        fields = ["baslik", "tur", "metin", "yayin_tarihi", "bitis_tarihi",
+                  "bik_kodu", "gazete", "durum"]
+        labels = {"baslik": "İlan başlığı", "tur": "İlan türü",
+                  "metin": "İlan metni", "yayin_tarihi": "Yayın tarihi",
+                  "bitis_tarihi": "Bitiş tarihi", "bik_kodu": "BIK kodu",
+                  "gazete": "Gazete", "durum": "Durum"}
+        help_texts = {
+            "tur": "Dört tür yasal karşılığı olduğu için korunuyor; ikisi "
+                   "bugüne kadar hiç kullanılmadı (§16).",
+        }
+        widgets = {"metin": forms.Textarea(attrs={"rows": 10})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["gazete"].required = False
+
+
+class BildirimForm(forms.ModelForm):
+    """Bildirim — §13'ün iki kuralı: başlık 50 karakter, içerik şart."""
+
+    class Meta:
+        model = Bildirim
+        fields = ["baslik", "icerik_turu", "icerik_id", "hedef_sayisi",
+                  "acan_sayisi"]
+        labels = {"baslik": "Bildirim başlığı", "icerik_turu": "İçerik türü",
+                  "icerik_id": "İçerik kimliği", "hedef_sayisi": "Hedef kişi",
+                  "acan_sayisi": "Açan kişi"}
+        help_texts = {
+            "baslik": "En çok 50 karakter — kilit ekranında kesilmemesi için.",
+            "icerik_id": "Zorunlu: içerik seçilmeden bildirim gönderilmez.",
+        }
+        widgets = {"baslik": forms.TextInput(
+            attrs={"maxlength": Bildirim.BASLIK_SINIRI})}
+
+    def clean_baslik(self):
+        baslik = (self.cleaned_data.get("baslik") or "").strip()
+        if len(baslik) > Bildirim.BASLIK_SINIRI:
+            raise forms.ValidationError(
+                f"Başlık en çok {Bildirim.BASLIK_SINIRI} karakter olabilir.")
+        return baslik
+
+    def clean_icerik_id(self):
+        deger = self.cleaned_data.get("icerik_id")
+        if not deger:
+            raise forms.ValidationError(
+                "İçerik seçilmeden bildirim gönderilemez (§13).")
+        return deger
+
+
+class SonDakikaForm(forms.ModelForm):
+    class Meta:
+        model = SonDakika
+        fields = ["baslik", "adres", "haber", "baslangic", "bitis", "sira",
+                  "aktif"]
+        labels = {"baslik": "Bant başlığı", "adres": "Adres",
+                  "haber": "Bağlı haber", "baslangic": "Başlangıç",
+                  "bitis": "Bitiş", "sira": "Sıra", "aktif": "Aktif"}
+        help_texts = {
+            "adres": "Serbest adres. Boşsa bağlı haberin adresi kullanılır.",
+            "haber": "İsteğe bağlı: son dakika dış bir adrese de işaret edebilir.",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["haber"].required = False
+        # 356 bin haberi açılır listeye basmak sayfayı düşürür; bağ yalnız
+        # mevcut kaydınkiyle sınırlı tutuluyor.
+        self.fields["haber"].queryset = (
+            Haber.objects.filter(pk=self.instance.haber_id)
+            if self.instance.pk and self.instance.haber_id
+            else Haber.objects.none())
+
+    def clean(self):
+        veri = super().clean()
+        if not (veri.get("adres") or "").strip() and not veri.get("haber"):
+            raise forms.ValidationError(
+                "Ya serbest adres ya da bağlı haber verilmeli; bantta "
+                "tıklanamayan kayıt olmamalı.")
+        return veri

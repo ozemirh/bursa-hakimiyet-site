@@ -11,7 +11,11 @@
       <section class="kutu">
         <div class="kutu-bas vurgu">
           <h1>ARAMA</h1>
-          {% if sorgu %}<span class="tumu">{{ toplam }} sonuç</span>{% endif %}
+          {% comment %}Sayım üst sınırla kesiliyor (icerik/views.py
+          SinirliSayfalayici.UST_SINIR = 1000): "41.074 sonuç" ile "1.000+ sonuç"
+          arasındaki fark okurun kararını değiştirmiyordu ama taramanın yarısı
+          ona gidiyordu. Sınırı aşınca kesin sayı yerine "1.000+" yazılır.{% endcomment %}
+          {% if sorgu and not uyari %}<span class="tumu">{% if sayfa.paginator.kesildi_mi %}1.000+{% else %}{{ toplam }}{% endif %} sonuç</span>{% endif %}
         </div>
         <div class="kutu-ic">
           <form class="ara-sayfa" role="search" action="/ara" method="get">
@@ -20,7 +24,9 @@
             <button type="submit">Ara</button>
           </form>
 
-          {% if sorgu %}
+          {% if uyari %}
+            <p class="bos" role="status">{{ uyari }}</p>
+          {% elif sorgu %}
             <h2 class="gorsel-gizli">Haberler</h2>
             <div class="kutu-izgara">
               {% for h in sayfa %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 %}

@@ -1,6 +1,6 @@
 # Yönetim Paneli — Notlar, Kararlar ve Alan Sözleşmesi
 
-> Son güncelleme: 25 Ağustos 2026 (kararlar turu — dört ekran)
+> Son güncelleme: 28 Ağustos 2026 (§24.12 — model turu uygulandı)
 > Kardeş belge: `DEMO-NOTLARI.md` (site tasarımları). Bu belge **panel** içindir.
 
 ---
@@ -907,3 +907,660 @@ tasarım tarafında 7 ilçe eklenecek.
 - Kabuk her panel dosyasına gömülü: **birinde değişen hepsinde değişir**
 - Panel dosyaları `noindex, nofollow` taşır — demo, aramaya çıkmamalı
 - Meta Yazar Bilgisi eşlemesi hukuki teyit bekliyor (§19)
+
+---
+
+## 24. Model turu — tasarım (28 Ağustos 2026)
+
+> Bu bölüm bir **tasarım belgesidir**. Kod, migration ve dosya değişikliği
+> içermez. Aşağıdaki her sayı ya `C:\Users\Asus\Downloads\bursa_hakimiyet_panel`
+> dökümünden ya da bu makinede ölçüldü; ölçülemeyen her yer öyle etiketli.
+>
+> Kapsam, model gerektiren on kalem: Yorumlar · Son Dakika · Resmî İlanlar ·
+> Reklam Yönetimi · Gazete Listesi · Kendi Yayınlarım · Duyurular ·
+> Log Kayıtları · Bildirimler · 2FA.
+
+### 24.0 Ortak ölçümler — on kalemin hepsini bağlar
+
+#### Ö1. Migration maliyeti — SQLite'ta 300 bin satır (ölçüldü)
+
+Sentetik tablo, gerçek `icerik_haber` ölçülerine göre kuruldu: **300.000 satır ·
+33 sütun · ortalama gövde 1.827 karakter · 1.181 MB**. Canlı veritabanına
+dokunulmadı, ölçüm dosyaları silindi.
+
+| İşlem | Süre |
+|---|---|
+| `ALTER TABLE ADD COLUMN` (NULL kabul eden) | **0,00 sn** |
+| `ADD COLUMN` NOT NULL + sabit varsayılan | **0,00 sn** |
+| `ADD COLUMN` yabancı anahtar (NULL kabul eden) | **0,00 sn** |
+| `CREATE INDEX` (tek / iki sütun) | **1,2 / 1,3 sn** |
+| `UPDATE` — 300 bin satırda alan doldurma | **16,4 sn** |
+| **Tablo yeniden kurma** (Django `_remake_table`) | **34–47 sn** |
+
+Dört ardışık yeniden kurma ölçüldü: **136,4 sn / 4 = ortalama 34,1 sn** (tekil
+değerler 16,8 · 48,5 · 31,6 · 39,5 — disk önbelleğinden dalgalanıyor).
+**Dosya bir kez ikiye katlanıp (1.181 → 2.356 MB) orada sabitleniyor**; sonraki
+kurmalar boşalan sayfaları geri kullanıyor. Disk ihtiyacı ~2× tablo boyutu, ama
+kurma sayısıyla büyümüyor.
+
+#### Ö2. Django hangisini seçiyor — kaynaktan doğrulandı
+
+`django/db/backends/sqlite3/schema.py` → `add_field()`: alan **birincil anahtar ·
+tekil · `null=False` · etkin varsayılanı `None` olmayan · sabit olmayan
+`db_default`** ise tablo **yeniden kuruluyor**; değilse `ADD COLUMN`.
+
+Deneysel doğrulama (aynı kural, gerçek alan nesneleriyle):
+
+| Alan tanımı | Sonuç |
+|---|---|
+| `CharField(null=True)` · `CharField(null=True, blank=True)` | **ADD COLUMN — 0 sn** |
+| `IntegerField(null=True)` · `DateTimeField(null=True)` | **ADD COLUMN — 0 sn** |
+| `BooleanField(null=True)` · `TextField(null=True)` | **ADD COLUMN — 0 sn** |
+| `CharField(blank=True)` · `TextField(blank=True)` | **YENİDEN KURMA — ~34 sn** |
+| `BooleanField(default=False)` · `IntegerField(default=0)` | **YENİDEN KURMA — ~34 sn** |
+
+> **Tasarım kuralı, bundan çıkıyor:** `icerik_haber`e ucuz alan eklemenin tek
+> yolu **`null=True` + varsayılan yok + tekil değil**. Bizim alışkanlığımız olan
+> `blank=True` ve `default=False` her seferinde 34 saniye ve tablo kopyası demek.
+
+#### Ö3. Bu proje bunu zaten yaşadı — ölçüldü
+
+`icerik/migrations/0003_*` **17 alan** ekliyor. Bugünkü kurala göre ayrıştırıldı:
+
+- **14 alan tabloyu yeniden kurar:** `gomulu_kod · ikinci_baslik · kaynak_turu ·
+  manset_ana · manset_kare · manset_tepe · meta_yazar · meta_yazar_elle ·
+  muhabir · odak_kelime · rss · seo_baslik · yonlendirme_url · yorumlar_acik`
+- **3 alan ucuz:** `etiketler` (M2M → ayrı tablo) · `ilgili_haberler` (M2M) ·
+  `olusturan` (FK, `null=True`)
+
+**26 Ağustos 13:36'da ucuza geldi, çünkü tablo o an neredeyse boştu.** Bugün
+308.602 satırda aynı migration: 14 × 34,1 sn ≈ **8 dakika**. Göç 556.824'e
+ulaşınca ≈ **15 dakika**.
+
+> **Ölçülemedi:** `0003`ün gerçek süresi. `django_migrations.applied` damgaları
+> migration süresini değil, `migrate` çağrıları arasındaki **boş zamanı** veriyor
+> (aradaki farklar 1.319 / 3.483 / 5.393 sn). Tek gerçek değer `0003 → 0004`
+> arası **0,8 sn**, o da aynı koşuda oldukları için — ve `0004` yalnız
+> `AlterModelOptions` + `AddIndex` içeriyor.
+
+#### Ö4. Reklam yuvası — F7(b) ölçüldü, üç alana **ayrışmıyor**
+
+`URUN-PLANI.md` §3 F7(b): "reklam yuvası kaydı **konum + ölçü + cihaz** üç alanlı
+ve mevcut **50 yuva** bu modele taşınmış". Dökümdeki `getZone` listesi ayrıştırıldı:
+
+| Ölçüm | Sonuç |
+|---|---|
+| Toplam yuva | **50** |
+| Ölçüsü addan çıkarılabilen | **38** |
+| — bunun yıldızlı yazımı (`728*90`) | **4** |
+| Ölçüsü **hiç yok** | **12** |
+| Konumu çıkarılabilen | **48** |
+| Konumu yok (ad sadece ölçü: `1100x150`, `320*100`) | **2** |
+| Cihazı adından okunabilen | **7** |
+| **Üçü de ayrışan (konum + ölçü + cihaz)** | **6 / 50** |
+| Düzenli kalıpta (`-Konum- WxH`) | **21** |
+| Yer tutucu metni taşıyan | **6** |
+| Reklamveren adı taşıyan | **5** dar tanımla · **11** gevşek tanımla |
+
+**Sonuç: otomatik taşıma mümkün değil.** 50 yuvanın **44'ü** en az bir alanı
+eksik bırakıyor; cihaz bilgisi **43 yuvada hiç yok**. F7(b)'nin "mevcut 50 yuva
+bu modele taşınmış" ölçütü ancak **elle eşleme** ile karşılanır — betik işi
+değil, veri girişi kalemi. §14'ün 21/29 ayrımı bu ölçümle uyuşuyor. Yer tutucu
+metni taşıyan 6 kayıt yuva değil, **boş yuvanın görünen hâli**.
+
+### 24.1 Yorumlar
+
+**Alan sözleşmesi — döküm VAR** (`comments_list.php`).
+Sütunlar: `İçerik ID · Sayfa Tipi · Yorumu Yapan Kişi · Yorum İçeriği · IP Adresi ·
+Tarih · Onaylayan · İşlemler`. Süzgeç: `Editör Seç` (18) · `Durum Seç`
+(**Aktif · Pasif · Silinmiş** — dördüncü değer *Arşiv* burada yok, §9'la birebir) ·
+tarih aralığı. Düzenleme modalı "Yorumu Değiştir": tek `textarea` (`area`) + `id` +
+`csrf`; uçlar `comments_edit.php`, `comments_save_ajax.php`,
+`toggle_comments_status_ajax.php`, `delete_comments_ajax.php`.
+
+Önerilen alanlar: `icerik_turu` · `icerik_id` · `okur_adi` · `metin` · `ip` ·
+`tarih` · `durum` (3 değerli) · `onaylayan` (FK) · `duzenleyen` ·
+`duzenleme_gerekcesi` · `ozgun_metin` · `duzenlendi_mi`.
+Son dört alan §13'ün kararından: izsiz düzenleme okur adına beyanda bulunmaktır.
+
+**İlişkiler / çakışma.** Yorum dört içerik ailesine bağlanabilir ve Django'da tek
+FK ile dört modele bağlanmaz. İki yol: (a) `ContentType` genel bağı;
+(b) `sayfa_tipi` + `icerik_id` çifti, FK'sız. **(b) öneriliyor** — dökümdeki alan
+zaten bu, göç verisi bu biçimde gelecek ve genel bağın referans bütünlüğü zaten
+yok. `Haber.yorumlar_acik` mevcut ve bu modele bağlanır.
+
+**Göç verisiyle çakışma.** **Tamamen yeni tablo**, geriye dönük alan yok. Yorum
+verisi göçte **hiç taranmadı** — sitemap'te yorum ailesi yok. Tablo **boş
+başlar**; §13'ün ölçümü: dökümden yalnız **bir** yorumun tam metni çıkarılabildi.
+
+**Migration sırası ve maliyeti.** Bağımsız, ilk sırada. `CreateModel` → boş tablo
+→ **~0 sn**. İki indeks (`icerik_turu+icerik_id`, `durum+tarih`) → **~0 sn**.
+
+### 24.2 Son Dakika
+
+**Alan sözleşmesi — döküm VAR** (`last_minute_list.php`).
+Liste: `Başlık · Url · Editör · Tarih`. Ekleme formu: `headlineId` (hidden) ·
+`csrf` · **`headline_title`** (text) · **`lastMinuteUrl`** (text). Yani kayıt
+**serbest başlık + serbest adres**; bir habere FK ile bağlı değil.
+
+**İlişkiler / çakışma — gerekçeli öneri.** Bugün son dakika bandı ayrı kayıt
+değil: `icerik/baglam.py` en yeni yayındaki haberleri basıyor.
+
+> **Öneri: ayrı model açın, haberde bayrak yapmayın.** Üç ölçülmüş gerekçe:
+> 1. Dökümdeki kayıt **serbest URL** taşıyor (`lastMinuteUrl`) — son dakika bir
+>    dış adrese de işaret edebiliyor. Haberde bayrak bunu karşılamaz.
+> 2. Başlık **habere ait değil** (`headline_title` ayrı alan).
+> 3. `icerik_haber`e bayrak eklemek 308 binden fazla satırda **34 sn'lik tablo
+>    yeniden kurma** demek (`BooleanField(default=False)` → yeniden kurma). Ayrı
+>    tablo **0 sn**.
+>
+> Model: `baslik · adres` (serbest) · `haber` (FK, `null=True`) · `baslangic /
+> bitis` · `sira` · `aktif` · `olusturan`. Bant önce bu tabloya bakar, boşsa
+> bugünkü davranışa düşer — bugünkü davranış kaybolmaz.
+
+**Göç verisiyle çakışma.** Yeni tablo. §18 m.4 geçerli: **en yeni kayıt
+2025-12-20**, sekiz aydır kullanılmıyor; korunacak alışkanlık yok, veri
+taşınmayacak.
+
+**Migration sırası ve maliyeti.** `icerik.Haber`den sonra (FK). Boş tablo → **~0 sn**.
+
+### 24.3 Resmî İlanlar
+
+**Alan sözleşmesi — döküm VAR** (`official_announcement_list.php`).
+Sütunlar: `ID · Başlık · İlan Türü · Tarih · Editör · İşlemler`. Süzgeçler:
+`Operatör Seçimi` (18) · **`İlan Türü` — 4 değer: İCRA · İHALE · TEBLİGAT ·
+PERSONEL ALIMI** · `Durum Seç` (Aktif · Pasif · Arşiv) · tarih aralığı · arama.
+§16'da ölçülen içerik: **24 kayıt, ID 1646–1718, 14 İHALE + 10 TEBLİGAT**;
+İCRA ve PERSONEL ALIMI kullanılmamış ama **yasal karşılığı olduğu için korunacak**.
+
+Önerilen alanlar: `baslik · tur` (4'lü) · `metin` · `yayin_tarihi` ·
+`bitis_tarihi` · `bik_kodu` · `durum` · `olusturan`.
+
+> **Ölçüm sınırı:** dökümde ilan **ekleme formu yok** (`official_announcement_add`
+> ucu var, sayfası kaydedilmemiş). Metin alanının uzunluğu, BIK kodu alanı ve ek
+> dosya olup olmadığı **ölçülemedi** — bunlar bizim türetimimizdir.
+>
+> **Ölçüm tuzağı:** bu sayfanın dökümünde "Kullanıcı Yorumu / Yorumu Değiştir"
+> etiketleri de görünüyor. Bunlar ilan alanı **değil**; `func_comments` kabuğu
+> her sayfaya gömülü olduğu için çıkıyor. Alan sözleşmesine katılmamalı.
+
+**İlişkiler / çakışma.** Bağımsız; kategorisi yok, türü var. Ön yüzde
+`/resmi-ilan` sayfası **zaten var** ve şu an yer tutucu. Yetkilik mevcut:
+`resmi_ilan_girme` (İlan Sorumlusu + Yayın Yönetmeni).
+
+**Göç verisiyle çakışma.** Yeni tablo, **boş başlar**; 24 kayıt dökümden elle
+girilebilir. Göçte taranmadı (sitemap ailesi değil).
+
+**Migration maliyeti.** Bağımsız, **~0 sn**.
+
+### 24.4 Reklam Yönetimi
+
+**Alan sözleşmesi — döküm VAR** (`advertisement_list.php`).
+Sütunlar: `Başlık · Fotoğraf · Başlangıç / Bitiş Tarihi · Reklam Alanı · Editör ·
+İşlemler`. Süzgeçler: **`Reklam Alanı Seç` — 50 yuva** · `Durum Seç`
+(Aktif · Pasif) · tarih aralığı.
+
+**İki model gerekiyor; dökümdeki tek listenin arkasında ikisi var:**
+
+| Model | Alanlar | Kaynak |
+|---|---|---|
+| **Yuva** (`ReklamYuvasi`) | `konum · genislik · yukseklik · cihaz · aktif` | `URUN-PLANI.md` §3 F7(b) |
+| **Kampanya** (`ReklamKampanyasi`) | `baslik · yuva` (FK) · `gorsel · hedef_adres · baslangic · bitis · durum · olusturan` | Döküm sütunları |
+
+§14 ve §16'nın kararı: **reklamverenin adı yuvaya değil kampanyaya yazılır**;
+reklamveren değişince yuva yerinde kalır ve "hepsiburada 2/3/4" gibi kayıtlar
+oluşmaz.
+
+**İlişkiler / çakışma.** Yuva adları anasayfada **zaten kullanılıyor** — F1
+ölçütü 3 gereği şablonlarda gerçek envanter adları var (`1100x150`,
+`-Manşet yanı- 300x250`, `-Sol/Sağ pageskin1- 160x600`). Model gelince şablon bu
+adları **yuva kaydından** çözmeli; adların birebir korunması şart, yoksa F1
+ölçütü 3 bozulur.
+
+**Göç verisiyle çakışma.** Yeni tablolar. Ama **50 yuvanın taşınması otomatik
+değil** — Ö4: yalnız **6/50** üç alana ayrışıyor, cihaz bilgisi 43 yuvada hiç
+yok. Ayrıca `-Manşet altı4-` **eksik** (1, 2, 3, 5, 6 var).
+
+**Migration maliyeti.** İki `CreateModel`, boş tablolar → **~0 sn**. Yuva
+verisinin girilmesi migration değil, veri işi.
+
+### 24.5 Gazete Listesi
+
+**Alan sözleşmesi — döküm VAR** (`newspapers.php`).
+Sütunlar: `Başlık · BIK Kodu · İşlemler`. **17 kayıt**, hepsi `YYN-` kodlu.
+Ölçülen örnekler: `BURSA HAKİMİYET → YYN-000132` · `AKŞAM → YYN-000867` ·
+`BİRGÜN → YYN-000363` · `CUMHURİYET → YYN-000171` · `DÜNYA → YYN-000208` ·
+`EVRENSEL → YYN-000341`. Ek uç `save_newspaper_sort_ajax` → **sıralanabilir
+liste**, yani `sira` alanı var.
+
+Önerilen alanlar: `ad · bik_kodu · sira · aktif · bizim_mi` (bool).
+`bizim_mi` §16'dan: `YYN-000132` ekranda ayrı renkte ve "Bizim" rozetiyle;
+**değiştirilmemeli**.
+
+**İlişkiler / çakışma.** Resmî ilan modeliyle ilişkili olabilir (hangi gazetede
+yayımlandı) ama bu bağ dökümde **görünmüyor — ölçülemedi**. Bağ kurulmadan da
+ekran çalışır; referans tablosudur.
+
+**Göç verisiyle çakışma.** Yeni tablo, 17 satır, elle girilir.
+
+**Migration maliyeti.** **~0 sn.**
+
+### 24.6 Kendi Yayınlarım — **ERTELENDİ**
+
+> **Karar (koordinatör, 28 Ağustos 2026): model turunun DIŞINDA kalıyor.**
+> **Kapsamdan çıkarılmadı** — §2'nin ekran listesi kullanıcının "birebir kopya"
+> kararına dayanıyor ve onu iptal etmek koordinatörün yetkisinde değil; yalnız
+> sıralama değişti. Kullanıcı kapsamdan tümden çıkarmak isterse ayrıca söyler.
+
+**Alan sözleşmesi — döküm VAR ama BOŞ** (`my_newspapers_list.php`).
+Sütunlar: `Başlık · Fotoğraf · Tarih · Editör · İşlemler`. Tek veri satırı:
+**"Kayıt bulunamadı."** Süzgeçler: `Editör Seç` · `Durum Seç`
+(Aktif · Pasif · Arşiv).
+
+> **Alan sözleşmesi ölçülemedi:** `my_newspapers_add/edit` uçları var ama
+> sayfaları kaydedilmemiş ve liste boş. Sütun adlarından ötesi **bizim
+> türetimimiz olurdu**.
+
+**İlişkiler / çakışma.** §18 m.2 duruyor: ayrı ekran değil, İlan & Reklam altında
+sekme. Gazete Listesi'yle karışmamalı — o BIK kod defteri, bu gazetenin kendi
+künye kaydı.
+
+**Göç verisiyle çakışma.** Yok; tablo boş başlar ve bugün de boş.
+
+**Migration maliyeti.** **~0 sn** — ama uygulanmıyor.
+
+**Erteleme gerekçesi:** sekiz aydır boş, alan sözleşmesi ölçülemiyor, hiçbir
+ekranı beslemiyor. Boş bir tablo açmak, açmamaktan daha az dürüst olurdu.
+
+### 24.7 Duyurular — **ERTELENDİ**
+
+> **Karar (koordinatör, 28 Ağustos 2026): model turunun DIŞINDA kalıyor.**
+> **Kapsamdan çıkarılmadı**, yalnız sıralaması değişti — gerekçe §24.6'daki ile
+> aynı yetki ayrımı.
+
+**Alan sözleşmesi — döküm VAR ama LİSTE BOŞ.**
+Sütunlar: `ID · Başlık · Tarih · Resim · Önizleme`. Veri satırı: **0**. Modal
+başlığı: **"Duyuru İçeriği"**. Tarih aralığı süzgeci var.
+
+Önerilen alanlar: `baslik · icerik` (HTML) · `gorsel` · `tarih ·
+baslangic / bitis · aktif`.
+
+**İlişkiler / çakışma.** §18 m.1 duruyor: ayrı ekran değil, Ayarlar altında
+"Sistem duyuruları" rafı. Gerekçe ölçülmüştü — URL `system-announcements`,
+megafon ikonu, **hedef kitle alanı yok**: bu sağlayıcının sürüm duyurusu,
+gazetenin okura duyurusu değil. §18 m.7: liste boşluğu kanıt değil, süzgeç son
+30 güne kilitli.
+
+**Göç verisiyle çakışma.** Yok.
+
+**Migration maliyeti.** **~0 sn** — ama uygulanmıyor.
+
+**Erteleme gerekçesi:** içerik sağlayıcıya ait, bize geçmiyor. Kendi duyuru
+ihtiyacımız doğarsa **yeni** bir model tasarlanır, bunun kopyası değil.
+
+### 24.8 Log Kayıtları
+
+**Alan sözleşmesi — döküm VAR ama DAR** (`login_logs.php`).
+Sütunlar: `ID · IP · Tarayıcı · Durum · Tarih`. Ölçülen tek satır:
+`27845 · 85.105.225.130 · Mozilla/5.0 (Windows NT 10.0; Win64; x…) · Başarılı ·
+13:54 25-08-2026`.
+
+> **Ölçülmüş ve belirleyici bulgu: bu bir OTURUM AÇMA günlüğü, eylem günlüğü
+> değil.** Uç adı `login_logs`, tek durum değeri "Başarılı", ve **hangi kaydın
+> değiştirildiğini söyleyen tek bir sütun yok**. ID 27.845'e ulaşmış, yani
+> ~28 bin oturum kaydı var — ama **kimin hangi haberi yayına aldığının izi bu
+> tabloda yok.**
+>
+> §2'nin düzeltme kalemi ("4 hesap Administrator adını paylaşıyor, log kimin ne
+> yaptığını söyleyemiyor") bu yüzden **iki katmanlı bir sorun:** adlar
+> çakışıyordu *ve* log zaten eylemi kaydetmiyordu. Kullanıcılar ekranında ad
+> tekilliğini zorunlu kılmak birinci katmanı kapattı; ikincisi bu modelin işi.
+
+#### Hangi olaylar kaydedilmeli
+
+Ölçüt: **geri alınamayan ya da yayına çıkan her fiil.**
+
+| Olay | Neden |
+|---|---|
+| Oturum açma / kapama / başarısız deneme | Dökümdeki bugünkü kapsam; korunur |
+| Haber **yayına alma / yayından çekme / arşivleme** | Okura görünürlüğü değiştirir |
+| **Manşete alma / çıkarma** | Anasayfanın sırasını değiştirir, ayrı yetkiliktir |
+| **Kategori değiştirme** | Kanonik **adresi** değiştirir, 301 yazar |
+| **Toplu işlem** — fiil + etkilenen kayıt sayısı | Tek tıkla yüzlerce kayıt; en yüksek riskli fiil |
+| **Kaynak birleştirme** | Bağlantıları taşır, geri alınamaz |
+| **Yorum düzenleme** | Okur adına beyan; §13 özgün metni saklamayı şart koştu |
+| Kullanıcı / rol değişikliği, parola değişimi | Yetki sınırını değiştirir |
+| Resmî ilan girme / silme | BIK yükümlülüğü, yasal sonuç |
+
+Haber **taslak düzenlemesi kaydedilmemeli** — masa günde ~220 haber üretiyor
+(§20); her kaydetme loglanırsa tablo eylem günlüğü olmaktan çıkar.
+
+#### Ne kadar saklanmalı
+
+Hacim tahmini: günde ~220 haber × ~2 durum değişimi + oturumlar ≈ **500–700
+kayıt/gün**, yılda ~200–250 bin. Öneri: **oturum kayıtları 12 ay**, **eylem
+kayıtları süresiz** (yasal sonuç doğuranlar özellikle: resmî ilan, meta yazar,
+yayın kararı). Ayrım yoksa ya çok erken siliniyor ya sonsuza kadar oturum çöpü
+birikiyor.
+
+#### Hangi alan olmadan bir log kaydı işe yaramaz
+
+1. **`kullanici` (FK, `PROTECT`)** — kimliği ada değil kayda bağlar; "Administrator"
+   sorununun asıl çözümü budur. Kullanıcı silinirse log okunamaz hâle gelir.
+2. **`fiil`** — kapalı liste; serbest metin olursa log aranamaz.
+3. **`hedef_tur` + `hedef_id`** — *neyin* değiştiği. **Bu ikisi olmadan kayıt işe
+   yaramaz**; bugünkü `login_logs`ın eksiği tam olarak budur.
+4. **`zaman`** (indeksli).
+5. **`oncesi` / `sonrasi`** — değişen alanın iki hâli (JSON). Bu olmadan
+   "yayından çekildi" kaydı *neyin* değiştiğini söyler ama *nereden nereye*
+   olduğunu söylemez; toplu işlemde geri alma tartışması bu alansız yürümez.
+
+Ek ama zorunlu değil: `ip`, `tarayici` (dökümde var), `toplu_islem_kimligi`
+(aynı toplu fiilin kayıtlarını birbirine bağlar), `gerekce` (yorum düzenlemede
+§13 zaten zorunlu kılıyor).
+
+**Göç verisiyle çakışma.** Yeni tablo, boş başlar. Eski 28 bin oturum kaydı
+göçte taranmadı ve taşınması **önerilmez**: eylem bilgisi taşımıyor.
+
+**Migration maliyeti.** Bağımsız, boş tablo → **~0 sn**. Ama `hedef_tur +
+hedef_id` ve `zaman` indeksleri **baştan konmalı**; tablo büyüdükten sonra indeks
+eklemek 300 binde 1,2 sn, milyonda dakikalara çıkar.
+
+### 24.9 Bildirimler
+
+**Alan sözleşmesi — döküm VAR** (`notifications_list.php`).
+Liste sütunları: `Tarih · Veri Kaynağı · Bildirim · Yaklaşık Hedef Kişi ·
+Açan Kişi · İşlemler`. Detay modalı ("Bildirim Detayı"): `Veri Kaynağı ·
+Bildirim · Gönderen · Tarih · Yaklaşık Hedef Kişi · Açan kişi · **Açılma Oranı**`.
+
+Ölçülen satırlar (32 veri satırı):
+`2026-05-25 · Makale · "BURSASPOR'UN TRANSFER HARİTASI" · 22683 → 46` ·
+`2025-07-28 · Haber · "ALEVLER TEKRAR YÜKSELDİ" · 9207 → 25`.
+**"Veri Kaynağı" iki değer alıyor: `Makale` ve `Haber`** — bildirim iki farklı
+içerik türüne bağlanabiliyor.
+
+Önerilen alanlar: `baslik · icerik_turu · icerik_id · gonderen` (FK) ·
+`gonderim_zamani · hedef_sayisi · acan_sayisi`.
+
+**İlişkiler / çakışma.** §13'ün kararı: **açılma oranı hesaplanıp ekranın en
+üstüne konur** — mevcut panelde iki sütun var ama oran hiçbir yerde yok. Oran
+**saklanmaz, türetilir** (`acan / hedef`); iki sayı zaten kayıtta. §13'ün ölçümü:
+10 gönderimde ortalama **%0,21**, en iyi %0,56, en kötü %0,10; hedef kitle
+9.207 → 22.683'e çıkarken açan sayısı 21–47 bandında sabit kalmış.
+
+Gönderim formu §13'te iki kurala bağlı: başlık **50 karakter** (kilit ekranında
+kesilmesin), **haber seçilmeden gönderim yok**.
+
+> **Ölçülemedi:** gönderme formunun alanları. Dökümde yalnız liste ve detay
+> modalı var.
+
+**Göç verisiyle çakışma.** Yeni tablo. 32 satırlık geçmiş dökümden girilebilir;
+göçte taranmadı.
+
+**Migration maliyeti.** **~0 sn.** Gerçek gönderim altyapısı (push servisi)
+**model turunun kapsamı dışında** — bu model yalnız kaydı tutar.
+
+### 24.10 2FA
+
+**Alan sözleşmesi — döküm VAR, iki ekran** (`fa_security.php`,
+`change_password.php`).
+
+- Birinci ekran: `csrf` · `curr_password` · `new_password` · `renew_password` ·
+  **`google_2fa`** (text) — parola değiştirirken 2FA kodu isteniyor.
+- İkinci ekran: kart başlığı **"İki Faktörlü Kimlik Doğrulama (2FA)"**; alanlar
+  `csrf` · `process` · **`secret_key`** · **`secret_name`** · `one_code`. Sayfada
+  `QR`, `Google Authenticator`, `SMS`, `telefon` geçiyor.
+- Ölçülen metin: *"İki faktörlü doğrulama hesap güvenliği için **zorunludur**.
+  Aşağıdaki iki yöntemden birini seçebilir, dilediğiniz zaman değiştirebilirsiniz…"*
+
+> **Çelişki, kayda geçti:** §11 "altyapı hazır, **şu an isteğe bağlı**" diyor;
+> dökümdeki ekran metni "**zorunludur**" diyor. Hangisinin fiilen uygulandığı
+> **ölçülemedi** — döküm bir operatör hesabına ait ve o hesabın 2FA durumu
+> görünmüyor.
+
+Önerilen alanlar (kullanıcıya bağlı ayrı tablo): `kullanici` (OneToOne) ·
+`yontem` (`authenticator` / `sms`) · `gizli_anahtar` · `telefon` ·
+`dogrulandi_mi` · `son_kullanim` · `yedek_kodlar`.
+
+**İlişkiler / çakışma.** `auth.User` ile bire bir. **Mevcut Şifre ekranı
+(`/panel/sifre`) bu modelden etkilenir**: 2FA gelince parola değişimi de kod
+isteyecek. §11'in önerisi — yayımlama, manşet ve resmî ilan yetkisi olan rollerde
+zorunlu — **rol matrisine bağlı bir kuraldır**; `IKI_ADIMLI_ZORUNLU` kümesi
+`icerik/yetkiler.py`de zaten duruyor.
+
+**Göç verisiyle çakışma.** Yeni tablo, kullanıcı sayısı kadar satır (bugün 3,
+gerçekte 17). Geriye dönük alan yok.
+
+**Migration maliyeti.** **~0 sn.**
+
+> **Eşik konu — kullanıcıya soruldu:** gizli anahtarın nasıl saklanacağı bir
+> **güvenlik kararıdır**. Düz metin saklamak, 2FA'nın koruduğu şeyi veritabanı
+> erişimi olan herkese açar. Şifreleme anahtarının nerede duracağı
+> (`BH_GIZLI_ANAHTAR` ile aynı yerde olmamalı) karara bağlanmalı.
+
+### 24.11 Toplu değerlendirme
+
+#### Migration sırası
+
+```
+1. yorum                (bağımsız)                          ~0 sn
+2. log_kaydi            (bağımsız; indeksler BAŞTAN)        ~0 sn
+3. reklam_yuvasi        (bağımsız)                          ~0 sn
+4. reklam_kampanyasi    ← reklam_yuvasi                     ~0 sn
+5. gazete               (bağımsız)                          ~0 sn
+6. resmi_ilan           (bağımsız; gazete bağı ölçülemedi)  ~0 sn
+7. bildirim             (bağımsız)                          ~0 sn
+8. iki_adimli           ← auth.User                         ~0 sn
+9. son_dakika           ← icerik.Haber (FK null=True)       ~0 sn
+—  duyuru, kendi_yayinim: ERTELENDİ (§24.6, §24.7)
+```
+
+**Hepsi tek `migrate` çağrısında uygulanabilir.** 1–8 arası birbirinden
+bağımsız; yalnız 4→3 ve 8, 9 sıralı.
+
+#### Toplam duraklama tahmini
+
+| Senaryo | Süre |
+|---|---|
+| Sekiz kalemin tamamı, **yalnız yeni tablo** | **< 5 sn** |
+| Geriye dönük **tek** alan, `null=True` varsayılansız | **~0 sn** |
+| Geriye dönük **tek** alan, `blank=True` ya da `default=` | **~34 sn** |
+| `0003` gibi 14 alanlık migration, bugünkü 308.602 satırda | **~8 dakika** |
+| Aynısı, göç 556.824'e ulaştığında | **~15 dakika** (doğrusal varsayım, **ölçülmedi**) |
+
+> **Kritik tasarım sonucu: sekiz kalemin hiçbiri `icerik_haber`e alan
+> eklemiyor.** Hepsi yeni tablo. Bu, model turunun duraklamasını saniyeler
+> mertebesinde tutar — **ama yalnız bu tasarıma sadık kalınırsa.** Son Dakika'yı
+> "haberde bayrak" olarak yapmak tek başına 34 saniye ve 1,2 GB'lık bir tablo
+> kopyası demektir; ayrı model bu yüzden öneriliyor (§24.2).
+
+#### Ölçülemeyenler — hepsi etiketli
+
+| Ne | Neden |
+|---|---|
+| Resmî ilan **ekleme formunun** alanları | `official_announcement_add` sayfası dökümde yok |
+| Kendi Yayınlarım'ın alanları | Liste boş, ekleme sayfası dökümde yok |
+| Duyuruların alanları | Liste boş (süzgeç son 30 güne kilitli) |
+| Bildirim **gönderme formunun** alanları | Yalnız liste + detay modalı var |
+| Gazete ↔ resmî ilan bağı | Dökümde görünmüyor |
+| 2FA'nın fiilen zorunlu mu isteğe bağlı mı olduğu | Ekran metni "zorunlu", §11 "isteğe bağlı" |
+| `0003` migration'ının **gerçek** süresi | `django_migrations` damgaları boş zamanı ölçüyor |
+| 556.824 satırda 14 rebuild süresi | 300 binde ölçüldü, tam veriye doğrusal varsayımla genişletildi |
+
+#### Kullanıcıdan gereken
+
+1. **`usertype_list` + `operator_list` dökümü** — F5(d) bunu bekliyor; panele
+   erişim var, iki sayfanın kaydedilmiş hâli gelirse rol matrisi karşılaştırması
+   ölçülebilir hâle gelir.
+2. **2FA gizli anahtarının nasıl saklanacağı** — güvenlik kararı.
+   **→ Kullanıcıya iletildi (koordinatör, 28 Ağustos 2026); cevap bekleniyor.**
+3. **Duyurular ve Kendi Yayınlarım'ın akıbeti** — koordinatör kararıyla model
+   turundan **ertelendi**, kapsamdan çıkarılmadı (§24.6, §24.7). Kullanıcı
+   kapsamdan tümden çıkarmak isterse bildirmeli.
+4. **Reklam yuvalarının elle eşlenmesi** — 50 yuvanın 44'ü otomatik taşınamıyor
+   (Ö4). Veri girişi kalemidir ve F7(b) ona bağlıdır.
+
+> **Bu bölüm üretilirken kod, migration ve dosya değişikliği yapılmadı.** Ölçüm
+> için kurulan geçici SQLite dosyaları silindi; canlı veritabanına yalnız okuma
+> yapıldı.
+
+### 24.12 Uygulandı — 28 Ağustos 2026
+
+Tasarımın **dokuz kalemi** `icerik` uygulamasına eklendi; Duyurular ve Kendi
+Yayınlarım ertelendi (§24.6, §24.7). Yeni uygulama açılmadı — `settings.py`
+düzenlemesi gerektirirdi ve o dosya kapsam dışıydı; modeller `icerik/models.py`
+içinde duruyor.
+
+Tek migration: `icerik/0005_bildirim_gazete_ikiadimli_logkaydi_reklamkampanyasi_and_more`,
+**31 işlem** (9 `CreateModel` · 11 `AddField` · 10 `AddIndex` · 1 `RunSQL`).
+
+**Migration öncesi yedek:** `db.sqlite3` (1.364.520.960 bayt) scratchpad'e
+kopyalandı, `PRAGMA integrity_check` → **ok**, 356.839 haber doğrulandı.
+
+#### Bitti ölçütü — **aşıldı, gevşetilmedi**
+
+| Ölçüm | Süre |
+|---|---|
+| Migration işleminin kendisi (Django'nun raporu) | **4,515 sn** |
+| **`migrate` çağrısının tamamı** (duvar saati) | **5,54 sn** |
+
+§24.11'in tahmini "< 5 sn" idi. **Şema işlemi için tuttu (4,515), komutun
+tamamı için tutmadı (5,54).** Aradaki 1,03 sn Django'nun `post_migrate`
+kancaları: 9 content type + 36 permission kaydı. Tahmin bunları içermiyordu.
+
+> **Karar (koordinatör, 28 Ağustos 2026): ölçüt AŞILDI olarak kalıyor,
+> gevşetilmiyor.** Ölçütü "post_migrate hariç" diye yeniden tanımlamak,
+> tutmayan bir tahmini sonradan tutar hâle getirmek olurdu; bu, projenin
+> "ölçülür, beyan edilmez" ilkesini içeriden çürütür.
+>
+> Bunun bir **başarısızlık değil tahmin hatası** olduğu da kayda geçiyor: asıl
+> önemli olan süre değil, `icerik_haber`in yeniden kurulmaması ve göç
+> verisinin bozulmamasıydı — ikisi de tuttu.
+
+#### `icerik_haber` yeniden kurulmadı — uygulamadan ÖNCE doğrulandı
+
+`sqlmigrate` çıktısı migration uygulanmadan önce okundu. 356 bin satırlık bir
+tabloda tahminle ilerlemek kabul edilemezdi. Tabloya dokunan tek satır:
+
+```sql
+CREATE INDEX "icerik_habe_ilce_id_72bdcf_idx" ON "icerik_haber" ("ilce_id", "yayin_zamani" DESC);
+```
+
+Tablo kopyalamalar (`new__icerik_*` · `INSERT INTO … SELECT` · `DROP TABLE`)
+yalnız **yeni ve boş** tablolarda oldu (`ikiadimli`, `logkaydi`,
+`reklamkampanyasi` — Django yabancı anahtar eklerken yeniden kuruyor). Boş
+tabloda maliyeti sıfır. §24'ün "dokuz kalemin hiçbiri `icerik_haber`e alan
+eklemiyor" tasarımı **tuttu**.
+
+#### İlçe indeksi — ölçüldü
+
+| | Önce | Sonra |
+|---|---|---|
+| Sorgu planı | `SEARCH … USING INDEX icerik_haber_ilce_id_f7d38216` + **`USE TEMP B-TREE FOR ORDER BY`** | `SEARCH … USING INDEX icerik_habe_ilce_id_72bdcf_idx (ilce_id=? AND yayin_zamani>?)` |
+| İlçe sayfası (aynı ORM ölçümü, 7 tekrar) | **25,6 ms** | **2,5 ms** |
+
+`USE TEMP B-TREE FOR ORDER BY` kalktı, sorgu ~10 kat hızlandı. Ham SQL
+düzeyinde 0,06 ms; önceki 25,6 ms ORM ölçümüydü, elmayla elmayı
+karşılaştırmak için ikisi de ORM'le yeniden ölçüldü.
+
+#### `ANALYZE` paketin son işlemi — ve gerçekten iş yaptı
+
+`migrations.RunSQL("ANALYZE;", reverse_sql=noop)`, SQL çıktısının 143. satırı
+(150 satırdan). Sonuç:
+
+- `sqlite_stat1`: 55 → **56 satır**
+- Yeni indeksin istatistiği: `icerik_habe_ilce_id_72bdcf_idx → 356839 19825 1`
+  — **gerçek satır sayısıyla birebir**, bayat değil
+
+ANALYZE olmasaydı yeni indeksin istatistiği hiç oluşmayacak ve planlayıcı onu
+kullanmayabilecekti. Sessizce olurdu.
+
+#### Dokuz model, dokuz ekran, sıfır yeni yetkilik
+
+| Model | Ekran | Yetkilik |
+|---|---|---|
+| `Yorum` | `/panel/yorumlar` + düzenle | `yorum_onaylama` |
+| `LogKaydi` | `/panel/log` + **salt okunur** detay | `log_goruntuleme` |
+| `ReklamYuvasi` | `/panel/yuvalar` + düzenle | `sayfa_duzeni` |
+| `ReklamKampanyasi` | `/panel/kampanyalar` + düzenle | `reklam_kampanyasi` |
+| `Gazete` | `/panel/gazeteler` + düzenle | `resmi_ilan_girme` |
+| `ResmiIlan` | `/panel/ilanlar` + düzenle | `resmi_ilan_girme` |
+| `Bildirim` | `/panel/bildirimler` + düzenle | `mansete_alma` |
+| `IkiAdimli` | `/panel/iki-adimli` (salt okunur) | **yetkilik yok**, `login_required` |
+| `SonDakika` | `/panel/son-dakika` + düzenle | `mansete_alma` |
+
+**§11'in 14 yetkiliği, 5 rolü ve 30 bağı değişmedi** — test bunu kilitliyor.
+Menüye iki bölüm geldi: **Etkileşim** (Yorumlar · Bildirimler) ve **İlan &
+Reklam** (Resmî İlanlar · Gazete Listesi · Reklam Yuvaları · Kampanyalar).
+Panel adresi 25 → **42**.
+
+> **Karar (koordinatör, 28 Ağustos 2026): Bildirim ve Son Dakika
+> `mansete_alma`da KALIYOR.** Gerekçe: ikisi de "okurun önüne ne çıkacak"
+> kararıdır, manşetle aynı karar sınıfı; matrisi büyütmek için gerçek bir
+> ihtiyaç yok.
+>
+> **Ayrı yetkilik açık öneri olarak duruyor, kapatılmadı.** Ancak bir rol
+> "manşete alabilsin ama bildirim gönderemesin" diye ayrılmak istendiğinde
+> anlamlı olur; o gün gelirse §11 kararıyla açılır.
+
+#### Log modeli — beş zorunlu alan yerinde
+
+`kullanici` (**PROTECT**; testle doğrulandı, hesap silinmeye çalışılınca
+`ProtectedError`) · `fiil` (16 değerli **kapalı liste**) · `hedef_tur` +
+`hedef_id` · `zaman` (indeksli) · `oncesi` / `sonrasi` (JSON).
+
+**Dört indeks baştan kuruldu** — Ö1'in kuralı: tablo büyüdükten sonra indeks
+eklemek 300 binde 1,2 sn, milyonda dakikalara çıkıyor.
+
+Detay ekranında **form yok**: düzenlenebilen log, log değildir. Testle kilitli.
+
+#### 2FA — kurulum akışı bilerek açılmadı
+
+Model kuruldu, `gizli_anahtar` alanı duruyor, ama **onu dolduran hiçbir yol
+yok**. Ekran durumu gösteriyor, kurulum yaptırmıyor ve nedenini söylüyor. İki
+test bunu kilitliyor: bağlamda `form` yok, sayfada `name="gizli_anahtar"` yok.
+
+Ekrandaki metin: *"Yarım bir 2FA, olmayan 2FA'dan tehlikelidir — çünkü
+korunduğunuzu sanırsınız."* Şifreleme kararı kullanıcıdan bekleniyor (§24.10).
+
+#### Ölçümler
+
+**Testler: 437/437 geçiyor** (381 → 437). Model turunun kendi testleri
+`icerik/tests_panel_model.py`, **56 test**, 8 sınıf.
+
+| Yerleşim turu | Ölçüm | Bulgu |
+|---|---|---|
+| **39 ekran × 7 genişlik** (font yüklü) | **273** | **0** |
+| 38 ekran × 5 genişlik (**font engelli**) | **190** | **0** |
+| Toplu işlem onay ekranı | 7 | **0** |
+| Medya şeridi denetimi | 3 | **0** |
+
+Odak alabilen **8.015** öğede odak halkası olmayan **0**; sayfa başına `h1` = 1;
+yüklenen aileler `['IBM Plex Mono', 'Inter', 'Source Serif 4']`, engelli turda
+boş. Çok satırlı `{# #}` **0**, `:root` dışında hex/rgba **0**.
+
+**Migration sonrası veri bütünlüğü:** `integrity_check` **ok** ·
+`foreign_key_check` **temiz** · haber **356.839** · video 31.084 · köşe 6.713 ·
+galeri 4.040 · ilçeli haber 20.366 — **hiçbiri değişmedi**. Dokuz yeni tablo
+**boş**. Dosya 1.364 MB → **1.311 MB** (ANALYZE ve yeniden kurmalar sonrası
+sayfa geri kazanımı).
+
+#### Dördüncü kez yapılan hata — kural olarak yazılıyor
+
+Ölçüm turunda iki `UnorderedObjectListWarning` çıktı (`ReklamYuvasi`,
+`Gazete`): `annotate()` GROUP BY kurunca Paginator `Meta.ordering`i
+"sıralanmamış" sayıyor. **Aynı hata bu projede dördüncü kez** yapıldı (daha
+önce `Yazar`, `FotoGaleri`, `Kategori`).
+
+> **KURAL: `annotate()` varsa `order_by()` de olacak.** Meta sıralaması
+> yetmez; sayfalama sessizce tutarsızlaşır.
+
+#### Bu turdan sonrası
+
+Dokuz tablo **boş**. Dökümdeki gerçek veriler (50 yuva · 17 gazete · 24 resmî
+ilan · 32 bildirim) elle girilecek; yuvaların 44'ü otomatik taşınamıyor (Ö4).
+
+İlçe indeksi **bu turda kuruldu** — göç ajanının aynı işi tekrarlamasına gerek
+yok. Sıradaki koordinasyon kalemi `meta_yazar` backfill'idir:
+`bulk_create`ın `save()` çağırmaması ve `meta_yazar_elle` semantiği panel
+tarafının alanıdır (§7).

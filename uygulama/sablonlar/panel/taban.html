@@ -41,6 +41,7 @@
           {% if haber_girebilir %}<li><a href="{% url 'panel-haber-ekle' %}">Haber Ekle</a></li>{% endif %}
           <li><a href="{% url 'panel-akis' %}"{% if bolum == 'akis' %} aria-current="page"{% endif %}>Tüm Haberler</a></li>
           {% if mansete_alabilir %}<li><a href="{% url 'panel-mansetler' %}"{% if bolum == 'mansetler' %} aria-current="page"{% endif %}>Manşetler</a></li>{% endif %}
+          {% if mansete_alabilir %}<li><a href="{% url 'panel-son-dakika' %}"{% if bolum == 'son-dakika' %} aria-current="page"{% endif %}>Son Dakika</a></li>{% endif %}
           {% if kose_yonetir %}
             <li><a href="{% url 'panel-kose' %}"{% if bolum == 'kose' %} aria-current="page"{% endif %}>Köşe Yazıları</a></li>
             <li><a href="{% url 'panel-yazarlar' %}"{% if bolum == 'yazarlar' %} aria-current="page"{% endif %}>Köşe Yazarları</a></li>
@@ -51,6 +52,36 @@
           {% endif %}
         </ul>
       </li>
+      {% comment %}Etkileşim — model turuyla geldi (§24.1, §24.9). Yorum ve
+         bildirim, okurla kurulan iki bağ; §13 ikisini aynı bölümde
+         topluyordu.{% endcomment %}
+      {% if yorum_onaylar or mansete_alabilir %}
+      <li>
+        <a href="{% if yorum_onaylar %}{% url 'panel-yorumlar' %}{% else %}{% url 'panel-bildirimler' %}{% endif %}"{% if ust_bolum == 'etkilesim' %} aria-current="true"{% endif %}><span class="im" aria-hidden="true">◍</span><span>Etkileşim</span></a>
+        <ul class="alt">
+          {% if yorum_onaylar %}<li><a href="{% url 'panel-yorumlar' %}"{% if bolum == 'yorumlar' %} aria-current="page"{% endif %}>Yorumlar</a></li>{% endif %}
+          {% if mansete_alabilir %}<li><a href="{% url 'panel-bildirimler' %}"{% if bolum == 'bildirimler' %} aria-current="page"{% endif %}>Bildirimler</a></li>{% endif %}
+        </ul>
+      </li>
+      {% endif %}
+
+      {% comment %}İlan & Reklam — §16'nın dört sekmesinin karşılığı. Yuva
+         tanımı Sayfa Düzeni yetkisinde, kampanya İlan Sorumlusu'nda; ikisi
+         ayrı karardır (§14).{% endcomment %}
+      {% if ilan_girebilir or sayfa_duzeni_yapar or reklam_yonetir %}
+      <li>
+        <a href="{% if ilan_girebilir %}{% url 'panel-ilanlar' %}{% else %}{% url 'panel-yuvalar' %}{% endif %}"{% if ust_bolum == 'reklam' %} aria-current="true"{% endif %}><span class="im" aria-hidden="true">▧</span><span>İlan &amp; Reklam</span></a>
+        <ul class="alt">
+          {% if ilan_girebilir %}
+            <li><a href="{% url 'panel-ilanlar' %}"{% if bolum == 'ilanlar' %} aria-current="page"{% endif %}>Resmî İlanlar</a></li>
+            <li><a href="{% url 'panel-gazeteler' %}"{% if bolum == 'gazeteler' %} aria-current="page"{% endif %}>Gazete Listesi</a></li>
+          {% endif %}
+          {% if sayfa_duzeni_yapar %}<li><a href="{% url 'panel-yuvalar' %}"{% if bolum == 'yuvalar' %} aria-current="page"{% endif %}>Reklam Yuvaları</a></li>{% endif %}
+          {% if reklam_yonetir %}<li><a href="{% url 'panel-kampanyalar' %}"{% if bolum == 'kampanyalar' %} aria-current="page"{% endif %}>Kampanyalar</a></li>{% endif %}
+        </ul>
+      </li>
+      {% endif %}
+
       {% comment %}Ayarlar bölümü HERKESE görünür: içindeki Şifre maddesi
          yetkiye bağlı değil, herkes kendi parolasını değiştirebilmeli.
          Bölüm bağlantısı, kullanıcının girebildiği ilk maddeye gider.{% endcomment %}
@@ -65,7 +96,9 @@
             <li><a href="{% url 'panel-kullanicilar' %}"{% if bolum == 'kullanicilar' %} aria-current="page"{% endif %}>Kullanıcılar</a></li>
             <li><a href="{% url 'panel-roller' %}"{% if bolum == 'roller' %} aria-current="page"{% endif %}>Roller</a></li>
           {% endif %}
+          {% if log_gorur %}<li><a href="{% url 'panel-log' %}"{% if bolum == 'log' %} aria-current="page"{% endif %}>Log Kayıtları</a></li>{% endif %}
           <li><a href="{% url 'panel-sifre' %}"{% if bolum == 'sifre' %} aria-current="page"{% endif %}>Şifre</a></li>
+          <li><a href="{% url 'panel-iki-adimli' %}"{% if bolum == 'iki-adimli' %} aria-current="page"{% endif %}>İki Adımlı Doğrulama</a></li>
         </ul>
       </li>
     </ul>

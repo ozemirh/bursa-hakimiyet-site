@@ -505,3 +505,28 @@ legend{font-weight:600;font-size:14px;margin-bottom:6px}
 .giris-kutu .alan{margin-bottom:14px}
 .giris-kutu label{display:block;font-weight:600;font-size:13px;margin-bottom:4px}
 .giris-kutu input{width:100%}
+
+/* ===== model turu ekranları (PANEL-NOTLARI.md §24) ===== */
+
+/* Log kaydı dökümü — salt okunur, iki sütun. */
+.log-dokum{grid-template-columns:minmax(0,130px) minmax(0,1fr)}
+.log-json{background:var(--zemin);border:1px solid var(--cizgi);border-radius:9px;
+  padding:11px 13px;font-family:var(--mono);font-size:12.5px;line-height:1.6;
+  white-space:pre-wrap;word-break:break-word;margin-bottom:14px;
+  max-height:240px;overflow:auto}
+
+/* ===== ilgili haber seçicisi (28 Ağustos 2026) ===== */
+.ilgili-ara{margin-bottom:10px}
+.ilgili-ara label{display:block;font-weight:600;font-size:13px;margin-bottom:4px}
+.ilgili-sonuc{list-style:none;margin-top:8px;display:flex;flex-direction:column;
+  gap:5px;max-height:220px;overflow:auto}
+.ilgili-sonuc .dugme{text-align:left;width:100%;white-space:normal;
+  font-weight:500;font-size:13px}
+.ilgili-alan select[data-ilgili]{min-height:110px}
+
+/* ===== ikinci başlık açılır kutusu (§4 alan 3) ===== */
+.acilir-alan{margin-bottom:16px;border:1px solid var(--cizgi);border-radius:9px;
+  padding:0 12px;background:var(--zemin)}
+.acilir-alan summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:13px}
+.acilir-alan[open] summary{border-bottom:1px solid var(--cizgi);margin-bottom:10px}
+.acilir-alan .alan{margin-bottom:12px}

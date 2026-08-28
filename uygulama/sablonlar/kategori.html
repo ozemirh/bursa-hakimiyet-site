@@ -12,7 +12,10 @@
       <section class="kutu">
         <div class="kutu-bas vurgu">
           <h1>{{ baslik|buyult }}</h1>
-          <span class="tumu">{{ sayfa.paginator.count }} haber</span>
+          {% comment %}Sayım üst sınırla kesiliyor (SinirliSayfalayici).
+          Ölçüm: kategori sayımı 422 ms, ilçe sayımı 704 ms sürüyordu — ilçede
+          tam tarama. Kesin sayı okurun kararını değiştirmiyor.{% endcomment %}
+          <span class="tumu">{% if sayfa.paginator.kesildi_mi %}1.000+{% else %}{{ sayfa.paginator.count }}{% endif %} haber</span>
         </div>
         <div class="kutu-ic">
           <h2 class="gorsel-gizli">Haberler</h2>

@@ -67,9 +67,23 @@ OLCUM_BETIGI = r"""
     }
   }
 
+  /* Kapali <details> icerigi ELENIYOR.
+     Olculdu (28 Agustos 2026): Chrome kapali details icerigini sayfa-ici
+     aramaya acik tuttugu icin `offsetParent` doluyor, ama tarayici onu
+     TAB SIRASINA ALMIYOR -- 60 Tab basildi, ogeye hic ulasilmadi
+     (`test_kapali_details_klavye_sirasinda_mi`). Suzgec bunu elemeyince
+     arac, gercekte erisilemeyen bir ogeyi "odak halkasi yok" diye
+     isaretliyordu: kusur sayfada degil, olcumdeydi. */
+  const kapaliDetay = (el) => {
+    for (let d = el.closest('details'); d; d = d.parentElement &&
+                                              d.parentElement.closest('details')) {
+      if (!d.open) return true;
+    }
+    return false;
+  };
   const odaklanabilir = [...document.querySelectorAll(
     'a[href], button, input:not([type=hidden]), select, textarea, [tabindex]')]
-    .filter(el => !el.disabled && el.offsetParent !== null);
+    .filter(el => !el.disabled && el.offsetParent !== null && !kapaliDetay(el));
 
   const halkasiz = [];
   for (const el of odaklanabilir) {
@@ -78,8 +92,13 @@ OLCUM_BETIGI = r"""
     const halka = (s.outlineStyle !== 'none' && parseFloat(s.outlineWidth) > 0)
                   || (s.boxShadow && s.boxShadow !== 'none');
     if (!halka) {
-      halkasiz.push(el.tagName.toLowerCase() + '.' +
-                    (el.className || '').toString().split(' ')[0]);
+      /* Kimlik ve tip de yazılıyor: "input." demek hangi öğe olduğunu
+         söylemiyordu ve bulguyu elle aramak gerekti (28 Ağustos). */
+      halkasiz.push(el.tagName.toLowerCase() +
+                    (el.type ? '[' + el.type + ']' : '') +
+                    (el.id ? '#' + el.id : '') +
+                    '.' + (el.className || '').toString().split(' ')[0] +
+                    ' outline=' + s.outlineStyle + '/' + s.outlineWidth);
     }
   }
   if (document.activeElement) document.activeElement.blur();
@@ -214,7 +233,9 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
     from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
     from taksonomi.models import Etiket, Kategori, KategoriTur, Kaynak
 
-    from .models import Haber
+    from .models import (Bildirim, Gazete, Haber, LogKaydi,
+                         ReklamKampanyasi, ReklamYuvasi, ResmiIlan,
+                         SonDakika, Yorum)
 
     class PanelYerlesimOlcumu(StaticLiveServerTestCase):
         """Bütün panel ekranları × yedi genişlik."""
@@ -290,6 +311,36 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
                                  (990002, "manset_kare")):
                 Haber.objects.filter(pk=kimlik).update(**{alan: True})
 
+            # --- model turu ornek kayitlari (PANEL-NOTLARI.md 24) ---
+            for sira in range(6):
+                Yorum.objects.create(
+                    icerik_turu=Yorum.TUR_HABER, icerik_id=990000 + sira,
+                    okur_adi=f"Okur {sira}", metin=f"{uzun} {sira}",
+                    ip="10.0.0.1")
+            self.yorum = Yorum.objects.first()
+
+            self.yuva = ReklamYuvasi.objects.create(
+                ad="-Manset yani- 300x250", konum="Manset yani",
+                genislik=300, yukseklik=250)
+            ReklamYuvasi.objects.create(ad="hakimiyet", konum="hakimiyet")
+            self.kampanya = ReklamKampanyasi.objects.create(
+                baslik=uzun, yuva=self.yuva)
+            self.gazete = Gazete.objects.create(
+                ad="BURSA HAKIMIYET", bik_kodu="YYN-000132", bizim_mi=True)
+            self.ilan = ResmiIlan.objects.create(
+                baslik=uzun, tur=ResmiIlan.TUR_IHALE,
+                yayin_tarihi=timezone.localdate())
+            self.bildirim = Bildirim.objects.create(
+                baslik="Bildirim baslik ornegi", icerik_id=990000,
+                hedef_sayisi=22683, acan_sayisi=46, gonderim_zamani=simdi)
+            self.son_dakika = SonDakika.objects.create(
+                baslik=uzun, adres="/gundem/ornek-1")
+            self.log = LogKaydi.objects.create(
+                kullanici=self.yonetmen, fiil="toplu_islem",
+                hedef_tur="haber", hedef_id=990000, etkilenen_sayisi=12,
+                oncesi={"durum": 2}, sonrasi={"durum": 1},
+                ip="10.0.0.1", tarayici="Mozilla/5.0 olcum")
+
             self.kategori = kategori
             self.spor = KategoriTur.objects.get(
                 tur=Kategori.TUR_HABER, slug="spor").kategori
@@ -339,6 +390,31 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
                 ("Kaynaklar", "/panel/kaynaklar", "Kaynaklar", 4),
                 ("Kaynak düzenle", f"/panel/kaynak/{self.kaynak.pk}",
                  self.kaynak.ad, 0),
+                ("Yorumlar", "/panel/yorumlar", "Yorumlar", 6),
+                ("Yorum duzenle", f"/panel/yorum/{self.yorum.pk}",
+                 f"Yorum #{self.yorum.pk}", 0),
+                ("Son Dakika", "/panel/son-dakika", "Son dakika", 1),
+                ("Son dakika duzenle", f"/panel/son-dakika/{self.son_dakika.pk}",
+                 self.son_dakika.baslik, 0),
+                ("Resmi Ilanlar", "/panel/ilanlar", "Resmî ilanlar", 1),
+                ("Ilan duzenle", f"/panel/ilan/{self.ilan.pk}",
+                 self.ilan.baslik, 0),
+                ("Reklam Yuvalari", "/panel/yuvalar", "Reklam yuvaları", 2),
+                ("Yuva duzenle", f"/panel/yuva/{self.yuva.pk}",
+                 self.yuva.ad, 0),
+                ("Kampanyalar", "/panel/kampanyalar", "Reklam kampanyaları", 1),
+                ("Kampanya duzenle", f"/panel/kampanya/{self.kampanya.pk}",
+                 self.kampanya.baslik, 0),
+                ("Gazete Listesi", "/panel/gazeteler", "Gazete listesi", 1),
+                ("Gazete duzenle", f"/panel/gazete/{self.gazete.pk}",
+                 self.gazete.ad, 0),
+                ("Bildirimler", "/panel/bildirimler", "Bildirimler", 1),
+                ("Bildirim duzenle", f"/panel/bildirim/{self.bildirim.pk}",
+                 self.bildirim.baslik, 0),
+                ("Log Kayitlari", "/panel/log", "Log kayıtları", 1),
+                ("Log detay", f"/panel/log/{self.log.pk}",
+                 f"Log #{self.log.pk}", 0),
+                ("Iki Adimli", "/panel/iki-adimli", "İki adımlı doğrulama", 0),
                 ("Roller", "/panel/roller", "Roller", 0),
                 ("Şifre", "/panel/sifre", "Şifre", 0),
             ]
@@ -493,8 +569,8 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
                     dosya.write(base64.b64decode(veri["data"]))
                 print("görüntü:", yol_disk)
 
-            for ad, yol in [("akis-toplu", "/panel/akis"),
-                            ("kaynaklar", "/panel/kaynaklar")]:
+            for ad, yol in [("haber-ekle", "/panel/haber/ekle"),
+                            ("haber-duzenle", f"/panel/haber/{self.haber.pk}")]:
                 for genislik in (360, 1280):
                     self._git(yol, genislik)
                     veri = self.cdp.cagir("Page.captureScreenshot",
@@ -646,6 +722,49 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
             for b in bulgular:
                 print("  ! " + b)
             self.assertEqual(bulgular, [])
+
+        def test_kapali_details_klavye_sirasinda_mi(self):
+            """Kapalı `<details>` içindeki alan Tab ile erişilebiliyor mu?
+
+            Ölçüm aracı `#id_ikinci_baslik`i "odak halkası yok" diye
+            işaretledi. Soru: bu gerçek bir erişilebilirlik kusuru mu, yoksa
+            aracın süzgeci mi yanlış? Tab'a gerçekten basıp bakıyoruz —
+            tarayıcı kapalı details içeriğini atlıyorsa kusur SAYFADA DEĞİL.
+            """
+            self._hazirla()
+            self._oturum_ac()
+            self._git("/panel/haber/ekle", 1280)
+            self.cdp.cagir("Runtime.evaluate", expression=
+                "document.querySelector('.acilir-alan').open")
+            sonuc = self.cdp.cagir("Runtime.evaluate", returnByValue=True,
+                                   expression="""(() => JSON.stringify({
+                        acik: document.querySelector('.acilir-alan').open,
+                        gorunur: !!document.querySelector('#id_ikinci_baslik')
+                                     .offsetParent,
+                      }))()""")
+            durum = json.loads(sonuc["result"]["value"])
+            print("  details acik mi:", durum["acik"],
+                  "· offsetParent var mi:", durum["gorunur"])
+
+            # Sayfanin basindan itibaren 60 Tab: ikinci baslik odagi alir mi?
+            self.cdp.cagir("Runtime.evaluate",
+                           expression="document.body.focus()")
+            ulasti = False
+            for _ in range(60):
+                for tur in ("rawKeyDown", "keyUp"):
+                    self.cdp.cagir("Input.dispatchKeyEvent", type=tur,
+                                   windowsVirtualKeyCode=9, key="Tab",
+                                   code="Tab")
+                y = self.cdp.cagir("Runtime.evaluate", returnByValue=True,
+                                   expression="(document.activeElement||{}).id||''")
+                if y["result"]["value"] == "id_ikinci_baslik":
+                    ulasti = True
+                    break
+            print("  60 Tab sonunda ikinci baslik odaklandi mi:", ulasti)
+            self.assertFalse(
+                ulasti,
+                "Kapalı details içindeki alan Tab sırasına giriyorsa bu "
+                "GERÇEK bir kusurdur ve sayfa düzeltilmeli.")
 
         def test_panel_ekranlari_tasmiyor_ve_erisilebilir(self):
             self._hazirla()

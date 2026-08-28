@@ -22,9 +22,13 @@ from django.utils import timezone
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 from taksonomi.models import Etiket, Ilce, Kategori, KategoriTur, Kaynak, Yonlendirme
 
-from .formlar import (FotoGaleriForm, HaberForm, KategoriForm, KaynakForm,
-                      KoseYazisiForm, KullaniciForm, VideoForm, YazarForm)
-from .models import Haber
+from .formlar import (BildirimForm, FotoGaleriForm, GazeteForm, HaberForm,
+                      KategoriForm, KaynakForm, KoseYazisiForm, KullaniciForm,
+                      ReklamKampanyasiForm, ReklamYuvasiForm, ResmiIlanForm,
+                      SonDakikaForm, VideoForm, YazarForm, YorumForm)
+from .models import (Bildirim, Gazete, Haber, IkiAdimli, LogKaydi,
+                     ReklamKampanyasi, ReklamYuvasi, ResmiIlan, SonDakika,
+                     Yorum)
 
 SAYFA_BOYU = 25
 
@@ -63,6 +67,9 @@ def _yetkiler(kullanici) -> dict:
         "kullanici_yonetir": kullanici.has_perm("icerik.kullanici_yonetimi"),
         "log_gorur": kullanici.has_perm("icerik.log_goruntuleme"),
         "kose_yonetir": kullanici.has_perm("icerik.kose_yonetimi"),
+        "yorum_onaylar": kullanici.has_perm("icerik.yorum_onaylama"),
+        "sayfa_duzeni_yapar": kullanici.has_perm("icerik.sayfa_duzeni"),
+        "reklam_yonetir": kullanici.has_perm("icerik.reklam_kampanyasi"),
     }
 
 
@@ -201,16 +208,38 @@ def bugun(request):
               .prefetch_related("kategori__turler"))
 
     bugun_baslangic = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # UCUZ KAPI — 28 Ağustos 2026 ölçümü.
+    #
+    # Ekran 2.287 ms sürüyordu ve sebebi render değil sorgu planıydı:
+    # `durum + hazirlik` indeksi bugünkü veride SEÇİCİ DEĞİL, çünkü göçten
+    # gelen 356.839 kaydın **tamamı** `durum=1, hazirlik=''`. SQLite'ın
+    # istatistiği (`356839 356839 356839`) "bu alanlar hiçbir şeyi
+    # daraltmıyor" diyor, bu yüzden `LIMIT 20` sorgularında indeksi bırakıp
+    # tam tarama seçiyor — ve eşleşen kayıt olmadığı için tarama sonuna
+    # kadar gidiyor (~840 ms × 3 sorgu).
+    #
+    # `COUNT` aynı indeksi ÖRTÜCÜ olarak kullanabildiği için 0,1 ms.
+    # Kuyruk boşken liste sorgularını hiç çalıştırmıyoruz. Kuyruk doluyken
+    # tarama zaten erken biter, yani bu kapı yavaşlatmıyor.
+    kuyruk_sayisi = kuyruk.count()
+    if kuyruk_sayisi:
+        taslaklar = list(kuyruk.filter(hazirlik="taslak")[:20])
+        incelemedekiler = list(kuyruk.filter(hazirlik="incelemede")[:20])
+        benim = kuyruk.filter(olusturan=request.user).count()
+    else:
+        taslaklar, incelemedekiler, benim = [], [], 0
+
     return render(request, "panel/bugun.html", {
         "baslik": "Bugün",
         "bolum": "bugun",
         "ust_bolum": "bugun",
-        "taslaklar": kuyruk.filter(hazirlik="taslak")[:20],
-        "incelemedekiler": kuyruk.filter(hazirlik="incelemede")[:20],
-        "kuyruk_sayisi": kuyruk.count(),
+        "taslaklar": taslaklar,
+        "incelemedekiler": incelemedekiler,
+        "kuyruk_sayisi": kuyruk_sayisi,
         "bugun_yayinlanan": Haber.yayindakiler().filter(
             yayin_zamani__gte=bugun_baslangic).count(),
-        "benim_taslaklarim": kuyruk.filter(olusturan=request.user).count(),
+        "benim_taslaklarim": benim,
         **_yetkiler(request.user),
     })
 
@@ -1187,12 +1216,29 @@ MANSET_ALANLARI = [("ana", "Ana manşet", "manset_ana"),
 @login_required
 @permission_required("icerik.mansete_alma", raise_exception=True)
 def mansetler(request):
+    # ÜÇ AYRI İNDEKSLİ SORGU, OR DEĞİL — 28 Ağustos 2026 ölçümü.
+    #
+    # `Q(a) | Q(b) | Q(c)` biçimini SQLite'ın kısmi indeksleri KARŞILAMIYOR:
+    # Django boolean'ı çıplak sütun olarak yazıyor (`WHERE "manset_ana"`) ve
+    # çıplak koşullu kısmi indeks yalnız TEK sütunlu sorguda eşleşiyor
+    # (ölçüm tablosu `migrations/0006`in başlığında). OR'da hiçbir biçim
+    # eşleşmiyor ve sorgu 356.839 satırı tam tarıyordu (752 ms).
+    #
+    # Üç ayrı sorgu her biri örtücü indeks taramasıyla ~0,2 ms; kimlikler
+    # Python'da birleşiyor. Manşetli kayıt sayısı doğası gereği küçük
+    # (anasayfada üç slot), yani birleşen küme de küçük.
+    kimlikler = set()
+    for _kod, _ad, alan in MANSET_ALANLARI:
+        # `.order_by()` ŞART: Meta sıralaması (`-yayin_zamani`) planlayıcıyı
+        # o indekse çekiyor ve kısmi indeks devre dışı kalıyordu (ölçüldü).
+        # Kimlik toplarken sıralamanın zaten anlamı yok.
+        kimlikler.update(Haber.objects.filter(**{alan: True})
+                         .order_by().values_list("pk", flat=True))
     sorgu = (Haber.objects
              .select_related("kategori", "olusturan")
              .prefetch_related("kategori__turler")
              .exclude(durum=Haber.DURUM_SILINMIS)
-             .filter(Q(manset_ana=True) | Q(manset_tepe=True) |
-                     Q(manset_kare=True)))
+             .filter(pk__in=kimlikler))
     secili_slot = request.GET.get("slot") or ""
     secili_durum = request.GET.get("durum") or ""
     aranan = (request.GET.get("q") or "").strip()
@@ -1221,12 +1267,18 @@ def mansetler(request):
             ],
         }
 
-    # "Şu an anasayfada ne var" — üç slotun doluluk sayımı.
+    # ALTI SORGU -> BİR. 28 Ağustos ölçümü: manşet alanlarında indeks yok,
+    # her sorgu 356.839 satırı tam tarıyordu (~800 ms) ve ekran altı tane
+    # çalıştırıyordu. Manşetli kayıt sayısı doğası gereği küçük (anasayfada
+    # üç slot var), o yüzden kümeyi bir kez çekip sayımları Python'da
+    # yapmak doğru: tarama bir kez oluyor.
+    isaretliler = list(sorgu.values_list(
+        "manset_ana", "manset_tepe", "manset_kare", "durum"))
     doluluk = ", ".join(
-        f"{ad}: {sorgu.filter(**{alan_: True}).count()}"
-        for _, ad, alan_ in MANSET_ALANLARI)
-
-    yayindan_dusmus = sorgu.exclude(durum=Haber.DURUM_AKTIF).count()
+        f"{ad}: {sum(1 for satir in isaretliler if satir[sira])}"
+        for sira, (_, ad, _alan) in enumerate(MANSET_ALANLARI))
+    yayindan_dusmus = sum(1 for satir in isaretliler
+                          if satir[3] != Haber.DURUM_AKTIF)
     return _liste_ciz(
         request, baslik="Manşetler", bolum="mansetler", ust_bolum="icerik",
         tablo_adi="Manşet listesi",
@@ -1867,3 +1919,751 @@ class SifreDegistir(PasswordChangeView):
             **_yetkiler(self.request.user),
         })
         return baglam
+
+
+# ===========================================================================
+# Model turu ekranları — PANEL-NOTLARI.md §24
+#
+# Dokuz model, dokuz liste + dokuz düzenleme ekranı. Ortak liste kabuğunu
+# (`_liste_ciz`) ve ortak kayıt formunu (`kayit_form.html`) kullanıyorlar;
+# yeni bir kabuk yazılmadı.
+#
+# **Yeni yetkilik AÇILMADI.** §11'in 14 yetkiliği ve 5×14 matrisi olduğu gibi
+# duruyor; her ekran en yakın mevcut yetkiliğe bağlandı. Yeni yetkilik açmak
+# matrisi değiştirmek olurdu ve o bir karardır, kod işi değil:
+#
+#   Yorumlar          → yorum_onaylama      (Editör · Yayın Yönetmeni)
+#   Log Kayıtları     → log_goruntuleme     (Yayın Yönetmeni)
+#   Reklam yuvaları   → sayfa_duzeni        (Sayfa Sekreteri · Yayın Yön.)
+#   Reklam kampanyası → reklam_kampanyasi   (İlan Sorumlusu · Yayın Yön.)
+#   Gazeteler         → resmi_ilan_girme    (İlan Sorumlusu · Yayın Yön.)
+#   Resmî ilanlar     → resmi_ilan_girme    (aynı)
+#   Bildirimler       → mansete_alma        (Sayfa Sekreteri · Yayın Yön.)
+#   Son dakika        → mansete_alma        (aynı)
+#   2FA               → yetkilik YOK, login_required (kendi hesabı)
+#
+# Bildirim ve son dakika `mansete_alma`ya bağlandı çünkü ikisi de "okurun
+# önüne ne çıkacak" kararıdır — manşetle aynı karar sınıfı. Adayı raporda
+# plan eki olarak duruyor: ikisine ayrı yetkilik açılabilir.
+# ===========================================================================
+
+
+def _durum_rozeti_genel(nesne, sinif_haritasi):
+    return _rozet(nesne.get_durum_display(),
+                  sinif_haritasi.get(nesne.durum, ""))
+
+
+@login_required
+@permission_required("icerik.yorum_onaylama", raise_exception=True)
+def yorum_listesi(request):
+    """Yorumlar — §24.1. Dökümdeki sütun sözleşmesi."""
+    sorgu = Yorum.objects.select_related("onaylayan", "duzenleyen")
+    secili_durum = request.GET.get("durum") or ""
+    secili_tur = request.GET.get("icerik_turu") or ""
+    aranan = (request.GET.get("q") or "").strip()
+    if secili_durum:
+        sorgu = sorgu.filter(durum=secili_durum)
+    if secili_tur:
+        sorgu = sorgu.filter(icerik_turu=secili_tur)
+    if aranan:
+        sorgu = sorgu.filter(Q(metin__icontains=aranan) |
+                             Q(okur_adi__icontains=aranan))
+
+    sinif = {1: "aktif", 2: "pasif", 3: "silinmis"}
+
+    def satir(y):
+        return {
+            "kimlik": y.pk,
+            "duzenle": f"/panel/yorum/{y.pk}",
+            "adres": "",
+            "hucreler": [
+                _bag(f"/panel/yorum/{y.pk}", y.metin[:60] or "(boş)"),
+                _metin(y.okur_adi),
+                _metin(y.get_icerik_turu_display()),
+                _metin(y.icerik_id, "mono"),
+                _metin(y.ip or "", "mono"),
+                _tarih(y.tarih),
+                _rozet("Düzenlendi", "silinmis") if y.duzenlendi_mi
+                else _metin(""),
+                _durum_rozeti_genel(y, sinif),
+            ],
+        }
+
+    bekleyen = Yorum.bekleyenler().count()
+    return _liste_ciz(
+        request, baslik="Yorumlar", bolum="yorumlar", ust_bolum="etkilesim",
+        tablo_adi="Yorum listesi",
+        basliklar=["Yorum", "Yorumu yapan", "Sayfa tipi", "İçerik ID", "IP",
+                   "Tarih", "İz", "Durum", "İşlemler"],
+        sorgu=sorgu, satir_kur=satir, temiz_adi="panel-yorumlar",
+        suzgecler=[
+            _arama_suzgeci(aranan, "Yorumda ya da adda ara"),
+            {"tur": "secim", "ad": "icerik_turu", "etiket": "Sayfa tipi",
+             "bos": "Sayfa tipi seç", "secenekler": Yorum.TURLER,
+             "deger": secili_tur},
+            {"tur": "secim", "ad": "durum", "etiket": "Durum",
+             "bos": "Durum seç", "secenekler": Yorum.DURUMLAR,
+             "deger": secili_durum},
+        ],
+        ust_bilgi=f"{bekleyen} yorum karar bekliyor.",
+        notlar=[
+            "Durum enum'u burada ÜÇ değerli (Aktif · Pasif · Silinmiş); "
+            "dökümde ölçüldü, içerik ekranlarındaki dördüncü değer Arşiv "
+            "yorumlarda yok (§9).",
+            "Yorum metnini değiştirmek gerekçe ister; özgün metin saklanır ve "
+            "okur “düzenlendi” işaretini görür (§13).",
+        ])
+
+
+@login_required
+@permission_required("icerik.yorum_onaylama", raise_exception=True)
+def yorum_duzenle(request, kimlik):
+    yorum = get_object_or_404(Yorum, pk=kimlik)
+    form = YorumForm(request.POST or None, instance=yorum,
+                     kullanici=request.user)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("panel-yorum-duzenle", kimlik=yorum.pk)
+    kilitli = [("Kimlik", yorum.pk),
+               ("Sayfa tipi", yorum.get_icerik_turu_display()),
+               ("İçerik ID", yorum.icerik_id),
+               ("IP", yorum.ip or "—"),
+               ("Tarih", yorum.tarih.strftime("%d.%m.%Y %H:%M"))]
+    if yorum.duzenlendi_mi:
+        kilitli.append(("Özgün metin", yorum.ozgun_metin[:120] or "—"))
+    return render(request, "panel/kayit_form.html", {
+        "baslik": f"Yorum #{yorum.pk}",
+        "bolum": "yorumlar", "ust_bolum": "etkilesim",
+        "form": form, "adres": "", "geri_adi": "panel-yorumlar",
+        "kilitli": kilitli,
+        "kilit_notu": "Metin değişirse gerekçe zorunlu; özgün hâli saklanır.",
+        **_yetkiler(request.user),
+    })
+
+
+@login_required
+@permission_required("icerik.log_goruntuleme", raise_exception=True)
+def log_listesi(request):
+    """Log kayıtları — §24.8. **Eylem günlüğü**, oturum günlüğü değil.
+
+    Mevcut panelin `login_logs` ekranı yalnız oturum açmayı kaydediyordu ve
+    hangi kaydın değiştiğini söyleyen tek sütunu yoktu; bu ekran `hedef_tur`
+    ve `hedef_id` sütunlarıyla o boşluğu kapatıyor.
+    """
+    sorgu = LogKaydi.objects.select_related("kullanici")
+    secili_fiil = request.GET.get("fiil") or ""
+    secili_kullanici = request.GET.get("kullanici") or ""
+    aranan = (request.GET.get("q") or "").strip()
+    if secili_fiil:
+        sorgu = sorgu.filter(fiil=secili_fiil)
+    if secili_kullanici:
+        sorgu = sorgu.filter(kullanici_id=secili_kullanici)
+    if aranan:
+        sorgu = sorgu.filter(Q(hedef_tur__icontains=aranan) |
+                             Q(gerekce__icontains=aranan))
+
+    def satir(k):
+        return {
+            "kimlik": k.pk,
+            "duzenle": f"/panel/log/{k.pk}",
+            "adres": "",
+            "hucreler": [
+                _tarih(k.zaman),
+                _metin(k.kullanici.get_username()),
+                _metin(k.get_fiil_display()),
+                _metin(k.hedef_tur, "mono") if k.hedef_tur
+                else _yok("Hedefsiz kayıt — oturum olayı."),
+                _metin(k.hedef_id, "mono") if k.hedef_id
+                else _yok("Hedefsiz kayıt."),
+                _metin(k.etkilenen_sayisi, "mono"),
+                _metin(k.ip or "", "mono"),
+            ],
+        }
+
+    oturum = LogKaydi.objects.filter(
+        fiil__in=("giris", "giris_basarisiz", "cikis")).count()
+    kullanicilar = [(u.pk, u.get_username())
+                    for u in User.objects.filter(is_active=True).order_by("username")]
+    return _liste_ciz(
+        request, baslik="Log kayıtları", bolum="log", ust_bolum="ayarlar",
+        tablo_adi="Log kaydı listesi",
+        basliklar=["Zaman", "Kullanıcı", "Fiil", "Hedef türü", "Hedef",
+                   "Etkilenen", "IP", "İşlemler"],
+        sorgu=sorgu, satir_kur=satir, temiz_adi="panel-log",
+        suzgecler=[
+            _arama_suzgeci(aranan, "Hedef türünde ya da gerekçede ara"),
+            {"tur": "secim", "ad": "fiil", "etiket": "Fiil", "bos": "Fiil seç",
+             "secenekler": LogKaydi.FIILLER, "deger": secili_fiil},
+            {"tur": "secim", "ad": "kullanici", "etiket": "Kullanıcı",
+             "bos": "Kullanıcı seç", "secenekler": kullanicilar,
+             "deger": secili_kullanici},
+        ],
+        ust_bilgi=f"{sorgu.count()} kayıt · bunun {oturum} tanesi oturum olayı.",
+        notlar=[
+            "Mevcut panelin log ekranı bir OTURUM AÇMA günlüğüydü; hangi "
+            "kaydın değiştiğini söyleyen sütunu yoktu (§24.8).",
+            "Saklama önerisi: oturum kayıtları 12 ay, eylem kayıtları süresiz.",
+            "Kullanıcı bağı PROTECT: hesap silinirse log okunamaz hâle gelirdi.",
+        ])
+
+
+@login_required
+@permission_required("icerik.log_goruntuleme", raise_exception=True)
+def log_detay(request, kimlik):
+    """Log kaydı **salt okunur**. Düzenlenebilen log, log değildir."""
+    kayit = get_object_or_404(LogKaydi.objects.select_related("kullanici"),
+                              pk=kimlik)
+    return render(request, "panel/log_detay.html", {
+        "baslik": f"Log #{kayit.pk}",
+        "bolum": "log", "ust_bolum": "ayarlar",
+        "kayit": kayit,
+        **_yetkiler(request.user),
+    })
+
+
+@login_required
+@permission_required("icerik.sayfa_duzeni", raise_exception=True)
+def yuva_listesi(request):
+    """Reklam yuvaları — §24.4, F7(b)'nin konum + ölçü + cihaz modeli."""
+    # `annotate()` GROUP BY kurdugu icin Paginator Meta.ordering'i
+    # "siralanmamis" sayiyor; siralama acikca veriliyor.
+    sorgu = (ReklamYuvasi.objects.annotate(kampanya=Count("kampanyalar"))
+             .order_by("konum", "ad", "id"))
+    secili_cihaz = request.GET.get("cihaz") or ""
+    aranan = (request.GET.get("q") or "").strip()
+    if secili_cihaz:
+        sorgu = sorgu.filter(cihaz=secili_cihaz)
+    if aranan:
+        sorgu = sorgu.filter(Q(ad__icontains=aranan) | Q(konum__icontains=aranan))
+
+    def satir(y):
+        return {
+            "kimlik": y.pk,
+            "duzenle": f"/panel/yuva/{y.pk}",
+            "adres": "",
+            "hucreler": [
+                _bag(f"/panel/yuva/{y.pk}", y.ad),
+                _metin(y.konum),
+                _metin(y.olcu, "mono") if y.olcu
+                else _yok("Ölçüsü kaynakta yoktu; 50 yuvanın 12'sinde eksik."),
+                _metin(y.get_cihaz_display()),
+                _metin(y.kampanya, "mono"),
+                _rozet("Yer tutucu", "pasif") if y.yer_tutucu_mu
+                else (_rozet("Aktif", "aktif") if y.aktif
+                      else _rozet("Pasif", "pasif")),
+            ],
+        }
+
+    olcusuz = ReklamYuvasi.objects.filter(genislik__isnull=True).count()
+    return _liste_ciz(
+        request, baslik="Reklam yuvaları", bolum="yuvalar", ust_bolum="reklam",
+        tablo_adi="Reklam yuvası listesi",
+        basliklar=["Yuva adı", "Konum", "Ölçü", "Cihaz", "Kampanya", "Durum",
+                   "İşlemler"],
+        sorgu=sorgu, satir_kur=satir, temiz_adi="panel-yuvalar",
+        suzgecler=[
+            _arama_suzgeci(aranan, "Yuva adında ya da konumda ara"),
+            {"tur": "secim", "ad": "cihaz", "etiket": "Cihaz",
+             "bos": "Cihaz seç", "secenekler": ReklamYuvasi.CIHAZLAR,
+             "deger": secili_cihaz},
+        ],
+        uyari=(f"{olcusuz} yuvanın ölçüsü boş. Ölçüldü: sağlayıcıdaki 50 "
+               "yuvanın yalnız 6'sı konum + ölçü + cihaz üçlüsüne ayrışıyor, "
+               "cihaz bilgisi 43'ünde hiç yok. Taşıma elle yapılır."
+               ) if olcusuz else "",
+        notlar=[
+            "Reklamverenin adı yuvaya değil KAMPANYAYA yazılır (§14); "
+            "böylece reklamveren değişince yuva yerinde kalır.",
+            "Yuva adı anasayfa şablonlarının çağırdığı addır (F1 ölçütü 3); "
+            "değiştirmek bağı koparır.",
+        ])
+
+
+@login_required
+@permission_required("icerik.sayfa_duzeni", raise_exception=True)
+def yuva_duzenle(request, kimlik):
+    yuva = get_object_or_404(ReklamYuvasi, pk=kimlik)
+    form = ReklamYuvasiForm(request.POST or None, instance=yuva)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("panel-yuva-duzenle", kimlik=yuva.pk)
+    return render(request, "panel/kayit_form.html", {
+        "baslik": yuva.ad,
+        "bolum": "yuvalar", "ust_bolum": "reklam",
+        "form": form, "adres": "", "geri_adi": "panel-yuvalar",
+        "kilitli": [("Kimlik", yuva.pk), ("Ölçü", yuva.olcu or "—"),
+                    ("Kampanya", yuva.kampanyalar.count())],
+        "kilit_notu": "Yuva adını şablonlar kullanıyor; değiştirmeden önce "
+                      "anasayfadaki karşılığını kontrol edin.",
+        **_yetkiler(request.user),
+    })
+
+
+@login_required
+@permission_required("icerik.reklam_kampanyasi", raise_exception=True)
+def kampanya_listesi(request):
+    """Reklam kampanyaları — dökümdeki `advertisement_list.php` sözleşmesi."""
+    sorgu = ReklamKampanyasi.objects.select_related("yuva", "olusturan")
+    secili_yuva = request.GET.get("yuva") or ""
+    secili_durum = request.GET.get("durum") or ""
+    aranan = (request.GET.get("q") or "").strip()
+    if secili_yuva:
+        sorgu = sorgu.filter(yuva_id=secili_yuva)
+    if secili_durum:
+        sorgu = sorgu.filter(durum=secili_durum)
+    if aranan:
+        sorgu = sorgu.filter(baslik__icontains=aranan)
+
+    def satir(k):
+        return {
+            "kimlik": k.pk,
+            "duzenle": f"/panel/kampanya/{k.pk}",
+            "adres": k.hedef_adres or "",
+            "hucreler": [
+                _bag(f"/panel/kampanya/{k.pk}", k.baslik),
+                _metin(k.yuva.ad),
+                _metin(f"{k.baslangic or '—'} → {k.bitis or '—'}", "mono"),
+                _metin(k.olusturan.get_username()) if k.olusturan_id
+                else _yok(EDITOR_NOTU),
+                _rozet("Süresi geçti", "pasif") if k.suresi_gecti_mi()
+                else _rozet(k.get_durum_display(),
+                            "aktif" if k.durum == 1 else "pasif"),
+            ],
+        }
+
+    yuvalar = [(y.pk, y.ad) for y in ReklamYuvasi.objects.filter(aktif=True)]
+    gecmis = len([k for k in ReklamKampanyasi.objects.all() if k.suresi_gecti_mi()])
+    return _liste_ciz(
+        request, baslik="Reklam kampanyaları", bolum="kampanyalar",
+        ust_bolum="reklam", tablo_adi="Reklam kampanyası listesi",
+        basliklar=["Başlık", "Reklam alanı", "Başlangıç / Bitiş", "Editör",
+                   "Durum", "İşlemler"],
+        sorgu=sorgu, satir_kur=satir, temiz_adi="panel-kampanyalar",
+        suzgecler=[
+            _arama_suzgeci(aranan, "Kampanya başlığında ara"),
+            {"tur": "secim", "ad": "yuva", "etiket": "Reklam alanı",
+             "bos": "Reklam alanı seç", "secenekler": yuvalar,
+             "deger": secili_yuva},
+            {"tur": "secim", "ad": "durum", "etiket": "Durum",
+             "bos": "Durum seç", "secenekler": ReklamKampanyasi.DURUMLAR,
+             "deger": secili_durum},
+        ],
+        uyari=(f"{gecmis} kampanyanın bitiş tarihi geçmiş ama kaydı duruyor."
+               ) if gecmis else "",
+        notlar=["Görsel yerel dosyadan gelir; sayfa internetsiz de açılmalı."])
+
+
+@login_required
+@permission_required("icerik.reklam_kampanyasi", raise_exception=True)
+def kampanya_duzenle(request, kimlik):
+    kampanya = get_object_or_404(
+        ReklamKampanyasi.objects.select_related("yuva"), pk=kimlik)
+    form = ReklamKampanyasiForm(request.POST or None, instance=kampanya)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("panel-kampanya-duzenle", kimlik=kampanya.pk)
+    return render(request, "panel/kayit_form.html", {
+        "baslik": kampanya.baslik,
+        "bolum": "kampanyalar", "ust_bolum": "reklam",
+        "form": form, "adres": kampanya.hedef_adres or "",
+        "geri_adi": "panel-kampanyalar",
+        "kilitli": [("Kimlik", kampanya.pk), ("Yuva", kampanya.yuva.ad),
+                    ("Yuva ölçüsü", kampanya.yuva.olcu or "—")],
+        "kilit_notu": "Yuva tanımı Sayfa Düzeni'ndedir; buradan değiştirilmez.",
+        **_yetkiler(request.user),
+    })
+
+
+@login_required
+@permission_required("icerik.resmi_ilan_girme", raise_exception=True)
+def gazete_listesi(request):
+    """Gazete listesi — BIK yayın kodu defteri (§24.5)."""
+    sorgu = (Gazete.objects.annotate(ilan=Count("ilanlar"))
+             .order_by("sira", "ad", "id"))
+    aranan = (request.GET.get("q") or "").strip()
+    if aranan:
+        sorgu = sorgu.filter(Q(ad__icontains=aranan) |
+                             Q(bik_kodu__icontains=aranan))
+
+    def satir(g):
+        return {
+            "kimlik": g.pk,
+            "duzenle": f"/panel/gazete/{g.pk}",
+            "adres": "",
+            "hucreler": [
+                _metin(g.sira, "mono"),
+                _bag(f"/panel/gazete/{g.pk}", g.ad),
+                _metin(g.bik_kodu, "mono kilitli") if g.bik_kodu
+                else _yok("BIK kodu girilmemiş."),
+                _rozet("Bizim", "aktif") if g.bizim_mi else _metin(""),
+                _metin(g.ilan, "mono"),
+                _rozet("Aktif", "aktif") if g.aktif else _rozet("Pasif", "pasif"),
+            ],
+        }
+
+    return _liste_ciz(
+        request, baslik="Gazete listesi", bolum="gazeteler", ust_bolum="reklam",
+        tablo_adi="Gazete listesi",
+        basliklar=["Sıra", "Gazete", "BIK kodu", "", "İlan", "Durum",
+                   "İşlemler"],
+        sorgu=sorgu, satir_kur=satir, temiz_adi="panel-gazeteler",
+        suzgecler=[_arama_suzgeci(aranan, "Gazete adında ya da kodda ara")],
+        notlar=[
+            "Bursa Hakimiyet'in kendi kodu YYN-000132'dir; resmî ilan "
+            "yükümlülüklerinin dayanağı, değiştirilmemeli (§16).",
+            "Dökümde 17 kayıt vardı, hepsi YYN kodlu.",
+        ])
+
+
+@login_required
+@permission_required("icerik.resmi_ilan_girme", raise_exception=True)
+def gazete_duzenle(request, kimlik):
+    gazete = get_object_or_404(Gazete, pk=kimlik)
+    form = GazeteForm(request.POST or None, instance=gazete)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("panel-gazete-duzenle", kimlik=gazete.pk)
+    return render(request, "panel/kayit_form.html", {
+        "baslik": gazete.ad,
+        "bolum": "gazeteler", "ust_bolum": "reklam",
+        "form": form, "adres": "", "geri_adi": "panel-gazeteler",
+        "kilitli": [("Kimlik", gazete.pk), ("Bağlı ilan", gazete.ilanlar.count())],
+        "kilit_notu": "BIK kodu yasal dayanaktır; değiştirmeden önce doğrulayın.",
+        **_yetkiler(request.user),
+    })
+
+
+@login_required
+@permission_required("icerik.resmi_ilan_girme", raise_exception=True)
+def ilan_listesi(request):
+    """Resmî ilanlar — §24.3. Dökümdeki `official_announcement_list.php`."""
+    sorgu = ResmiIlan.objects.select_related("gazete", "olusturan")
+    secili_tur = request.GET.get("tur") or ""
+    secili_durum = request.GET.get("durum") or ""
+    aranan = (request.GET.get("q") or "").strip()
+    if secili_tur:
+        sorgu = sorgu.filter(tur=secili_tur)
+    if secili_durum:
+        sorgu = sorgu.filter(durum=secili_durum)
+    if aranan:
+        sorgu = sorgu.filter(baslik__icontains=aranan)
+
+    sinif = {1: "aktif", 2: "pasif", 4: "arsiv"}
+
+    def satir(i):
+        return {
+            "kimlik": i.pk,
+            "duzenle": f"/panel/ilan/{i.pk}",
+            "adres": "",
+            "hucreler": [
+                _metin(i.pk, "mono"),
+                _bag(f"/panel/ilan/{i.pk}", i.baslik),
+                _metin(i.get_tur_display()),
+                _metin(i.yayin_tarihi.strftime("%d.%m.%Y") if i.yayin_tarihi else "",
+                       "mono"),
+                _metin(i.olusturan.get_username()) if i.olusturan_id
+                else _yok(EDITOR_NOTU),
+                _durum_rozeti_genel(i, sinif),
+            ],
+        }
+
+    return _liste_ciz(
+        request, baslik="Resmî ilanlar", bolum="ilanlar", ust_bolum="reklam",
+        tablo_adi="Resmî ilan listesi",
+        basliklar=["ID", "Başlık", "İlan türü", "Tarih", "Editör", "Durum",
+                   "İşlemler"],
+        sorgu=sorgu, satir_kur=satir, temiz_adi="panel-ilanlar",
+        suzgecler=[
+            _arama_suzgeci(aranan, "İlan başlığında ara"),
+            {"tur": "secim", "ad": "tur", "etiket": "İlan türü",
+             "bos": "İlan türü", "secenekler": ResmiIlan.TURLER,
+             "deger": secili_tur},
+            {"tur": "secim", "ad": "durum", "etiket": "Durum",
+             "bos": "Durum seç", "secenekler": ResmiIlan.DURUMLAR,
+             "deger": secili_durum},
+        ],
+        notlar=[
+            "Dört tür yasal karşılığı olduğu için korunuyor; ölçülen 24 "
+            "kaydın hiçbiri İCRA ya da PERSONEL ALIMI değildi (§16).",
+            "ALAN SÖZLEŞMESİ ÖLÇÜLEMEDİ: dökümde ilan ekleme formu yok; "
+            "alanlar bizim modelimizden türetildi (§24.3).",
+        ])
+
+
+@login_required
+@permission_required("icerik.resmi_ilan_girme", raise_exception=True)
+def ilan_duzenle(request, kimlik):
+    ilan = get_object_or_404(ResmiIlan.objects.select_related("gazete"), pk=kimlik)
+    form = ResmiIlanForm(request.POST or None, instance=ilan)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("panel-ilan-duzenle", kimlik=ilan.pk)
+    return render(request, "panel/kayit_form.html", {
+        "baslik": ilan.baslik,
+        "bolum": "ilanlar", "ust_bolum": "reklam",
+        "form": form, "adres": "", "geri_adi": "panel-ilanlar",
+        "kilitli": [("Kimlik", ilan.pk), ("Tür", ilan.get_tur_display()),
+                    ("Gazete", ilan.gazete.ad if ilan.gazete_id else "—")],
+        "kilit_notu": "Resmî ilan BIK yükümlülüğü taşır ve yasal sonuç doğurur.",
+        **_yetkiler(request.user),
+    })
+
+
+@login_required
+@permission_required("icerik.mansete_alma", raise_exception=True)
+def bildirim_listesi(request):
+    """Bildirimler — §24.9. Açılma oranı **türetiliyor**, saklanmıyor."""
+    sorgu = Bildirim.objects.select_related("gonderen")
+    secili_tur = request.GET.get("icerik_turu") or ""
+    aranan = (request.GET.get("q") or "").strip()
+    if secili_tur:
+        sorgu = sorgu.filter(icerik_turu=secili_tur)
+    if aranan:
+        sorgu = sorgu.filter(baslik__icontains=aranan)
+
+    def satir(b):
+        return {
+            "kimlik": b.pk,
+            "duzenle": f"/panel/bildirim/{b.pk}",
+            "adres": "",
+            "hucreler": [
+                _tarih(b.gonderim_zamani),
+                _metin(b.get_icerik_turu_display()),
+                _bag(f"/panel/bildirim/{b.pk}", b.baslik),
+                _metin(b.hedef_sayisi, "mono"),
+                _metin(b.acan_sayisi, "mono"),
+                _metin("%%%.2f" % b.acilma_orani, "mono") if b.hedef_sayisi
+                else _yok("Henüz gönderilmedi."),
+            ],
+        }
+
+    gonderilen = [b for b in Bildirim.objects.all() if b.hedef_sayisi]
+    ortalama = (sum(b.acilma_orani for b in gonderilen) / len(gonderilen)
+                if gonderilen else 0.0)
+    return _liste_ciz(
+        request, baslik="Bildirimler", bolum="bildirimler",
+        ust_bolum="etkilesim", tablo_adi="Bildirim listesi",
+        basliklar=["Tarih", "Veri kaynağı", "Bildirim", "Hedef kişi",
+                   "Açan kişi", "Açılma oranı", "İşlemler"],
+        sorgu=sorgu, satir_kur=satir, temiz_adi="panel-bildirimler",
+        suzgecler=[
+            _arama_suzgeci(aranan, "Bildirim başlığında ara"),
+            {"tur": "secim", "ad": "icerik_turu", "etiket": "Veri kaynağı",
+             "bos": "Veri kaynağı seç", "secenekler": Yorum.TURLER,
+             "deger": secili_tur},
+        ],
+        ust_bilgi=("Ortalama açılma oranı %%%.2f (%d gönderim)."
+                   % (ortalama, len(gonderilen))) if gonderilen else
+                  "Henüz gönderim yok.",
+        notlar=[
+            "Oran SAKLANMIYOR, hedef ve açan sayısından türetiliyor. Mevcut "
+            "panelde iki sütun vardı ama oran hiçbir yerde hesaplanmıyordu (§13).",
+            "Ölçülen geçmiş: 10 gönderimde ortalama %0,21; hedef kitle "
+            "9.207 → 22.683'e çıkarken açan sayısı 21-47 bandında sabit kaldı.",
+            "Bu ekran yalnız KAYDI tutar; gerçek gönderim altyapısı kapsam dışı.",
+        ])
+
+
+@login_required
+@permission_required("icerik.mansete_alma", raise_exception=True)
+def bildirim_duzenle(request, kimlik):
+    bildirim = get_object_or_404(Bildirim, pk=kimlik)
+    form = BildirimForm(request.POST or None, instance=bildirim)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("panel-bildirim-duzenle", kimlik=bildirim.pk)
+    return render(request, "panel/kayit_form.html", {
+        "baslik": bildirim.baslik,
+        "bolum": "bildirimler", "ust_bolum": "etkilesim",
+        "form": form, "adres": "", "geri_adi": "panel-bildirimler",
+        "kilitli": [("Kimlik", bildirim.pk),
+                    ("Açılma oranı", "%%%.2f" % bildirim.acilma_orani),
+                    ("Gönderen", bildirim.gonderen.get_username()
+                     if bildirim.gonderen_id else "—")],
+        "kilit_notu": "Oran türetilir; hedef ve açan sayısından hesaplanır.",
+        **_yetkiler(request.user),
+    })
+
+
+@login_required
+@permission_required("icerik.mansete_alma", raise_exception=True)
+def son_dakika_listesi(request):
+    """Son dakika — §24.2. Ayrı model, haberde bayrak değil."""
+    sorgu = SonDakika.objects.select_related("haber", "olusturan")
+    secili_durum = request.GET.get("durum") or ""
+    aranan = (request.GET.get("q") or "").strip()
+    if secili_durum == "aktif":
+        sorgu = sorgu.filter(aktif=True)
+    elif secili_durum == "pasif":
+        sorgu = sorgu.filter(aktif=False)
+    if aranan:
+        sorgu = sorgu.filter(baslik__icontains=aranan)
+
+    def satir(s):
+        return {
+            "kimlik": s.pk,
+            "duzenle": f"/panel/son-dakika/{s.pk}",
+            "adres": s.yol,
+            "hucreler": [
+                _metin(s.sira, "mono"),
+                _bag(f"/panel/son-dakika/{s.pk}", s.baslik),
+                _metin(s.yol, "mono") if s.yol
+                else _yok("Ne serbest adres ne bağlı haber var."),
+                _metin(s.olusturan.get_username()) if s.olusturan_id
+                else _yok(EDITOR_NOTU),
+                _tarih(s.baslangic),
+                _rozet("Aktif", "aktif") if s.aktif else _rozet("Pasif", "pasif"),
+            ],
+        }
+
+    bantta = SonDakika.bandakiler().count()
+    return _liste_ciz(
+        request, baslik="Son dakika", bolum="son-dakika", ust_bolum="icerik",
+        tablo_adi="Son dakika listesi",
+        basliklar=["Sıra", "Başlık", "Adres", "Editör", "Başlangıç", "Durum",
+                   "İşlemler"],
+        sorgu=sorgu, satir_kur=satir, temiz_adi="panel-son-dakika",
+        suzgecler=[
+            _arama_suzgeci(aranan, "Bant başlığında ara"),
+            {"tur": "secim", "ad": "durum", "etiket": "Durum",
+             "bos": "Durum seç",
+             "secenekler": [("aktif", "Aktif"), ("pasif", "Pasif")],
+             "deger": secili_durum},
+        ],
+        ust_bilgi=f"Şu an bantta görünen kayıt: {bantta}.",
+        notlar=[
+            "Ayrı model, haberde bayrak DEĞİL: dökümdeki kayıt serbest URL "
+            "taşıyor ve başlık habere ait değil (§24.2).",
+            "Bant boşsa site bugünkü davranışına düşer — en yeni yayındaki "
+            "haberler gösterilir; bugünkü davranış kaybolmadı.",
+            "§18 m.4: sağlayıcıdaki en yeni kayıt 2025-12-20; göçte veri "
+            "taşınmadı, davranış yeniden kuruldu.",
+        ])
+
+
+@login_required
+@permission_required("icerik.mansete_alma", raise_exception=True)
+def son_dakika_duzenle(request, kimlik):
+    kayit = get_object_or_404(SonDakika.objects.select_related("haber"), pk=kimlik)
+    form = SonDakikaForm(request.POST or None, instance=kayit)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("panel-son-dakika-duzenle", kimlik=kayit.pk)
+    return render(request, "panel/kayit_form.html", {
+        "baslik": kayit.baslik,
+        "bolum": "son-dakika", "ust_bolum": "icerik",
+        "form": form, "adres": kayit.yol, "geri_adi": "panel-son-dakika",
+        "kilitli": [("Kimlik", kayit.pk),
+                    ("Bantta mı", "evet" if kayit in SonDakika.bandakiler() else "hayır"),
+                    ("Bağlı haber", kayit.haber_id or "—")],
+        "kilit_notu": "Serbest adres varsa bağlı haberin adresi kullanılmaz.",
+        **_yetkiler(request.user),
+    })
+
+
+@login_required
+def iki_adimli(request):
+    """2FA durumu — **salt okunur, kurulum akışı bilerek YOK** (§24.10).
+
+    Gizli anahtarın nasıl saklanacağı bir güvenlik kararıdır ve kullanıcıya
+    soruldu (28 Ağustos 2026); cevap gelmedi. Bu ekran durumu gösterir,
+    kurulum yaptırmaz.
+
+    **Yarım bir 2FA, olmayan 2FA'dan tehlikelidir**: kullanıcı korunduğunu
+    sanır. Bu yüzden `gizli_anahtar` alanına yazan hiçbir yol açılmadı.
+
+    Yetkilik yok, `login_required` yeter: herkes kendi hesabının durumunu
+    görebilmeli — Şifre ekranıyla aynı gerekçe.
+    """
+    from .yetkiler import IKI_ADIMLI_ZORUNLU
+    kayit = IkiAdimli.objects.filter(kullanici=request.user).first()
+    roller = {g.name for g in request.user.groups.all()}
+    return render(request, "panel/iki_adimli.html", {
+        "baslik": "İki adımlı doğrulama",
+        "bolum": "iki-adimli", "ust_bolum": "ayarlar",
+        "kayit": kayit,
+        "zorunlu_mu": bool(roller & IKI_ADIMLI_ZORUNLU),
+        "zorunlu_roller": sorted(IKI_ADIMLI_ZORUNLU),
+        "yontemler": IkiAdimli.YONTEMLER,
+        **_yetkiler(request.user),
+    })
+
+
+# ===========================================================================
+# Haber arama ucu — ilgili haber seçicisinin kaynağı (28 Ağustos 2026)
+#
+# `/panel/haber/ekle` sayfası 356.839 `<option>` basıyordu: 36,5 MB ve
+# 32,7 sn. Alan artık yalnız seçilileri basıyor, yenisi buradan geliyor.
+#
+# İkinci bir arama mantığı YAZILMADI: `arama_metni.sorgu_coz` sitenin
+# aramasında ne yapıyorsa burada da onu yapıyor — durak kelime elemesi ve
+# en az uzunluk kapısı. Motor tarafı (normalize alan + indeks) F7'nin işi;
+# burada da ham `icontains` kullanılıyor, tıpkı `icerik/views.py`de olduğu
+# gibi. İki yerde iki farklı arama davranışı olmasın diye.
+# ===========================================================================
+
+HABER_ARA_EN_COK = 12
+
+
+@login_required
+@permission_required("icerik.haber_girme", raise_exception=True)
+def haber_ara(request):
+    """İlgili haber seçicisi için JSON arama. Yalnız okuma yapar."""
+    from django.http import JsonResponse
+
+    from .arama_metni import sorgu_coz
+
+    sorgu = (request.GET.get("q") or "").strip()
+    cozum = sorgu_coz(sorgu)
+    if not cozum:
+        sebep = ("Çok genel kelimelerle arama yapılamıyor."
+                 if cozum.sebep == "hepsi_durak"
+                 else "Aramak istediğiniz kelimeyi yazın.")
+        return JsonResponse({"sonuclar": [], "uyari": sebep})
+    if max(len(t.kelime) for t in cozum.terimler) < 3:
+        return JsonResponse({"sonuclar": [],
+                             "uyari": "En az 3 harflik bir kelime yazın."})
+
+    haric = request.GET.get("haric") or 0
+    bulunan = (Haber.objects.filter(baslik__icontains=sorgu)
+               .exclude(pk=haric)
+               .exclude(durum=Haber.DURUM_SILINMIS)
+               .only("id", "baslik", "yayin_zamani")
+               .order_by()[:HABER_ARA_EN_COK])
+    return JsonResponse({"sonuclar": [
+        {"id": h.pk,
+         "etiket": f"[{h.pk}] {h.baslik[:70]}",
+         "tarih": h.yayin_zamani.strftime("%d.%m.%Y") if h.yayin_zamani else ""}
+        for h in bulunan], "uyari": ""})
+
+
+@login_required
+@permission_required("icerik.haber_girme", raise_exception=True)
+def galeri_ara(request):
+    """Bağlı galeri seçicisi için JSON arama.
+
+    `haber_ara` ile aynı kapı, aynı gerekçe: ikinci bir arama mantığı
+    yazılmadı, `arama_metni.sorgu_coz` kullanılıyor.
+    """
+    from django.http import JsonResponse
+
+    from .arama_metni import sorgu_coz
+
+    sorgu = (request.GET.get("q") or "").strip()
+    cozum = sorgu_coz(sorgu)
+    if not cozum:
+        return JsonResponse({"sonuclar": [], "uyari":
+                             "Aramak istediğiniz kelimeyi yazın."})
+    if max(len(t.kelime) for t in cozum.terimler) < 3:
+        return JsonResponse({"sonuclar": [],
+                             "uyari": "En az 3 harflik bir kelime yazın."})
+
+    bulunan = (FotoGaleri.objects.filter(baslik__icontains=sorgu)
+               .exclude(durum=FotoGaleri.DURUM_SILINMIS)
+               .only("id", "baslik", "yayin_zamani")
+               .order_by()[:HABER_ARA_EN_COK])
+    return JsonResponse({"sonuclar": [
+        {"id": g.pk,
+         "etiket": f"[{g.pk}] {g.baslik[:70]}",
+         "tarih": g.yayin_zamani.strftime("%d.%m.%Y") if g.yayin_zamani else ""}
+        for g in bulunan], "uyari": ""})

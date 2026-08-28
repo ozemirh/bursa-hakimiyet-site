@@ -36,6 +36,12 @@ urlpatterns = [
     path("panel/", panel_gorunum.bugun, name="panel-bugun"),
     path("panel/akis", panel_gorunum.akis, name="panel-akis"),
     path("panel/haber/ekle", panel_gorunum.haber_ekle, name="panel-haber-ekle"),
+    # Ilgili haber secicisinin JSON ucu. Salt okuma; haber formunun
+    # 356 bin secenekli <select>ini bu ucla degistirdik.
+    path("panel/haber-ara", panel_gorunum.haber_ara,
+         name="panel-haber-ara"),
+    path("panel/galeri-ara", panel_gorunum.galeri_ara,
+         name="panel-galeri-ara"),
     path("panel/haber/<int:kimlik>", panel_gorunum.haber_duzenle,
          name="panel-haber-duzenle"),
 
@@ -77,6 +83,41 @@ urlpatterns = [
          name="panel-kaynaklar"),
     path("panel/kaynak/<int:kimlik>", panel_gorunum.kaynak_duzenle,
          name="panel-kaynak-duzenle"),
+    # --- Model turu ekranlari (PANEL-NOTLARI.md 24). Dokuz model, dokuz
+    # liste + dokuz duzenleme. Yeni yetkilik acilmadi; her ekran mevcut 14
+    # yetkilikten birine bagli.
+    path("panel/yorumlar", panel_gorunum.yorum_listesi, name="panel-yorumlar"),
+    path("panel/yorum/<int:kimlik>", panel_gorunum.yorum_duzenle,
+         name="panel-yorum-duzenle"),
+    path("panel/son-dakika", panel_gorunum.son_dakika_listesi,
+         name="panel-son-dakika"),
+    path("panel/son-dakika/<int:kimlik>", panel_gorunum.son_dakika_duzenle,
+         name="panel-son-dakika-duzenle"),
+    path("panel/ilanlar", panel_gorunum.ilan_listesi, name="panel-ilanlar"),
+    path("panel/ilan/<int:kimlik>", panel_gorunum.ilan_duzenle,
+         name="panel-ilan-duzenle"),
+    path("panel/yuvalar", panel_gorunum.yuva_listesi, name="panel-yuvalar"),
+    path("panel/yuva/<int:kimlik>", panel_gorunum.yuva_duzenle,
+         name="panel-yuva-duzenle"),
+    path("panel/kampanyalar", panel_gorunum.kampanya_listesi,
+         name="panel-kampanyalar"),
+    path("panel/kampanya/<int:kimlik>", panel_gorunum.kampanya_duzenle,
+         name="panel-kampanya-duzenle"),
+    path("panel/gazeteler", panel_gorunum.gazete_listesi,
+         name="panel-gazeteler"),
+    path("panel/gazete/<int:kimlik>", panel_gorunum.gazete_duzenle,
+         name="panel-gazete-duzenle"),
+    path("panel/bildirimler", panel_gorunum.bildirim_listesi,
+         name="panel-bildirimler"),
+    path("panel/bildirim/<int:kimlik>", panel_gorunum.bildirim_duzenle,
+         name="panel-bildirim-duzenle"),
+    # Log SALT OKUNUR: duzenlenebilen log, log degildir.
+    path("panel/log", panel_gorunum.log_listesi, name="panel-log"),
+    path("panel/log/<int:kimlik>", panel_gorunum.log_detay,
+         name="panel-log-detay"),
+    # 2FA: yetkilik yok, kendi hesabi. Kurulum akisi BILEREK acilmadi.
+    path("panel/iki-adimli", panel_gorunum.iki_adimli, name="panel-iki-adimli"),
+
     path("panel/roller", panel_gorunum.roller, name="panel-roller"),
 
     # Sifre: yetkilik YOK, herkes kendi parolasini degistirebilmeli.

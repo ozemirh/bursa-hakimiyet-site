@@ -1,0 +1,59 @@
+{% extends "panel/taban.html" %}
+
+{% comment %}Log kaydı — SALT OKUNUR.
+
+Düzenlenebilen log, log değildir. Bu ekranda form yok; kaydın kendisi
+değiştirilemez. §24.8'in beş zorunlu alanı burada okunuyor.{% endcomment %}
+
+{% block icerik %}
+  <div class="kayit-duzen">
+    <div class="kayit-form">
+      <div class="kutu bilgi" role="status">
+        Log kaydı <b>salt okunurdur</b>. Düzenlenebilen bir günlük, günlük
+        sayılmaz.
+      </div>
+
+      <dl class="kunye-liste log-dokum">
+        <dt>Zaman</dt><dd>{{ kayit.zaman|date:"d.m.Y H:i:s" }}</dd>
+        <dt>Kullanıcı</dt><dd>{{ kayit.kullanici.get_username }}{% if kayit.kullanici.get_full_name %} ({{ kayit.kullanici.get_full_name }}){% endif %}</dd>
+        <dt>Fiil</dt><dd>{{ kayit.get_fiil_display }}</dd>
+        <dt>Hedef türü</dt><dd>{{ kayit.hedef_tur|default:"—" }}</dd>
+        <dt>Hedef</dt><dd>{{ kayit.hedef_id|default:"—" }}</dd>
+        <dt>Etkilenen</dt><dd>{{ kayit.etkilenen_sayisi }}</dd>
+        <dt>IP</dt><dd>{{ kayit.ip|default:"—" }}</dd>
+        <dt>Tarayıcı</dt><dd>{{ kayit.tarayici|default:"—" }}</dd>
+        <dt>Gerekçe</dt><dd>{{ kayit.gerekce|default:"—" }}</dd>
+        <dt>Toplu iş</dt><dd>{{ kayit.toplu_islem_kimligi|default:"—" }}</dd>
+      </dl>
+
+      <h2 class="onay-bas">Öncesi</h2>
+      <pre class="log-json">{{ kayit.oncesi|default:"—" }}</pre>
+      <h2 class="onay-bas">Sonrası</h2>
+      <pre class="log-json">{{ kayit.sonrasi|default:"—" }}</pre>
+
+      <div class="eylem">
+        <a class="dugme ufak" href="{% url 'panel-log' %}">Listeye dön</a>
+      </div>
+    </div>
+
+    <aside class="kayit-yan" aria-label="Log notu">
+      <div class="yan-kart">
+        <h2>Bu kayıt neden var</h2>
+        <p class="alt-not">
+          Mevcut panelin log ekranı bir <b>oturum açma günlüğüydü</b>: sütunları
+          ID · IP · Tarayıcı · Durum · Tarih ve hangi kaydın değiştiğini
+          söyleyen tek bir sütunu yoktu.
+        </p>
+        <p class="alt-not">
+          <b>Hedef türü</b> ve <b>Hedef</b> alanları olmadan bir log kaydı işe
+          yaramaz; <b>Öncesi / Sonrası</b> olmadan da “ne değişti” sorusu
+          cevaplanamaz.
+        </p>
+        <p class="alt-not">
+          Kullanıcı bağı <code>PROTECT</code>: hesap silinirse log okunamaz
+          hâle gelirdi.
+        </p>
+      </div>
+    </aside>
+  </div>
+{% endblock %}

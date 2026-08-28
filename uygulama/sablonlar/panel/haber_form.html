@@ -1,4 +1,5 @@
 {% extends "panel/taban.html" %}
+{% load static %}
 
 {% block icerik %}
   {# Alan sırası PANEL-NOTLARI.md §4'teki sözleşmeyi izler. #}
@@ -19,7 +20,13 @@
     <fieldset>
       <legend>Metin</legend>
       {% include "panel/parca/alan.html" with alan=form.baslik ipucu="En çok 60 karakter." %}
-      {% include "panel/parca/alan.html" with alan=form.ikinci_baslik ipucu="İsteğe bağlı." %}
+      {% comment %}İkinci başlık — §4 alan 3: "varsayılan kapalı, açılır".
+         `<details>` betiksiz de çalışır; JS gerekmiyor. Doluysa açık
+         geliyor ki editör gözden kaçırmasın.{% endcomment %}
+      <details class="acilir-alan"{% if form.ikinci_baslik.value %} open{% endif %}>
+        <summary>İkinci başlık ekle</summary>
+        {% include "panel/parca/alan.html" with alan=form.ikinci_baslik ipucu="İsteğe bağlı." %}
+      </details>
       {% include "panel/parca/alan.html" with alan=form.spot ipucu="En çok 160 karakter. Yayına almak için zorunlu." %}
       {% include "panel/parca/alan.html" with alan=form.govde ipucu="Yayına almak için en az iki paragraf." %}
     </fieldset>
@@ -27,6 +34,19 @@
     <fieldset>
       <legend>Sınıflandırma</legend>
       {% include "panel/parca/alan.html" with alan=form.kategori ipucu="Kategori haberin ADRESİNİ belirler. Değiştirirseniz eski adres otomatik yönlendirilir." %}
+
+      {% comment %}Adres önizlemesi — §4 alan 14, §21'de ölçülmüştü ama üründe
+         eksikti. Betik doldurur; betik yoksa kutu kaydedilmiş adresi
+         gösterir (yeni haberde boş kalır). Kaydedilen slug'ı SUNUCU üretir;
+         bu yalnız önizleme.{% endcomment %}
+      <div class="alan">
+        <label id="adres-onizleme-etiket">Adres</label>
+        <div class="adres-onizleme" data-adres-onizleme
+             data-kimlik="{% if haber %}{{ haber.pk }}{% endif %}"
+             aria-labelledby="adres-onizleme-etiket">{% if haber %}{{ haber.get_absolute_url }}{% endif %}</div>
+        <p class="sag-not">Adres deseni <code>/{kategori-slug}/{slug}-{id}</code>.
+          Kimlik kayıtta verilir; slug'ı sunucu üretir.</p>
+      </div>
       {% include "panel/parca/alan.html" with alan=form.ilce ipucu="İsteğe bağlı, tek seçim." %}
       {% include "panel/parca/alan.html" with alan=form.etiketler ipucu="Yayına almak için en az bir etiket zorunlu." %}
     </fieldset>
@@ -71,7 +91,28 @@
       {% include "panel/parca/alan.html" with alan=form.gomulu_kod %}
       {% include "panel/parca/alan.html" with alan=form.odak_kelime %}
       {% include "panel/parca/alan.html" with alan=form.seo_baslik %}
-      {% include "panel/parca/alan.html" with alan=form.ilgili_haberler %}
+      {% comment %}İlgili haberler — arama tabanlı seçim.
+
+         Alan 356.839 <option> basıyordu (36,5 MB, 32,7 sn). Artık yalnız
+         SEÇİLİ olanlar basılıyor; yenisi arama kutusundan geliyor.
+
+         Arama kutusu `hidden` sınıfıyla saklanmıyor: betik yoksa kutu
+         görünür ama işlevsizdir — bu yüzden betik onu kendisi ekliyor.
+         Betiksiz durumda alan yine çalışır: bağlı haberler görünür,
+         kaldırılabilir, haber kaydedilebilir.{% endcomment %}
+      <div class="alan ilgili-alan" data-ilgili-kap
+           data-ara-adres="{% url 'panel-haber-ara' %}"
+           data-haric="{% if haber %}{{ haber.pk }}{% endif %}">
+        {% include "panel/parca/alan.html" with alan=form.ilgili_haberler %}
+      </div>
+
+      {% comment %}Bağlı galeriler — §4 alan 27. Aynı desen, aynı kap
+         nitelikleri; betik ikisini de tanır.{% endcomment %}
+      <div class="alan ilgili-alan" data-ilgili-kap
+           data-secim="select[data-galeri]"
+           data-ara-adres="{% url 'panel-galeri-ara' %}">
+        {% include "panel/parca/alan.html" with alan=form.bagli_galeriler %}
+      </div>
     </fieldset>
 
     <div class="eylem">
@@ -79,4 +120,5 @@
       <a class="dugme ufak" href="{% url 'panel-akis' %}">Vazgeç</a>
     </div>
   </form>
+  <script src="{% static 'betik/panel.js' %}" defer></script>
 {% endblock %}

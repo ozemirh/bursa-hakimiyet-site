@@ -133,8 +133,20 @@
   function menuAcikMi(){ return !!menuDugme && menuDugme.getAttribute('aria-expanded') === 'true'; }
   function menuOdaklar(){
     if(!tamMenu){ return []; }
-    return [menuDugme].concat(dizi('a[href]', tamMenu)).filter(function(o){
-      return o && o.getClientRects().length > 0;
+    /* `summary` de odaklanabilir: bölümler <details> ile katlanıyor ve
+       klavye kullanıcısı onları Tab ile gezip Enter/Space ile açıyor.
+       Yalnız `a[href]` toplansaydı katlanır başlıklar odak tuzağının
+       dışında kalır, kapalı bölümler klavyeyle hiç açılamazdı. */
+    return [menuDugme].concat(dizi('summary, a[href]', tamMenu)).filter(function(o){
+      if(!o || o.getClientRects().length === 0){ return false; }
+      /* KAPALI <details> içindeki bağlantılar ODAK ALAMAZ ama Chrome onlara
+         yine de kutu (client rect) veriyor — kapalı içerik `content-visibility`
+         ile atlanıyor, `display:none` ile değil. Bu yüzden salt "kutusu var mı"
+         süzgeci onları listeye alıyordu ve tuzağın "son öğe"si asla odak
+         alamayan bir bağlantı oluyordu: sarma koşulu hiç gerçekleşmiyor, odak
+         menüden kaçıyordu (ölçüldü: 70 Tab adımının 53'ü dışarı çıktı).
+         `summary` kendi kapalı bölümünün içinde sayılmaz — o odaklanabilir. */
+      return o.tagName === 'SUMMARY' || !o.closest('details:not([open])');
     });
   }
   function menuKapat(odakla){
@@ -146,8 +158,11 @@
   function menuAc(){
     menuDugme.setAttribute('aria-expanded', 'true');
     tamMenu.hidden = false;
-    var ilkBag = tamMenu.querySelector('a[href]');
-    if(ilkBag){ ilkBag.focus(); }
+    /* Odak panelin ilk odaklanabilir öğesine gider — artık bu bir
+       `summary`. Odak sırası görsel sırayla aynı kalsın diye DOM sırasının
+       ilki alınıyor. */
+    var ilkOdak = tamMenu.querySelector('summary, a[href]');
+    if(ilkOdak){ ilkOdak.focus(); }
   }
   if(menuDugme && tamMenu){
     menuDugme.addEventListener('click', function(){
