@@ -1933,3 +1933,87 @@ arama yoktu**.
 Ajan ölçüm için `yonetmen` parolasını değiştirdi ve **bunu bildirdi**;
 koordinatör geri aldı (üç deneme hesabı da yine `deneme1234`). Kural: ölçüm
 için parola değiştiren, turun sonunda kendisi geri alır.
+
+
+---
+
+## 25. 28 Ağustos — `meta_yazar` backfill: kapıdan elenen bilgi kurtarıldı
+
+§22'nin kaynak kapısı yanlış bağları kopardığında **elenen bilgi çöpe
+gitmiyordu** — "Haber Merkezi", "Bülten" gibi değerler kaynak değil **Meta
+Yazar Bilgisi** (`PANEL-NOTLARI.md` §7) ve doğru alanları vardı. Backfill o
+bilgiyi yerine koydu.
+
+### Dağılım — önce / sonra
+
+| `meta_yazar` | Önce | Sonra |
+|---|---|---|
+| *(boş)* | 356.839 | **358** |
+| `haber_merkezi` | 0 | **336.547** |
+| `alinti` | 0 | **10.412** |
+| `haber_ajansi` | 0 | **8.854** |
+| `bulten` | 0 | **545** |
+| `fikir_iscisi` | 0 | **123** |
+
+| `kaynak_turu` | Önce | Sonra |
+|---|---|---|
+| `ajans` | 356.839 *(hepsi varsayılan)* | 346.304 |
+| `dis_yayin` | 0 | **10.412** |
+| `muhabir` | 0 | **123** |
+
+**Dokunulmayan 358 kayıt**, kaynak alanı çöp olan (gövdeden düşmüş parça)
+kayıtlar — sayfanın gerçek değeri hiç okunmadığı için **bilinmiyor** ve
+uydurulmadı. `meta_yazar_elle` korunanı 0 (tablo boştu) ama kural yine de
+kodda: `filter(meta_yazar_elle=False)`.
+
+Sınıflandırma denetlenebilir olsun diye adlar da yazdırıldı — ajans tarafı
+İHA 3.540 · AA 3.107 · DHA 2.169 · Reuters 34; dış yayın tarafı TRT Haber
+2.511 · MyNet 2.299 · Milliyet 2.061. **TRT Haber ve BBC bilerek `dis_yayin`
+sayıldı**: §5 ayrımı yayın kuruluşlarını ajanstan ayırıyor, ajans listesi dar
+tutuldu.
+
+### `save()` bilerek çağrılmadı — tuzak tersine dönüyordu
+
+Koordinatör "`bulk_create` `save()` çağırmıyor, bunu hesaba kat" demişti.
+Ölçüm bunun **tersini** gerektirdi: `Haber.save()` içindeki
+`meta_yazar = META_TURETIM[kaynak_turu]` türetimi çalışsaydı, ölçülen
+`haber_merkezi` değerini varsayılan `kaynak_turu='ajans'`ten türetip
+**`haber_ajansi`ye çevirirdi** — yani kaynağı olmayan 336 bin haberi "ajanstan
+geldi" diye damgalardı. Bu, §22'de düzeltilen hatanın aynısı olurdu.
+`QuerySet.update()` türetimi atlar ve ölçüyü korur.
+
+### Süre
+
+Okuma **3.481 sn (58 dk)** · yazma **22,8 sn** · `ANALYZE` **1,2 sn** ·
+toplam **3.505 sn**. Yazma §24'ün ~16 sn tahminiyle uyumlu; asıl maliyet
+484 bin dosyalık arşiv okuması ve arşiv taraması `D:`yi doyurduğu için
+I/O bağımlıydı.
+
+### Yan bulgu — üçüncü yer tutucu kusuru
+
+Kaynak tablosunda **`Seçiniz` (47 haber)** ve **`Diğer` (2)** vardı: mevcut
+panelin açılır listesinin **seçilmemiş hâli** kaynak diye kaydedilmiş.
+Kapıya `yer tutucu (secilmemis)` reddi eklendi; `kaynak_denetle` 49 bağı
+kopardı (19.149 → **19.100**), kayıtlar silinmedi.
+
+Ayrıca **4 kaynak adı gazetenin kendi köşe yazarıydı** (Erhan Bedir 63 ·
+İsmail Karaduman 45 · Süha Gürsoy 10 · Coşkun Saitoğlu 5) — §5'in işaret
+ettiği kusur. `medya.Yazar` tablosuyla **ad eşleşmesinden** bulundu, tahminle
+değil; o 123 haber artık `muhabir` / `fikir_iscisi`.
+
+### Karar bekliyor — migration ister
+
+`haber_merkezi` ve `bulten` için **doğru `kaynak_turu` yok**; üç seçenek de
+yanlış olurdu, o yüzden 337.092 kayıtta alana dokunulmadı ve hâlâ varsayılan
+`ajans` görünüyorlar. **Risk:** bu kayıtlardan biri panelden kaydedilirse
+`save()` türetimi `meta_yazar`ı `haber_ajansi` yapıp ölçümü ezer.
+
+**Kalıcı çözüm:** `kaynak_turu`yu `blank=True` yapmak — `meta_yazari_turet()`
+zaten boş türde `"haber_merkezi"` döndürüyor, yani türetim kendiliğinden doğru
+sonucu verir. Migration gerektirdiği için **bir sonraki tura bırakıldı**.
+
+### Göç tazelemesi bekliyor
+
+Arşiv taraması bu tur sırasında **484.678 dosyaya (%87)** ulaştı; **126.842
+kayıt henüz göçmedi**. `--yalniz-yeni` ile alınacak, ardından
+`meta_yazar_doldur` yeni kayıtlar için **tekrar koşmalı**.
