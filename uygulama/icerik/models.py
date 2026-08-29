@@ -153,6 +153,25 @@ class Haber(models.Model):
             # ORDER BY` kalıntısı duruyordu; bu indeks onu kaldırıyor.
             # 20.366 haberin ilçesi dolu (17 ilçenin hiçbiri boş değil).
             models.Index(fields=["ilce", "-yayin_zamani"]),
+            # Panel akış süzgeçleri — 29 Ağustos 2026 ölçümü.
+            #
+            # Django'nun otomatik tek sütunlu yabancı anahtar indeksleri bu
+            # iki süzgece yetmiyordu, çünkü sorgu ikinci bir koşul taşıyor
+            # (`durum != Silinmiş`) ve satırlar tabloya gidilerek okunuyordu:
+            #
+            #     kategori = 1   501 ms  (indeksi buluyor, satırları okuyor)
+            #     editör   = 1 1.014 ms  (indeksi HİÇ kullanmıyor, tam tarama)
+            #
+            # `olusturan` alanı arşivden gelen 486.667 kaydın tamamında BOŞ;
+            # `ANALYZE` istatistikleri "bu sütunun tek değeri var" dediği için
+            # planlayıcı indeksi seçici bulmayıp taramaya dönüyordu — projenin
+            # üçüncü tuzağının (§ bayat istatistik) aynısı.
+            #
+            # Durumu indekse katmak ikisini de KAPSAYAN indekse çeviriyor,
+            # yani sayım tabloya hiç gitmiyor: kategori 501 → 8 ms.
+            # Bedeli ölçüldü: kategori indeksi 4,9 MB.
+            models.Index(fields=["kategori", "durum"]),
+            models.Index(fields=["olusturan", "durum"]),
             # Manşet ekranı — KISMİ indeksler (28 Ağustos 2026).
             #
             # Ölçüldü: manşet alanlarında indeks yoktu ve `Q(ana|tepe|kare)`

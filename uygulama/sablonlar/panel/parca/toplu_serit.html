@@ -11,10 +11,20 @@ Betik yalnızca "hepsini seç"i ve canlı sayacı ekler.{% endcomment %}
 <div class="toplu-serit" data-toplu data-toplu-sayi="{{ toplu.suzgec_sayisi }}">
   <p class="toplu-durum">
     <span class="sayac" data-toplu-sayac aria-live="polite">0 kayıt seçili</span>
-    <label class="toplu-tumu">
-      <input type="checkbox" name="tumu" value="1" data-toplu-suzgec>
-      Süzgeçteki <b>{{ toplu.suzgec_sayisi }}</b> kaydın tamamını seç
-    </label>
+    {% if toplu.sayi_asildi %}
+      {% comment %}Sayım üst sınırda kesildi; küme zaten toplu işlenemez
+      (TOPLU_UST_SINIR). Seçilemeyecek bir kutuyu çizmek, bu şeridin
+      düzelttiği hatanın kendisi olurdu: fiili olmayan seçim.{% endcomment %}
+      <span class="toplu-tumu alt-not">
+        Süzgeçte <b>{{ toplu.suzgec_sayisi }}+</b> kayıt var; tek işlemde en çok
+        {{ toplu.ust_sinir }} kayıt işlenebilir. Süzgeci daraltın.
+      </span>
+    {% else %}
+      <label class="toplu-tumu">
+        <input type="checkbox" name="tumu" value="1" data-toplu-suzgec>
+        Süzgeçteki <b>{{ toplu.suzgec_sayisi }}</b> kaydın tamamını seç
+      </label>
+    {% endif %}
   </p>
 
   <input type="hidden" name="suzgec" value="{{ toplu.suzgec }}">

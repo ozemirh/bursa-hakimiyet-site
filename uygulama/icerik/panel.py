@@ -14,7 +14,9 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.views import PasswordChangeView
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.utils.functional import cached_property
+from django.db.models import Count, IntegerField, OuterRef, Q, Subquery
+from django.db.models.functions import Coalesce
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -133,13 +135,89 @@ def _boyut_suzgeci(secili) -> dict:
             "deger": str(secili)}
 
 
+# Sayimin kesildigi ust sinir. Toplu islem sinirinin ta kendisi: bu sayinin
+# uzerindeki bir kume zaten toplu islenemiyor (`TOPLU_UST_SINIR`), yani tam
+# sayiyi bilmenin panelde bir karsiligi yok.
+SAYIM_SINIRI = 5000
+
+
+class SinirliSayfalayici(Paginator):
+    """Sayımı üst sınırda kesen sayfalayıcı — 29 Ağustos 2026 ölçümü.
+
+    Panelin akış süzgecinde arama `LIKE '%…%'` ile yapılıyor ve baştaki
+    joker hiçbir B-ağacı indeksinin kullanılamayacağı anlamına geliyor:
+    486.667 satır taranıyor. Ölçülen bedel, sonucun tamamı sayıldığında:
+
+        tam sayım      1.176 ms   (78.959 kayıt)
+        5.001'de kesik   104 ms
+        sayfa sorgusu      0 ms   (LIMIT 25, ilk eşleşmelerde duruyor)
+
+    Yani ekranın bütün maliyeti **kimsenin bakmadığı bir toplamı** tam
+    saymaktan geliyordu. Sayım `SAYIM_SINIRI + 1`de kesiliyor; sınır aşıldıysa
+    `asildi` doğru döner ve şablon sayıyı "5.000+" diye basar — kesin sayıymış
+    gibi yuvarlak bir rakam göstermek yanlış olurdu.
+
+    Bu bir SQLite kaçamağı değil: PostgreSQL'de de aynı kazanç geçerli.
+    Gerçek altyapı çözümü ayrı bir iş — `LIKE '%…%'` için PostgreSQL'in
+    `pg_trgm` GIN indeksi (F7).
+    """
+
+    def __init__(self, nesneler, *args, sayim_siniri=None, **kwargs):
+        # Varsayılan CAĞRI ANINDA okunuyor, imzaya bağlanmıyor: sınır bir
+        # ayar, testler ve gelecekteki bir yapılandırma onu değiştirebilmeli.
+        self.sayim_siniri = SAYIM_SINIRI if sayim_siniri is None else sayim_siniri
+        # Kesme yalnız veritabanı sorgusunda anlamlı; bellekteki bir listede
+        # sayım zaten bedava ve KESİN.
+        self._sorgu_mu = hasattr(nesneler, "query")
+        self._asildi = False
+        super().__init__(nesneler, *args, **kwargs)
+
+    @cached_property
+    def count(self):
+        if not self._sorgu_mu:
+            return Paginator.count.func(self)
+        # Dilimlenmiş sorgunun `count()`u SQL'de `LIMIT`li bir alt sorguya
+        # çevriliyor; veritabanı sınıra ulaşınca taramayı bırakıyor.
+        sayi = self.object_list[:self.sayim_siniri + 1].count()
+        if sayi > self.sayim_siniri:
+            self._asildi = True
+            # Sınırın kendisi döndürülür: "5.001" kesin bir sayı değil,
+            # taramanın durduğu yer. Ekranda "5.000+" diye okunur.
+            return self.sayim_siniri
+        return sayi
+
+    @property
+    def asildi(self) -> bool:
+        self.count          # sayımı tetikler; bayrak orada kurulur
+        return self._asildi
+
+
 def _liste_ciz(request, *, baslik, bolum, ust_bolum, tablo_adi, basliklar,
                sorgu, satir_kur, suzgecler, temiz_adi, notlar=(), uyari="",
                ust_bilgi="", ek_baglantilar=(), toplu=None):
     """Süzülmüş sorguyu sayfalayıp ortak liste şablonuna verir."""
     basliklar = list(basliklar)
     boyut = _sayfa_boyu(request)
-    sayfa = Paginator(sorgu, boyut).get_page(request.GET.get("sayfa") or 1)
+    sayfa = SinirliSayfalayici(sorgu, boyut).get_page(
+        request.GET.get("sayfa") or 1)
+
+    # SÜZGEÇLİ COUNT BİR KEZ ÇALIŞIR — 29 Ağustos 2026 ölçümü.
+    #
+    # `Paginator` sayfa sayısını bulmak için zaten `COUNT(*)` çalıştırıyor.
+    # Toplu işlem şeridinin "süzgeçteki N kayıt" satırı ve bazı ekranların
+    # üst bilgisi AYNI sorguyu ikinci kez saydırıyordu. Ölçülen bedel:
+    #
+    #     /panel/akis?q=bursa      3.703 ms  (2.484 + 1.188 ms, iki COUNT)
+    #     /panel/akis?kategori=1   1.039 ms  (500 + 500 ms, iki COUNT)
+    #
+    # `Paginator.count` bir `cached_property`; sayıyı ondan alan herkes
+    # ikinci bir tarama açmıyor.
+    toplam = sayfa.paginator.count
+    if toplu is not None and toplu.get("suzgec_sayisi") is None:
+        toplu = {**toplu, "suzgec_sayisi": toplam,
+                 "sayi_asildi": sayfa.paginator.asildi}
+    if callable(ust_bilgi):
+        ust_bilgi = ust_bilgi(toplam)
 
     # Sayfalama bağlantısı süzgeçleri korumalı; `sayfa` iki kez yazılmamalı.
     korunan = request.GET.copy()
@@ -541,8 +619,21 @@ def kaynak_olcumu() -> dict:
 @permission_required("icerik.taksonomi_duzenleme", raise_exception=True)
 def kaynak_listesi(request):
     tekrarlar = _tekrar_eden_anahtarlar()
+
+    # BAĞLI HABER SAYISI ALT SORGUYLA — 29 Ağustos 2026 ölçümü.
+    #
+    # `annotate(Count("haberler"))` ara tabloya JOIN atıp GROUP BY kuruyordu;
+    # `ORDER BY ad` yüzünden veritabanı **400 kaynağın tamamını** 112.906
+    # bağ satırı üzerinden gruplayıp sıralamak zorunda kalıyor, `LIMIT 25`
+    # hiçbir şeyi kısaltmıyordu: 109 ms. Alt sorgu, sıralamayı `ad` indeksine
+    # bırakıp yalnız **ekrana çıkan 25 satır** için sayım yapıyor.
+    bag = Haber.kaynaklar.through
+    bagli_sayi = (bag.objects.filter(kaynak_id=OuterRef("pk"))
+                  .order_by().values("kaynak_id")
+                  .annotate(adet=Count("haber_id")).values("adet"))
     sorgu = (Kaynak.objects.select_related("birlesti_ile")
-             .annotate(haber_sayisi=Count("haberler"))
+             .annotate(haber_sayisi=Coalesce(
+                 Subquery(bagli_sayi, output_field=IntegerField()), 0))
              .order_by("ad", "id"))
 
     secili_tur = request.GET.get("tur") or ""
@@ -681,7 +772,12 @@ def kaynak_duzenle(request, kimlik):
 # Tek POST'ta işlenecek en çok kayıt. Sayfa boyu en fazla 100 olduğu için bu
 # sınır arayüzden zor aşılır; asıl işi "süzgeçteki tüm kayıtları seç"
 # seçeneğinde ve elle kurulmuş isteklerde yapar.
-TOPLU_UST_SINIR = 5000
+#
+# Liste sayımının kesildiği yer de burasıdır (`SinirliSayfalayici`): bu sayıyı
+# aşan bir küme zaten toplu işlenemediği için tam sayısını hesaplamanın
+# panelde bir karşılığı yok. İkisi TEK sayı olmalı, ayrışırsa şerit
+# "5.000 kaydın tamamını seç" deyip sunucu reddederdi.
+TOPLU_UST_SINIR = SAYIM_SINIRI
 
 # Bu sayının üstündeki her işlem onay ekranından geçer. Kategori değişimi
 # **sayıdan bağımsız** olarak her zaman onay ister (adres kırar).
@@ -779,7 +875,7 @@ def medya_toplu_baglam(request, aile, sorgu):
         "gruplar": {f["grup"] for f in fiiller},
         "aile": aile,
         "suzgec": suzgec.urlencode(),
-        "suzgec_sayisi": sorgu.count(),
+        "suzgec_sayisi": None,   # `_liste_ciz` sayfalayıcıdan doldurur
         "ust_sinir": TOPLU_UST_SINIR,
         # Medya ailelerinde değer seçici gerektiren fiil yok.
         "hazirliklar": [], "kategoriler": [], "ilceler": [], "etiketler": [],
@@ -935,7 +1031,9 @@ def toplu_baglam(request, sorgu, secili) -> dict:
         "fiiller": fiiller,
         "gruplar": {f["grup"] for f in fiiller},
         "suzgec": suzgec.urlencode(),
-        "suzgec_sayisi": sorgu.count(),
+        # `_liste_ciz` sayfalayıcının saydığı değeri buraya koyar; burada
+        # saydırmak aynı taramayı ikinci kez açardı.
+        "suzgec_sayisi": None,
         "hazirliklar": Haber.HAZIRLIK,
         "kategoriler": Kategori.objects.filter(aktif=True),
         "ilceler": Ilce.objects.all(),
@@ -2098,7 +2196,9 @@ def log_listesi(request):
              "bos": "Kullanıcı seç", "secenekler": kullanicilar,
              "deger": secili_kullanici},
         ],
-        ust_bilgi=f"{sorgu.count()} kayıt · bunun {oturum} tanesi oturum olayı.",
+        # Çağrılabilir üst bilgi: sayı sayfalayıcının saydığından gelir.
+        ust_bilgi=lambda sayi: (
+            f"{sayi} kayıt · bunun {oturum} tanesi oturum olayı."),
         notlar=[
             "Mevcut panelin log ekranı bir OTURUM AÇMA günlüğüydü; hangi "
             "kaydın değiştiğini söyleyen sütunu yoktu (§24.8).",
@@ -2233,7 +2333,13 @@ def kampanya_listesi(request):
         }
 
     yuvalar = [(y.pk, y.ad) for y in ReklamYuvasi.objects.filter(aktif=True)]
-    gecmis = len([k for k in ReklamKampanyasi.objects.all() if k.suresi_gecti_mi()])
+    # Süresi geçen kampanyalar VERİTABANINDA sayılır. Önce bütün kampanyalar
+    # Python'a çekilip tek tek `suresi_gecti_mi()` çağrılıyordu; dökümdeki
+    # 131 kampanyanın 25'iyle sorun görünmüyor ama tablo büyüdükçe ekranın
+    # bedeli satır sayısıyla doğru orantılı artardı. `bitis__lt` boş tarihi
+    # zaten dışarıda bırakır, yani `suresi_gecti_mi()` ile aynı kümedir.
+    gecmis = ReklamKampanyasi.objects.filter(
+        bitis__lt=timezone.localdate()).count()
     return _liste_ciz(
         request, baslik="Reklam kampanyaları", bolum="kampanyalar",
         ust_bolum="reklam", tablo_adi="Reklam kampanyası listesi",

@@ -35,7 +35,7 @@ kullanıcının kararı; kaldırılması bir sonraki temizlik turuna bırakıld�
     <a class="dugme ufak" href="{% url 'panel-akis' %}">Temizle</a>
   </form>
 
-  <p class="alt-not">{{ sayfa.paginator.count }} kayıt · sayfa {{ sayfa.number }}/{{ sayfa.paginator.num_pages }}</p>
+  <p class="alt-not">{{ sayfa.paginator.count }}{% if sayfa.paginator.asildi %}+{% endif %} kayıt · sayfa {{ sayfa.number }}/{{ sayfa.paginator.num_pages }}{% if sayfa.paginator.asildi %}+{% endif %}</p>
 
   <div class="tablo-kaydir">
   <table class="liste">

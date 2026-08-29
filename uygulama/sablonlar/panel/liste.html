@@ -25,7 +25,8 @@ yazılır. Bu hatanın panelin yerleşimini bir kez bozduğu kayıtlı
   {% endif %}
 
   <p class="alt-not serit">
-    {{ sayfa.paginator.count }} kayıt · sayfa {{ sayfa.number }}/{{ sayfa.paginator.num_pages }}
+    {{ sayfa.paginator.count }}{% if sayfa.paginator.asildi %}+{% endif %} kayıt
+    · sayfa {{ sayfa.number }}/{{ sayfa.paginator.num_pages }}{% if sayfa.paginator.asildi %}+{% endif %}
   </p>
 
   {% if toplu %}<form method="post" action="{% if toplu.aile %}{% url 'panel-medya-toplu' aile=toplu.aile %}{% else %}{% url 'panel-toplu' %}{% endif %}">{% csrf_token %}{% endif %}

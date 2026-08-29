@@ -1808,6 +1808,27 @@ Son kalemin ayracı sunucu tarafında (`mobil_son`) işaretleniyor: CSS
    sayıyordu; dört kaleme `class` eklenince dördünü kaçırdı ve "6 != 10"
    dedi. Sözleşme duruyordu, kalıp kırılmıştı — sayım `<a\s` oldu.
 
+## Sağ ray hizalandı — 29 Ağustos 2026
+
+Sayfanın dikey ek yeri manşetin altında **20 px kayıyordu**. Sebep iki
+kuralın ayrı düşmesi: `.manset-alani` sağ rayı **340 px**, hemen altındaki
+`.ana-izgara` **320 px** tanımlıyordu. Sol sütun 742'den 762'ye atlıyor, göz
+kaymayı yakalıyordu.
+
+| | Sol sütun biter | Sağ ray başlar | Ray genişliği |
+|---|---|---|---|
+| Manşet satırı (önce) | x=985 | x=1003 | 340 px |
+| Son haberler satırı | x=1005 | x=1023 | 320 px |
+| **İkisi de (sonra)** | **x=1005** | **x=1023** | **320 px** |
+
+Aykırı olan manşetti: haber detayın `.izgara`sı da 320 px kullanıyor, yani
+**320 sitenin ray ölçüsü**. 1140 px altında iki kural da 300'e indiği için
+kaçık yalnız geniş ekranda görünüyordu.
+
+Değişmez `icerik/tests_yerlesim.py` içinde kilitli: iki ızgara aynı rayı
+kullanmalı, ray sitenin geri kalanıyla aynı olmalı ve kırılma noktasında
+**birlikte** daralmalı — biri daralıp öteki kalırsa dikiş yine kayar.
+
 ## Reklam anahtarı — 29 Ağustos 2026
 
 Reklam panolarını kapatan düğme **sunum aracıdır, okur özelliği değil**:
@@ -1821,6 +1842,12 @@ yayın ekibine sayfayı reklamsız gösterebilmek için. Sıradan ziyaretçiye
   okunsaydı panolar bir an görünüp kaybolurdu.
 - **Tek CSS kuralı yedi yuvanın hepsini** kapatıyor (ölçüldü: 7 → 0).
   Kapalıyken içerik y=234'e çıkıyor.
+- **Izgara da tek sütuna iner.** İlk sürümde inmiyordu ve düğme sayfayı
+  bozuyordu: 1480 px üstünde `.sayfa` üç sütun (160 · 1100 · 160), yan
+  raylar `display:none` olunca ızgara yerleşiminden düşüyor ve orta sütun
+  **birinci sütuna — 160 px'lik raya** geçiyordu. Sayfa 160 px'e sıkışıyordu.
+  Ders: bir ızgara çocuğunu gizlerken **sütun sayısı da azalmalı**. Ölçümle
+  doğrulandı — orta sütun beş genişlikte de açıkken ve kapalıyken 1100 px.
 - `aria-pressed` durumu, düğme yazısı ("Reklamları gizle" ↔ "göster")
   ile birlikte değişir. `localStorage` atarsa düğme çalışmaya devam eder,
   tercih yalnız o oturumda yaşar.
@@ -2344,3 +2371,88 @@ Dayanağım canlı anasayfanın 7,4 / 42,5 / 0,39 sn'lik yanıt süreleriydi —
 ama o ölçüm de **bizim** bağlantı kurulumumuzu ölçüyordu, sunucunun yanıt
 süresini değil. Aşamalara bölmeden yapılan süre ölçümü hangi katmanın yavaş
 olduğunu söylemez. Sunucunun okurlara yavaş olduğuna dair bir kanıt yok.
+
+---
+
+## 28. 29 Ağustos — panel liste ekranları: sayım maliyeti kaldırıldı
+
+§24'te panelin ağır ekranları düzeltilmişti; o turdan sonra veritabanı
+356.839'dan **486.667 habere** çıktı ve maliyet süzgeçli listelere kaydı.
+Bütün panel ekranları gerçek veriyle, süre + sorgu sayısı + en pahalı sorgu
+olarak ölçüldü.
+
+### Ölçülen dört sorun
+
+**1. Aynı `COUNT(*)` her liste ekranında iki kez koşuyordu.** `Paginator`
+sayfa sayısı için zaten sayıyor; toplu işlem şeridinin "süzgeçteki N kayıt"
+satırı ve log ekranının üst bilgisi aynı sorguyu ikinci kez açıyordu. Bu
+sorgular birbirinin kopyasıydı, farklı sayımlar değil.
+
+**2. Sayımın üst sınırı yoktu.** Akış araması `LIKE '%…%'` ile yapılıyor;
+baştaki joker hiçbir B-ağacı indeksinin kullanılamayacağı anlamına geliyor ve
+486.667 satır taranıyordu. Ayrıştırınca ekranın **bütün** maliyetinin
+kimsenin bakmadığı bir toplamı tam saymaktan geldiği çıktı:
+
+| | süre |
+|---|---|
+| tam sayım (78.959 kayıt) | 1.176 ms |
+| 5.001'de kesik sayım | 104 ms |
+| sayfanın kendi sorgusu (`LIMIT 25`) | 0 ms |
+
+**3. İki tamsayı süzgeci indeks kullanamıyordu.** Django'nun otomatik tek
+sütunlu yabancı anahtar indeksleri yetmiyordu, çünkü sorgu ikinci bir koşul
+taşıyor (`durum != Silinmiş`) ve satırlar tabloya gidilerek okunuyordu:
+kategori **501 ms**, editör **1.014 ms — indeksi hiç kullanmadan tam tarama**.
+Editör alanı arşivden gelen kayıtların tamamında boş olduğu için `ANALYZE`
+istatistikleri "bu sütunun tek değeri var" diyor ve planlayıcı indeksi seçici
+bulmuyordu; projenin üçüncü tuzağının aynısı.
+
+**4. Kaynak listesi `LIMIT`ten faydalanamıyordu.** `annotate(Count("haberler"))`
+ara tabloya JOIN atıp GROUP BY kuruyor, `ORDER BY ad` yüzünden 400 kaynağın
+tamamı 112.906 bağ satırı üzerinden gruplanıyordu: **109 ms**.
+
+### Yapılanlar
+
+* Süzgeçli sayı tek kaynaktan geliyor: `_liste_ciz` sayfalayıcının saydığı
+  değeri şeride ve üst bilgiye veriyor.
+* **`SinirliSayfalayici`** sayımı `SAYIM_SINIRI + 1`de kesiyor. Sınır
+  `TOPLU_UST_SINIR` ile **aynı sayı** (5.000): onu aşan küme zaten toplu
+  işlenemiyor, yani tam sayısını bilmenin panelde bir karşılığı yok. İkisi tek
+  sabite bağlandı; ayrışsalardı şerit "tamamını seç" der, sunucu reddederdi.
+* Sınır aşıldığında ekran **"5.000+"** yazıyor ve şerit "tamamını seç"
+  kutusunu çizmiyor, yerine "süzgeci daraltın" diyor. Kesik bir sayıyı kesin
+  gibi göstermek ya da seçilemeyecek bir kutu çizmek — ikincisi §12'nin
+  düzelttiği hatanın ta kendisi olurdu.
+* İki kapsayan indeks eklendi (`0010`): `(kategori, durum)` ve
+  `(olusturan, durum)`. Ölçülen bedel 4,9 MB.
+* Kaynak listesindeki sayım **alt sorguya** çevrildi; sıralama `ad` indeksine
+  kalıyor, sayım yalnız ekrana çıkan 25 satır için yapılıyor.
+* Kampanya ekranının "süresi geçti" sayımı Python döngüsünden veritabanına
+  alındı.
+
+### Sonuç
+
+| ekran | önce | sonra |
+|---|---|---|
+| `/panel/akis?q=bursa` | **3.703 ms** | **74 ms** |
+| `/panel/akis?kategori=1` | 1.039 ms | **31 ms** |
+| `/panel/kaynaklar` | 283 ms | **53 ms** |
+| `/panel/akis?sayfa=500` | 282 ms | **45 ms** |
+| `/panel/akis` | 251 ms | **38 ms** |
+| `/panel/videolar` | 109 ms | **52 ms** |
+
+**21 panel ekranının tamamı 60 ms'nin altında.** Her ekran bir sorgu daha az
+çalıştırıyor. **533 test geçiyor**; 15'i bu turda eklendi.
+
+### Yapılmayan ve nedeni
+
+**`spot` alanına arama indeksi kurulmadı.** Kapsayan bir indeks
+(`durum, baslik, spot`) aramayı 1.157 → 270 ms'ye indiriyor, ölçüldü — ama
+**147,5 MB** yer kaplıyor ve daha önemlisi PostgreSQL göçüne mayın döşüyor:
+`spot` en uzun 5.794 karakter, PostgreSQL'in btree indeksi ise 2.704 baytta
+reddediyor (18 kayıt bu sınırın üstünde). Sınırlı sayım aynı ekranı 147 MB'sız
+ve göçü bozmadan 74 ms'ye indirdi.
+
+`LIKE '%…%'` için doğru altyapı çözümü PostgreSQL'in **`pg_trgm` GIN**
+indeksidir ve F7'nin işidir. FTS5 bunun yerine geçmez: tam metin arama
+sözcük/önek eşler, ortadan eşleşme yapmaz.
