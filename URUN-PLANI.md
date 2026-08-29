@@ -27,9 +27,9 @@ Kullanıcının tarif ettiği sıra. **Yukarıdan aşağıya bağlayıcı.**
 
 ```
 ┌ SOL ┐                 içerik sütunu                  ┌ SAĞ ┐
-│ban  │  LOGO — sol üstte, TEK BAŞINA                  │ban  │
-│ner  │  ───────────────────────────────────────────   │ner  │
-│     │  KATEGORİ BANDI (10 kalem, kalabalık değil)    │     │
+│ban  │  ┌ LOGO ┐ KATEGORİ BANDI (10 kalem)           │ban  │
+│ner  │  └───────┘ …………………… [ara] [☰ MENÜ]           │ner  │
+│     │   ↑ 29 Ağu 2026: logo bandın İÇİNDE             │     │
 │     │  SON DAKİKA BANDI                              │     │
 │     │  REKLAM 1100×150                               │     │
 │     │  [haber][haber][haber][haber]  ← 4 yan yana    │     │
@@ -70,8 +70,8 @@ Kullanıcının tarif ettiği sıra. **Yukarıdan aşağıya bağlayıcı.**
 | # | Bileşen | Ayrıntı |
 |---|---|---|
 | 1 | **Yan bannerlar** | Sayfanın üst kısmında iki yanda. Mevcut yuva envanterinde `-Sol pageskin1..4-` ve `-Sağ pageskin1..4-` (160×600) karşılığı var. |
-| 2 | **Logo** | Sol üstte, **tek başına**. Yanında arama/abone kutusu yok — arama bandın içinde. |
-| 3 | **Kategori bandı** | **Tam 10 kalem:** Yazarlar · Bursa · Bursaspor · Gündem · Ekonomi · Dünya · Spor · Magazin · İlçeler · Resmî İlan. Kalabalıklaştırma. **Arama ve menü düğmesi bandın içinde**, sağ uçta: önce arama, onun sağında menü düğmesi (26 Ağustos kararı). |
+| 2 | **Logo** | Sol üstte. **29 Ağustos 2026'da kendi şeridinden kategori bandının içine alındı** — şerit 93 px idi ve %82'si boştu (ölçüm: bant 1100 px, logo 196 px). Yanında hâlâ arama/abone kutusu yok; arama bandın sağ ucunda. Kazanç: içeriğin başlangıcı 379 → 284 px. Logo artık **yapışkan bantta**, yani sayfa kaydırılırken de görünür. |
+| 3 | **Kategori bandı** | **Tam 10 kalem:** Yazarlar · Bursa · Bursaspor · Gündem · Ekonomi · Dünya · Spor · Magazin · İlçeler · Resmî İlan. Kalabalıklaştırma. **Arama ve menü düğmesi bandın içinde**, sağ uçta: önce arama, onun sağında menü düğmesi (26 Ağustos kararı). **Dar ekranda (≤1000 px) dördü kalır:** Bursa · Bursaspor · Gündem · Spor; kalan altısı gizlenir ama **DOM'dan düşmez** (29 Ağustos 2026). Öncesinde liste bütünüyle `display:none` idi ve 360 px'te görünen kategori sayısı **sıfırdı**. |
 | 4 | **Son dakika bandı** | Kategori bandının hemen altında. |
 | 5 | **Reklam** | **1100×150**, tam genişlik. |
 | 6 | **Dört haber kutucuğu** | Yan yana, eşit. |
@@ -1761,6 +1761,70 @@ için "dışarı tıkla kapat" davranışı olduğu gibi çalışıyor.
 · menüdeki **50 bağlantı** · **17 ilçe + "Tüm ilçeler" = 18** — hepsi DOM'da,
 `hidden` yok, sonradan yükleme yok.
 
+## Üst bant birleştirildi — 29 Ağustos 2026
+
+Logo kendi 93 px'lik beyaz şeridindeydi ve o şeridin **%82'si boştu**: bant
+1100 px, logo 196 px. Beş şerit üst üste diziliyordu (servis 38 · logo 93 ·
+kategori 44 · son dakika 40 · reklam 150) ve **1280×900'de içerik y=379'da**,
+yani ekranın %42'si haber görmeden geçiyordu.
+
+**Karar:** logo şeridi kalktı, logo yapışkan kategori bandının soluna girdi.
+Diğer iki seçenek — şeridi doldurmak, ya da kaydırınca daraltmak — reddedildi;
+bu en çok yeri kazandıran ve JavaScript'e en az yaslanan yol.
+
+### Bant sözleşmesi BOZULMADI
+
+İlk hesap "10 kalem sığmaz, 6-7'ye insin" diyordu (logo 130 + kategoriler 830
++ arama 180 + menü 90 = 1230 > 1100). Sözleşme F1 ölçütü olduğu için önce
+daraltma denendi ve **ölçüm haklı çıkardı**: yazı 15→13,5 px, iç boşluk
+11→8 px, logo 58→30 px yükseklik.
+
+| Genişlik | Bant | Kalem | Taşma |
+|---|---|---|---|
+| 1024 · 1119 | 42 px, tek satır | 10 | 0 |
+| 1120 · 1280 · 1600 | 42 px, tek satır | 10 | 0 |
+| 360 · 768 · 1000 | 78-82 px, iki satır | 4 (+6 DOM'da) | 0 |
+
+**İçerik başlangıcı 379 → 284 px** (masaüstü), 379 → 344 px (360 px).
+
+### Dar ekranda kategoriler geri geldi
+
+`.kategori-liste{display:none}` kuralı 1000 px altında bandı boşaltıyordu —
+**360 px'te görünen kategori sayısı sıfırdı**, yerel gazetenin okuru
+"Bursa"ya tek dokunuşla gidemiyordu. Artık dört kalem kendi satırında
+duruyor: Bursa · Bursaspor · Gündem · Spor. Kalan altısı CSS ile gizli,
+**DOM'da** — menüdeki 17 ilçeyle aynı gerekçe.
+
+Son kalemin ayracı sunucu tarafında (`mobil_son`) işaretleniyor: CSS
+`:last-of-type` burada **"Resmî İlan"ı** seçerdi, o da gizli.
+
+### İki tuzak
+
+1. **`<header>` sarmalayıcısı yapışkanlığı öldürüyordu.** `position:sticky`
+   ancak ebeveyninin kutusu içinde tutunur; nav'i yüksekliği kendisiyle aynı
+   olan bir header'a almak bandı ilk kaydırmada ekrandan çıkarıyordu.
+   Sarmalayıcı kaldırıldı, gizli `h1` nav'ın kardeşi olarak duruyor.
+2. **Bant sözleşmesi testi yanlış nedenle kırıldı.** `<a href=` kalıbıyla
+   sayıyordu; dört kaleme `class` eklenince dördünü kaçırdı ve "6 != 10"
+   dedi. Sözleşme duruyordu, kalıp kırılmıştı — sayım `<a\s` oldu.
+
+## Reklam anahtarı — 29 Ağustos 2026
+
+Reklam panolarını kapatan düğme **sunum aracıdır, okur özelliği değil**:
+yayın ekibine sayfayı reklamsız gösterebilmek için. Sıradan ziyaretçiye
+**çizilmez** — reklam gizleme düğmesi gelir modeline dokunur.
+
+- **Kapı:** geliştirme makinesi (`127.0.0.1`/`localhost`) ya da panele
+  girmiş `is_staff` kullanıcı — `icerik/baglam.py`, `_reklam_dugmesi`.
+- **Tercih** `<html data-reklam>` üzerinde, `localStorage`'da saklanır ve
+  `<head>` içindeki minik betikle **sayfa çizilmeden** okunur; sonradan
+  okunsaydı panolar bir an görünüp kaybolurdu.
+- **Tek CSS kuralı yedi yuvanın hepsini** kapatıyor (ölçüldü: 7 → 0).
+  Kapalıyken içerik y=234'e çıkıyor.
+- `aria-pressed` durumu, düğme yazısı ("Reklamları gizle" ↔ "göster")
+  ile birlikte değişir. `localStorage` atarsa düğme çalışmaya devam eder,
+  tercih yalnız o oturumda yaşar.
+
 ### Bulunan iki gerçek kusur
 
 1. **`summary` odak halkası kuralında yoktu.** Kural `a,button,input,select`
@@ -2183,3 +2247,87 @@ kaydın meta yazarı `haber_ajansi`, `dis_yayin` görünenin `alinti`,
 * Yüklenen verinin dağılımı dökümle birebir: ilan 23 arşiv + 1 pasif,
   14 İHALE + 10 TEBLİGAT; kampanya 11 aktif + 14 pasif, 8'i çok yuvalı,
   toplam 36 kampanya-yuva bağı; gazete 17/17 aktif.
+
+---
+
+## 27. 29 Ağustos — tarama 13 kat hızlandı: bağlantı yeniden kullanımı
+
+§26.1'de "kaynak site hasta" diye yazdığım şey yanlış teşhisti. Ölçünce
+sunucunun kusursuz çalıştığı, sorunun **bizim tarafımızda** olduğu çıktı.
+
+### Teşhis — zaman nerede geçiyordu
+
+Tek bir haber sayfası, aynı adres, sekiz kez, aşamalara bölünerek:
+
+| tcp connect | tls | TTFB | indirme | toplam |
+|---|---|---|---|---|
+| 15,08 | 0,06 | 0,22 | 0,005 | 15,36 |
+| 0,06 | 0,05 | 0,22 | 0,004 | 0,33 |
+| 3,07 | 0,04 | 0,22 | 0,006 | 3,34 |
+| 7,07 | 0,04 | 0,22 | 0,000 | 7,33 |
+| **42,12** | 0,06 | 0,21 | 0,011 | **42,40** |
+
+**TTFB her ölçümde 0,21-0,23 sn.** Gövde 31,7 KB ve 5 milisaniyede iniyor.
+Sunucu hızlı; zamanın tamamı **TCP `connect`** aşamasında geçiyor ve süreler
+**1 / 3 / 7 / 15 / 42 sn** diye ilerliyor — bu çekirdeğin SYN yeniden gönderim
+geri çekilmesi, yani **bağlantı kurulum paketleri düşürülüyor**.
+
+Site **Cloudflare arkasında** (yanıt başlığından okundu). Betik `urllib` ile
+her istekte yeni bir TCP+TLS bağlantısı açıyordu; kayıt başına ~2,6 istek
+(yönlendirme + sayfa + ortalama 1,6 görsel) demek, saatlerce süren bir koşuda
+milyonlarca bağlantı kurulumu. Bağlantı hızı sınırına takılan buydu.
+
+Kontrollü karşılaştırma, aynı sayfa altı kez:
+
+```
+A) her istekte yeni bağlantı : 78,85 sn  (13,14 sn/istek)  3,3 · 0,3 · 28,3 · 42,4 · 3,3 · 1,3
+B) tek bağlantı, keep-alive  :  8,05 sn  ( 1,34 sn/istek)  7,3 · 0,17 · 0,15 · 0,15 · 0,13 · 0,14
+```
+
+B'nin ilk isteği bağlantıyı kurma bedelini ödüyor; sonraki beşi **0,15 sn**.
+
+### Çözüm — bağımlılık eklemeden
+
+Her iş parçacığı konak başına **bir bağlantıyı açık tutup tekrar kullanıyor**.
+`requests` kullanılmadı: betik `paketle.ps1` ile başka makineye taşınabiliyor
+ve yalnız standart kütüphaneye dayanması şart. `http.client` ile yazıldı.
+
+Dikkat edilenler:
+
+* **Her yanıtın gövdesi sonuna kadar okunuyor** — okunmazsa bağlantı tekrar
+  kullanılamaz, sessizce eski davranışa düşerdik.
+* **Yönlendirmeler elle izleniyor** (`urllib` bunu kendi yapıyordu). Sitemap
+  adreslerinin bir kısmı eski kategori slug'ına işaret ediyor ve 301 dönüyor.
+* **2xx dışı yanıt `urllib.error.HTTPError` olarak fırlatılıyor**, böylece
+  `sayfa_indir` içindeki 403/429 geri çekilme mantığı olduğu gibi çalışıyor.
+* **Bayat bağlantı bir kez yeniden deneniyor**: karşı taraf boştaki bağlantıyı
+  sessizce kapatabilir.
+* Eşzamanlılık 10'da bırakıldı; artık `BH_ESZAMANLILIK` ile ayarlanabiliyor.
+  Artırılmadı — darboğaz bağlantı kurulumuydu, iş parçacığı sayısı değil.
+
+### Ölçülen sonuç
+
+**Çıktı birebir aynı.** Arşivde zaten var olan 12 kayıt yeni yolla yeniden
+çekildi ve üretilen JSON **12/12 aynı** çıktı (`yerel_gorseller` dışında —
+o alan kök yolunu taşıyor).
+
+Üretimdeki hız, dakika dakika:
+
+| | eski kod (13:01-13:21) | yeni kod (13:24-13:29) |
+|---|---|---|
+| çekim hızı | 0,32 - 0,83 kayıt/sn | **6,4 - 11,7 kayıt/sn** |
+| ortalama | ~0,7 | **8,84** |
+| başarısız oranı | 11/50 (%22, HTTP 502) | 27/3.182 (**%0,85**) |
+
+**13 kat.** 502'lerin de kaybolması teşhisi doğruluyor: Cloudflare bağlantı
+baskısı altında origin'e ulaşamayınca 502 döndürüyordu, sunucu çökmüş değildi.
+
+Kalan ~66 bin kayıt bu hızda **~2 saat**; eski hızla 55 saat sürecekti.
+
+### Yanlış teşhisin kaydı
+
+§26.1'de "kaynak site bugün hasta, okur da aynısını yaşıyor" yazmıştım.
+Dayanağım canlı anasayfanın 7,4 / 42,5 / 0,39 sn'lik yanıt süreleriydi —
+ama o ölçüm de **bizim** bağlantı kurulumumuzu ölçüyordu, sunucunun yanıt
+süresini değil. Aşamalara bölmeden yapılan süre ölçümü hangi katmanın yavaş
+olduğunu söylemez. Sunucunun okurlara yavaş olduğuna dair bir kanıt yok.
