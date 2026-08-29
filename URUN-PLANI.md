@@ -2324,6 +2324,19 @@ baskısı altında origin'e ulaşamayınca 502 döndürüyordu, sunucu çökmü�
 
 Kalan ~66 bin kayıt bu hızda **~2 saat**; eski hızla 55 saat sürecekti.
 
+### 502 geri çekilmeye alındı
+
+Hız düzeldikten sonra ikinci bir ölçüm daha yapıldı: dakikada 550-700 kayıt
+çekilirken hata oranı **%0**, ama 13:30'da **bir dakika** süren bir origin
+kesintisi 479 kaydı birden düşürdü (%80) ve sonraki dakikada oran yine %0'a
+döndü. 502 kalıcı bir red değil, geçici dalgalanma; anında başarısız saymak o
+kayıtları ikinci bir koşuya bırakıyordu. `GECICI_KODLAR`a 502/503/504 eklendi
+(403/429 zaten vardı). Geri çekilme sırasında iş parçacıkları beklediği için
+kesinti anında sunucuya binen yük de azalıyor.
+
+Düzeltmeden sonraki yedi dakika: **8,10 kayıt/sn ortalama, sıfır hata**
+(338 · 613 · 650 · 550 · 550 · 550 kayıt/dk). Arşiv %89,5'e çıktı.
+
 ### Yanlış teşhisin kaydı
 
 §26.1'de "kaynak site bugün hasta, okur da aynısını yaşıyor" yazmıştım.
