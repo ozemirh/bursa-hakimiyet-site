@@ -209,6 +209,12 @@ class HaberForm(forms.ModelForm):
         self.fields["bagli_galeriler"].queryset = FotoGaleri.objects.all()
         self.fields["ilce"].required = False
 
+        # §25: kaynak türü boş olabilir — arşivden gelen 337 bin haberde
+        # ölçülemedi. Django'nun "---------" yer tutucusu bunu anlatmıyor.
+        self.fields["kaynak_turu"].required = False
+        self.fields["kaynak_turu"].choices = (
+            [("", "Belirtilmemiş")] + list(Haber.KAYNAK_TURLERI))
+
         # §7: değer kaynak türünden türetilir, editör isterse ezer.
         self.fields["meta_yazar"].required = False
         self.fields["meta_yazar"].help_text = (
@@ -781,20 +787,21 @@ class ReklamYuvasiForm(forms.ModelForm):
 class ReklamKampanyasiForm(forms.ModelForm):
     class Meta:
         model = ReklamKampanyasi
-        fields = ["baslik", "yuva", "gorsel_dosya", "gorsel_alt",
+        fields = ["baslik", "yuvalar", "gorsel_dosya", "gorsel_alt",
                   "hedef_adres", "baslangic", "bitis", "durum"]
-        labels = {"baslik": "Kampanya başlığı", "yuva": "Reklam alanı",
+        labels = {"baslik": "Kampanya başlığı", "yuvalar": "Reklam alanları",
                   "gorsel_dosya": "Görsel dosyası", "gorsel_alt": "Görsel alt metni",
                   "hedef_adres": "Hedef adres", "baslangic": "Başlangıç",
                   "bitis": "Bitiş", "durum": "Durum"}
         help_texts = {
             "gorsel_dosya": "Yerel yol. Sayfa internetsiz de açılmalı.",
-            "yuva": "Reklamverenin adı YUVAYA değil buraya yazılır (§14).",
+            "yuvalar": "Reklamverenin adı YUVAYA değil buraya yazılır (§14). "
+                       "Bir kampanya birden çok yuvada yayımlanabilir.",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["yuva"].queryset = ReklamYuvasi.objects.filter(aktif=True)
+        self.fields["yuvalar"].queryset = ReklamYuvasi.objects.filter(aktif=True)
 
     def clean(self):
         veri = super().clean()

@@ -2203,12 +2203,13 @@ def yuva_duzenle(request, kimlik):
 @permission_required("icerik.reklam_kampanyasi", raise_exception=True)
 def kampanya_listesi(request):
     """Reklam kampanyaları — dökümdeki `advertisement_list.php` sözleşmesi."""
-    sorgu = ReklamKampanyasi.objects.select_related("yuva", "olusturan")
+    sorgu = (ReklamKampanyasi.objects.select_related("olusturan")
+             .prefetch_related("yuvalar"))
     secili_yuva = request.GET.get("yuva") or ""
     secili_durum = request.GET.get("durum") or ""
     aranan = (request.GET.get("q") or "").strip()
     if secili_yuva:
-        sorgu = sorgu.filter(yuva_id=secili_yuva)
+        sorgu = sorgu.filter(yuvalar__id=secili_yuva)
     if secili_durum:
         sorgu = sorgu.filter(durum=secili_durum)
     if aranan:
@@ -2221,7 +2222,7 @@ def kampanya_listesi(request):
             "adres": k.hedef_adres or "",
             "hucreler": [
                 _bag(f"/panel/kampanya/{k.pk}", k.baslik),
-                _metin(k.yuva.ad),
+                _metin(" / ".join(y.ad for y in k.yuvalar.all()) or "—"),
                 _metin(f"{k.baslangic or '—'} → {k.bitis or '—'}", "mono"),
                 _metin(k.olusturan.get_username()) if k.olusturan_id
                 else _yok(EDITOR_NOTU),
@@ -2257,7 +2258,7 @@ def kampanya_listesi(request):
 @permission_required("icerik.reklam_kampanyasi", raise_exception=True)
 def kampanya_duzenle(request, kimlik):
     kampanya = get_object_or_404(
-        ReklamKampanyasi.objects.select_related("yuva"), pk=kimlik)
+        ReklamKampanyasi.objects.prefetch_related("yuvalar"), pk=kimlik)
     form = ReklamKampanyasiForm(request.POST or None, instance=kampanya)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -2267,9 +2268,13 @@ def kampanya_duzenle(request, kimlik):
         "bolum": "kampanyalar", "ust_bolum": "reklam",
         "form": form, "adres": kampanya.hedef_adres or "",
         "geri_adi": "panel-kampanyalar",
-        "kilitli": [("Kimlik", kampanya.pk), ("Yuva", kampanya.yuva.ad),
-                    ("Yuva ölçüsü", kampanya.yuva.olcu or "—")],
-        "kilit_notu": "Yuva tanımı Sayfa Düzeni'ndedir; buradan değiştirilmez.",
+        "kilitli": [
+            ("Kimlik", kampanya.pk),
+            ("Yuva", " / ".join(y.ad for y in kampanya.yuvalar.all()) or "—"),
+            ("Yuva ölçüleri",
+             " / ".join(y.olcu or "—" for y in kampanya.yuvalar.all()) or "—")],
+        "kilit_notu": "Yuva tanımı Sayfa Düzeni'ndedir; buradan değiştirilmez. "
+                      "Bir kampanya birden çok yuvada yayımlanabilir.",
         **_yetkiler(request.user),
     })
 

@@ -53,7 +53,7 @@
 
     <fieldset>
       <legend>Kaynak ve sorumluluk</legend>
-      {% include "panel/parca/alan.html" with alan=form.kaynak_turu ipucu="Meta Yazar Bilgisi bundan türetilir." %}
+      {% include "panel/parca/alan.html" with alan=form.kaynak_turu ipucu="Meta Yazar Bilgisi bundan türetilir. Boş bırakılırsa ölçülmüş değer korunur." %}
       {% include "panel/parca/alan.html" with alan=form.muhabir ipucu="Kaynak türü 'Kendi muhabirimiz' ise zorunlu." %}
       {% include "panel/parca/alan.html" with alan=form.kaynaklar %}
       {% include "panel/parca/alan.html" with alan=form.meta_yazar ipucu="Yasal sonuç doğurur. Boş bırakırsanız kaynak türünden türetilir." %}

@@ -2017,3 +2017,169 @@ sonucu verir. Migration gerektirdiği için **bir sonraki tura bırakıldı**.
 Arşiv taraması bu tur sırasında **484.678 dosyaya (%87)** ulaştı; **126.842
 kayıt henüz göçmedi**. `--yalniz-yeni` ile alınacak, ardından
 `meta_yazar_doldur` yeni kayıtlar için **tekrar koşmalı**.
+
+---
+
+## 26. 29 Ağustos — kaynak türü yalanı temizlendi, panel tabloları dolduruldu
+
+Bu tur §25'in açık bıraktığı iki maddeyi kapatıyor ve panel model turunun
+"dokuz tablo boş" kalemine giriyor. Üçü de **ölçümle** yürüdü.
+
+### 26.1 Tarama 17,5 saat ölü yatmış
+
+Sabah bulunan ilk şey buydu: tarama 28 Ağustos 18:45'te düşmüş, 29 Ağustos
+12:18'e kadar kimse çalıştırmamış. Kayıp yok (tarama kaldığı yerden devam
+ediyor), kaybedilen **zaman**. `calistir.ps1` yeniden, ayrı bir pencerede
+bağımsız süreç olarak başlatıldı.
+
+**Yan ölçüm — kaynak site bugün hasta.** Yeniden başlayan koşunun gerçek
+çekim hızı iki ayrı pencerede **0,31 kayıt/sn** ölçüldü (atlanan kayıtlar
+sayılmadan); aynı taramanın 27-28 Ağustos ortalaması **5-6 kayıt/sn**, tepe
+değeri 12,8. Yirmi kat fark tarayıcıda değil karşı tarafta:
+
+* canlı siteden arka arkaya üç anasayfa isteği **7,4 sn · 42,5 sn · 0,39 sn**
+  sürdü;
+* çekim penceresinde **50 istekten 11'i HTTP 502** aldı — sunucunun kendi
+  ağ geçidi hatası, bizim hız sınırımız değil (429/403 gelmiyor).
+
+**Bu bir tarama sorunu değil, yayın sorunu.** Aynı 502'leri ve 42 saniyelik
+bekleyişi okur da yaşıyor. Kodda değişiklik yapılmadı: eşzamanlılığı artırmak
+zaten zorlanan kendi sunucumuzu daha çok zorlamak olurdu. 502 alan kayıtlar
+diske yazılmadığı için sonraki koşuda yeniden denenirler.
+
+Bu hızda kalan ~90 bin çekilmemiş kayıt **günler** alır. Site toparlarsa
+tarama kendiliğinden hızlanır; ölçüm `disa-aktarim/durum.py` ile bakılır.
+
+### 26.2 `kaynak_turu` artık boş olabiliyor — 337.450 kayıttaki uydurma silindi
+
+§25'in "karar bekliyor" kalemi. Alan `default="ajans"` ile açılmıştı ve
+arşivden gelen **hiçbir** kayıtta kaynak türü yoktu; hepsi bu varsayılanla
+yazılmıştı. `meta_yazar` backfill'i `haber_merkezi` ve `bulten` değerlerini
+ölçmüş ama bu kayıtlar için doğru bir kaynak türü olmadığından alana
+dokunmamıştı — sonuç: veritabanı 337.450 haber için "ajanstan geldi" diyordu.
+
+`0008_kaynak_turu_bos_olabilir` alanı `blank=True, default=""` yaptı ve
+**ölçüte** göre boşalttı: kaynak türü ile meta yazar birbirini tutmuyorsa o
+kaynak türü hiç ölçülmemiştir. `meta_yazar_elle=True` olan kayda dokunulmadı.
+
+| `kaynak_turu` | Önce | Sonra |
+|---|---|---|
+| `ajans` | 346.304 | **8.854** |
+| `dis_yayin` | 10.412 | 10.412 |
+| `muhabir` | 123 | 123 |
+| *(boş)* | 0 | **337.450** |
+
+Migration 39,1 sn, `ANALYZE` 0,4 sn.
+
+**§25'in önerdiği çözüm eksikti.** Plan "`meta_yazari_turet()` zaten boş türde
+`haber_merkezi` döndürüyor, türetim kendiliğinden doğru sonucu verir" diyordu.
+336.547 `haber_merkezi` kaydı için doğru, **545 `bulten` kaydı için değil** —
+o kayıtlar panelden kaydedilince `haber_merkezi`ye dönerdi. Türetim
+düzeltildi: kaynak türü boşsa **ölçülmüş `meta_yazar` korunur**, o da boşsa
+ev varsayılanı `haber_merkezi` yazılır. Üç yeni test bunu tutuyor.
+
+Panel formunda kaynak türünün boş seçeneği "Belirtilmemiş" diye adlandırıldı;
+Django'nun `---------` yer tutucusu bu ayrımı anlatmıyordu.
+
+### 26.3 Kampanya ↔ yuva bağı çoka çok oldu
+
+Panel tablolarını doldururken çıktı: dökümdeki 25 kampanyanın **8'i birden
+çok yuvada** yayımlanıyor ("-Manşet yanı- 300x250 / -Manşet altı1- 300x250 /
+-Haber arası2- 300x250"). Model tek yuvalı `ForeignKey` ile kurulmuştu.
+Kampanyayı yuva başına bölmek 131 kampanyalık gerçeği bozardı.
+
+`0009_kampanya_coka_cok_yuva` bağı `ManyToManyField`e çevirdi. Ara tablo
+**elle yazıldı** (`KampanyaYuva`) çünkü Django'nun ürettiği tablo eski
+bağdaki `on_delete=PROTECT` korumasını sessizce düşürüyordu: kullanımdaki bir
+yuva silinince kampanya yuvasız kalırdı ve yuva adları anasayfa şablonlarında
+geçiyor (F1 ölçütü 3). Gerileme testi zaten vardı ve değişikliği yakaladı.
+
+### 26.4 `panel_veri_al` — dokuz tablonun beşi dolduruldu
+
+Yeni komut, panel dökümünü **tablo başlığı imzasından** tanıyıp okuyor; dosya
+adına bakmıyor, çünkü sayfa numaraları dökümü alan kişinin gezinme sırasından
+geliyor.
+
+| tablo | alınan | dökümde | durum |
+|---|---|---|---|
+| `Gazete` | 17 | 17 | tam |
+| `ResmiIlan` | 24 | 24 | tam |
+| `ReklamYuvasi` | 50 | 50 | tam |
+| `ReklamKampanyasi` | 25 | **131** | eksik — döküm 1. sayfa |
+| `Bildirim` | 25 | **2.208** | eksik — döküm 1. sayfa |
+
+**Eksiklik bu turda ölçüldü.** "17 gazete · 24 resmî ilan · 32 bildirim ·
+50 reklam yuvası" notu bildirim tarafında yanlıştı: DataTables'ın kendi bilgi
+satırı (`1 - 25 / 2.208`) dökümün listenin yalnız ilk sayfası olduğunu
+söylüyor. Komut bu toplamı her koşuda basıyor ve eksikse işaretliyor;
+"tablo dolduruldu" denmiyor.
+
+**Üç ölçüm kararı:**
+
+1. **Durum kodları dökümün kendi JS'inden okundu**, renginden değil.
+   `row[8] == 1|2|4` → Aktif · Pasif · Arşiv; Django modelindeki değerlerle
+   birebir aynı. Düğme ipucu kaydın **şu anki durumunu** yazıyor — ama arşiv
+   düğmesi **eylemi** yazıyor ("Arşivden çıkar" = kayıt arşivde). İkisi
+   karıştırılsa 23 ilan yanlış duruma giderdi.
+2. **Kısalmış yuva listesi ipucundan tamamlandı.** Hücrede
+   "… / -..." görünen liste `data-bs-title` niteliğinde tam duruyor; ekrandaki
+   metni okumak 8 kampanyada yuva kaybettirirdi.
+3. **Editör adı kullanıcıya bağlanmadı.** Dökümde ad var ("Coşkun SAİTOĞLU")
+   ama gerçek kullanıcı tablosu henüz göçmedi (F5(d) `usertype_list`
+   dökümünü bekliyor). `olusturan` boş bırakıldı, ada bakıp kullanıcı
+   uydurulmadı.
+
+**Yuvaların ayrıştırılamayan alanları boş bırakıldı, sayıldı:** 50 yuvanın
+21'inde konum · 38'inde ölçü · 7'sinde cihaz adı geçiyor; 6'sı yuva değil boş
+yuvanın görünen hâli ("Bu alana reklam verebilirsiniz…") ve öyle işaretlendi.
+
+**Alınmayan dört tablo ve nedeni:** `Yorum` ve `LogKaydi` okur yorumu ve IP
+adresi taşıyor — kişisel veriyi demo doldurmak için taşımak ayrı bir karar,
+sorulmadan yapılmadı. `IkiAdimli` gizli anahtar kararını bekliyor (§24.10).
+`SonDakika`nın dökümde liste sayfası yok, yalnız ekleme formu var.
+
+Komut **tekrar çalıştırılabilir** (`update_or_create`), `--kuru` ile yalnız
+sayar. 15 gerileme testi ayıklama kurallarını tutuyor; testler gerçek dökümü
+değil, dökümün ölçülmüş biçimini taklit eden küçük sayfaları kuruyor — döküm
+depoda değil.
+
+### 26.5 Göç tazelemesi ve `meta_yazar` ikinci turu
+
+`goc_al --yalniz-yeni` **129.828 kayıt** aldı; veritabanı **486.667 habere**
+çıktı (356.839 → +%36,4). Görselsiz gelen 325 · ilçesi türetilen 12.384 ·
+kaynak bağı kurulan 93.806 · yeni kaynak kaydı 163.
+
+`meta_yazar_doldur` komutuna **`--yalniz-yeni`** eklendi: `meta_yazar`ı zaten
+dolu olan kaydın arşiv dosyasını hiç okumuyor. Tazeleme koşusu böylece
+356.481 dosyayı atladı ve **58 dakikadan 11,8 dakikaya** indi (okuma 694 sn,
+yazma 9 sn, `ANALYZE` 3,5 sn).
+
+| meta_yazar | 28 Ağu | 29 Ağu | fark |
+|---|---|---|---|
+| `haber_merkezi` | 336.547 | **369.054** | +32.507 |
+| `haber_ajansi` | 8.854 | **76.422** | +67.568 |
+| `alinti` | 10.412 | **35.045** | +24.633 |
+| `bulten` | 545 | **2.120** | +1.575 |
+| `fikir_iscisi` | 123 | **1.728** | +1.605 |
+| *(boş — kaynak alanı çöp)* | 358 | **2.298** | +1.940 |
+
+**Yeni kayıtlar bambaşka dağılıyor.** Eski partide ajans payı %2,5 iken yeni
+129.828 kayıtta **%52** (İHA 36.500 · AA 22.619 · DHA 8.297). Beklenen bir
+sonuç: yeni gelen kayıtlar son yılların içeriği ve kaynak alanı o dönemde
+gerçekten doldurulmuş. Aynı sebeple "kendi muhabirimiz" 123'ten 1.728'e
+çıktı (İsmail Karaduman 818 · Coşkun Saitoğlu 342 · Erhan Bedir 258).
+
+**Alan sözleşmesi 486.667 kaydın tamamında tutarlı:** `ajans` görünen her
+kaydın meta yazarı `haber_ajansi`, `dis_yayin` görünenin `alinti`,
+`muhabir` görünenin `fikir_iscisi`. Kaynak türü boş olan 373.472 kayıtta
+ölçülmüş meta yazar duruyor ve türetim onu ezmiyor.
+
+### 26.6 Ölçülen sonuç
+
+* **505 test geçiyor** (önceki tur 489; 16 yeni test bu turda eklendi).
+* Beş panel ekranı gerçek veriyle çiziliyor: `/panel/yuvalar` ·
+  `/panel/kampanyalar` · `/panel/gazeteler` · `/panel/ilanlar` ·
+  `/panel/bildirimler` — hepsi 200.
+* Yüklenen verinin dağılımı dökümle birebir: ilan 23 arşiv + 1 pasif,
+  14 İHALE + 10 TEBLİGAT; kampanya 11 aktif + 14 pasif, 8'i çok yuvalı,
+  toplam 36 kampanya-yuva bağı; gazete 17/17 aktif.

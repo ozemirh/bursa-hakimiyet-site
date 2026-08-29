@@ -74,8 +74,10 @@ class Haber(models.Model):
     etiketler = models.ManyToManyField(Etiket, blank=True, related_name="haberler")
 
     # -- kaynak ve sorumluluk (PANEL-NOTLARI.md §5, §7) --
-    kaynak_turu = models.CharField(max_length=12, choices=KAYNAK_TURLERI,
-                                   default=KAYNAK_AJANS)
+    kaynak_turu = models.CharField(
+        max_length=12, choices=KAYNAK_TURLERI, blank=True, default="",
+        help_text="Boş = ölçülemedi. Arşivden gelen 337 bin haberin kaynak türü "
+                  "kayıtlarda yoktu; varsayılan 'Ajans' bunu uydurmuş oluyordu.")
     muhabir = models.CharField(max_length=120, blank=True,
                                help_text="Kaynak türü 'Kendi muhabirimiz' ise doldurulur.")
     meta_yazar = models.CharField(
@@ -182,6 +184,11 @@ class Haber(models.Model):
         """
         if self.meta_yazar_elle and self.meta_yazar:
             return self.meta_yazar
+        if not self.kaynak_turu:
+            # Kaynak türü ölçülemediyse türetilecek bir şey yok. Arşivden
+            # ÖLÇÜLMÜŞ değer (haber_merkezi 336.547 · bulten 545) burada
+            # korunur; ezilirse §25'te kurtarılan bilgi geri kaybolur.
+            return self.meta_yazar or "haber_merkezi"
         return self.META_TURETIM.get(self.kaynak_turu, "haber_merkezi")
 
     def save(self, *args, **kwargs):
@@ -453,14 +460,23 @@ class ReklamKampanyasi(models.Model):
 
     Görsel **yerel dosya yolu** olarak tutuluyor; sayfanın internetsiz
     açılması kuralı reklam görselinde de geçerli.
+
+    **Yuva bağı ÇOKA ÇOK** — 29 Ağustos 2026'da ölçülerek düzeltildi. Model
+    tek yuvalı (ForeignKey) kurulmuştu; dökümün "Reklam Alanı" sütununda
+    kampanyaların **8'i (25'te)** birden çok yuva sayıyor
+    ("-Manşet yanı- 300x250 / -Manşet altı1- 300x250 / -Haber arası2- 300x250").
+    Tam liste hücrenin `data-bs-title` ipucunda duruyor; ekranda kısaltılmış
+    görünen kısım kayıp değil. Tek yuvada ısrar etmek kampanyayı yuva başına
+    bölmek demekti — 131 kampanyalık gerçeği bozardı.
     """
 
     DURUM_AKTIF, DURUM_PASIF = 1, 2
     DURUMLAR = [(DURUM_AKTIF, "Aktif"), (DURUM_PASIF, "Pasif")]
 
     baslik = models.CharField(max_length=200)
-    yuva = models.ForeignKey(ReklamYuvasi, on_delete=models.PROTECT,
-                             related_name="kampanyalar")
+    yuvalar = models.ManyToManyField(
+        ReklamYuvasi, related_name="kampanyalar", through="KampanyaYuva",
+        help_text="Bir kampanya birden çok yuvada yayımlanabilir.")
     gorsel_dosya = models.CharField(max_length=300, blank=True)
     gorsel_alt = models.CharField(max_length=300, blank=True)
     hedef_adres = models.URLField(max_length=600, blank=True)
@@ -475,13 +491,37 @@ class ReklamKampanyasi(models.Model):
         ordering = ["-baslangic", "baslik"]
         verbose_name = "reklam kampanyası"
         verbose_name_plural = "reklam kampanyaları"
-        indexes = [models.Index(fields=["yuva", "durum"])]
+        # Yuva artık M2M; indeks yalnız duruma kurulur.
+        indexes = [models.Index(fields=["durum"])]
 
     def __str__(self) -> str:
-        return f"{self.baslik} → {self.yuva_id}"
+        return self.baslik
 
     def suresi_gecti_mi(self) -> bool:
         return bool(self.bitis and self.bitis < timezone.localdate())
+
+
+class KampanyaYuva(models.Model):
+    """Kampanya ↔ yuva bağı. Django'nun ürettiği tabloyu kendimiz yazıyoruz.
+
+    **Tek sebebi `PROTECT`.** Bağ önce ForeignKey'di ve yuva silinmeye
+    çalışılınca `ProtectedError` veriyordu; çoka çok bağa geçerken Django'nun
+    varsayılan ara tablosu bu korumayı sessizce düşürüyor, kullanımdaki bir
+    yuva silinince kampanya yuvasız kalıyordu. Yuva adları anasayfa
+    şablonlarında geçtiği için (F1 ölçütü 3) bu sessiz kayıp pahalı.
+    """
+
+    kampanya = models.ForeignKey("ReklamKampanyasi", on_delete=models.CASCADE)
+    yuva = models.ForeignKey(ReklamYuvasi, on_delete=models.PROTECT)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(
+            fields=["kampanya", "yuva"], name="kampanya_yuva_tek")]
+        verbose_name = "kampanya-yuva bağı"
+        verbose_name_plural = "kampanya-yuva bağları"
+
+    def __str__(self) -> str:
+        return f"{self.kampanya_id} → {self.yuva_id}"
 
 
 class Gazete(models.Model):

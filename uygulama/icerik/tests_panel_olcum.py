@@ -323,8 +323,8 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
                 ad="-Manset yani- 300x250", konum="Manset yani",
                 genislik=300, yukseklik=250)
             ReklamYuvasi.objects.create(ad="hakimiyet", konum="hakimiyet")
-            self.kampanya = ReklamKampanyasi.objects.create(
-                baslik=uzun, yuva=self.yuva)
+            self.kampanya = ReklamKampanyasi.objects.create(baslik=uzun)
+            self.kampanya.yuvalar.add(self.yuva)
             self.gazete = Gazete.objects.create(
                 ad="BURSA HAKIMIYET", bik_kodu="YYN-000132", bizim_mi=True)
             self.ilan = ResmiIlan.objects.create(

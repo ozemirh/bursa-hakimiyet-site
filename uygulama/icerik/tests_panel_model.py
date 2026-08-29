@@ -67,7 +67,8 @@ class ModelTuruTemel(TestCase):
         cls.olcusuz_yuva = ReklamYuvasi.objects.create(
             ad="hakimiyet", konum="hakimiyet")
         cls.kampanya = ReklamKampanyasi.objects.create(
-            baslik="Deneme kampanyası", yuva=cls.yuva)
+            baslik="Deneme kampanyası")
+        cls.kampanya.yuvalar.add(cls.yuva)
         cls.gazete = Gazete.objects.create(
             ad="BURSA HAKİMİYET", bik_kodu="YYN-000132", bizim_mi=True)
         cls.ilan = ResmiIlan.objects.create(
@@ -342,7 +343,7 @@ class ReklamEkranlari(ModelTuruTemel):
     def test_kampanya_kaydediliyor(self):
         self._gir("İlan Sorumlusu")
         yanit = self.client.post(f"/panel/kampanya/{self.kampanya.pk}", {
-            "baslik": "Güncellenen kampanya", "yuva": self.yuva.pk,
+            "baslik": "Güncellenen kampanya", "yuvalar": [self.yuva.pk],
             "gorsel_dosya": "reklam/ornek.jpg", "gorsel_alt": "Örnek",
             "hedef_adres": "https://ornek.example/",
             "baslangic": "2026-09-01", "bitis": "2026-09-30",
@@ -353,9 +354,19 @@ class ReklamEkranlari(ModelTuruTemel):
         self.assertEqual(self.kampanya.baslik, "Güncellenen kampanya")
 
     def test_yuva_silinemez_kampanya_varken(self):
-        """PROTECT: yuva silinirse kampanya sahipsiz kalırdı."""
+        """PROTECT: yuva silinirse kampanya sahipsiz kalırdı.
+
+        Bağ çoka çok olduktan sonra da geçerli: koruma `KampanyaYuva` ara
+        modelindeki `on_delete=PROTECT` ile taşınıyor.
+        """
         with self.assertRaises(ProtectedError):
             self.yuva.delete()
+
+    def test_kampanya_birden_cok_yuvada_olabiliyor(self):
+        """Ölçüm: dökümdeki 25 kampanyanın 8'i çok yuvalı."""
+        self.kampanya.yuvalar.add(self.olcusuz_yuva)
+        self.assertEqual(self.kampanya.yuvalar.count(), 2)
+        self.assertEqual(self.yuva.kampanyalar.count(), 1)
 
 
 class GazeteVeIlanEkranlari(ModelTuruTemel):

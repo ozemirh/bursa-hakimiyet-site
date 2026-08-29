@@ -178,6 +178,35 @@ class HaberFormuAlanSozlesmesi(TestCase):
         haber.save()
         self.assertEqual(haber.meta_yazar, "bulten")
 
+    # --- §25: kaynak türü ölçülemediyse ölçülmüş meta yazar korunur ---
+    def test_bos_kaynak_turu_olculmus_meta_yazari_ezmiyor(self):
+        """Arşivden gelen 337 bin kaydın davranışı.
+
+        Bu kayıtlarda kaynak türü hiç kaydedilmemiş; meta yazar ise arşivin
+        `kaynak` alanından ÖLÇÜLDÜ. Panelden bir kaydetme ölçümü ezerse
+        kurtarılan bilgi geri kaybolur.
+        """
+        for meta in ("haber_merkezi", "bulten"):
+            with self.subTest(meta=meta):
+                haber = Haber(id=810100 + len(meta), slug="x", baslik="X",
+                              kategori=self.kategori, kaynak_turu="",
+                              meta_yazar=meta)
+                haber.save()
+                haber.refresh_from_db()
+                self.assertEqual(haber.meta_yazar, meta)
+
+    def test_bos_kaynak_turu_bos_meta_yazarda_haber_merkezine_duser(self):
+        haber = Haber(id=810110, slug="x", baslik="X", kategori=self.kategori,
+                      kaynak_turu="", meta_yazar="")
+        haber.save()
+        self.assertEqual(haber.meta_yazar, "haber_merkezi")
+
+    def test_kaynak_turu_bos_birakilabiliyor(self):
+        form = HaberForm(data=self._veri(kaynak_turu="", muhabir=""))
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(
+            form.fields["kaynak_turu"].choices[0], ("", "Belirtilmemiş"))
+
     def test_muhabir_secildiyse_ad_zorunlu(self):
         form = HaberForm(data=self._veri(kaynak_turu=Haber.KAYNAK_MUHABIR, muhabir=""))
         self.assertFalse(form.is_valid())

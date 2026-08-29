@@ -87,6 +87,11 @@ class Command(BaseCommand):
             Path(getattr(settings, "ARSIV_KOK", "D:/bursa-hakimiyet-arsiv")) / "veri"))
         parser.add_argument("--kuru", action="store_true",
                             help="yazmaz, yalnız ne olacağını sayar")
+        parser.add_argument(
+            "--yalniz-yeni", action="store_true",
+            help="meta_yazar'ı zaten dolu olan kaydın dosyasını hiç okumaz. "
+                 "Göç tazelemesinden sonraki koşuyu kısaltır; ölçülmüş "
+                 "değeri yeniden hesaplamaz.")
 
     def handle(self, *args, **s):
         y = self.stdout.write
@@ -95,6 +100,9 @@ class Command(BaseCommand):
 
         yazarlar = {_kucult(a) for a in Yazar.objects.values_list("ad", flat=True)}
         vt = set(Haber.objects.values_list("id", flat=True))
+        # Zaten siniflandirilmis kayitlarin dosyasini okumamak icin.
+        hazir = (set(Haber.objects.exclude(meta_yazar="")
+                     .values_list("id", flat=True)) if s["yalniz_yeni"] else set())
 
         # hedef (meta_yazar, kaynak_turu|None) -> [id...]
         kova: dict[tuple, list[int]] = defaultdict(list)
@@ -109,6 +117,9 @@ class Command(BaseCommand):
                 continue
             if kimlik not in vt:
                 sayac["veritabaninda yok (henuz gocmedi)"] += 1
+                continue
+            if kimlik in hazir:
+                sayac["atlandi (meta_yazar zaten dolu)"] += 1
                 continue
             try:
                 d = json.loads(yol.read_text(encoding="utf-8"))
