@@ -26,13 +26,18 @@ Cikti (varsayilan D:/bursa-hakimiyet-arsiv altinda):
 from __future__ import annotations
 
 import argparse
+import gzip
+import http.client
 import json
 import os
 import random
 import re
+import socket
 import sys
+import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -88,8 +93,11 @@ kok_ayarla(os.environ.get("BH_ARSIV_KOK", VARSAYILAN_KOK))
 
 SITEMAP_INDEX = "https://www.bursahakimiyet.com.tr/static/sitemap/sitemap.xml"
 DISK_GUVENLI_ESIK_GB = 10
-ESZAMANLILIK = 10
+ESZAMANLILIK = int(os.environ.get("BH_ESZAMANLILIK", "10"))
 DENEME_SAYISI = 3
+# Yonlendirme zinciri siniri: sitemap adreslerinin bir kismi eski kategori
+# slug'ina isaret ediyor ve 301 donuyor.
+EN_COK_YONLENDIRME = 5
 ILERLEME_ARALIGI = 50  # bu kadar haberde bir ilerleme.json guncellenir
 
 _ID_KATEGORI = re.compile(r"bursahakimiyet\.com\.tr/([a-z0-9-]+)/[a-z0-9-]+-(\d+)$")
@@ -142,13 +150,133 @@ def disk_yeterli_mi() -> bool:
 
 # -- sitemap --------------------------------------------------------------
 
+# -- kalici baglanti havuzu -------------------------------------------------
+#
+# NEDEN VAR (29 Agustos 2026'da olculdu). Betik once her istek icin yeni bir
+# TCP+TLS baglantisi aciyordu (urllib boyle calisir). Ayni sayfa icin ardarda
+# olculen sureler:
+#
+#     her istekte yeni baglanti : 13,14 sn/istek  (3,3 · 0,3 · 28,3 · 42,4 ...)
+#     tek baglanti, keep-alive  :  1,34 sn/istek  (ilki 7,3 sonrakiler 0,15)
+#
+# Fark **9,8 kat**. Sebep sunucunun yavasligi degil: TTFB her olcumde
+# 0,21-0,23 sn, govde indirmesi 0,005 sn. Zamanin tamami TCP `connect`
+# asamasinda gecti ve sureler 1 / 3 / 7 / 15 / 42 sn diye ilerledi -- bu
+# cekirdegin SYN yeniden gonderim deseni, yani **baglanti kurulum paketleri
+# dusuruluyor**. Site Cloudflare arkasinda; her istekte yeni baglanti acan
+# bir tarayici baglanti hizi sinirina takiliyor.
+#
+# Cozum bagimlilik eklemeden: her is parcacigi konak basina BIR baglantiyi
+# acik tutar ve tekrar kullanir. `requests` kullanilmadi, betik salt standart
+# kutuphaneyle calismali (baska makineye `paketle.ps1` ile tasinabiliyor).
+#
+# ONEMLI: keep-alive'in calismasi icin her yanitin GOVDESI SONUNA KADAR
+# OKUNMALI, yoksa baglanti tekrar kullanilamaz.
+
+_yerel = threading.local()
+
+
+def _baglanti(konak: str, guvenli: bool, zaman_asimi: int):
+    havuz = getattr(_yerel, "havuz", None)
+    if havuz is None:
+        havuz = _yerel.havuz = {}
+    baglanti = havuz.get(konak)
+    if baglanti is None:
+        kurucu = http.client.HTTPSConnection if guvenli else http.client.HTTPConnection
+        baglanti = havuz[konak] = kurucu(konak, timeout=zaman_asimi)
+    return baglanti
+
+
+def _baglantiyi_kapat(konak: str) -> None:
+    havuz = getattr(_yerel, "havuz", None)
+    if havuz and konak in havuz:
+        try:
+            havuz[konak].close()
+        except Exception:
+            pass
+        del havuz[konak]
+
+
+def baglantilari_kapat() -> None:
+    """Is parcacigi isini bitirince kendi baglantilarini birakir."""
+    for konak in list(getattr(_yerel, "havuz", {})):
+        _baglantiyi_kapat(konak)
+
+
+def istek_yap(url: str, zaman_asimi: int = 30) -> tuple[bytes, str]:
+    """Kalici baglanti uzerinden GET; (govde, content-type) dondurur.
+
+    Yonlendirmeleri kendisi izler. 2xx disi yanitta `urllib.error.HTTPError`
+    firlatir -- cagiran taraftaki `e.code` denetimleri (403/429 geri cekilmesi)
+    boylece oldugu gibi calismaya devam eder.
+    """
+    gorulen = 0
+    while True:
+        parca = urllib.parse.urlsplit(url)
+        konak = parca.netloc
+        guvenli = parca.scheme != "http"
+        yol = urllib.parse.urlunsplit(("", "", parca.path or "/", parca.query, ""))
+        basliklar = {
+            "User-Agent": ayiklayici.TARAYICI,
+            "Accept-Language": "tr,en;q=0.8",
+            "Accept-Encoding": "gzip",
+            "Connection": "keep-alive",
+        }
+
+        yanit = None
+        for deneme in (1, 2):
+            baglanti = _baglanti(konak, guvenli, zaman_asimi)
+            try:
+                baglanti.request("GET", yol, headers=basliklar)
+                yanit = baglanti.getresponse()
+                govde = yanit.read()
+                break
+            except (http.client.HTTPException, OSError, socket.timeout):
+                # Bayat baglanti: karsi taraf sessizce kapatmis olabilir.
+                # Bir kez yeni baglantiyla tekrar denenir.
+                _baglantiyi_kapat(konak)
+                if deneme == 2:
+                    raise
+        if yanit.headers.get("Content-Encoding") == "gzip":
+            try:
+                govde = gzip.decompress(govde)
+            except (OSError, EOFError):
+                pass
+
+        if yanit.status in (301, 302, 303, 307, 308):
+            hedef = yanit.headers.get("Location")
+            gorulen += 1
+            if hedef and gorulen <= EN_COK_YONLENDIRME:
+                url = urllib.parse.urljoin(url, hedef)
+                continue
+        if not 200 <= yanit.status < 300:
+            raise urllib.error.HTTPError(
+                url, yanit.status, yanit.reason, yanit.headers, None)
+        return govde, yanit.headers.get("Content-Type", "")
+
+
+def _cozumle(govde: bytes, icerik_turu: str) -> str:
+    """`ayiklayici.getir` ile ayni kodlama sirasi -- o dosya degistirilmiyor."""
+    tur = None
+    for parca in icerik_turu.split(";"):
+        parca = parca.strip()
+        if parca.lower().startswith("charset="):
+            tur = parca.split("=", 1)[1].strip().strip('"')
+    for kodlama in filter(None, [tur, "utf-8", "windows-1254", "latin-1"]):
+        try:
+            return govde.decode(kodlama)
+        except (UnicodeDecodeError, LookupError):
+            continue
+    return govde.decode("utf-8", errors="replace")
+
+
 def _getir_ham(url: str, zaman_asimi: int = 30) -> bytes:
-    istek = urllib.request.Request(url, headers={
-        "User-Agent": ayiklayici.TARAYICI,
-        "Accept-Language": "tr,en;q=0.8",
-    })
-    with urllib.request.urlopen(istek, timeout=zaman_asimi) as yanit:
-        return yanit.read()
+    return istek_yap(url, zaman_asimi)[0]
+
+
+def _sayfa_metni(url: str, zaman_asimi: int = 30) -> str:
+    govde, tur = istek_yap(url, zaman_asimi)
+    return _cozumle(govde, tur)
 
 
 def sitemap_ay_dosyalari() -> list[str]:
@@ -225,7 +353,7 @@ def zaten_islendi_mi(ay: str, id_: int) -> bool:
 def sayfa_indir(url: str) -> str | None:
     for deneme in range(1, DENEME_SAYISI + 1):
         try:
-            return ayiklayici.getir(url)
+            return _sayfa_metni(url)
         except urllib.error.HTTPError as e:
             if e.code in (403, 429) and deneme < DENEME_SAYISI:
                 bekle = 5 * deneme + random.uniform(0, 3)
