@@ -350,12 +350,24 @@ def zaten_islendi_mi(ay: str, id_: int) -> bool:
     return (VERI_KOK / ay / f"{id_}.json").exists()
 
 
+# Gecici sayilan ve geri cekilerek TEKRAR DENENEN yanit kodlari.
+# 403/429 hiz siniri; 5xx ag gecidi hatalari (Cloudflare origin'e ulasamiyor).
+#
+# 502 NEDEN BURADA (29 Agustos 2026'da olculdu). Once yalniz 403/429 tekrar
+# deneniyordu, 502 aninda basarisiz sayiliyordu. Olcum: dakikada 550-700 kayit
+# cekilirken hata orani **%0**, ama 13:30'da BIR dakika suren origin kesintisi
+# 479 kaydi birden dusurdu (%80) ve sonraki dakikada oran yine %0'a dondu.
+# Yani 502 kalici bir red degil, gecici bir dalgalanma; geri cekilip tekrar
+# denemek hem o kayitlari kurtariyor hem de kesinti aninda yuku azaltiyor.
+GECICI_KODLAR = (403, 429, 502, 503, 504)
+
+
 def sayfa_indir(url: str) -> str | None:
     for deneme in range(1, DENEME_SAYISI + 1):
         try:
             return _sayfa_metni(url)
         except urllib.error.HTTPError as e:
-            if e.code in (403, 429) and deneme < DENEME_SAYISI:
+            if e.code in GECICI_KODLAR and deneme < DENEME_SAYISI:
                 bekle = 5 * deneme + random.uniform(0, 3)
                 log(f"  {url} -> HTTP {e.code}, {bekle:.0f}sn sonra tekrar denenecek.")
                 time.sleep(bekle)
