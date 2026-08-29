@@ -79,7 +79,7 @@ class IlgiliHaberSecicisi(TestCase):
         yanit = self.client.post(f"/panel/haber/{self.ana.pk}", {
             "baslik": self.ana.baslik, "spot": "Spot.",
             "govde": "<p>Bir.</p><p>İki.</p>", "kategori": self.kategori.pk,
-            "etiketler": [], "durum": Haber.DURUM_PASIF, "hazirlik": "taslak",
+            "etiketler": "", "durum": Haber.DURUM_PASIF, "hazirlik": "taslak",
             "kaynak_turu": Haber.KAYNAK_AJANS,
             "ilgili_haberler": [hedef.pk],
         })
@@ -90,7 +90,7 @@ class IlgiliHaberSecicisi(TestCase):
         self._gir()
         yanit = self.client.post(f"/panel/haber/{self.ana.pk}", {
             "baslik": self.ana.baslik, "spot": "", "govde": "",
-            "kategori": self.kategori.pk, "etiketler": [],
+            "kategori": self.kategori.pk, "etiketler": "",
             "durum": Haber.DURUM_PASIF, "hazirlik": "taslak",
             "kaynak_turu": Haber.KAYNAK_AJANS,
             "ilgili_haberler": [99999999],
@@ -104,7 +104,7 @@ class IlgiliHaberSecicisi(TestCase):
         self._gir()
         yanit = self.client.post(f"/panel/haber/{self.ana.pk}", {
             "baslik": "Betiksiz kayıt", "spot": "", "govde": "",
-            "kategori": self.kategori.pk, "etiketler": [],
+            "kategori": self.kategori.pk, "etiketler": "",
             "durum": Haber.DURUM_PASIF, "hazirlik": "taslak",
             "kaynak_turu": Haber.KAYNAK_AJANS,
             "ilgili_haberler": [self.haberler[1].pk],
@@ -119,7 +119,7 @@ class IlgiliHaberSecicisi(TestCase):
         self._gir()
         self.client.post(f"/panel/haber/{self.ana.pk}", {
             "baslik": self.ana.baslik, "spot": "", "govde": "",
-            "kategori": self.kategori.pk, "etiketler": [],
+            "kategori": self.kategori.pk, "etiketler": "",
             "durum": Haber.DURUM_PASIF, "hazirlik": "taslak",
             "kaynak_turu": Haber.KAYNAK_AJANS, "ilgili_haberler": [],
         })
@@ -353,7 +353,7 @@ class BagliGaleriSecicisi(TestCase):
         self.client.force_login(self.yonetmen)
         yanit = self.client.post(f"/panel/haber/{self.haber.pk}", {
             "baslik": self.haber.baslik, "spot": "", "govde": "",
-            "kategori": self.kategori.pk, "etiketler": [],
+            "kategori": self.kategori.pk, "etiketler": "",
             "durum": Haber.DURUM_PASIF, "hazirlik": "taslak",
             "kaynak_turu": Haber.KAYNAK_AJANS,
             "bagli_galeriler": [self.galeriler[2].pk],
@@ -421,7 +421,7 @@ class FormKolayliklari(TestCase):
         self.client.force_login(self.yonetmen)
         yanit = self.client.post("/panel/haber/ekle", {
             "baslik": "", "spot": "", "govde": "", "kategori": "",
-            "etiketler": [], "durum": Haber.DURUM_PASIF, "hazirlik": "taslak",
+            "etiketler": "", "durum": Haber.DURUM_PASIF, "hazirlik": "taslak",
             "kaynak_turu": Haber.KAYNAK_AJANS,
         })
         self.assertEqual(yanit.status_code, 200)

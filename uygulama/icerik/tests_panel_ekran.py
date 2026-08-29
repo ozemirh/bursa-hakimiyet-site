@@ -74,7 +74,7 @@ class PanelErisim(TestCase):
         self._gir("Muhabir")
         yanit = self.client.post("/panel/haber/ekle", {
             "baslik": "Muhabirin taslağı",
-            "spot": "", "govde": "", "etiketler": [],
+            "spot": "", "govde": "", "etiketler": "",
             "kategori": self.kategori.pk,
             "durum": Haber.DURUM_PASIF, "hazirlik": "taslak",
             "kaynak_turu": Haber.KAYNAK_MUHABIR, "muhabir": "A. Yılmaz",
@@ -94,7 +94,7 @@ class PanelErisim(TestCase):
         yanit = self.client.post(f"/panel/haber/{haber.pk}", {
             "baslik": "Taslak", "spot": "Spot metni.",
             "govde": "<p>Bir.</p><p>İki.</p>",
-            "kategori": self.kategori.pk, "etiketler": [self.etiket.pk],
+            "kategori": self.kategori.pk, "etiketler": self.etiket.ad,
             "durum": Haber.DURUM_AKTIF, "hazirlik": "hazir",
             "kaynak_turu": Haber.KAYNAK_AJANS,
             "yayin_zamani": timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -113,7 +113,7 @@ class PanelErisim(TestCase):
         yanit = self.client.post(f"/panel/haber/{haber.pk}", {
             "baslik": "Taslak 2", "spot": "Spot metni.",
             "govde": "<p>Bir.</p><p>İki.</p>",
-            "kategori": self.kategori.pk, "etiketler": [self.etiket.pk],
+            "kategori": self.kategori.pk, "etiketler": self.etiket.ad,
             "durum": Haber.DURUM_AKTIF, "hazirlik": "hazir",
             "kaynak_turu": Haber.KAYNAK_AJANS,
             "yayin_zamani": timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -134,7 +134,7 @@ class PanelErisim(TestCase):
         self.client.post(f"/panel/haber/{haber.pk}", {
             "baslik": "Uçtan uca", "spot": "Spot",
             "govde": "<p>Bir.</p><p>İki.</p>",
-            "kategori": self.kategori.pk, "etiketler": [self.etiket.pk],
+            "kategori": self.kategori.pk, "etiketler": self.etiket.ad,
             "durum": Haber.DURUM_AKTIF, "hazirlik": "hazir",
             "kaynak_turu": Haber.KAYNAK_AJANS,
             "yayin_zamani": timezone.now().strftime("%Y-%m-%d %H:%M:%S"),

@@ -26,6 +26,8 @@ değiştirilirse form eski adresi `Yonlendirme` tablosuna yazar; bağlantı
 kırılmaz.
 """
 
+import re
+
 from django import forms
 from django.contrib.auth.models import Group, User
 from django.utils import timezone
@@ -33,6 +35,7 @@ from django.utils import timezone
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 from taksonomi.models import Etiket, Ilce, Kategori, Kaynak, Yonlendirme
 
+from .arama_metni import anahtar
 from .models import (Bildirim, Gazete, Haber, ReklamKampanyasi,
                      ReklamYuvasi, ResmiIlan, SonDakika, Yorum)
 from .yetkiler import ROLLER
@@ -122,13 +125,88 @@ def _galeri_etiketleri(kimlikler) -> dict:
     return {str(g.pk): f"[{g.pk}] {g.baslik[:70]}" for g in bulunan}
 
 
+class EtiketAlani(forms.CharField):
+    """Virgülle ayrılmış etiket adları — 29 Ağustos 2026.
+
+    NEDEN METİN ALANI. Alan önce `ModelMultipleChoiceField` idi ve
+    `Etiket.objects.all()` üzerinden çoklu seçim sunuyordu. Ölçüm: **etiket
+    tablosu boş** (0 satır) ve arşivde de etiket verisi yok — 400 kayıtlık
+    örneklemde `anahtar_kelimeler` alanı hepsinde boştu, canlı site etiketi
+    HTML'de yayımlamıyor. Boş bir `<select multiple>` ekranda çökmüş bir kutu
+    olarak çiziliyordu; "etiketler gözükmüyor" denen şey buydu.
+
+    Sonuç yalnız görsel değildi: `HaberForm.clean()` yayına almak için en az
+    bir etiket şart koşuyor, yani seçilecek etiket olmadığı için **panelden
+    hiçbir haber yayınlanamıyordu**.
+
+    Etiketi editör yazar; yazdığı ad yoksa kaydederken açılır. Var olanlar
+    `<datalist>` ile önerilir — öneri betiksiz de çalışır, panelin kuralı bu.
+    """
+
+    AYIRAC = re.compile(r"[,;\n]+")
+    EN_COK = 20
+    AD_SINIRI = 60
+
+    def to_python(self, deger):
+        if deger in self.empty_values:
+            return []
+        # Liste gelmesi eski kipin (çoklu seçim) izi; tek değere indirilir.
+        if isinstance(deger, (list, tuple)):
+            deger = ", ".join(str(d) for d in deger)
+        adlar, gorulen = [], set()
+        for ham in self.AYIRAC.split(str(deger)):
+            ad = " ".join(ham.split())
+            if not ad:
+                continue
+            imza = anahtar(ad)
+            if imza in gorulen:      # "Bursa" ile "BURSA" aynı etiket
+                continue
+            gorulen.add(imza)
+            adlar.append(ad)
+        return adlar
+
+    def validate(self, deger):
+        if self.required and not deger:
+            raise forms.ValidationError(self.error_messages["required"],
+                                        code="required")
+        uzun = [a for a in deger if len(a) > self.AD_SINIRI]
+        if uzun:
+            raise forms.ValidationError(
+                f"Etiket en çok {self.AD_SINIRI} karakter olabilir: "
+                f"“{uzun[0][:70]}”.")
+        if len(deger) > self.EN_COK:
+            raise forms.ValidationError(
+                f"En çok {self.EN_COK} etiket yazılabilir (şu an {len(deger)}).")
+
+
+def etiketleri_kur(adlar) -> list:
+    """Adları `Etiket` kayıtlarına çevirir, olmayanı açar.
+
+    Eşleştirme SLUG üzerinden: "Nilüfer Çayı" ile "nilüfer çayı" aynı etiket
+    olmalı, iki satır değil. Slug Türkçe-doğru küçültme + ASCII katlamayla
+    üretiliyor (`arama_metni.anahtar`); Django'nun `slugify`'ı Türkçe harfi
+    çevirmez, **atar** — "Şehreküstü" → "ehrekst".
+    """
+    kayitlar = []
+    for ad in adlar:
+        slug = re.sub(r"[^a-z0-9]+", "-", anahtar(ad)).strip("-")[:60]
+        if not slug:
+            continue
+        etiket, _ = Etiket.objects.get_or_create(slug=slug, defaults={"ad": ad})
+        kayitlar.append(etiket)
+    return kayitlar
+
+
 class HaberForm(forms.ModelForm):
     """Panelin haber ekle/düzenle formu."""
 
-    etiketler = forms.ModelMultipleChoiceField(
-        queryset=Etiket.objects.all(), required=False, label="Etiketler",
-        widget=forms.SelectMultiple(attrs={"data-cip": "1"}),
-        help_text="Çip arayüzü. Yayına alırken en az bir etiket şart.")
+    etiketler = EtiketAlani(
+        required=False, label="Etiketler",
+        widget=forms.TextInput(attrs={
+            "list": "etiket-onerileri", "autocomplete": "off",
+            "placeholder": "nilüfer çayı, baraj, meclis"}),
+        help_text="Virgülle ayırın. Olmayan etiket kaydederken açılır. "
+                  "Yayına alırken en az bir etiket şart.")
 
     # 356 bin seçenekli `<select>` yerine arama tabanlı seçim. Doğrulama
     # tüm haberleri kabul eder (`pk__in` ucuz), widget yalnız seçilileri
@@ -153,7 +231,7 @@ class HaberForm(forms.ModelForm):
         model = Haber
         fields = [
             "baslik", "ikinci_baslik", "spot", "govde",
-            "kategori", "ilce", "etiketler",
+            "kategori", "ilce",
             "kaynak_turu", "muhabir", "kaynaklar", "meta_yazar",
             "gorsel_url", "gorsel_alt",
             "durum", "hazirlik",
@@ -198,6 +276,16 @@ class HaberForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.kullanici = kullanici
         self._eski_kategori_id = self.instance.kategori_id if self.instance.pk else None
+
+        # Etiket alanı `Meta.fields` dışında: M2M'i `_save_m2m` kendisi yazıyor.
+        # Düzenlemede mevcut etiketler metne çevrilerek gösteriliyor.
+        if self.instance.pk and not self.is_bound:
+            self.initial["etiketler"] = ", ".join(
+                self.instance.etiketler.values_list("ad", flat=True))
+        # `<datalist>` önerileri. Sınır var: liste büyüdükçe sayfa şişmesin
+        # (356 bin `<option>` hatasının küçük ölçekte tekrarı olurdu).
+        self.etiket_onerileri = list(
+            Etiket.objects.order_by("ad").values_list("ad", flat=True)[:200])
 
         self.fields["kategori"].queryset = Kategori.objects.filter(aktif=True)
         self.fields["kaynaklar"].queryset = Kaynak.objects.filter(
@@ -257,6 +345,16 @@ class HaberForm(forms.ModelForm):
         return muhabir
 
     # -- bütün form --------------------------------------------------------
+
+    def _save_m2m(self):
+        """Etiketler `Meta.fields` dışında; bağı burada kuruyoruz.
+
+        Kayıt açma işi DOĞRULAMADA değil burada: `clean()` içinde açsaydık
+        geçersiz bir form bile veritabanında öksüz etiket bırakırdı.
+        """
+        super()._save_m2m()
+        self.instance.etiketler.set(
+            etiketleri_kur(self.cleaned_data.get("etiketler") or []))
 
     def clean(self):
         veri = super().clean()

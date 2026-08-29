@@ -17,7 +17,8 @@ from django.utils import timezone
 
 from taksonomi.models import Etiket, Kategori, KategoriTur, Yonlendirme
 
-from .formlar import BASLIK_SINIR, SPOT_SINIR, HaberForm
+from .formlar import (BASLIK_SINIR, SPOT_SINIR, HaberForm,
+                      etiketleri_kur)
 from .models import Haber
 from .yetkiler import ROLLER, rolun_yetkileri
 
@@ -99,7 +100,7 @@ class HaberFormuAlanSozlesmesi(TestCase):
             "spot": "Kısa bir spot metni.",
             "govde": "<p>Birinci paragraf.</p><p>İkinci paragraf.</p>",
             "kategori": self.kategori.pk,
-            "etiketler": [self.etiket.pk],
+            "etiketler": self.etiket.ad,
             "durum": Haber.DURUM_AKTIF,
             "hazirlik": "hazir",
             "kaynak_turu": Haber.KAYNAK_AJANS,
@@ -206,6 +207,52 @@ class HaberFormuAlanSozlesmesi(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(
             form.fields["kaynak_turu"].choices[0], ("", "Belirtilmemiş"))
+
+    # --- etiket alanı: boş tablo yüzünden görünmüyordu (29 Ağustos) ---
+    def test_etiket_yazilarak_aciliyor(self):
+        """Etiket tablosu boştu; seçilecek bir şey olmayınca alan çiziliyordu
+        ama görünmüyordu ve hiçbir haber yayına alınamıyordu."""
+        Etiket.objects.all().delete()
+        form = HaberForm(data=self._veri(etiketler="Nilüfer Çayı, baraj"))
+        self.assertTrue(form.is_valid(), form.errors)
+        haber = form.save(commit=False)
+        haber.id, haber.slug = 810200, "x"
+        haber.save()
+        form.save_m2m()
+        self.assertEqual(
+            sorted(haber.etiketler.values_list("ad", flat=True)),
+            ["Nilüfer Çayı", "baraj"])
+
+    def test_ayni_etiket_buyuk_kucuk_harfle_tekrarlanmiyor(self):
+        form = HaberForm(data=self._veri(etiketler="BURSA, bursa, Bursa"))
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["etiketler"], ["BURSA"])
+
+    def test_etiket_slugu_turkce_harfi_atmiyor(self):
+        """Django `slugify`'ı Türkçe harfi çevirmez, ATAR: Şehreküstü→ehrekst."""
+        Etiket.objects.all().delete()
+        etiketleri_kur(["Şehreküstü"])
+        self.assertEqual(Etiket.objects.get().slug, "sehrekustu")
+
+    def test_gecersiz_formda_etiket_kaydi_acilmiyor(self):
+        """Kayıt açma doğrulamada olsaydı öksüz etiket kalırdı."""
+        Etiket.objects.all().delete()
+        form = HaberForm(data=self._veri(baslik="", etiketler="yeni etiket"))
+        self.assertFalse(form.is_valid())
+        self.assertEqual(Etiket.objects.count(), 0)
+
+    def test_cok_etiket_reddediliyor(self):
+        form = HaberForm(data=self._veri(
+            etiketler=", ".join(f"etiket{i}" for i in range(25))))
+        self.assertFalse(form.is_valid())
+        self.assertIn("etiketler", form.errors)
+
+    def test_duzenlemede_mevcut_etiketler_metin_olarak_geliyor(self):
+        haber = Haber.objects.create(id=810210, slug="x", baslik="X",
+                                     kategori=self.kategori)
+        haber.etiketler.set(etiketleri_kur(["baraj", "meclis"]))
+        form = HaberForm(instance=haber)
+        self.assertEqual(form.initial["etiketler"], "baraj, meclis")
 
     def test_muhabir_secildiyse_ad_zorunlu(self):
         form = HaberForm(data=self._veri(kaynak_turu=Haber.KAYNAK_MUHABIR, muhabir=""))

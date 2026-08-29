@@ -3,6 +3,17 @@
   --murekkep:#12181F;--gri:#5B6672;--gri-acik:#8B97A3;
   --kirmizi:#D51C24;--lacivert:#1B2A6B;--deniz:#0E6E6E;
   --cizgi:#E3E8EC;--yuzey:#FFFFFF;--zemin:#F4F6F8;
+  /* Girdi zemini ve çerçevesi AYRI değişken — 29 Ağustos 2026.
+     Girdiler `--zemin` kullanıyordu, `body` de aynı değeri kullanıyor:
+     haber formunda 23 girdinin 23'ü arka planıyla BİREBİR aynı renkti
+     (başsız Chrome'da ölçüldü, kontrast 1,000:1). Beyaz kartların üstünde
+     bile fark 1,083:1'di, yani neredeyse görünmez.
+     Çerçeve WCAG 1.4.11'in etkileşimli öğe sınırı için istediği 3:1'i
+     KOMŞU OLDUĞU ÜÇ RENGE KARŞI DA karşılıyor: beyaz karta 3,68:1, gri
+     sayfaya 3,39:1, girdinin kendi dolgusuna 3,06:1. Eski `--cizgi`
+     1,23:1'de kalıyordu. Çerçevenin iki yanı da sayılır; ilk denenen
+     #7C8B9B dolgusuna karşı 2,90:1'de kalıp testten döndü. */
+  --girdi-zemin:#E4EBF1;--girdi-cizgi:#788797;
   --artis:#0B6E3B;
   --uyari-zemin:#FFF8E6;--uyari-cizgi:#E8C766;--uyari-yazi:#6B4E00;
   --tehlike-zemin:#FDECEC;--tehlike-cizgi:#F0A9A9;--tehlike-yazi:#8C1D1D;
@@ -110,8 +121,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 input[type=text],input[type=url],input[type=email],input[type=number],
 input[type=search],input[type=password],input[type=tel],input[type=date],
 input[type=datetime-local],textarea,select{
-  width:100%;border:1px solid var(--cizgi);border-radius:9px;padding:10px 12px;font:inherit;
-  font-size:14.5px;background:var(--zemin);color:var(--murekkep)}
+  width:100%;border:1px solid var(--girdi-cizgi);border-radius:9px;padding:10px 12px;
+  font:inherit;font-size:14.5px;background:var(--girdi-zemin);color:var(--murekkep)}
 textarea{resize:vertical;line-height:1.55}
 select{cursor:pointer}
 input:disabled,textarea:disabled,select:disabled{opacity:.55;cursor:not-allowed}

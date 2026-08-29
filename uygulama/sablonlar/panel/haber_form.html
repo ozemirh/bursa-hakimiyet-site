@@ -48,7 +48,12 @@
           Kimlik kayıtta verilir; slug'ı sunucu üretir.</p>
       </div>
       {% include "panel/parca/alan.html" with alan=form.ilce ipucu="İsteğe bağlı, tek seçim." %}
-      {% include "panel/parca/alan.html" with alan=form.etiketler ipucu="Yayına almak için en az bir etiket zorunlu." %}
+      {% include "panel/parca/alan.html" with alan=form.etiketler ipucu="Virgülle ayırın. Olmayan etiket kaydederken açılır; yayına almak için en az bir tane şart." %}
+      {% comment %}Öneri listesi: betiksiz çalışır, tarayıcı kendisi tamamlar.
+      Boşken de zararsız — etiket tablosu dolduça listeye düşer.{% endcomment %}
+      <datalist id="etiket-onerileri">
+        {% for ad in form.etiket_onerileri %}<option value="{{ ad }}"></option>{% endfor %}
+      </datalist>
     </fieldset>
 
     <fieldset>

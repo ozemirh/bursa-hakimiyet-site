@@ -83,7 +83,7 @@ Kullanıcının tarif ettiği sıra. **Yukarıdan aşağıya bağlayıcı.**
 | 12 | **Sağ ray — sekmeler** | 3 sekme: hava · namaz · eczane. Mevcut klasik demodaki davranış korunur. |
 | 13 | **Sağ ray — yazarlar** | Yazar adı **ve son yazısının başlığı**. |
 | 14 | **Sağ ray — en çok okunanlar** | Kullanıcı "uygun bir yere" dedi; sağ raya, yazarların altına konuyor. |
-| 15 | **Bursaspor alanı** | Solda **dar**: **4 lig** puan durumu (Süper · 1. · 2. · 3.) + o haftaki Bursaspor maç skoru. Sağda **geniş**: Bursaspor haberleri. |
+| 15 | **Bursaspor alanı** | Solda **dar**: **4 lig** puan durumu (Süper · 1. · 2. · 3.) + o haftaki Bursaspor maç skoru. Sağda **geniş**: Bursaspor haberleri. **29 Ağustos 2026:** geniş sütun karma dizgi — **6 görselli kart + 9 tarihli başlık** (§32.1). Yerleşim (solda dar / sağda geniş) değişmedi; değişen geniş sütunun içeriği: tam kadro tablo sol sütunu 958 px'e çıkardığı için altı kart sağ altta 412 px boşluk bırakıyordu. |
 | 16 | **Galeriler** | Bursaspor alanının altında. |
 | 17 | **Videolar** | Galerilerin altında. |
 | 18 | **Vizyonda neler var** | Videoların altında. API ile beslenecek. |
@@ -2456,3 +2456,458 @@ ve göçü bozmadan 74 ms'ye indirdi.
 `LIKE '%…%'` için doğru altyapı çözümü PostgreSQL'in **`pg_trgm` GIN**
 indeksidir ve F7'nin işidir. FTS5 bunun yerine geçmez: tam metin arama
 sözcük/önek eşler, ortadan eşleşme yapmaz.
+
+## 29. 29 Ağustos — BURSASPOR bölümü: yeşil-beyaz, tam tablo, haftanın maçı
+
+Bölüm üç yerinden eksikti: tablo **beş satıra kırpılıyordu**, grup
+**körlemesine** ilk gruptu, haftanın maçı **hiç** çizilmiyordu. Üçü de
+kapandı; veri zaten tamdı (`canli-veri/veri/puan-durumu.json`, 127 takım),
+eksik olan gösterimdi.
+
+### Kararlar
+
+| Konu | Karar | Nerede |
+|---|---|---|
+| **Renk** | Bölüm **yeşil-beyaz** — kulüp kimliği. Sitenin geri kalanı lacivert-kırmızı kalır. Dört yeni simge `:root` içinde: `--yesil` `--yesil-koyu` `--yesil-ak` `--yesil-cizgi`; kurallar `#bursaspor` ve yalnız bu bölümde geçen sınıflarla sınırlı | `site.css` §15 |
+| **Açık sekme** | Listenin ilki (Süper Lig) **değil**, Bursaspor'un ligi. Lig koda gömülü değil, veri `takip.lig` alanından gelir (şu an `1lig`) | `canli.puan_ligleri` |
+| **Grup seçimi** | Körlemesine `gruplar.0` **değil**: Bursaspor'un grubu, yoksa **en çok Bursa kulübü** barındıran grup öne gelir; diğer gruplar düşmez, okur sekmeyle geçer. §8'in önerdiği sonucu ölçerek veriyor: 2. Lig **Kırmızı**, 3. Lig **2. Grup** | `canli.puan_ligleri` |
+| **Tablo** | Kırpma kalktı, **grubun tamamı** basılır (18-20 satır) ve sütunlar **tam**: O G B M A Y Av P | `anasayfa.html` |
+| **Bursa satırları** | Bursaspor satırı dolu yeşil/beyaz yazı; diğer Bursa kulüpleri (İnegöl Kafkas, Karacabey, Sultan Su İnegölspor, Bursa Nilüfer, Bursa Yıldırım) açık yeşil zeminli. Tanıma sözcük **başı** eşleşmesi: "SULTAN SU İNEGÖLSPOR" yakalanır, "YENİ MALATYASPOR" YENİŞEHİR'e takılmaz | `canli._bursa_kulubu` |
+| **Haftanın maçı** | Tablonun **üstünde** — tablolar tam kadro olduğundan altta kalsa görünmezdi. Maç oynandıysa **skor**, oynanmadıysa **tarih + saat** basılır; kaynakta olmayan sonuç uydurulmaz (`skor_var` yalnız `oynandi` **ve** iki gol alanı doluysa true) | `canli.puan_takibi` |
+| **Menü çapası** | Menüdeki "Puan durumu" bağlantısı `#puan-super` idi; Süper Lig paneli artık varsayılan olarak kapalı (`display:none`) ve çapa hiçbir yere gitmiyordu → `#bursaspor` | `parca/kategori_bandi.html` |
+
+### Sekme kümelerinin ayrılması
+
+`site.js` sekmeleri `.sek` öğesinin **ana** öğesinde arıyor. Grup sekmeleri
+lig panellerinin içine girdiği için lig sekmeleri onları da toplayıp iki küme
+birbirine karışacaktı. Çözüm JS'i değiştirmek değil, her kümeye kendi
+sarmalayıcısını vermek oldu: `.lig-sek` ve `.grup-sek`. Ölçüldü: lig
+sekmesinde ArrowRight'a basmak grup sekmelerinin seçimini **bozmuyor**.
+
+### Ölçüm (başsız Chrome, `Network.setCacheDisabled`)
+
+| genişlik | yatay taşma | puan kutusu | tablo kabı | satır × sütun |
+|---|---|---|---|---|
+| 360 | **0** | 299 px | 273 → 273 (kaymıyor) | 20 × 10 |
+| 768 | **0** | 707 px | 681 → 681 | 20 × 10 |
+| 1024 · 1280 · 1600 | **0** | 300 px | 274 → 274 | 20 × 10 |
+
+Sekiz sayı sütunu 300 px'lik kutuya **kayma olmadan** sığdı (takım adına
+143 px kalıyor); yine de tablo kendi `overflow-x:auto` kabında duruyor —
+daha uzun takım adı geldiğinde sayfa değil tablo kayar. Kap klavyeyle
+gezilebilsin diye odak alıyor. Tıklama ölçümü: 2. Lig sekmesi → Kırmızı 17
+satır, Beyaz'a geçiş → 18 satır, her adımda taşma 0. Odak halkası duruyor
+(`solid 3px` kırmızı).
+
+**500 test geçiyor**; 11'i bu turda eklendi (`tests_canli.PuanDurumu`) ve üç
+kararı da kilitliyor: açık sekme Bursaspor'un ligi, grup sırası Bursa'ya
+göre, tablo kırpılmıyor.
+
+### Açık kalan
+
+Tablo tam kadro olunca sol sütun sağdaki haber şeridinden **uzun** kalıyor;
+geniş ekranda sağ altta boşluk oluşuyor. Haber sayısını artırmak ya da şeridi
+iki sütuna indirmek bunu kapatır — ikisi de §8 madde 15'in yerleşimini
+(solda dar puan, sağda geniş haber) değiştirmediği için ayrı bir karar.
+
+---
+
+## 30. 29 Ağustos — RESMÎ İLANLAR bölümü: elle yazılmış liste veriye bağlandı
+
+Kullanıcı isteği: bölüm yeniden düzenlensin ve **daha ilgi çekici** olsun.
+Resmî ilan BİK yükümlülüğü olan editoryal bir bölüm ve gazete için gelir
+kalemi; ciddiyeti bozmadan okunur olması gerekiyordu.
+
+### Asıl kusur ilgi çekicilik değildi: bölüm sahteydi
+
+Şablondaki altı `<li>` **elle yazılmıştı**. Başlıklar gerçekti (biri
+veritabanına bakıp kopyalamış) ama şablona çakılıydı: kayıt değişse sayfa
+değişmeyecekti. Veritabanında zaten **24 gerçek `ResmiIlan` kaydı** vardı.
+Bölüm artık `ResmiIlan.yayimlananlar()` sorgusundan çiziliyor.
+
+### Süzgeç neden `durum=AKTİF` değil, "pasif değil"
+
+Ölçüldü: 24 kaydın **hiçbiri AKTİF değil** — 23'ü Arşiv, 1'i Pasif.
+`durum=AKTİF` süzgeci bölümü **tamamen boşaltırdı**.
+
+Durum kodunun anlamı dökümün kendi JS'inden doğrulandı
+(`__bursahakimiyet.com.tr__15.html`, 831-849. satır): `row[8]==1` →
+tooltip "Aktif", `==2` → "Pasif", başka → "Arşivden çıkar". Yani tooltip
+**durumu** söylüyor, eylemi değil; `panel_veri_al`ın eşlemesi doğru.
+Aynı satırdaki arşiv düğmesi eylem yazıyor ("Arşivle" / "Arşivden çıkar")
+olduğu için bu ayrım tek tek denetlendi.
+
+Karar: **arşiv kalır, pasif çıkar.** Arşiv "yayımlandı, güncelliğini
+yitirdi" demek — bölüm gazetenin yayımladığı ilanların dizini olduğu için
+bu kayıtlar oraya aittir. Pasif ise editörün yayından çektiği kayıttır.
+Kayıtlar aktifleşmeye başlayınca süzgeç yeniden değerlendirilmeli.
+
+### Tasarım kararları ve gerekçeleri
+
+1. **Tarih omurgası.** Düz listede sekiz başlık aynı ağırlıktaydı ve
+   "bu ne kadar yeni" sorusu ancak en alttaki gri satır okunarak
+   yanıtlanıyordu. Gün/ay bloğu (`.ilan-gun`) tarihi satırın soluna,
+   ilk bakılan yere aldı. Notice/ilan sayfalarının klasik çözümü:
+   okur türden önce **tarihe** bakar.
+2. **Lejant → süzgeç.** Alttaki "İLAN TÜRLERİ" şeridi renk kodunu tanıtan
+   ölü bir bilgiydi. Aynı şerit listenin üstüne alındı ve tıklanabilir
+   oldu (`aria-pressed`, `role="status"` canlı bölge). Dört tür de
+   duruyor (§16), kaydı olmayanlar **kesikli çerçeve + gerçek 0** ile;
+   "bu gazete bu türde ilan yayımlamıyor" da bilgidir.
+3. **Kaydı olan türler önce.** Yasal sıra (İCRA ilk) süzgeci boş bir
+   düğmeyle açıyordu; `tur_dagilimi` sıfırları sona indiriyor.
+4. **Ölü bağlantılar kaldırıldı.** Başlıklar `href="#"` idi. İlan
+   metinleri göç etmedi, detay sayfası **yok**; başlık artık bağlantı
+   değil, düz metin. Satır vurgusu (`li:hover`) da kaldırıldı — tıklanamayan
+   satırı boyamak "buraya tıkla" sözü veriyordu. "TÜM İLANLAR" gerçek
+   `/resmi-ilan` adresine bağlandı.
+5. **Son başvuru vurgusu YAPILMADI.** İstenmişti ama `bitis_tarihi`
+   24 kaydın **hepsinde boş**. Uydurulmadı; bölümün notu bunu okura
+   açıkça söylüyor.
+
+### Yan bulgu — `|lower` Türkçe İ harfini bozuyor
+
+Nottaki tür adları `{{ t.ad|lower }}` ile küçültülünce tarayıcıda
+**"i̇hale"** basıyordu: Unicode "İ"yi `i` + birleşen nokta (U+0307)
+olarak küçültüyor. `site_etiket`te `buyult` vardı ama karşılığı yoktu;
+`kucult` süzgeci eklendi.
+
+### Ölçüm (başsız Chrome, `Network.setCacheDisabled`)
+
+| genişlik | `clientWidth` / `scrollWidth` | sütun | bölümde taşan |
+|---|---|---|---|
+| 360 | 345 / 345 | 1 | 0 |
+| 768 | 753 / 753 | 1 | 0 |
+| 1024 | 1009 / 1009 | 2 | 0 |
+| 1280 | 1265 / 1265 | 2 | 0 |
+| 1600 | 1585 / 1585 | 2 | 0 |
+
+Sayfadaki diğer taşan öğelerin tamamı `DIV.akis` (son dakika şeridi)
+içinde ve **tasarımı gereği** yatay kayan kapta; sayfa yatay kaymıyor.
+Sağ ray beş genişlikte de 320 px.
+
+Kontrast (en düşükler): gün/ay etiketi 5,17 · ilan no 5,50 · kapalı süzgeç
+düğmesi 5,17 · TEBLİGAT rozeti 6,62 · basılı TÜMÜ düğmesi 17,82. Hepsi
+AA eşiğinin (4,5) üstünde.
+
+Odak **gerçek Tab tuşuyla** ölçüldü (`Input.dispatchKeyEvent`):
+`3px solid var(--kirmizi)`, 2 px aralık, `:focus-visible` eşleşiyor.
+Kaydı olmayan iki tür `disabled` olduğu için sekme sırasında atlanıyor.
+Not: `element.focus()` ile ölçüm `outline-style:none` veriyordu —
+programatik odak `:focus-visible`ı tetiklemiyor, ölçüm yanıltıcıydı.
+
+Süzgeç davranışı ölçüldü: TEBLİGAT → 2 satır kalıyor, ikisi de tebligat,
+`aria-pressed` doğru, canlı bölge "Sayfadaki 2 tebligat ilanı gösteriliyor."
+TÜMÜ → 8 satır geri geliyor ve not varsayılana dönüyor.
+
+**Ekran görüntüsü açılıp bakıldı** (360 · 1280 · süzülmüş hâl). İlk kırpma
+denemesi altbilgiyi yakalamıştı: `captureBeyondViewport` sayfa koordinatlarını
+kaydırıyor. Bölüm görünüre kaydırılıp yeniden çekildi.
+
+### Açık kalan
+
+- `/resmi-ilan` sayfası hâlâ yer tutucu (`bekleyen.html`). Anasayfa artık
+  gerçek kayıt gösterdiği için bu sayfanın 23 kaydı listelemesi sıradaki
+  iş; kapsam dışı bırakıldı.
+- İlan **metni**, BİK kodu ve bitiş tarihi dökümde yok (§24.3): ekleme
+  formu kaydedilmemiş. Bu alanlar gelmeden ilan detay sayfası yapılamaz.
+- Anasayfa 8 ilan gösteriyor; süzgeç sayıları **sayfadakini** sayar,
+  arşiv toplamı (23) bölümün notunda ayrıca yazılı.
+
+---
+
+## 31. 29 Ağustos — vizyon takvimi kaynağa bağlandı: dağıtımcı duyuruları
+
+§20'de "TMDB anahtarı alınacak" diye kapatılan konu **yeniden açıldı ve
+başka türlü kapandı**. Bileşen 26 Ağustos'tan beri Wikidata'dan gelen
+**1 filmle** duruyordu; artık gerçek veriyle doluyor.
+
+### Önce eleme: bütün portallarda aynı madde var
+
+Türkiye vizyon takvimi yayımlayan siteler tek tek okundu. `robots.txt`
+çoğunda temizdi; eleyen şey **sözleşme şartları** oldu ve hepsinde aynı
+kalıp çıktı.
+
+| Kaynak | robots.txt | Kullanım koşulları — birebir |
+|---|---|---|
+| `sinemalar.com` | temiz (`ClaudeBot` yalnız `Crawl-delay: 60`) | *"Kişisel kullanım dışında, reklam veya **ticari amaçlı** olarak herhangi bir NOKTACOM'a ait İçeriği, NOKTACOM yazılı onayı olmaksızın kullanma, çoğaltma, modifiye etme, dağıtma, depolama/saklama yasaktır."* |
+| `beyazperde.com` | temiz | md. 3.12 *"…bu malzemeler ve dokümanlar üye ve **başka kişi ile kuruluşlar** tarafından izinsiz kullanılamaz, iktisap edilemez ve değiştirilemez."* + md. 3.3 *"Otomatik programlar kullanılarak çok sayıda sorgu … yapılması … bu yasağa dahildir."* |
+| `biletinial.com` | `ClaudeBot: Allow: /` | *"Kullanıcı sadece kişisel kullanım için kopya hakkına sahip olduğunu kabul eder ve Biletinial'ın **yazılı izni olmadan** … kopyalayamaz, çoğaltamaz, yayınlayamaz, satamaz…"* |
+| `paribucineverse.com` | temiz | md. 2 *"…siteden herhangi bir şekilde izinsiz bir şekilde görsel veya yazılı bir parçasını veya bütününü kopyalamayacağını, çoğaltmayacağını, **başka sitelerde kullanmayacağını** kabul ve beyan eder."* |
+| `uip.com.tr` | robots.txt yok | *"HERHANGİ BİR MATERYALİN YETKİ DIŞI KULLANIMI, KOPYALANMASI, ÇOĞALTILMASI, MODİFİKASYONU, YAYIMLANMASI … KESİNLİKLE YASAKTIR."* |
+| `boxofficeturkiye.com` | temiz | madde 14 (§8'de yazılı) — **ama** `/kurumsal/icerik-izni` adresinde gerçek bir izin formu var |
+| `tmefilm.com` | **`User-agent: ClaudeBot` → `Disallow: /`** | okunmadı; robots kapatıyor, siteye hiç gidilmedi |
+
+Teknik gerekçeyle elenenler: **Cinemaximum** (alan adı ölü, marka Paribu
+Cineverse'e geçmiş), **CJ ENM Türkiye** (alan adı ölü), **CGV Mars Dağıtım**
+(web sitesi yok, yalnız YouTube kanalı), **Warner Bros. Türkiye** (global
+siteye yönlendiriyor, TR takvimi yok), **Cinens** (repertuar/açık hava
+gösterimleri, ulusal takvim değil), **Kültür ve Turizm Bakanlığı film
+sınıflandırma portalı** (`robots.txt` `Allow: /` ve resmî kaynak, ama
+tamamen istemci tarafı çiziliyor ve tuttuğu tarih **sınıflandırma** tarihi,
+vizyon tarihi değil).
+
+**TMDB de elendi** (§20'deki karar geri alındı): şartları reklam geliri olan
+siteleri "commercial use" sayıyor ve ayrı yazılı anlaşma istiyor. Gazete
+reklamlı ticari bir yayın. Kod duruyor, varsayılan olmaktan çıktı.
+
+### Sonra çözüm: dağıtımcının kendi duyurusu
+
+Portalın "içeriğimizi kopyalamayın" maddesiyle, **dağıtımcının "filmimiz
+şu tarihte vizyonda" duyurusu aynı şey değil** — ikincisi zaten basının
+yayınlaması için yapılan bir açıklamadır. §9'un son paragrafı bu yolu
+işaret ediyordu; izlendi.
+
+İki dağıtımcı hem teknik hem hukuki olarak temiz çıktı. İkisinde de
+içeriğin kullanımını kısıtlayan bir kullanım koşulları sayfası **yok** —
+site haritalarının tamamı tarandı (Başka Sinema **19** sayfa, Bir Film
+**518** sayfa) — ve `robots.txt` bu yolları açık bırakıyor.
+
+| Dağıtımcı | Adres | Ne veriyor | Ölçüm |
+|---|---|---|---|
+| **Başka Sinema** | `/gelecek-filmler/` + `/basin/` | Türkçe ad, orijinal ad, yıllı tarih, tür | 30 film okundu, **3'ü** pencerede |
+| **Bir Film** | `/sinemalarda` → film sayfası | ad, yıllı tarih, tür | 20 öğe okundu, **5'i** pencerede |
+
+**Toplam ölçüm (29 Ağustos 2026, `--ay 3`): 8 film, 5 vizyon günü**,
+çıkış kodu **0**, durum `taze`. Anasayfada bölüm 4 kartla doluyor.
+
+Ölçülen bir tuhaflık: **Bir Film'in liste sayfası yıl vermiyor**
+("13 Kasım'da Sinemalarda!"). Yıl yalnız film sayfasında yazılı. Bu yüzden
+liste kaba bir **süzgeç** olarak kullanılır ve tarih film sayfasından
+okunur; bir koşuda açılan film sayfası 25 ile sınırlı.
+
+### Kapsam dürüstlüğü
+
+Bu liste **ulusal vizyon takviminin tamamı değildir**; yalnız bu iki
+dağıtımcının getirdiği filmleri kapsar. Bu, gizlenmesi değil söylenmesi
+gereken bir sınır: çıktıya `kaynak.kapsam_uyarisi` alanı yazılır ve şablon
+bunu okura basar. Anasayfadaki *"doğrulanmış bir kaynak henüz yok"* yer
+tutucu notu kaldırıldı, yerine gerçek künye + kapsam uyarısı geldi.
+
+Eksik film **uydurulmaz**. Kaynakta olmayan alan (özgün ad, özet, yaş
+sınırı) boş kalır.
+
+### Açık kalan iş kalemi
+
+**Box Office Türkiye'ye izin başvurusu.** Kapsam farkı büyük (dağıtımcı +
+orijinal ad + çoklu tür + cuma bazlı hafta, ayda ~30 film) ve site
+`/kurumsal/icerik-izni` adresinde **gerçek bir izin süreci** sunuyor —
+yani yasak mutlak değil, izne bağlı. Ayrıştırıcı zaten yazılı ve
+doğrulanmış; izin gelirse `--yazili-izin-var` bayrağıyla tek adımda açılır.
+Bu bir **e-posta işidir**, betiğin işi değildir; §2/§8/§12/§15'teki diğer
+hukuki teyit kalemleriyle aynı listeye girer.
+
+İkinci sırada **Paribu Cineverse**: verisi teknik olarak en temizi
+(sayfada hazır JSON-LD, ölçüldü: 34 film / 8 cuma), ama dağıtımcı alanı yok
+ve madde 2 açık. İzin alınırsa güçlü bir ikinci kaynak olur.
+
+---
+
+## 32. 29 Ağustos — denetim turu: Bursaspor boşluğu kapandı, resmî ilan beyanı düzeltildi
+
+İki bölüm (§29 Bursaspor, §30 Resmî ilanlar) denetlendi: şablon + CSS + JS
+okundu, beş genişlikte başsız Chrome ile ölçüldü, ekran görüntüleri açılıp
+incelendi. §29'un **açık bıraktığı yerleşim kararı** burada verildi.
+
+### 32.1 Bursaspor — 412 px'lik boşluk: karar ve gerekçe
+
+Ölçülen kusur: tam kadro tablo sol sütunu **958 px**'e çıkarıyor, sağdaki
+altı kart **546 px**'te bitiyordu. 1280 ve 1600 px'te sağ altta
+**412 px × 760 px** boş alan kalıyordu (1024'te 391 px). Ekran görüntüsünde
+bu boşluk "içerik yüklenmemiş" gibi okunuyordu.
+
+Tartılan seçenekler:
+
+| Seçenek | Neden seçilmedi |
+|---|---|
+| Kart sayısını 6 → 12 | Üç sıra 786 px'te kalıyor (hâlâ 170 px açık), dört sıra 1048 px ile **tabloyu aşıyor**. Asıl sorun ölçü değil: on iki eşit ağırlıklı kart bölümü **düz bir kart duvarına** çevirirdi, hiyerarşi tümden düzleşirdi. |
+| Sütunları takas etmek (tablo sağa) | Boşluğu kapatmıyor, sola taşıyor. Ayrıca §1 madde 15 "solda dar puan" diyor — sözleşme değişikliği gerektirirdi, karşılığı yok. |
+| Tabloyu iki sütuna bölmek (1-10 / 11-20) | ~600 px genişlik ister; "solda dar" sözleşmesini bozar ve sıra sürekliliği kopunca puan tablosu okunmaz olur. |
+| Tabloyu kısaltmak | Kullanıcı tam kadro istedi; kapalı. |
+| **Kart bloğu + başlık listesi (seçilen)** | — |
+
+**Karar: sağ sütun karma dizgiye geçti** — üstte altı görselli kart
+(değişmedi), altında `.bursaspor-liste`: tarihli, tek satırlık dokuz
+başlık. Gerekçe biçimsel değil editoryal: kulüp sayfalarının klasik
+çözümü üstte görselli seçki, altında yoğun başlık dizisidir; geri dönen
+okur fotoğrafa değil **başlığa** bakar. Liste dikeyde ucuz olduğu için
+sütun yüksekliği tablonun yüksekliğine göre ayarlanabiliyor — kart eklemek
+bu esnekliği vermiyordu.
+
+**§1 madde 15 DEĞİŞMEDİ**: yerleşim hâlâ "solda dar puan durumu, sağda
+geniş Bursaspor haberleri". Değişen, geniş sütunun *içeriği*. Sözleşmeye
+eklenen tek satır: geniş sütun **6 kart + 9 başlık** taşır
+(`views.BURSASPOR = 6`, `BURSASPOR_LISTE = 9`; toplam 15 kayıt tek
+sorgudan dilimlenir, kart ile liste **kesişmez**).
+
+Ölçüm (başsız Chrome, `Network.setCacheDisabled`, sol sütun − sağ sütun):
+
+| genişlik | önce | sonra | yatay taşma |
+|---|---|---|---|
+| 360 | (tek sütun) | (tek sütun) | **0** |
+| 768 | (tek sütun) | (tek sütun) | **0** |
+| 1024 | +391 px | **−24 px** | **0** |
+| 1280 | +412 px | **+14 px** | **0** |
+| 1600 | +412 px | **+14 px** | **0** |
+
+Liste satırı 41 px (sonuncusu 29 px, alt dolgusu yok). Kontrast: başlık
+bağlantısı 17,82 · tarih 5,50 · "SON GELİŞMELER" başlığı 10,28 — hepsi AA
+üstünde. Yeni renk **tanımlanmadı**; §15'in yeşilleri kullanıldı.
+
+### 32.2 Tarih sütunu yılı gizliyordu — `kisa_zaman` süzgeci
+
+Liste tarihi öne aldığı için tarihin **doğru okunması** gerekiyordu.
+Ölçüldü: Bursaspor kategorisindeki en yeni haber **31 Ekim 2025**
+tarihli (arşiv taraması güncele yetişmedi; kategoride 2026 kaydı yok).
+Yılsız "31 Eki" bunu *bu yılın* haberi gibi gösteriyordu — üstelik
+hemen yanında 29 Ağustos 2026 tarihli maç dururken.
+
+`kisa_zaman` süzgeci eklendi: **bugünse saat, bu yılsa gün+ay, başka
+yılsa gün+ay+yıl.** Gazete masasının kuralı: aynı günün haberinde okur
+"kaçta", eski haberde "ne zaman" diye sorar. Bölümün notu da tarihlerin
+kaydın kendi tarihi olduğunu ve taramanın bugüne yetişmediğini söylüyor.
+
+### 32.3 Dar ekranda tablo takip edilemiyordu
+
+Sütunlar 1000 px altında üst üste binince puan kutusu tam genişliğe
+çıkıyor ve 768 px'te takım adı ile sayı sütunları arasında **~400 px
+boşluk** kalıyordu; okur satırı gözle takip edemiyordu (ekran
+görüntüsünde görüldü). `@media(max-width:1000px)` içinde tabloya
+`max-width:560px` kondu. Kutu geniş kalıyor, tablo ölçüsü sınırlanıyor.
+
+### 32.4 Odak halkası ölçüldü: §29'un beyanı yanlıştı
+
+§29 "odak halkası duruyor (`solid 3px` kırmızı)" diyor. **Gerçek Tab
+tuşuyla ölçüldü**: `.puan-sar` ve `.panel` `tabindex` taşıyan DIV'ler ve
+sitenin odak kuralı yalnız `a, button, input, select, summary` seçiyordu —
+bu ikisi Chrome'un kendi `auto 1px rgb(16,16,16)` halkasını alıyordu.
+Görünmez değil ama sitenin dili değil, ve beyan yanlıştı.
+
+Kural genişletildi: `[tabindex]:focus-visible` eklendi. Yeniden ölçüm:
+`.panel` ve `.puan-sar` artık `solid 3px rgb(228,34,43)`, 2 px aralık.
+Aynı düzeltme sağ raydaki servis sekmesi panellerini de kapsıyor.
+
+### 32.5 Resmî ilanlar — bölüm okura ne söylüyordu
+
+Süzgeç, klavye ve canlı bölge **temiz**: gerçek Tab ile üç düğmeye de
+ulaşılıyor (kaydı olmayan iki tür `disabled` olduğu için atlanıyor),
+Enter ve Boşluk çalışıyor, `aria-pressed` doğru, `role="status"` +
+`aria-live="polite"` duyurusu "Sayfadaki 2 tebligat ilanı gösteriliyor."
+basıyor, pasif düğmeye tıklama yok sayılıyor, `.gizli` satırlar
+`display:none` olduğu için erişilebilirlik ağacından da düşüyor.
+Tarih omurgası ve tür rozetleri sitenin diliyle uyumlu; 360 px'te de
+düzgün. Yatay taşma beş genişlikte **0**.
+
+Üç kusur bulundu ve düzeltildi:
+
+1. **Bölüm "açık ilan listesi" gibi okunuyordu.** 24 kaydın 23'ü arşiv,
+   `bitis_tarihi` hepsinde boş, en yenisi 24 Ağustos — okur 29 Ağustos'ta
+   bunları hâlâ açık ihale sanabilirdi. Nottaki "yayımlanabilir 23 ilan"
+   ifadesi teknik bir sözcüktü, okura bir şey söylemiyordu.
+   - Başlığa **dönem etiketi** kondu: *16 Ağustos – 24 Ağustos 2026*.
+     İlan sayfalarının klasik çözümü; aralık ilk bakışta "bu bir dönem
+     dizini" diyor.
+   - Not yeniden yazıldı: *"Bu bölüm gazetenin **yayımladığı** resmî
+     ilanların dizinidir, açık ilanların listesi değil"* ve *"bir ihalenin
+     ya da tebligatın hâlâ geçerli olup olmadığı ilanı veren kurumdan
+     doğrulanmalıdır."* Kaydın söylemediği şey **uydurulmadı**; kaydın
+     söylemediği söylendi.
+2. **Not şablona çakılı bir olgu taşıyordu.** *"İCRA ve PERSONEL ALIMI
+   türünde yayımlanmış ilan yok"* cümlesi elle yazılmıştı — §30'un
+   düzelttiği kusurun (elle yazılmış altı `<li>`) küçük bir kopyası.
+   Kayıt gelse not yalan söyleyecekti. Boş türler artık `tur_dagilimi`
+   çıktısından okunuyor; test İCRA kaydı ekleyip cümlenin daraldığını
+   doğruluyor.
+3. **Süzgeç sayılarının neyi saydığı yazılı değildi.** Şeritte "İHALE 6",
+   notta "13 ihale" duruyordu. Varsayılan not artık *"Sayılar bu sayfadaki
+   8 ilanı sayar"* diye başlıyor; arşiv toplamı bölümün alt notunda.
+   Sayılar sayfayı saymaya devam ediyor — tıklayınca olan bu, sayı ile
+   davranış ayrışmamalı.
+
+Yan temizlik: varsayılan not metni `data-varsayilan` niteliğiyle **iki
+yerde** duruyordu; betik artık metni sayfadan okuyor, nitelik kalktı.
+
+### 32.6 Testler
+
+**528 test geçiyor**; beşi bu turda eklendi (`icerik.tests.BolumDurustlugu`):
+boş tür cümlesinin veriden geldiği, bölümün dönem etiketi ve "açık ilan
+listesi değil" beyanını taşıdığı, tek tarihli kayıtta aralık yazılmadığı,
+Bursaspor listesinin kartlarla kesişmediği ve `kisa_zaman`ın yılı
+gizlemediği kilitlendi.
+
+### 32.7 Açık kalan
+
+- **Bursaspor arşivi bayat.** Kategorinin en yeni haberi 31 Ekim 2025;
+  2026 kaydı yok. Tarih sütunu bunu artık görünür kılıyor ve not okura
+  söylüyor, ama asıl çözüm taramanın ilerlemesi.
+- **Arşivde birebir aynı başlıklı iki kayıt var** ("Bursaspor kupaya veda
+  etti!", 16. ve 17. sırada). Şu anki 15 kayıtlık dilim onlara ulaşmıyor;
+  dilim büyütülürse aynı başlık iki kez basılır. Tekilleştirme bir **veri**
+  işi, gösterim işi değil.
+- `/resmi-ilan` sayfası hâlâ yer tutucu (§30'dan devrediyor).
+- İlan metni, BİK kodu ve bitiş tarihi dökümde yok (§24.3); bu alanlar
+  gelmeden "son başvuru" vurgusu da ilan detay sayfası da yapılamaz.
+
+---
+
+## 29. 29 Ağustos — etiket alanı ve girdi renkleri
+
+Kullanıcının bildirdiği iki kusur; ikisi de ölçülerek doğrulandı.
+
+### 29.1 "Etiketler gözükmüyor" — alan boş bir açılır listeydi
+
+Alan `ModelMultipleChoiceField` idi ve `Etiket.objects.all()` üzerinden çoklu
+seçim sunuyordu. **Etiket tablosu boş: 0 satır.** Arşivde de etiket verisi
+yok — 400 kayıtlık örneklemde `anahtar_kelimeler` alanı **hepsinde** boştu,
+canlı site etiketi HTML'de yayımlamıyor. `goc_al` da etiket taşımıyor. Boş
+bir `<select multiple>` ekranda çökmüş bir kutu olarak çiziliyordu.
+
+**Sorun görsel değildi.** `HaberForm.clean()` yayına almak için en az bir
+etiket şart koşuyor; seçilecek etiket olmadığı için **panelden hiçbir haber
+yayınlanamıyordu**. `data-cip="1"` niteliği de ölüydü — `panel.js` içinde
+karşılığı hiç yazılmamıştı.
+
+**Çözüm: alan yazılabilir.** `EtiketAlani`, virgülle ayrılmış adları alıyor;
+olmayan etiket **kaydederken** açılıyor. Üç karar:
+
+* **Kayıt açma `clean()`te değil `_save_m2m()`te.** Doğrulamada açsaydık
+  geçersiz bir form bile veritabanında öksüz etiket bırakırdı.
+* **Eşleştirme slug üzerinden**, slug Türkçe-doğru küçültme + ASCII katlamayla
+  (`arama_metni.anahtar`). Django'nun `slugify`'ı Türkçe harfi çevirmez,
+  **atar**: "Şehreküstü" → `ehrekst`. Bizimki `sehrekustu`. Böylece
+  "BURSA · bursa · Bursa" tek etiket oluyor, üç satır değil.
+* **Öneriler `<datalist>` ile**, betiksiz çalışıyor. Liste 200'le sınırlı —
+  sınırsız bırakmak `ilgili_haberler`de düzeltilen 356 bin `<option>`
+  hatasının küçük ölçekte tekrarı olurdu.
+
+### 29.2 Girdiler arka planlarıyla aynı renkti
+
+Başsız Chrome'da, 10 panel ekranındaki **62 girdinin** hesaplanmış arka planı
+ile onu taşıyan kabın arka planı karşılaştırıldı:
+
+| ekran | önce | sonra |
+|---|---|---|
+| `/panel/haber/ekle` | **23/23 girdi aynı renk** | 0 |
+| `/panel/akis` | 4/11 | 0 |
+| diğer sekiz ekran | 0 | 0 |
+| **toplam** | **27/62** | **0/62** |
+
+Sebep tek satırdı: girdiler `background: var(--zemin)` kullanıyordu ve `body`
+de aynı değişkeni kullanıyor. Haber formu diğer formların aksine kart değil,
+çıplak sayfanın üstünde duruyor — orada fark **1,000:1**'e düşüyordu. Beyaz
+kartların üstünde bile 1,083:1'di, yani neredeyse görünmez.
+
+**Çözüm iki yeni değişken.** `--girdi-zemin:#E4EBF1` ve
+`--girdi-cizgi:#788797`. Çerçeve WCAG 1.4.11'in etkileşimli öğe sınırı için
+istediği **3:1**'i komşu olduğu üç renge karşı da geçiyor: beyaz karta
+3,68:1, gri sayfaya 3,39:1, kendi dolgusuna 3,06:1. Eski `--cizgi` 1,23:1'de
+kalıyor ve bu ölçütü karşılamıyordu.
+
+İlk denenen `#7C8B9B` dolgusuna karşı 2,90:1'de kalmıştı ve **test onu geri
+çevirdi** — çerçevenin iki yanı da sayılıyor.
+
+Testler tarayıcı açmıyor: açsalardı CI'da Chrome gerekirdi. Renk sözleşmesini
+ve kontrast oranını sayıyla kilitliyorlar; tarayıcı ölçümü kararı verirken bir
+kez yapıldı ve sonuç sonradan doğrulandı.
+
+**565 test geçiyor**, 10'u bu turda eklendi.
