@@ -178,4 +178,201 @@
   <path d="M196 168 h16 M192 192 h24 M186 216 h36" stroke="#fff" stroke-width="6" opacity=".8"/>
   <circle cx="330" cy="60" r="22" fill="var(--s5)" opacity=".55"/>
 </symbol>
+
+<!-- Sosyal medya simgeleri — 30 Ağustos 2026 (§35).
+     Dışarıdan ikon kütüphanesi ÇEKİLMEZ: sayfa internetsiz de açılmalı.
+     `currentColor` ile boyanırlar, böylece şeritte ve künyede aynı sembol
+     iki farklı renkte kullanılabiliyor. viewBox 24'lük kare; sayfadaki
+     ölçü CSS'ten gelir. -->
+<symbol id="sos-x" viewBox="0 0 24 24"><path fill="currentColor" d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.21-6.82-5.97 6.82H1.67l7.73-8.84L1.25 2.25h6.83l4.71 6.23 5.45-6.23Zm-1.16 17.52h1.83L7.08 4.13H5.12l11.96 15.64Z"/></symbol>
+
+<symbol id="sos-instagram" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="4.8"/><circle cx="12" cy="12" r="4.4"/></g><circle cx="17.2" cy="6.8" r="1.25" fill="currentColor"/></symbol>
+
+<symbol id="sos-youtube" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M21.58 7.19a2.9 2.9 0 0 0-2.04-2.05C17.74 4.66 12 4.66 12 4.66s-5.74 0-7.54.48A2.9 2.9 0 0 0 2.42 7.19 30.3 30.3 0 0 0 2 12a30.3 30.3 0 0 0 .42 4.81 2.9 2.9 0 0 0 2.04 2.05c1.8.48 7.54.48 7.54.48s5.74 0 7.54-.48a2.9 2.9 0 0 0 2.04-2.05A30.3 30.3 0 0 0 22 12a30.3 30.3 0 0 0-.42-4.81ZM9.98 15.19V8.81L15.54 12l-5.56 3.19Z"/></symbol>
+
+<symbol id="sos-whatsapp" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.66 15L2 22l5.15-1.35A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.06.8.82-2.98-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.53-5.66c-.25-.13-1.47-.73-1.7-.81-.23-.08-.4-.13-.56.12-.17.25-.64.81-.79.98-.14.17-.29.19-.54.06a6.7 6.7 0 0 1-1.97-1.21 7.4 7.4 0 0 1-1.36-1.7c-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.42h-.48c-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.07 0 1.22.89 2.4 1.02 2.57.12.17 1.76 2.68 4.26 3.76.6.26 1.06.41 1.42.53.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.23-.17-.48-.29Z"/></symbol>
+
+<symbol id="sos-rss" viewBox="0 0 24 24"><circle cx="5" cy="19" r="2.2" fill="currentColor"/><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M4 11a9 9 0 0 1 9 9M4 4.5A15.5 15.5 0 0 1 19.5 20"/></symbol>
+
+<!-- Hava durumu simgeleri — 30 Ağustos 2026 (§35).
+     MGM'nin 31 hadise kodu on bir sembole indirgenir; eşleme
+     `icerik/canli.py` içindeki HAVA_SIMGE sözlüğündedir. Dışarıdan
+     ikon kütüphanesi ÇEKİLMEZ (sayfa internetsiz de açılmalı) ve
+     emoji kullanılmaz — emoji her işletim sisteminde başka çiziliyor,
+     gazetenin tipografisiyle uyuşmuyordu.
+     Güneş `--hv-gunes`, bulut `--hv-bulut`, damla `--hv-yagmur`,
+     kar `--hv-kar` ile boyanır; hepsi `:root`ta tanımlı. viewBox 24'lük
+     kare, ölçü CSS'ten gelir. -->
+
+<symbol id="hv-acik" viewBox="0 0 24 24">
+  <circle cx="12" cy="12" r="5" fill="var(--hv-gunes)"/>
+  <g stroke="var(--hv-gunes)" stroke-width="1.8" stroke-linecap="round">
+    <path d="M12 1.6v2.6M12 19.8v2.6M1.6 12h2.6M19.8 12h2.6M4.6 4.6l1.9 1.9M17.5 17.5l1.9 1.9M19.4 4.6l-1.9 1.9M6.5 17.5l-1.9 1.9"/>
+  </g>
+</symbol>
+
+<symbol id="hv-az-bulut" viewBox="0 0 24 24">
+  <circle cx="9.5" cy="9" r="4.2" fill="var(--hv-gunes)"/>
+  <g stroke="var(--hv-gunes)" stroke-width="1.6" stroke-linecap="round">
+    <path d="M9.5 1.9v2.1M2.4 9h2.1M4.4 3.9l1.5 1.5M14.6 3.9l-1.5 1.5"/>
+  </g>
+  <path fill="var(--hv-bulut)" d="M8.2 20.4a3.8 3.8 0 0 1-.3-7.59 5.2 5.2 0 0 1 10.05 1.3 3.15 3.15 0 0 1-.65 6.29Z"/>
+</symbol>
+
+<symbol id="hv-parcali" viewBox="0 0 24 24">
+  <circle cx="8" cy="8" r="3.8" fill="var(--hv-gunes)"/>
+  <path fill="var(--hv-bulut)" d="M8.4 20.6a4.1 4.1 0 0 1-.32-8.18 5.6 5.6 0 0 1 10.82 1.4 3.4 3.4 0 0 1-.7 6.78Z"/>
+</symbol>
+
+<symbol id="hv-kapali" viewBox="0 0 24 24">
+  <path fill="var(--hv-bulut)" opacity=".55" d="M14.6 9.9a4.6 4.6 0 0 0-8.9-1.15A3.35 3.35 0 0 0 6.25 15.4h8.9a2.75 2.75 0 0 0-.55-5.5Z"/>
+  <path fill="var(--hv-bulut)" d="M9.2 21a4.3 4.3 0 0 1-.34-8.58 5.85 5.85 0 0 1 11.3 1.47A3.55 3.55 0 0 1 19.4 21Z"/>
+</symbol>
+
+<symbol id="hv-bulut" viewBox="0 0 24 24">
+  <path fill="var(--hv-bulut)" d="M8.4 19.9a4.3 4.3 0 0 1-.34-8.58 5.85 5.85 0 0 1 11.3 1.47 3.55 3.55 0 0 1-.76 7.11Z"/>
+</symbol>
+
+<symbol id="hv-yagmur" viewBox="0 0 24 24">
+  <path fill="var(--hv-bulut)" d="M8.1 14.9a4.05 4.05 0 0 1-.32-8.08A5.5 5.5 0 0 1 18.4 8.2a3.35 3.35 0 0 1-.72 6.7Z"/>
+  <g stroke="var(--hv-yagmur)" stroke-width="1.9" stroke-linecap="round">
+    <path d="M8.4 17.4 7.3 20.6M12.4 17.4l-1.1 3.2M16.4 17.4l-1.1 3.2"/>
+  </g>
+</symbol>
+
+<symbol id="hv-saganak" viewBox="0 0 24 24">
+  <path fill="var(--hv-bulut)" d="M8.1 14.3a4.05 4.05 0 0 1-.32-8.08A5.5 5.5 0 0 1 18.4 7.6a3.35 3.35 0 0 1-.72 6.7Z"/>
+  <g stroke="var(--hv-yagmur)" stroke-width="2.1" stroke-linecap="round">
+    <path d="M7.6 16.5 6 21.2M11.9 16.5l-1.6 4.7M16.2 16.5l-1.6 4.7"/>
+  </g>
+</symbol>
+
+<symbol id="hv-firtina" viewBox="0 0 24 24">
+  <path fill="var(--hv-bulut)" d="M8.1 14.3a4.05 4.05 0 0 1-.32-8.08A5.5 5.5 0 0 1 18.4 7.6a3.35 3.35 0 0 1-.72 6.7Z"/>
+  <path fill="var(--hv-gunes)" d="M13.4 15.4h3.3l-5.6 6.9 1.5-4.5h-3l4.7-6.1Z"/>
+  <g stroke="var(--hv-yagmur)" stroke-width="1.9" stroke-linecap="round">
+    <path d="M7.9 16.6 6.6 20.4"/>
+  </g>
+</symbol>
+
+<symbol id="hv-dolu" viewBox="0 0 24 24">
+  <path fill="var(--hv-bulut)" d="M8.1 14.3a4.05 4.05 0 0 1-.32-8.08A5.5 5.5 0 0 1 18.4 7.6a3.35 3.35 0 0 1-.72 6.7Z"/>
+  <g fill="var(--hv-kar)">
+    <circle cx="8.3" cy="18" r="1.5"/><circle cx="12.4" cy="20.3" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/>
+  </g>
+</symbol>
+
+<symbol id="hv-kar" viewBox="0 0 24 24">
+  <path fill="var(--hv-bulut)" d="M8.1 14.3a4.05 4.05 0 0 1-.32-8.08A5.5 5.5 0 0 1 18.4 7.6a3.35 3.35 0 0 1-.72 6.7Z"/>
+  <g stroke="var(--hv-kar)" stroke-width="1.7" stroke-linecap="round">
+    <path d="M8.4 16.6v4M6.6 17.6l3.6 2M10.2 17.6l-3.6 2M15.8 16.6v4M14 17.6l3.6 2M17.6 17.6l-3.6 2"/>
+  </g>
+</symbol>
+
+<symbol id="hv-sis" viewBox="0 0 24 24">
+  <path fill="var(--hv-bulut)" opacity=".85" d="M8.1 12.6a4.05 4.05 0 0 1-.32-8.08A5.5 5.5 0 0 1 18.4 5.9a3.35 3.35 0 0 1-.72 6.7Z"/>
+  <g stroke="var(--hv-bulut)" stroke-width="1.9" stroke-linecap="round">
+    <path d="M4.4 15.9h15.2M6.6 19.1h13M4.4 19.1h.6"/>
+  </g>
+</symbol>
+
+<symbol id="hv-ruzgar" viewBox="0 0 24 24">
+  <g fill="none" stroke="var(--hv-bulut)" stroke-width="2" stroke-linecap="round">
+    <path d="M3 8.4h9.6a2.9 2.9 0 1 0-2.9-2.9"/>
+    <path d="M3 13.2h13.1a2.9 2.9 0 1 1-2.9 2.9"/>
+    <path d="M3 18h6.8"/>
+  </g>
+</symbol>
+
+<symbol id="hv-sicak" viewBox="0 0 24 24">
+  <path fill="none" stroke="var(--hv-gunes)" stroke-width="1.9" d="M11.4 13.7V4.6a2.3 2.3 0 0 1 4.6 0v9.1a4.3 4.3 0 1 1-4.6 0Z"/>
+  <circle cx="13.7" cy="17.4" r="2.2" fill="var(--hv-gunes)"/>
+  <g stroke="var(--hv-gunes)" stroke-width="1.7" stroke-linecap="round"><path d="M4.2 7.4h3.4M4.2 11.4h3.4"/></g>
+</symbol>
+
+<symbol id="hv-soguk" viewBox="0 0 24 24">
+  <g stroke="var(--hv-kar)" stroke-width="1.9" stroke-linecap="round">
+    <path d="M12 2.6v18.8M3.9 7.3l16.2 9.4M20.1 7.3 3.9 16.7"/>
+    <path d="M9.3 4.4 12 6.9l2.7-2.5M9.3 19.6 12 17.1l2.7 2.5"/>
+  </g>
+</symbol>
+
+<!-- Gece karşılıkları. Yalnız "gökyüzü açık" ailesinin ay hâli var:
+     yağmurun gecesi ayrı çizilmez, damla damladır. -->
+
+<symbol id="hv-acik-gece" viewBox="0 0 24 24">
+  <path fill="var(--hv-ay)" d="M20.6 15.1A8.4 8.4 0 0 1 9.5 3.7a9.2 9.2 0 1 0 11.1 11.4Z"/>
+  <g fill="var(--hv-ay)" opacity=".75">
+    <circle cx="17.6" cy="4.3" r="1"/><circle cx="20.8" cy="7.6" r=".8"/><circle cx="14.4" cy="6.6" r=".7"/>
+  </g>
+</symbol>
+
+<symbol id="hv-bulut-gece" viewBox="0 0 24 24">
+  <path fill="var(--hv-ay)" d="M17.9 11.1A6.7 6.7 0 0 1 9 2.9a7.35 7.35 0 1 0 8.9 8.2Z"/>
+  <path fill="var(--hv-bulut)" d="M8.4 20.9a4.2 4.2 0 0 1-.33-8.38 5.7 5.7 0 0 1 11.02 1.43 3.47 3.47 0 0 1-.74 6.95Z"/>
+</symbol>
+
+<!-- MANZARA — hava panelinin arka planı (§35, 30 Ağustos 2026).
+     Uludağ silueti: Bursa'nın kendi ufku. `sc-uludag` sahnesi 400x250
+     yatay çerçeve için çizilmişti ve dikey blokta ortadan kırpılınca
+     dağın eteği düşüyordu; bu çizim dikey blok için ayrı yapıldı ve
+     `xMidYMax slice` ile TABANDAN sabitlendi — blok kısaldığında gökyüzü
+     kırpılır, dağ hep durur.
+
+     Palet dışarıdan gelir: `.hv-manzara.m-gunes` gibi bir sınıf --s1..--s5
+     değerlerini değiştirir, aynı çizim beş farklı havayı gösterir. Üç
+     anahtar da CSS'ten kısılıp açılır: --hv-yildiz (yıldızlar),
+     --hv-hilal (hilal oyuğu), --hv-cizgi (yağış çizgileri; rengi --hv-damla) ve --hv-cisim
+     (gökcisminin gücü — gündüz sönük durur ki öndeki büyük simgeyle
+     yarışmasın, gecede ay öne çıkar). Varsayılan
+     hepsinde 0, yani gündüz-açık hâli.
+
+     Görsel BEZEME DEĞİL: gökyüzünün rengi havayı ve günün saatini
+     söylüyor. `aria-hidden` çünkü aynı bilgi yanında yazıyla da var. -->
+<symbol id="hv-manzara" viewBox="0 0 200 300" preserveAspectRatio="xMidYMax slice">
+  <rect width="200" height="300" fill="var(--s2)"/>
+  <g fill="var(--s5)" opacity="var(--hv-yildiz,0)">
+    <circle cx="26" cy="42" r="1.7"/><circle cx="58" cy="74" r="1.2"/>
+    <circle cx="92" cy="36" r="1.4"/><circle cx="122" cy="88" r="1.1"/>
+    <circle cx="176" cy="102" r="1.3"/><circle cx="44" cy="112" r="1"/>
+  </g>
+  <circle cx="152" cy="50" r="30" fill="var(--s5)" opacity="calc(var(--hv-cisim,.55) * .28)"/>
+  <circle cx="152" cy="50" r="17" fill="var(--s5)" opacity="var(--hv-cisim,.55)"/>
+  <circle cx="145" cy="43" r="14.5" fill="var(--s2)" opacity="var(--hv-hilal,0)"/>
+  <g stroke="var(--hv-damla)" stroke-width="2.4" stroke-linecap="round" opacity="var(--hv-cizgi,0)">
+    <path d="M30 118 l-7 20M72 100 l-7 20M112 132 l-7 20M154 112 l-7 20M50 162 l-7 20M132 168 l-7 20"/>
+  </g>
+  <path d="M0 300 L0 205 L38 168 L72 196 L104 148 L136 190 L168 164 L200 192 L200 300Z" fill="var(--s3)"/>
+  <path d="M104 148 L91 168 L100 173 L110 165 L121 175 L130 166Z" fill="var(--hv-kar)" opacity=".92"/>
+  <path d="M0 300 L0 248 L46 226 L104 254 L162 228 L200 246 L200 300Z" fill="var(--s4)"/>
+  <path d="M0 300 L0 280 L62 270 L132 284 L200 274 L200 300Z" fill="var(--s1)" opacity=".55"/>
+</symbol>
+
+<!-- Manzaranın YATAY hâli. Tek çizim iki oranı birden karşılayamıyor:
+     geniş ekranda blok 214x400 (dik), dar ekranda 300x150 (yassı) oluyor
+     ve `slice` her iki durumda da fazlalığı kırpıyor. Dikey çizim dar
+     ekranda öyle kırpılıyordu ki geriye yalnız en alttaki koyu tepeler
+     kalıyordu (390 px ölçümü: 301x136 kutuda gökyüzü hiç görünmüyordu).
+     Bu yüzden aynı sahne bir de yassı çerçeveye kuruldu; hangisinin
+     çizileceğini CSS kırılma noktası seçer. İkisi de aynı --s1..--s5
+     paletini ve aynı üç anahtarı kullanır. -->
+<symbol id="hv-manzara-yatay" viewBox="0 0 400 150" preserveAspectRatio="xMidYMax slice">
+  <rect width="400" height="150" fill="var(--s2)"/>
+  <g fill="var(--s5)" opacity="var(--hv-yildiz,0)">
+    <circle cx="40" cy="26" r="1.7"/><circle cx="96" cy="44" r="1.2"/>
+    <circle cx="150" cy="20" r="1.4"/><circle cx="232" cy="50" r="1.1"/>
+    <circle cx="318" cy="30" r="1.3"/><circle cx="372" cy="58" r="1"/>
+  </g>
+  <circle cx="340" cy="40" r="30" fill="var(--s5)" opacity="calc(var(--hv-cisim,.55) * .28)"/>
+  <circle cx="340" cy="40" r="17" fill="var(--s5)" opacity="var(--hv-cisim,.55)"/>
+  <circle cx="331" cy="32" r="14.5" fill="var(--s2)" opacity="var(--hv-hilal,0)"/>
+  <g stroke="var(--hv-damla)" stroke-width="2.4" stroke-linecap="round" opacity="var(--hv-cizgi,0)">
+    <path d="M46 44 l-7 20M112 30 l-7 20M168 52 l-7 20M226 34 l-7 20M282 56 l-7 20M74 74 l-7 20M198 80 l-7 20"/>
+  </g>
+  <path d="M0 150 L0 108 L46 78 L88 100 L134 60 L182 96 L228 70 L286 102 L336 76 L400 100 L400 150Z" fill="var(--s3)"/>
+  <path d="M134 60 L121 80 L131 85 L141 77 L152 87 L160 78Z" fill="var(--hv-kar)" opacity=".92"/>
+  <path d="M0 150 L0 126 L64 112 L146 132 L232 110 L318 130 L400 116 L400 150Z" fill="var(--s4)"/>
+  <path d="M0 150 L0 141 L80 134 L180 145 L280 136 L400 140 L400 150Z" fill="var(--s1)" opacity=".55"/>
+</symbol>
+
 </svg>

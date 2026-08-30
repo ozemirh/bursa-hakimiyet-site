@@ -33,7 +33,20 @@ BANT = [
     ("RESMÎ İLAN", None, "/resmi-ilan"),
 ]
 
-SON_DAKIKA_ADET = 4
+# Dar ekranda banda SIĞAN dört kalem (29 Ağustos 2026 kararı). Onlu bant
+# 1000 px altında satıra sığmıyordu ve eskiden tamamen gizleniyordu —
+# ölçüldü: 360 px'te görünen kategori sayısı SIFIR. Yerel gazete okuru
+# "Bursa"ya tek dokunuşla gidemiyordu.
+#
+# Bant sözleşmesi (10 kalem) BOZULMADI: onu da DOM'da duruyor, dördü
+# dışındakileri CSS gizliyor ve hepsi tam menüde zaten var. Seçim DOM
+# sırasının ilk dördü değil, okurun ilk aradığı dört bölüm.
+MOBIL_BANT = {"BURSA", "BURSASPOR", "GÜNDEM", "SPOR"}
+
+# 4 -> 6 (30 Ağustos 2026, §36): kayan şerit dört başlığı sırayla
+# gösteriyordu, rayda sabit liste altısını da AYNI ANDA gösteriyor —
+# yerine sığıyor ve okur birini kaçırmıyor.
+SON_DAKIKA_ADET = 6
 
 
 def site(request):
@@ -51,14 +64,42 @@ def site(request):
             if kategori is None:
                 continue  # taksonomi kurulmadıysa bandı kırma
             hedef = "/" + kategori.slug_al()
-        bant.append({"ad": ad, "yol": hedef, "etkin": yol == hedef})
+        bant.append({"ad": ad, "yol": hedef, "etkin": yol == hedef,
+                     "mobil": ad in MOBIL_BANT, "mobil_son": False})
+
+    # Dar ekrandaki DÖRTLÜNÜN sonuncusu işaretlenir: ayraç çizgisi onda
+    # kalkacak. CSS `:last-of-type` burada yanlış kalemi seçerdi — DOM'un
+    # son bağlantısı "Resmî İlan" ve o dar ekranda gizli.
+    for oge in reversed(bant):
+        if oge["mobil"]:
+            oge["mobil_son"] = True
+            break
 
     return {
         "band_kategorileri": bant,
         "tum_kategoriler": _tum_kategoriler(),
         "son_dakika": Haber.yayindakiler().select_related("kategori")[:SON_DAKIKA_ADET],
         "ilceler": Ilce.objects.all(),
+        "reklam_dugmesi": _reklam_dugmesi(request),
     }
+
+
+# Reklam panolarını gizleyen düğme SUNUM ARACIDIR, okur özelliği değil
+# (29 Ağustos 2026 kararı). Yayın ekibine sayfayı reklamsız gösterebilmek
+# için var; sıradan ziyaretçiye çizilmez, çünkü reklam gizleme düğmesi
+# gelir modeline dokunur.
+#
+# İki kapı: geliştirme makinesi ya da panele girmiş kullanıcı. `is_staff`
+# değil `is_authenticated` de yeterli olurdu ama panelin kendi eşiği
+# `is_staff`; ikisini ayrı tutmanın bir karşılığı yok.
+YEREL_SUNUCULAR = {"127.0.0.1", "localhost", "[::1]"}
+
+
+def _reklam_dugmesi(request):
+    kullanici = getattr(request, "user", None)
+    if kullanici is not None and kullanici.is_authenticated and kullanici.is_staff:
+        return True
+    return request.get_host().split(":")[0] in YEREL_SUNUCULAR
 
 
 # Menü sıralaması ÖNBELLEKLENİR.

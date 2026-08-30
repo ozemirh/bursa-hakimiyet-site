@@ -1,15 +1,30 @@
 {% comment %}
-Sayfalama. Arama sayfasında `q` parametresi korunmalı, yoksa ikinci sayfada
-sorgu kaybolur; bu yüzden bağlantılara sorgu da eklenir.
+Sayfalama — numaralı (29 Ağustos 2026 görsel denetimi). "← Önceki ·
+1 … 4 [5] 6 … 50 · Sonraki →". Eski hâli yalnız "1 / 50" gösteriyordu:
+son sayfaya ve aralara hiç erişim yoktu. Numaralar görünümdeki `_sayfala`
+yardımcısının kurduğu `sayfa.numaralar` listesinden gelir (elided aralık
+şablondan çağrılamıyor, metot bağımsız değişken istiyor).
+
+Arama sayfasında `q`, resmî ilan dizininde `tur` parametresi korunmalı,
+yoksa ikinci sayfada sorgu ya da süzgeç kaybolur; bu yüzden bağlantılara
+ikisi de eklenir. İkisi de yalnız tanımlıysa yazılır — kategori ve ilçe
+sayfalarının bağlamında ikisi de yok.
 {% endcomment %}
 {% if sayfa.paginator.num_pages > 1 %}
 <nav class="sayfalama" aria-label="Sayfalar">
   {% if sayfa.has_previous %}
-    <a href="?{% if sorgu %}q={{ sorgu|urlencode }}&amp;{% endif %}sayfa={{ sayfa.previous_page_number }}" rel="prev">&larr; Önceki</a>
+    <a href="?{% if sorgu %}q={{ sorgu|urlencode }}&amp;{% endif %}{% if tur %}tur={{ tur|urlencode }}&amp;{% endif %}sayfa={{ sayfa.previous_page_number }}" rel="prev">&larr; Önceki</a>
   {% endif %}
-  <span class="konum">{{ sayfa.number }} / {{ sayfa.paginator.num_pages }}</span>
+  <span class="sayfalar">
+  {% for n in sayfa.numaralar %}
+    {% if n == sayfa.number %}<span class="simdiki" aria-current="page">{{ n }}</span>
+    {% elif n == sayfa.paginator.ELLIPSIS %}<span class="uc-nokta" aria-hidden="true">{{ n }}</span>
+    {% else %}<a href="?{% if sorgu %}q={{ sorgu|urlencode }}&amp;{% endif %}{% if tur %}tur={{ tur|urlencode }}&amp;{% endif %}sayfa={{ n }}" aria-label="Sayfa {{ n }}">{{ n }}</a>
+    {% endif %}
+  {% endfor %}
+  </span>
   {% if sayfa.has_next %}
-    <a href="?{% if sorgu %}q={{ sorgu|urlencode }}&amp;{% endif %}sayfa={{ sayfa.next_page_number }}" rel="next">Sonraki &rarr;</a>
+    <a href="?{% if sorgu %}q={{ sorgu|urlencode }}&amp;{% endif %}{% if tur %}tur={{ tur|urlencode }}&amp;{% endif %}sayfa={{ sayfa.next_page_number }}" rel="next">Sonraki &rarr;</a>
   {% endif %}
 </nav>
 {% endif %}

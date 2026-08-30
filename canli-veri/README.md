@@ -28,7 +28,7 @@ python canli-veri\hava_durumu.py
 python canli-veri\namaz_vakitleri.py --gun 7
 python canli-veri\nobetci_eczane.py
 python canli-veri\puan_durumu.py
-python canli-veri\vizyon_takvimi.py --kaynak vikiveri
+python canli-veri\vizyon_takvimi.py
 ```
 
 Çıktı kökü `--kok` ya da `BH_CANLI_KOK` ortam değişkeniyle değişir.
@@ -48,7 +48,7 @@ kapsadığı bileşenler:
 | **Namaz vakitleri** | **Kaynak yok, hesap var.** Diyanet ölçütleriyle astronomik hesap; ağ gerektirmez | Günde bir yeter (gece yarısından sonra). Eşik **48 saat** — bu eşik kaynak düşmesini değil, zamanlayıcının durduğunu yakalar | Hesap düşmez. Yine de `--kaynak elle` → `namaz-elle.json` yolu var |
 | **Nöbetçi eczane** | Bursa Eczacı Odası — `beo.org.tr/nobetci-eczaneler` | Nöbet günde bir devrediliyor (ölçüldü: 18:30 → ertesi gün 08:30). Günde iki kez yeter. Eşik **24 saat** | Aynı davranış. Kalıcı düşmede `--kaynak elle` → `eczane-elle.json` |
 | **Puan durumu** | TFF — `www.tff.org` | Maç günü saatte bir, diğer gün günde bir. Eşik **48 saat** | Önceki dosya korunur, `durum-puan-durumu.json` → `eski`, kod **2**; hiç veri yoksa `yok` + kod **1** |
-| **Vizyon takvimi** | TMDB (varsayılan) · Wikidata · elle · Box Office TR (yalnız yazılı izinle) | Haftada bir (perşembe akşamı yeter). Eşik **7 gün** | Aynı davranış. Kalıcı düşmede `--kaynak elle` |
+| **Vizyon takvimi** | **Dağıtımcı duyuruları** (varsayılan) — Başka Sinema `/basin/` + Bir Film `/sinemalarda` · Wikidata · elle · TMDB ve Box Office TR (ikisi de kilitli) | Haftada bir (perşembe akşamı yeter). Eşik **7 gün** | Bir dağıtımcı düşerse öteki yayına devam eder; ikisi de düşerse önceki dosya korunur, `durum-vizyon-takvimi.json` → `eski`, kod **2**. Kalıcı düşmede `--kaynak elle` |
 
 Çıkış kodları: **0** taze veri · **2** çekilemedi ama önceki dosya duruyor ·
 **1** çekilemedi ve elde veri de yok. Zamanlayıcı 2'yi uyarı, 1'i hata sayar.
@@ -585,23 +585,71 @@ hukuki teyit kalemleriyle birlikte.
 
 ## Vizyon takvimi
 
-Dört kaynak var, hiçbiri ötekinin yerine geçmez.
+Beş kaynak var, hiçbiri ötekinin yerine geçmez.
 
 ```powershell
-$env:TMDB_ANAHTAR = "..."
-python canli-veri\vizyon_takvimi.py                     # tmdb, 3 ay
+python canli-veri\vizyon_takvimi.py                     # dağıtımcı, 3 ay
 python canli-veri\vizyon_takvimi.py --ay 6
 python canli-veri\vizyon_takvimi.py --kaynak vikiveri   # anahtarsız
 python canli-veri\vizyon_takvimi.py --kaynak elle
+$env:TMDB_ANAHTAR = "..."                               # tmdb yolu (elendi)
 python canli-veri\vizyon_takvimi.py --kaynak boxoffice --yazili-izin-var
 ```
 
 | Kaynak | Anahtar | Kapsam | Durum |
 |---|---|---|---|
-| `tmdb` | ücretsiz anahtar gerekir | geniş, TR vizyon tarihi doğrudan | **varsayılan** |
+| `dagitimci` | yok | dar ama gerçek — ölçüldü (29 Ağu 2026): **8 film, 5 vizyon günü** | **varsayılan** |
 | `vikiveri` | yok | çok dar — ölçüldü: 2026-08/2027-01 arası TR vizyon tarihi girilmiş film **1** | yedek / çapraz kontrol |
+| `tmdb` | ücretsiz anahtar gerekir | geniş, TR vizyon tarihi doğrudan | **elendi — şartları ticari kullanımı kapsıyor** |
 | `boxoffice` | yok | TR takviminin en eksiksiz açık listesi | **yazılı izin olmadan çalışmaz** |
 | `elle` | yok | panelden girilen kadarı | kalıcı düşmede çalışan yol |
+
+### Neden dağıtımcı duyuruları
+
+29 Ağustos 2026'da Türkiye vizyon takvimi yayımlayan **bütün** portallar
+tek tek okundu. `robots.txt` çoğunda temiz çıktı; eleyen şey **sözleşme
+şartları** oldu ve hepsinde aynı kalıp vardı:
+
+| Kaynak | robots.txt | Kullanım koşulları |
+|---|---|---|
+| `sinemalar.com` | temiz (`ClaudeBot` yalnız `Crawl-delay: 60`) | *"Kişisel kullanım dışında, reklam veya **ticari amaçlı** olarak … NOKTACOM yazılı onayı olmaksızın kullanma, çoğaltma … yasaktır."* |
+| `beyazperde.com` | temiz | md. 3.12 *"…bu malzemeler ve dokümanlar üye ve **başka kişi ile kuruluşlar** tarafından izinsiz kullanılamaz…"*; md. 3.3 otomatik çok sayıda sorguyu ayrıca yasaklıyor |
+| `biletinial.com` | `ClaudeBot: Allow: /` | *"…Biletinial'ın yazılı izni olmadan … kopyalayamaz, çoğaltamaz, yayınlayamaz…"* |
+| `paribucineverse.com` | temiz, veri **JSON-LD** (34 film, 8 cuma) | md. 2 *"…siteden … bir parçasını veya bütününü kopyalamayacağını, çoğaltmayacağını, **başka sitelerde kullanmayacağını** kabul ve beyan eder."* |
+| `uip.com.tr` | robots.txt yok | *"HERHANGİ BİR MATERYALİN YETKİ DIŞI KULLANIMI, KOPYALANMASI, ÇOĞALTILMASI … KESİNLİKLE YASAKTIR."* |
+| `boxofficeturkiye.com` | temiz | madde 14 (aşağıda) — ama `/kurumsal/icerik-izni` gerçek bir izin formu sunuyor |
+| `tmefilm.com` | **`User-agent: ClaudeBot` → `Disallow: /`** | okunmadı — robots kapatıyor, siteye hiç gidilmiyor |
+
+Teknik olarak ölü çıkanlar: Cinemaximum (alan adı ölü, marka Paribu
+Cineverse'e geçmiş), CJ ENM Türkiye, CGV Mars Dağıtım (web sitesi yok),
+Warner Bros. Türkiye (TR takvimi yok), Kültür ve Turizm Bakanlığı film
+sınıflandırma portalı (`robots.txt` `Allow: /` ve resmî, ama tamamen
+istemci tarafı çiziliyor ve tuttuğu tarih **sınıflandırma** tarihi, vizyon
+tarihi değil), Cinens (repertuar gösterimleri, ulusal takvim değil).
+
+**Kullanılan iki kaynak hukuken farklı bir şeydir:** filmi vizyona sokan
+**dağıtımcının kendi duyuru/basın sayfası**. "Filmimiz şu tarihte vizyonda"
+duyurusu zaten basının yayınlaması için yapılır. İkisinde de içeriğin
+kullanımını kısıtlayan bir kullanım koşulları sayfası **yok** — site
+haritalarının tamamı tarandı (Başka Sinema 19 sayfa, Bir Film 518 sayfa) —
+ve `robots.txt` bu yolları açık bırakıyor.
+
+| Dağıtımcı | Adres | Ne veriyor |
+|---|---|---|
+| **Başka Sinema** | `/gelecek-filmler/` + `/basin/` | Türkçe ad, orijinal ad, **yıllı** vizyon tarihi, tür |
+| **Bir Film** | `/sinemalarda` → film sayfası | ad, **yıllı** vizyon tarihi, tür |
+
+Bir Film'in liste sayfası günü ve ayı veriyor ama **yılı vermiyor**
+("13 Kasım'da Sinemalarda!"); yıl yalnız film sayfasında yazılı. Bu yüzden
+liste kaba bir **süzgeç** olarak kullanılır, tarih film sayfasından okunur.
+Bir koşuda açılan film sayfası **25 ile sınırlı** (`BIR_AZAMI_SAYFA`).
+
+**Kapsam dar ve bilerek dar.** Bu liste ulusal vizyon takviminin tamamı
+değil, yalnız bu iki dağıtımcının getirdiği filmler. Sayfa bunu okura
+`kapsam_uyarisi` alanıyla söyler. Eksik film **uydurulmaz**.
+
+Biri düşerse öteki yayına devam eder; ikisi birden düşerse önceki dosya
+korunur ve çıkış kodu **2** olur.
 
 ### boxofficeturkiye neden kilitli
 
@@ -616,7 +664,15 @@ o kaynak elenecek."* Bu yüzden kaynak **kodda duruyor ve çalışıyor** ama
 `--yazili-izin-var` bayrağı verilmeden başlamaz; bayrak yoksa betik nedenini
 yazıp çıkış kodu 2 ile döner. Ayrıştırıcı çevrimdışı doğrulandı: 2026 Ağustos
 sayfasından **30 film, 4 vizyon günü**, tür ve dağıtımcı alanlarıyla birlikte.
-İzin alınırsa tek bayrakla devreye girer.
+İzin alınırsa tek bayrakla devreye girer — ve site `/kurumsal/icerik-izni`
+adresinde **gerçek bir izin formu** sunuyor, yani yasak mutlak değil izne
+bağlı. Kapsam farkı büyük olduğu için bu başvuru yapılmaya değer.
+
+### tmdb neden elendi
+
+TMDB'nin API şartları reklam geliri olan siteleri **"commercial use"**
+sayıyor ve ayrı yazılı anlaşma istiyor. Bursa Hakimiyet reklamlı ticari bir
+gazete. Kod duruyor (`--kaynak tmdb`) ama varsayılan değil.
 
 ### Afiş — indirilmez
 

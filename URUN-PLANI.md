@@ -1829,6 +1829,31 @@ Değişmez `icerik/tests_yerlesim.py` içinde kilitli: iki ızgara aynı rayı
 kullanmalı, ray sitenin geri kalanıyla aynı olmalı ve kırılma noktasında
 **birlikte** daralmalı — biri daralıp öteki kalırsa dikiş yine kayar.
 
+## Puan tablosu genişletildi — 29 Ağustos 2026
+
+Kullanıcı isteği: "puan durumu tablosunu biraz daha genişlet." Genişlik göz
+kararıyla değil **ölçümle** seçildi; ölçüt takım adlarının alt satıra sarması.
+
+| Sol sütun | Sarmalayan takım adı | Sol yükseklik | Haber kartı |
+|---|---|---|---|
+| 300 px (önce) | **9** | 1004 px | 244 px |
+| 340 px | 3 | 917 px | 231 px |
+| **380 px (seçilen)** | **0** | 865 px | 217 px |
+| 420 px | 0 | 861 px | 204 px |
+| 460 · 500 px | 0 | 861 px | 191 · 177 px |
+
+**380 seçildi: sarmanın sıfırlandığı ilk genişlik.** Ötesi bir işe yaramıyor —
+sol sütun 861 px'te dibe vuruyor, fazladan genişlik yalnız sağdaki haber
+kartlarını daraltır.
+
+**Denge yeniden kuruldu.** Tablo kısalınca (1004 → 865 px) bu kez sağ sütun
+100 px uzun kaldı; §32'nin başlık listesi 9'dan **7**'ye indi (satır 41 px,
+iki satır = 82 px). Ölçüm: 1280 ve 1600 px'te fark **−18 px**, 1024'te −57 px,
+yatay taşma beş genişlikte de 0. Toplam kayıt 6 + 7 = 13.
+
+Dar ekranda (≤1000 px) bölüm zaten tek sütuna iniyor; 360 px'te takım adları
+yine sarıyor, orada sarmayı önleyecek genişlik yok.
+
 ## Reklam anahtarı — 29 Ağustos 2026
 
 Reklam panolarını kapatan düğme **sunum aracıdır, okur özelliği değil**:
@@ -2911,3 +2936,881 @@ ve kontrast oranını sayıyla kilitliyorlar; tarayıcı ölçümü kararı veri
 kez yapıldı ve sonuç sonradan doğrulandı.
 
 **565 test geçiyor**, 10'u bu turda eklendi.
+
+---
+
+## 33. 29 Ağustos — `/resmi-ilan`: yer tutucu sayfa dizine çevrildi
+
+§30 ve §32.5 anasayfadaki bölümü gerçek kayıtlara bağlamıştı ama "TÜM
+İLANLAR" bağlantısı hâlâ `bekleyen.html` yer tutucusuna gidiyordu: okur
+gerçek sekiz ilanı görüp bağlantıya basınca **"Resmî ilan kayıtları henüz
+göç etmedi"** yazısıyla karşılaşıyordu. Bölüm gerçekleştiği için tutarsızlık
+göze batar olmuştu. Sayfa artık 23 kaydın tamamını listeliyor.
+
+### 33.1 Dizin seçki değil — ayrıldığı dört nokta
+
+Anasayfadaki bölümün tasarım dili (tarih omurgası, tür rozetleri, aynı
+şerit) sürdürüldü; **düzeni** ve **mekanizması** değişti.
+
+1. **Süzgeç adreste, düğmede değil.** Anasayfada şerit JavaScript ile
+   sayfadaki satırları gizliyor. Dizinde `?tur=ihale` bir bağlantı:
+   paylaşılabilir, geri tuşuyla geri alınabilir, JavaScript kapalıyken de
+   çalışır. Asıl gerekçe teknik: liste **sayfalanabilir** ve sayfalanmış
+   bir listede tarayıcı içi süzgeç yalnız o sayfayı süzer — düğmedeki sayı
+   ile davranış ayrışır.
+2. **Sayılar arşivin tamamını sayar.** İlke anasayfayla aynı ve tek
+   cümleyle yazılabilir: *düğmedeki sayı, basınca geleni sayar.* Orada
+   tıklama sayfayı süzdüğü için sayı sayfayı sayıyordu (§32.5, madde 3);
+   burada tıklama arşivi süzüyor. Şeritteki not bunu ayrıca söylüyor.
+3. **Satırlar tek sütuna alındı ve tablo gibi hizalandı.** Seçkide iki
+   sütun kart benzeri satır var; dizinde tarih, tür, başlık ve ilan
+   numarası her satırda aynı x'te başlıyor. Gerekçe okuma biçimi: seçki
+   okunur, dizin **taranır**. Hizalı sütun olmadan tür ve tarih taranamaz.
+   Ölçüldü — dört alanın sol kenarı beş genişlikte de tek değer
+   (33.4'teki tablo).
+   - Tür sütunu **124 px sabit**: `max-content` her satırı kendi rozetine
+     göre çizer ve sütun hizası ölür. 124, dört yasal türün en genişi olan
+     PERSONEL ALIMI rozetine (ölçülen ~109 px) göre seçildi — o türde kayıt
+     geldiği gün yerleşim kaymasın.
+   - 720 px altında hizalı sütun taşıyacak yer yok; satır anasayfadaki
+     yığılmış biçimine döner.
+4. **Ay omurgası.** 23 kayıt 15 ayrı güne dağılıyor; güne göre gruplamak
+   1-3 satırlık 15 küme demekti ve günü zaten satırın solundaki tarih
+   bloğu taşıyor. Ay başlığı, kaydırırken "neredeyim" sorusunu yanıtlayan
+   tek kırılım — ve §32.2'nin yıl sorununu da çözüyor: gün bloğu yılı
+   göstermiyor ama başlıkta "AĞUSTOS 2026" yazıyor.
+
+### 33.2 Sayfalama: kuruldu, 23 kayıtta etkin değil
+
+`ILAN_SAYFA_BOYU = 40`, yani bugün **tek sayfa** ve sayfalama gezinmesi
+hiç çizilmiyor. Bilerek:
+
+- 23 satırlık bir dizini ikiye bölmek okurdan üçte birini saklardı ve
+  sayfanın asıl iddiası ("gazetenin bu dönemde yayımladığı ilanların
+  tamamı bu") tek ekranda okunabilmeli.
+- Sitenin haber sayfa boyu (20) buraya uymuyor: dizin satırı bir haber
+  kartından çok daha kısa.
+- Mekanizma yine de kurulu, çünkü ilan modülü canlıya çıkınca kayıt sayısı
+  hızla büyür ve sınırsız liste bir gün sayfayı düşürür. Test 45 kayıtla
+  ikinci sayfayı ve süzgecin sayfalar arasında korunduğunu doğruluyor.
+
+**Sıralama seçeneği bilerek eklenmedi.** İlan dizininin tek anlamlı sırası
+yeniden eskiye. Başlığa göre sıralamak işe yaramaz — başlıklar tekrar
+ediyor ("TAŞINMAZ SATIŞI YAPILACAK" üç kayıtta birebir aynı); türe göre
+sıralamanın işini zaten süzgeç görüyor. Karşılığı olmayan denetim sayfayı
+zenginleştirmez, kalabalıklaştırır.
+
+### 33.3 Dürüstlük çizgisi — §32.5'in dersi sürdürüldü
+
+Sayfanın notu anasayfadakinin **kopyası değil**. Orada bölüm bir seçki
+olduğu için "toplam 23 kayıt" demek gerekiyordu; burada liste zaten
+tamamı, o yüzden notun işi kaydın **neleri içermediğini** söylemek.
+
+İki olgu da şablona çakılı değil, veriden okunuyor:
+
+| cümle | veriden gelen | kayıt gelirse |
+|---|---|---|
+| "Son başvuru tarihi gösterilmez" | `bitis_tarihi` boş mu | cümle düşer |
+| "İlan metinleri … arşiv dökümünde yok" | `metin` boş mu | cümle "ilan sayfaları henüz açılmadı"ya döner |
+| "İCRA ve PERSONEL ALIMI türünde ilan yok" | `tur_dagilimi` | liste daralır |
+
+Başlıklar bağlantı değil (ilan metni yok, detay sayfası yok), `href="#"`
+yok, kaydı olmayan tür bağlantı değil `span` — boş listeye götüren bir
+bağlantı bağlantı sayılmaz. Adres satırından gelen tanınmayan tür
+(`?tur=uydurma`) 404 vermiyor, dizinin tamamına düşüyor.
+
+**Kanonik adres her zaman `/resmi-ilan`.** `?tur=…` bir sayfa değil,
+dizinin kesiti; kesitler ayrı indekslenirse aynı başlıklar birden çok
+adreste görünür. `noindex` **eklenmedi**: kanonikle birlikte kullanılınca
+ikisi çelişik sinyal veriyor. Sayfa artık `bekleyen.html`in `noindex`
+etiketini de taşımıyor — gerçek sayfa oldu.
+
+### 33.4 Ölçüm (başsız Chrome, `Network.setCacheDisabled`)
+
+| genişlik | `clientWidth` / `scrollWidth` | yatay taşma | gün · tür · başlık · ilan no (sol kenar) | satır yük. |
+|---|---|---|---|---|
+| 360 | 345 / 345 | 0 | 23 · 86 · 86 · (yığılmış) | 83–100 |
+| 768 | 753 / 753 | 0 | 23 · 86 · 224 · sağ 730 | 63 |
+| 1024 | 1009 / 1009 | 0 | 23 · 86 · 224 · sağ 986 | 63 |
+| 1280 | 1265 / 1265 | 0 | 96 · 159 · 297 · sağ 1170 | 63 |
+| 1600 | 1585 / 1585 | 0 | 256 · 319 · 457 · sağ 1330 | 63 |
+
+Dört sütunun da sol kenarı her genişlikte **tek değer** — 23 satırın
+hiçbiri kaymıyor. Sayfadaki taşan öğelerin tamamı `div.akis` (son dakika
+şeridi) içinde, tasarımı gereği; belge yatay kaymıyor.
+
+Kontrast (en düşükler): şerit etiketi/notu, boş tür rozeti, ay sayacı ve
+gün ayı **5,17** · ilan no ve kırıntı **5,50** · TEBLİGAT rozeti **6,62** ·
+sayaç **7,60** · ay başlığı ve gün rakamı **12,41** · h1 ve İHALE rozeti
+**13,21** · dönem çipi **16,51** · başlık ve basılı TÜMÜ **17,82**. Hepsi
+AA eşiğinin (4,5) üstünde.
+
+Odak **gerçek Tab tuşuyla** ölçüldü (`Input.dispatchKeyEvent`): üç süzgeç
+bağlantısına da ulaşılıyor, `3px solid var(--kirmizi)`, 2 px aralık,
+`:focus-visible` eşleşiyor. Kaydı olmayan iki tür `span` olduğu için sekme
+sırasında yok. 140 Tab boyunca odaklanan **hiçbir öğe halkasız değil**.
+
+**Ekran görüntüleri açılıp bakıldı** (360 · 768 · 1280 · 1600 · süzülmüş
+hâl · sayfanın notu). İlk kırpma denemeleri üç kez **boş gri** resim
+üretti: `Page.captureScreenshot`in `clip` alanı SAYFA koordinatı ister,
+öğeyi görünüre kaydırıp viewport rect'ini clip diye vermek görüntüyü
+sayfanın tepesinden alıyor. Ölçüm aracı yedinci kez yanılttı; çözüm
+kırpmayı bırakıp öğeyi kaydırıp viewport çekmek oldu.
+
+### 33.5 Ölçerek bulunan iki kusur (ikisi de bu turda girdi)
+
+1. **360 px'te tür rozeti ortalanıyordu.** `align-self:center` yalnız
+   ızgarada doğru; sütun yönlü flex'te aynı değer rozeti **yatayda**
+   ortalıyor. Ölçüldü: başlık x=86 iken rozet x=171 ve 180 — iki farklı
+   değer, yani satırlar arası hiza da yoktu. Dar ekran kuralına
+   `align-self:flex-start` eklendi.
+2. **`prefers-reduced-motion` süzgeç bağlantısında çalışmıyordu.**
+   Seçici dosyanın ortasındaki mevcut `@media(prefers-reduced-motion)`
+   bloğuna eklenmişti; özgüllük eşit olunca **dosyada sonra gelen** kural
+   kazanıyor ve geçiş `0.15s`te kalıyordu (anasayfadaki düğme aynı anda
+   0s ölçülüyordu). Blok dizin kurallarından sonraya alındı, ölçüm 0s.
+
+### 33.6 Kapsam dışında bulunan ve düzeltilen bir kusur
+
+`parca/sayfalama.html` **hiç biçimlendirilmemişti**. Ölçüldü
+(`/bursa?sayfa=2`, 1280 px): "← Önceki 2 / 50 Sonraki →" tek satırda,
+gövde metniyle aynı renkte, sayfanın sol kenarına yapışık akıyordu;
+bağlantı olduğu ancak imleçle anlaşılıyor, dokunma hedefi 18 px
+yüksekliğinde kalıyordu. Dizin aynı parçayı kullandığı için kural yazıldı
+(37 px hedef, çerçeveli düğme, ortada konum); **kategori, ilçe ve arama
+sayfaları da aynı anda düzeldi**.
+
+### 33.7 `tur_dagilimi` iki yollu oldu
+
+Anasayfa elindeki sekiz kayıtlık **listeyi** sayıyor; dizin arşivin
+tamamını sayıyor ve oradaki liste sayfalanmış. QuerySet gelirse sayım
+artık veritabanına bırakılıyor (`values_list().annotate()`), yoksa dizin
+yalnız sayı basmak için bütün arşivi belleğe alırdı — 23 kayıtta
+görünmez, ilan modülü canlıya çıkınca görünür. `order_by()` boşaltılmak
+zorunda: Meta sıralaması GROUP BY'a sızıyor. İki yolun aynı çıktıyı
+verdiği testle kilitli; anasayfanın çizdiği bölümün HTML'i değişiklikten
+önce ve sonra **birebir aynı** (diff ile doğrulandı).
+
+### 33.8 Testler
+
+**550 test geçiyor** (`icerik taksonomi medya`; depo geneli 583); 18'i bu
+turda eklendi (`icerik.tests.ResmiIlanDizini`). Kilitlenenler: yer tutucu
+şablonun kullanılmadığı, tek `h1` ve kanonik adres, süzgecin adresten
+çalıştığı ve kanonikte görünmediği, tanınmayan türün 404 vermediği,
+kaydı olmayan türün bağlantı olmadığı, sayıların sayfayı değil arşivi
+saydığı, sayfalamanın süzgeci koruduğu, ay başlıklarının ve tarihsiz
+kayıt grubunun veriden geldiği, dönem etiketinin süzülen kümeden
+okunduğu, üç dürüstlük cümlesinin veriden geldiği ve kayıt yokken
+sayfanın ayakta kaldığı.
+
+### 33.9 Açık kalan
+
+- **İlan metni, BİK kodu ve bitiş tarihi hâlâ yok** (§24.3): ekleme formu
+  dökümde kaydedilmemiş. Bu alanlar gelmeden ilan detay sayfası da "son
+  başvuru" vurgusu da yapılamaz. Sayfa bunu okura söylüyor ve alanlar
+  gelince cümleler kendiliğinden düşüyor.
+- **Arşivde birebir aynı başlıklı kayıtlar var** — dizinde artık
+  görünüyorlar: "BURSA 11.ASLİYE CEZA MAHKEMESİNDEN İLAN" (1664) ile
+  "BURSA 11. ASLİYE CEZA MAHKEMESİNDEN İLAN" (1661) aynı gün, tek fark
+  bir boşluk; "TAŞINMAZ SATIŞI YAPILACAK" üç kayıtta, "YILDIRIM'DA TAŞINMAZ SATIŞI" iki kayıtta birebir aynı. Tekilleştirme
+  bir **veri** işi, gösterim işi değil (§32.7'deki Bursaspor bulgusuyla
+  aynı sınıf).
+- **Süzülmüş görünümde tür rozeti tekrar ediyor** (10 satırda 10 TEBLİGAT).
+  Bilerek bırakıldı: rozet kaydın verisi, görünümün değil; satır bileşeni
+  görünüme göre değişirse aynı satır iki farklı yerde iki türlü basılır.
+- `/resmi-ilan` **site haritasında değil**. Artık gerçek bir sayfa;
+  `besleme` tarafının kapsamı, bu turda açılmadı.
+- Kayıtlar aktifleşmeye başlayınca `yayimlananlar()` süzgeci (arşiv kalır,
+  pasif çıkar) yeniden değerlendirilmeli — §30'dan devreden madde.
+
+
+## 34. 29 Ağustos — görsel denetim turu: Aşama 1+2 uygulandı
+
+`web-tasarim-direktoru` ajanı siteyi başsız Chrome ile 5 genişlikte ölçtü
+(360-1600) ve 18 maddelik öneri paketi çıkardı. Kullanıcı kararı: Aşama 1
+(hata onarımları + hızlı kazanımlar) ve Aşama 2 (yerleşim/okuma) uygulanır;
+Aşama 3 (serif gövde, kategori işaret renkleri, mobilde bileşen sırası,
+15 slayt sözleşmesi) ayrı kullanıcı kararı bekliyor — uygulanMAdı.
+
+### Hata onarımları (tasarım tercihi değil)
+
+- **`--ses-isaret` tanımsızdı**: `.ses-okunan` vurgusu hiç çizilmiyordu.
+  Demodan taşındı (`#FFF1B8`, koyu mürekkep üstünde 15,6:1).
+- **"En çok okunanlar" manşetin kopyasıydı**: `havuz[:5]` manşetin ilk
+  beşiydi; aynı başlık sayfada üç kez görünüyordu. Havuz `EN_COK` kadar
+  büyüdü, kutu artık dilimlerin SONRAKİ beş kaydını alır (`al(EN_COK)`).
+- **OTOMATİK GEÇİŞ düğmesi geri geldi** — §14'teki "seçim değil, varsayılan"
+  kararı KORUNUYOR: sayaç açılışta yine başlar, düğme yalnız okurun
+  duraklatma denetimidir (WCAG 2.2.2 görünür denetim ister). Hareket
+  azaltmada düğme devre dışı, sayaç hiç dönmez (eski davranış).
+
+### Sözleşme değişiklikleri (§1/§3.1'i etkileyen)
+
+- **Makale sayfası rayı**: `.izgara`nın ikinci sütunu (320 px) artık haber
+  detay ve köşe yazısında DOLU — reklam (`-Haber arası1-`) + en çok
+  okunanlar + (haberde) ilçe listesi / (köşede) yazar dizini. Ölçülen kusur:
+  her makale sayfasında 342 px ölü sütun, genişliğin %31'i.
+  `tests_yerlesim.MakaleRayi` iki şablonda `aside.ray` varlığını kilitler.
+- **Kart yapısına zaman satırı**: `parca/kart.html` `.ust` satırı artık
+  `<time>` taşır (kayıtta varsa). Kategori sayfası kendi adını kartlarda
+  gizler (`kategori_gizle`); ilçe adı basılmaya devam eder.
+- **Kategori sayfasında ilk haber büyük** (yalnız 1. sayfada): `.kart.genis`
+  iki sütuna yayılır, fotoğraf sola geçer.
+- **Tip merdiveni**: manşet 34→42 (1140'ta 34, 768'de 30, 600'de 26),
+  ikincil slayt 20→26, dörtlü 17→21 (ızgara kartının 18'inin ALTINDAydı —
+  inversiyon düzeldi), en-çok listesi 14→15, 600'de kart 18→17.
+  Manşet/kart oranı: 1280'de 2,33 (eski 1,89), 360'ta 1,53 (eski 1,22).
+- **Manşet nefesi**: `.slayt .yazi` yatay dolgu 54→24 px (oklar üst sağda
+  ikili grup); mini slaytta oklar kalktı (sütunun %20'siydi), gezinme
+  numaralı düğmelerle.
+- **Sayfalama numaralı**: `_sayfala` `sayfa.numaralar` kurar
+  (`get_elided_page_range`), parça "1 … 4 [5] 6 … 50" çizer. `icerik` ve
+  `medya` sayfalayıcıları aynı sözleşmeyi taşır.
+
+### Diğer görünür değişiklikler
+
+- Kart ızgaraları `--zemin`e oturdu (`:has` ile; beyaz üstünde beyaz kart
+  1,29:1 çizgiyle ayrışmıyordu). Tembel görsel yer tutucusu `--foto-bekleme`
+  (açık nötr) oldu; slayt penceresi `--gece` kaldı (karartma gradyanı onunla
+  ayarlı). Dokunma hedefleri 24 px'e çıktı (kutu-bas bağlantısı, servis
+  şeridi, son dakika, mini slayt noktaları). Detay gövdesi 16→18 px,
+  `max-width:68ch` (satır 79 karakterdi). Künyeye okuma süresi eklendi
+  (`okuma_dakikasi`, 200 kelime/dk; kelime_sayisi boşsa basılmaz).
+- **Mobil tepe**: ≤600 px'te servis şeridi tek satır (üç bağlantı gizli,
+  künyede zaten varlar), piyasa bandı tek satır yatay kaydırma, boş reklam
+  yuvası 70 px. Hedef: ilk editoryal piksel 603 → ≤320.
+- **yer-not blokları katlandı**: 9 notun 495 px'i (sayfanın %8,5'i,
+  manşetten fazla) tek satırlık `<details>` başlığına indi. Metinler
+  SİLİNMEDİ — ait oldukları bölümün altında, bir tıklama uzağında.
+  Direktörün önerisi metinleri künyeye taşımaktı; bağlam değişkenleri
+  (ilan sayıları, arşiv adetleri) anasayfa görünümüne bağlı olduğu için
+  yerinde katlama seçildi — beyan ile bölüm yan yana kalıyor.
+
+
+### §34 doğrulama turu — ölçüldü, düzeltildi (aynı gün)
+
+Uygulama sonrası direktör ajanı başsız Chrome ile yeniden ölçtü: 11 ölçüt
+GEÇTİ (ses vurgusu, duraklatma düğmesi davranışı, en-çok/manşet ayrışması,
+makale rayı, kartlarda saat 20/20, tip oranları 2,33 / 1,53, kategori lead,
+numaralı sayfalama, kontrast — 42 px manşet başlığı en kötü zeminde 6,71 —
+yatay taşma 0, sayfa içi dikiş). 8 bulgu KALDI ve aynı gün düzeltildi:
+
+- **K1** `.kart.genis` 360 px'te sütuna dönmüyor, 126 px taşıyordu: medya
+  kuralının özgüllüğü (0,2,0) taban kuralına (0,3,0) yeniliyordu. Seçici
+  `.kutu-izgara .kart.genis` yapıldı; `.ic`e `min-width:0`.
+- **K2** ≤600 piyasa bandında saat kalemlerin üstüne biniyordu: `dl` taban
+  `flex:1`i koruyup sıkışıyordu → `flex:0 0 auto`, kaydırmayı kap yapar.
+- **K3** Mini slaytta OTOMATİK GEÇİŞ ikinci satıra kırılıp manşet altında
+  27-63 px boş şerit açıyordu: mini sayaç gizlendi (aria-hidden'dı,
+  numaralı düğmeler aynı bilgiyi verir), düğme sıkılaştı.
+- **K4** 1001-1140 bandında `.izgara` 320'de kalıyor, anasayfa↔makale ray
+  dikişi 20 px kayıyordu: `.izgara` da 300'e iner;
+  `tests_yerlesim` dar ekran testi artık ÜÇ seçiciyi kilitler.
+- **K5** `max-width:68ch` fiilen 87 karakter veriyordu (`ch` = "0" rakamı
+  genişliği 10,1 px; Türkçe gövde ortalaması 7,9 px). Ölçü **54ch** ≈ 546 px
+  ≈ 68 gerçek karakter. (§34'teki "satır 79 karakterdi" tespiti doğru,
+  "68ch = 68 karakter" varsayımı yanlıştı.)
+- **K6** 24 px altı 68 hedef kalmıştı (44'ü künyede): künye listeleri, ilçe
+  şeridi, Bursaspor listesi, kart/sıra başlık bağlantıları, ilan tür
+  düğmeleri, yer-not başlığı — negatif kenar boşluğu tekniğiyle görünüm
+  değişmeden 24 px'e çıkarıldı.
+- **K7** yer-not oranı %4,76 (hedef ≤%3): başlık satırı sıkılaştırıldı
+  (~%4). **Bilinçli kalan sapma:** ≤%3 ancak notların künyeye taşınmasıyla
+  olur; not metinleri anasayfa görünümünün bağlam değişkenlerine bağlı ve
+  beyanın bölümüyle yan yana durması tercih edildi. Yeniden açılacaksa
+  kullanıcı kararı.
+- **K8** 360'ta ilk editoryal piksel 354 (hedef ≤320): boş reklam yuvası
+  48 px, main dolgusu 8, piyasa altı 10 → hesaplanan ≈320. Kalan iki kalem
+  (kategori bandı 82, servis 56) dolu bileşenler, kırpılmadı.
+
+
+### §34 kapanış — üçüncü ölçüm turu (aynı gün)
+
+İkinci turda K1 (genis kart taşması), K2 (piyasa örtüşmesi), K4 (ray
+dikişi) kapandı; üç kalem ile bir yan etki kaldı ve düzeltilip üçüncü
+turda ölçüldü:
+
+- **K3 kapandı**: manşet altı boşluğun kalan 36 px'i mini slayttan değil,
+  1140 bloğundaki `.slayt-pencere{height:392px}`ten geliyordu — sağ
+  sütunun katı asgarisi 472 px. Pencere o bantta 428'e alındı; boşluk
+  dokuz genişlikte de 1 px, 900 px'te ≤1000 kuralı (360) hâlâ kazanıyor.
+- **K5 kapandı**: 54ch ile ortalama 65,1 ölçülünce 55ch yapıldı →
+  ortalama **66,6** karakter (66-70 bandı içinde).
+- **K6 kapandı**: 24 px altı görünür dokunma hedefi yedi sayfa/genişlik
+  ölçümünde **0** (galeri/video başlıkları ve kırıntı bağlantıları da
+  eklendi; RSS bağlantısına min-width).
+- **Yan etki kapandı**: künyede negatif kenar boşluğu komşu bağlantıları
+  8 px bindiriyor, kenara tıklama YANLIŞ bağlantıyı açıyordu. Ders:
+  negatif kenar tekniği yalnız satır adımı kutudan büyük listelerde
+  güvenli. Künye `line-height:1.45` + gerçek dolguya çevrildi; örtüşme
+  ve kenar isabeti hatası 0, künye görünümü normal (465 px).
+- **K8 açık kaldı, bilinçli**: 360'ta ilk haber kartı y=322 (hedef 320,
+  ilk ölçüm 603'tü). Kalan 2 px için boş reklam yuvasını daha da kırpmak
+  gerekirdi; 322 ile 320 arasında okur davranışı farkı yok — kapatıldı.
+
+Sağlamlık: yatay taşma 10/10 ölçümde 0; ray dikişi üç bileşende de tek
+x (1024: 699 · 1280: 863). Django testleri her turda 552/552.
+
+
+## 35. 30 Ağustos 2026 — tur 2: menü, yazarlar, sosyal, haber sunumu
+
+Kullanıcı altı iş verdi: (1) slayttaki OTOMATİK GEÇİŞ düğmesi kalksın,
+otomatik geçiş zaten varsayılan olsun; (2) hava/namaz/eczane paneli
+aşağı insin; (3) yazarların sunuluşu tamamen değişsin ve fotoğrafları
+canlı siteden çekilsin; (4) haberlerin sunumu daha dikkat çekici olsun,
+konum ve kutu boyutları serbest; (5) sosyal medya bağlantıları üstte ve
+etkileyici olsun; (6) menü görünümü tamamen değişsin. §34'ün 3. aşama
+kalemleri (serif gövde, kategori işaret renkleri, mobilde manşet önde,
+15 slayt sözleşmesi, iki ağırlıklı bölüm başlığı) bu turda onaylandı.
+
+Tasarım, üç bağımsız öneri (ulusal-klasik · modern-vurgu · yerel-kimlik)
+ve bir jüri sentezi ile seçildi; keşif ajanları canlı sitedeki portrelerin
+indirilebilirliğini ve arşiv medya altyapısını önce ölçtü.
+
+### Sözleşme değişiklikleri (§1'i günceller)
+
+- **Bileşen 7 — ana manşet: 15 slayt → 5 slayt.** Kalan 10 kayıt slaytın
+  altında **GÜNÜN MANŞETLERİ** başlık listesi (`.manset-liste`, iki sütun,
+  tarihli). Gerekçe §4 madde 1'in kendi ölçümü: "5'ten sonrası neredeyse
+  görülmüyor". Bursaspor bölümünde işe yaradığı ölçülen çözümün uyarlaması.
+  `views.MANSET=5`, yeni `MANSET_LISTE=10`; havuz büyüdü, dilimler
+  kesişmiyor ve §34'ün "en çok okunanlar manşetin kopyası değil"
+  güvencesi testle yeniden kilitlendi.
+- **Bileşen 11 — haber kutuları 10 → 11.** İlk kart iki sütuna yayılıyor
+  (`.kart.genis`, kategori sayfasıyla ortak); 1 + 10 beş tam satır eder.
+- **Bileşen 12 — şehir servisleri raydan çıktı.** Artık **RESMÎ İLANLAR ile
+  BURSASPOR arasında**, tam genişlikte, **üç panel birden AÇIK**
+  (`#sehir-servisleri`, `.servis-uclu`). Sekme mimarisi 300 px'lik ray
+  zorunluluğuydu; genişlikte üçü de tıklamadan görünüyor. `panel-hava`,
+  `panel-vakit`, `panel-eczane` kimlikleri KORUNDU — menü ve künye
+  çapaları kırılmadı. `role="tablist"` DOM'u anasayfadan kalktı;
+  `site.js` `.sek` bulamayınca dokunmuyor (Bursaspor sekmeleri sürüyor).
+- **Bileşen 13 — yazarlar rayı, YAZAR KUŞAĞI oldu.** Tam genişlik,
+  portreli, scroll-snap ile kaydırılan 10 kartlık şerit; manşet bloğunun
+  altında. Sağ raydaki beş satırlık liste kalktı. `.yazar-ray` kuralları
+  köşe yazısı sayfasının rayında kullanıldığı için duruyor.
+- **Sağ ray yeni dizilim:** EN ÇOK OKUNANLAR → **İLÇE İLÇE BURSA** (yeni
+  çip ızgarası; ilçeler menüde katlanmış duruyordu) → `-Haber arası1-`
+  300×250. Reklam yuvalarının adı ve ölçüsü değişmedi.
+- **Bölüm başlığı iki ağırlıkta.** Editoryal bölümler (SON HABERLER ·
+  YAZARLAR · GALERİLER · VİDEOLAR · İLÇE İLÇE BURSA) `.kutu-bas.hafif`:
+  beyaz zemin, lacivert başlık, lacivert alt çizgi. Servis ve yükümlülük
+  bölümleri (ŞEHİR SERVİSLERİ · RESMÎ İLANLAR · VİZYON · PİYASA) dolu
+  bantta kaldı; EN ÇOK OKUNANLAR dolu kırmızı; **BURSASPOR dokunulmaz**.
+  Kırmızı fitil (`h2::before`) iki ağırlıkta da duruyor — ortak imza.
+- **Dar ekranda (≤768 px) sıra: manşet → manşet listesi → dörtlü.**
+  `.ust-blok` sarmalayıcısı ve `order`; DOM ve odak sırası değişmiyor.
+  360'ta okur ana manşete 1550 px aşağıda varıyordu.
+
+### Menü — sidebar kalktı, banda asılı beyaz mega levha geldi
+
+Kullanıcı 28 Ağustos'ta gelen koyu sidebar'ı beğenmedi. Yeni menü bandın
+altına asılan beyaz levhadır; masaüstünde **beş sütunlu** açılır
+(İLÇELER en geniş sütun), dar ekranda akordeon kalır.
+
+Kritik karar: **şablona `open` yazılmadı.** Bölümleri geniş ekranda
+`site.js` `menuAc()` açıyor (3 satır). Böylece sunucu HTML'i bayt bayt
+aynı kalıyor ve menünün DOM sözleşmeleri — 17 ilçe + "Tüm ilçeler",
+50 bağlantı, tek açık bölüm, `<summary><h2>` düzeni, odak tuzağı —
+hiç oynamadı. Perde yine ayrı öğe değil, ikinci gölge: karartma levhanın
+üst kenarından aşağı uzanıyor, bant ve MENÜ düğmesi aydınlık kalıyor,
+dışarı tıklayınca kapanma davranışı sürüyor. `--menu-bas` kullanımsız
+kaldı, yorumla işaretlendi.
+
+### Sosyal medya üste çıktı
+
+Beş SVG sembolü (`sos-x` · `sos-instagram` · `sos-youtube` ·
+`sos-whatsapp` · `sos-rss`) `parca/simgeler.html`e eklendi — dış kaynak
+yok, sayfa internetsiz açılmaya devam ediyor. Üst servis şeridinin sağ
+kümesinde **İHBAR HATTI pili** + beş ikon duruyor; künyedeki liste aynı
+sembollerle güçlendi ve yerinde kaldı.
+
+**Ayrı şerit açılmadı**: §34 K8'de piksel piksel kazanılan mobil tepe
+bütçesi (ilk haber ≤322 px) geri yakılmıyor. ≤600'de yalnız metin
+bağları (Künye/İletişim/E-Gazete — künyede zaten varlar) ve pilin yazısı
+gizleniyor, ikonlar kalıyor; ≤420'de YouTube ve RSS düşüyor.
+
+### Entegrasyon
+
+- **Gövde serifi**: `--serif` = Roboto Serif → Georgia. Yalnız `.metin` ve
+  `.detay .spot`; listeler ve başlıklar sans. Tek font isteği, italik
+  kesim alınmadı. **Satır uzunluğu yeniden ölçülecek** — `ch` birimi "0"
+  rakamının genişliğidir ve serifte farklı çıkar (§34 K5 dersi).
+- **Kategori işaret rengi denemesi**: yalnız `--isaret-bursa` (#0E6E8C,
+  beyaz üstünde 5,79 · zemin üstünde 5,10) ve `--isaret-ekonomi`
+  (#7A5200, 6,93 · 6,10). Yalnız `.kart .ust` etiketinde, yalnız açık
+  zeminde; kalan 11 kategori kırmızıda. Geri alma maliyeti iki CSS satırı.
+- **Dörtlü**: dört kutucuk **EŞİT genişlikte**. İlk hâlinde ilk kutucuk
+  1,5fr ve 25 px başlıktı ("ölçülü asimetri"); 30 Ağustos'ta kullanıcı
+  eşit olmalarını istedi ve asimetri geri alındı. Vurgu yalnız kırmızı
+  üst çizgide kaldı — ızgarayı ve tip merdivenini bozmuyor, sıralamayı
+  yine de belli ediyor. Ölçüldü (768·1024·1280·1600): dört kart da
+  sırasıyla 359,5 · 236,8 · 264,5 · 264,5 px, başlıklar 21 px, yatay
+  taşma 0. Foto yüksekliği hiç değişmedi.
+
+### Yazar portreleri — canlı siteden indirildi
+
+`medya/management/commands/yazar_portre_indir.py`. Ölçülen durum: göç,
+portre diye kaynağın `og:image` karesini almıştı — **37 kaydın 37'si de
+1200×630**, yani paylaşım kırpımı; yuvarlak avatarda yüz kesiliyordu.
+
+Canlı site aynı fotoğrafı `/static/<YYYY/AA/GG>/<ad>_small.jpg` olarak
+**270×270 kare** de yayımlıyor, ama ölçüldü: bu biçim yalnız **yeni**
+kayıtlarda (kaynağı `_large.webp` olanlar, 2025+) var — **19 kayıt**;
+2021-2024 kayıtlarında 404 dönüyor ve elde yalnız 750×500 kalıyor —
+**18 kayıt**. Komut sırayla dener, ilkini alır.
+
+**Teşhis indirdikten sonra derinleşti — dosyalar açılıp GÖRÜLDÜ.**
+750×500 olan şey bir portre değil, gazetenin **afiş şablonudur**: solda
+yazarın adı büyük harflerle, arkada harita grafiği ve logo, yüz ise sağ
+üçte birde. Ortadan kırpılsaydı yuvarlak avatarda yüz değil **harita**
+görünecekti. İki biçim bu yüzden dosya adında ayrılıyor:
+
+    {slug}-portre.jpg   270×270 gerçek portre  -> ortadan kırpılır
+    {slug}-afis.jpg     750×500 afiş           -> `object-position:88%`
+
+Ayrımı CSS `img[src*="-afis"]` ile yapıyor: model alanı ve migration
+gerekmedi. Pillow ile kırpmak da çözerdi ama yeni bağımlılık getirirdi.
+Ders, §34'ün "tarayıcıda ölçerek doğrula" kuralının görsellere uzanan
+hâli: **boyut doğru diye içerik doğru sanılmaz, dosya açılıp bakılır.**
+
+İlk çözüm `object-position:88%` ile pencereyi sağa kaydırmaktı; ölçümde
+yetmediği görüldü — kare kırpım 500 px, yüz ise 300 px olduğu için afişin
+adı ve haritası daireye sızıyor, avatarlarda "AN PÇU" gibi harf
+kırıntıları okunuyordu. İkinci çözüm gerçek **yakınlaştırma**: `.portre`
+bir sarmalayıcı (`<span class="portre"><img></span>`), afiş 260×260'lık
+bir pencereye yakınlaştırılıyor. Yüzde kullanıldığı için 96/80/72 px'lik
+üç boyda da aynı kırpım çıkıyor.
+
+**Üçüncü katman: afiş şablonu İKİ ÇEŞİT.** Yakınlaştırma sonrası ölçümde
+18 afişin 16'sı temizken 2'si hâlâ sızdırıyordu. 18 kaydın tarihleri
+gruplandı, sonra **10 dosya açılıp gözle sınıflandırıldı**:
+
+| Parti | Adet | Şablon | Yüz merkezi | Pencere |
+|---|---|---|---|---|
+| 2022-01-13 | 7 | "beton" — gri duvar, koyu kırmızı şevron | x≈570 | x∈[440,700] · `left:-169%` |
+| 2023-07-10 ve sonrası | 11 | "harita" — kırmızı Avrupa haritası | x≈620 | x∈[490,750] · `left:-188%` |
+
+Gazete yazar afişini 2023'te yenilemiş. Tek pencere ikisine birden
+uymuyordu: haritaya göre ayarlanan pencere beton şablonunda yüzü sola
+itip sağ üçte biri duvara ayırıyordu. Şablon artık dosya adında
+(`-afis-harita.jpg` / `-afis-beton.jpg`, `AFIS_SINIRI = "2023-01-01"`);
+CSS iki `left` değeri kullanıyor, ortak `top`/`width` değişmiyor.
+
+**Dördüncü katman: şablon da tek başına yetmiyor.** İki pencereyle
+ölçüldüğünde beton grubunun altısı isabetliydi (yüz ekseni x≈565-600,
+pencere merkezi 570) ama **Av. Veysel Tayyar** x≈530'da kaldı — daire
+çapının %11'i kadar kaçık. Yedi beton afişinin tamamı gözle
+sınıflandırıldı; tek aykırı o. Çözüm ölçülen bir **istisna satırı**:
+`img[src*="av-veysel-tayyar"]{left:-158%}`. CSS'te yorumla "bu bir yama,
+kural değil" diye işaretli; yeni aykırı ölçülürse yanına eklenir. Kalıcı
+çözüm görsel başına odak noktası saklamaktır (model alanı + migration) —
+37 kayıt için bugün gereksiz.
+
+**Kare portrelerde baş ölçeği eşitlendi.** 270×270 kaynaklar yarım boy
+çekim: baş daireyi %33 dolduruyordu, afiş kırpımlarında %56 — şeritte baş
+ölçeği iki kata yakın oynuyordu (ölçüldü). Kare portreler de
+yakınlaştırıldı (`left:-21%; top:0; width:142%` = kaynağın x∈[40,230] ·
+y∈[0,190] penceresi) ve baş %47'ye çıktı. Pencere karenin üst %70'ini
+kapsadığı için baş kesme riski yok.
+
+**Ders (§34'ün "ölçerek doğrula" kuralının görsel katmanı):** boyut
+doğru olabilir, kırpma matematiği doğru olabilir, sınıflandırma doğru
+olabilir ve iş yine yanlış görünebilir. Görsel işlerde **örneklem tek
+dosya değildir** ve son söz ölçümün değil **bakmanın**dır: bu turda üç
+ayrı kusur (afiş olduğu, iki şablon olduğu, bir aykırı poz olduğu)
+yalnızca dosyalar açılıp görüldüğü için bulundu.
+
+### Ölçüm ortamı tuzağı — 360 px'teki üçüncü satır
+
+Denetimde 360'ta üst şerit 92,8 px (3 satır) ve ilk editoryal piksel 359
+ölçüldü; §34'ün ≤322 hedefi tutmuyor göründü. Sebep editoryal değil:
+**"Reklamları gizle" sunum düğmesi 102 px** ve `.sag` kümesini üçüncü
+satıra itiyor. Düğme `icerik/baglam.py::_reklam_dugmesi` ile yalnız
+`is_staff` oturumunda **ya da 127.0.0.1/localhost host'unda** çiziliyor —
+yani bütün ölçümlerde var, gerçek ziyaretçide hiç yok. Düğme gizlenerek
+ölçüldüğünde 360'ta şerit 55,8 px ve ilk editoryal piksel **322** (600'de
+304, 768'de 60,8). Gerileme yok.
+
+**Bundan sonraki ölçüm turları için:** yerel sunucuda alınan tepe
+ölçümleri bu 102 px'i içerir; mobil tepe bütçesi ölçülürken düğme
+gizlenmeli, yoksa olmayan bir kusur kovalanır.
+
+### Ölçüm turu bulguları (aynı gün, düzeltildi)
+
+- **K1 — bir özgüllük çatışması üç şeyi birden bozuyordu.** `.servis .sag a`
+  kuralı (0,2,1) tur 2'de eklenen üç kuralı eziyordu: ihbar pili
+  `inline-flex` olamıyor (ikon ile yazı **alt alta** düşüyor, yatay dolgu
+  0, "İ" kırpık), sosyal ikonlar `grid` olamıyor, ≤420'deki `dar-gizle`
+  hiç tutmuyordu (beş ikonun beşi de duruyordu). Kural zaten yalnız metin
+  bağları içindi; hedefi `.servis .ust-baglar a` olarak daraltmak üçünü
+  birden çözdü. **Ders: yeni kural eklerken var olanın özgüllüğü
+  ölçülmeli — sessizce ezilen kural hata vermez, yanlış görünür.**
+- **K3 — `:first-child` hiçbir şeyle eşleşmiyordu.** `.dortlu`nun ilk
+  çocuğu ekran okuyucu için duran gizli `<h2>`; dört kartın dördü de
+  lacivert çizgi alıyor, ilk başlık 21 px kalıyordu. `:first-of-type`
+  ile düzeldi.
+- **K4 — serif satırı yeniden ölçüldü.** `ch` neredeyse aynı kaldı
+  (10,08 ↔ 10,12) ama Türkçe gövdenin gerçek karakter genişliği 7,79 →
+  9,14 px (%17,4) çıktı ve 55ch ile satır 55,1 karaktere düştü.
+  **68ch** ≈ 685 px ≈ 66-70 gerçek karakter. 1024 px'te makale sütunu
+  623 px olduğu için orada satır ~62'de kalıyor — ızgara geometrisi,
+  `max-width` kusuru değil.
+- **K5** köşe künyesindeki yazar bağlantısı 78×18 idi, 24 px'e çıktı.
+- **Eczane tarihi** ham ISO ("2026-08-29") basılıyordu; yeni `iso_tarih`
+  süzgeci tür dönüşümü yapıyor, ay adı Django'nun Türkçe çevirisinden
+  geliyor.
+
+Ölçümde **GEÇEN** başlıklar: mega levha (bandın altına 0 px farkla
+oturuyor, beş sütun, 407 px yükseklik, 325 Tab adımında odak kaçışı 0,
+50 bağlantı ve 18 ilçe yerinde), yazar kuşağı (10 kart, kaydırma sayfayı
+taşırmıyor, 10/10 portre yükleniyor), manşet 5+10, şehir servislerinin
+yeni yeri ve üç açık panel, mobil sıra (manşet → liste → dörtlü), ray
+dikişi (1024: 699 · 1280: 863, anasayfa = haber = köşe), 36 taşma
+ölçümünün 36'sı 0, kontrast örnekleminin tamamı AA üstü, ham hex 0.
+
+Dosyalar `D:\bursa-hakimiyet-arsiv\gorseller-yazar\portre\{slug}-portre.jpg`;
+`/arsiv-medya/` yalnız dört beyaz listeli klasörü servis ediyor ve
+`gorseller-yazar` onlardan biri (portre `gorseller/` ağacına konursa
+404 olurdu). Yanına `KAYNAK.tsv` yazılıyor: hangi dosya hangi adresten,
+hangi biçimde, kaç bayt. **Hak teyidi hâlâ açık kalem** — portreler
+gazetenin kendi yayınından ama yayın öncesi teyit hukuki teyit
+listesindedir.
+
+Komut nazik: Chrome imzalı doğrudan istek (WebFetch bu sitede engelli),
+istekler arası 1 sn, zaman aşımı 30 sn (CDN istek başına 0,4-20,6 sn
+ölçüldü). Tekrar çalıştırılabilir; diskte olanı yeniden indirmez.
+DB yazımı kısa tek işlem + geri çekilmeli tekrar, ve **dosya diskte
+gerçekten var mı** diye doğrulanıyor — `gorsel_yolu()` diske bakmaz,
+bayrak yanlışsa kırık resim basar. Uyarı: `medya_goc_al` yeniden koşarsa
+`gorsel_dosya`yı arşiv JSON'una geri yazar; komut o zaman tekrar koşulur.
+
+### Testler
+
+554 test (2 yeni). Güncellenenler: bileşen sayıları (5+5 slayt, 11 kutu,
+`manset_liste` 10), manşet/en-çok/liste kesişimi 0, yazar sorgu sınırı
+5→10 (ölçüt "yazar başına bir sorgu", sabit sayı değil), sidebar testi
+mega levha testine dönüştü (+ masaüstünde beş sütun ve JS'in açması).
+Kategori/ilçe sayım testleri **veriden türetiliyor** artık — fikstür
+büyüyünce kırılan sabit sayılar kalktı.
+
+### Bu turda YAPILMAYANLAR (bilinçli)
+
+Mega levhanın DOM'unu yeniden sıralamak · `main` düzeyinde flex/order ·
+EN ÇOK OKUNANLAR'ı raydan almak · dörtlüyü yatay mini karta çevirmek ·
+kart üst çizgisini kategoriye göre renklendirmek (dörtlünün çizgi diliyle
+çakışıyor) · sosyal bağlantıları mega levhaya koymak (50 bağlantı
+sözleşmesi) · ayrı sosyal şerit (mobil tepe bütçesi).
+
+
+### §35 kapanış — son görsel doğrulama
+
+Veysel istisnası ve kare portre yakınlaştırması gözle doğrulandı:
+
+- **Veysel Tayyar `-158%`**: yüz ekseni kaçıklığı %16'dan **%5'e** indi
+  (grubun kendi hata bandının içinde); sağdaki duvar/şevron bloğu gitti,
+  sol alttan afiş yazısı girmedi. Sınır ölçüldü: `-154%`'te bordo harf
+  kenarı belirir, `-150%`'de "VEYSEL"in L'si girer — yani değer güvenli
+  tarafta ama payı **4 puan**; bu satır oynatılacaksa yeniden ölçülmeli.
+- **Kare portrelerde baş üstü kesilmedi** (taç payı kaynakta 9-16 px);
+  `top:0` zaten üst sınır, daha iyisi bu kaynaklarla alınamaz.
+  Baş/daire oranı %29-46 bandından **%41-65**'e çıktı, afiş bandı (%49)
+  ile aynı komşuluğa geldi.
+
+**Açık kalan (kabul edilen) kalem:** kare portrelerin baş ölçeği kendi
+içinde hâlâ 1,6× yayılıyor (Ali Genç %65 ↔ Atilla Sağım %41, üstelik
+şeritte bitişikler). Sabit 1,42× katsayı kaynaktaki farkı da büyüttü.
+Eşitlemek **dosya başına ölçek** ister — Veysel istisnasıyla aynı yere
+çıkar: doğru çözüm görsel başına odak noktası + ölçek saklamaktır
+(model alanı + migration). 37 kayıt ve tek şerit için bugün açılmadı;
+yayın öncesi ya da yazar sayısı arttığında yeniden değerlendirilir.
+Yayılım turun başında 2× idi, bugün 1,6× — gerileme değil, kalan pay.
+
+
+---
+
+## §36 — kategori bandı tam ekran · son dakika raya taşındı (30 Ağustos 2026)
+
+Kullanıcı isteği (iki tur): "kategorilerin olduğu şeriti biraz daha büyüt ve
+tüm ekrana genişlet" → sonra "tam ekranı kaplamıyor, belki reklam panosuyla
+çakıştığı için, bunu düzelt · son dakika için D seçeneğini yap".
+
+---
+
+### 1. Bant — tam ekran ve büyütme
+
+**Sorun (ölçüldü).** Bant `.orta` sütununun içindeydi, lacivert zemin
+**1100 px'te kesiliyordu**. Üstündeki servis şeridi ise zaten tam ekrandı.
+1920 px'lik ekranda iki şerit üst üste ama farklı genişlikteydi.
+
+**Yapılan.**
+
+1. **Taşıma.** `parca/kategori_bandi.html` include'ı `.orta`nın dışına,
+   `.sayfa` ızgarasının üstüne — doğrudan `<body>` altına — alındı.
+   `position:sticky` bozulmadı: yeni ebeveyn `<body>`. (Eski uyarı geçerli:
+   bandın etrafına **sarmalayıcı eklenmeyecek**.)
+2. **Kapak yok.** İlk denemede iç kutu `.servis-ic` gibi 1480 px'e
+   kapatılmıştı. Kullanıcı bunu "tam ekranı kaplamıyor" diye bildirdi ve
+   haklıydı: 1600 px'te zemin tam ekran ama kalemler iki yanda 60'ar px boş
+   lacivert bırakıyordu. Kapak kaldırıldı — logo x=0'a, MENÜ ekranın sağ
+   kenarına oturuyor. Artan genişlik `.kategori-liste a{flex:1 1 auto}` ile
+   **10 kaleme eşit dağıtılıyor**; sabit bıraksaydık 2560 px'te sağda büyük
+   bir boşluk kalırdı. Mega levha da aynı biçimde kenardan kenara.
+3. **Büyütme.** Kalem yazısı 13,5 → **15 px**, dikey dolgu 11 → **14 px**,
+   logo 30 → **36 px**, MENÜ ve arama aynı oranda. Bant **40 → 50 px**.
+
+### 2. Yan reklam rayı — gerçek çakışma vardı
+
+Kullanıcının sezgisi doğru çıktı. `.yan-reklam{position:sticky;top:14px}`
+idi; bant 50 px'lik yapışkan ve z-index 40 olduğu için ray panosunun **üst
+36 px'i bandın arkasına giriyordu**. `top:64px` yapıldı (50 px bant + 14 px
+eski pay). Kaydırılmış sayfada ölçüldü: bant.alt=50, ray.üst=64 → çakışma
+yok.
+
+### 3. Kırılma noktaları — yeniden ölçüldü
+
+Bant büyüyünce eski 1119 px eşiği yetmez oldu: **1262 px'te MENÜ düğmesi
+ikinci satıra düşüyordu** (bant 50 → 98 px). Ölçülen parça genişlikleri:
+logo 155 · 10 kalem 863 · arama kutusu 220 · MENÜ 88 → **toplam ~1350 px**.
+Arama simgeye inince kutu 220 → 46, gereken **~1176 px**.
+
+| Genişlik | Bant | Durum |
+|---|---|---|
+| ≥ 1360 px | 50 px | Tam: logo + 10 kalem + arama kutusu + MENÜ |
+| 1176–1359 | 50 px | Arama **simgeye** iner (tıklayınca alt satırda açılır) |
+| 1001–1175 | 42 px | Kalemler **büyümeden önceki** ölçüye döner (13,5 px / 30 px logo) |
+| ≤ 1000 px | 78–82 px | İki satır, dört kalem — **büyüme geçersiz** |
+
+1001–1175'te kalem düşürmek yerine ölçü küçültmek seçildi: onlu bant
+sözleşmesi masaüstünde bozulmasın.
+
+**Dar ekranda büyüme bilerek uygulanmıyor.** Bant orada zaten tam
+genişlikte, yani kazanç yok ama bedeli var — mobil tepe bütçesi (§34 K8,
+ilk haber ≤322 px) bandın üst satırını 38'den 48 px'e çıkarırdı.
+
+Yapışkan bant büyüdüğü için çapa payları güncellendi: `main` 52 → **62 px**,
+`.servis-dilim` 64 → **74 px**.
+
+---
+
+### 4. SON DAKİKA — kayan şerit kaldırıldı, raya sabit liste geldi (D)
+
+Dört seçenek sunuldu (A: şerit tam ekrana · B: banda yapıştır ve yapışkan
+yap · C: manşetin üstüne indir · D: rayda sabit liste). **Kullanıcı D'yi
+seçti.**
+
+- `parca/son_dakika.html` yeniden yazıldı: `.kutu` + `.kutu-bas.vurgu`
+  bileşenleriyle **kırmızı başlıklı ray kutusu**. Kayan `.akis`, ikinci
+  (`aria-hidden`) kopya ve `@keyframes kay` silindi.
+- **Neden:** kayan yazı okunması en zor kalıptır ve
+  `prefers-reduced-motion` açık olan okurda şerit duruyordu — o okur
+  listenin yalnız başını görüyordu. Sabit listede herkes aynı içeriği
+  görüyor, altı başlık da arama motoruna metin olarak geçiyor.
+- **Kalem sayısı 4 → 6** (`SON_DAKIKA_ADET`): şerit dördünü sırayla
+  gösteriyordu, kutu altısını aynı anda gösteriyor.
+- Kutu üç rayın da **en üstünde**: anasayfa, haber detay, köşe yazısı.
+  Detay sayfalarında 300x250 panonun bile üstünde — son dakika rayın ilk
+  kalemi olmalı.
+- Zaman sütunu `kisa_zaman` filtresiyle: **bugünse saat, değilse tarih**.
+  Ham `H:i` yanlıştı — arşivde farklı günlere ait kayıtlar var ve hepsi
+  saat olarak basılınca liste sırasız görünüyordu (13:52 · 15:27 · 11:29
+  alt alta). Sütun 64 px: `kisa_zaman`ın en uzun çıktısı "31 Eki 2025".
+- Başlıktaki nabız atan nokta `prefers-reduced-motion`'da **sabit** kalır,
+  kaybolmaz.
+- Mega menüdeki "Son dakika" bağlantısı `#son-dakika` → **`/#son-dakika`**:
+  kutu yalnız ray taşıyan sayfalarda var, çapa artık her sayfadan
+  anasayfadaki kutuya gidiyor.
+
+**Kapsam kaybı (bilinçli, kabul edildi):** kategori · ilçe · yazar dizini ·
+galeri gibi **rayı olmayan sayfalarda son dakika artık görünmüyor**. Eskiden
+şerit `taban.html`de olduğu için her sayfadaydı. Ray o sayfalara açılırsa
+kutu oraya da girer.
+
+---
+
+### Doğrulama
+
+Başsız Chrome, 2560 · 1920 · 1600 · 1480 · 1360 · 1280 · 1180 · 1100 · 1020 ·
+900 · 504 px: her genişlikte yatay taşma yok (`scrollWidth == innerWidth`),
+bant kenardan kenara (logo sol=0, MENÜ sağ kenarda), masaüstünde 10 kalemin
+onu da görünür, bant tek satır. 1200 px kaydırılmış sayfada yan ray ile bant
+çakışmıyor. **587 test geçiyor.**
+
+### Açık kalan — karar bekliyor
+
+**Şerit/kutu panelin son dakika kayıtlarını hâlâ okumuyor.**
+`icerik/models.py` `SonDakika` docstring'i "bant önce bu tabloya bakar,
+boşsa en yeni haberlere düşer" diyor ama `icerik/baglam.py` doğrudan
+`Haber.yayindakiler()[:6]` veriyor; `SonDakika.bandakiler()` yalnız panelde
+çağrılıyor. Yani sayfa sekreteri panelden son dakika girse bile siteye
+çıkmıyor — kutuda "en son yayımlanan altı haber" duruyor. Bu tur kapsam
+dışında bırakıldı, kullanıcıya soruldu, cevap beklemede.
+
+
+---
+
+## §37 — anasayfa üst blok yeniden sıralandı (30 Ağustos 2026)
+
+Kullanıcı isteği: "günün manşetlerini daha aşağı koy, onun yerine son
+dakikayı getir, son dakika'nın yanına da bir reklam panosu daha koy".
+
+### Yeni sıra
+
+| Önce | Sonra |
+|---|---|
+| piyasa · dörtlü · **manşet** · GÜNÜN MANŞETLERİ | piyasa · dörtlü · **manşet** · **SON DAKİKA + pano** |
+| yazarlar · SON HABERLER+ray · resmî ilanlar | yazarlar · SON HABERLER+ray · **GÜNÜN MANŞETLERİ** · resmî ilanlar |
+
+GÜNÜN MANŞETLERİ, SON HABERLER ızgarasının altına indi. Orada iki büyük
+bloğun (haber ızgarası ↔ resmî ilanlar) arasında ayraç işi de görüyor;
+`.ust-blok`tan çıktı.
+
+### SON DAKİKA satırı
+
+- `.sondakika-satir`: iki sütun — liste **784 px** + pano **300 px**
+  (1100 px'lik orta sütunda ölçüldü).
+- Pano **envanterden**: `-Manşet altı1- 300x250`. Yuva gerçekten manşetin
+  altındaki 300x250 alan; ad uydurulmadı (`ReklamYuvasi` dökümünde var).
+- Kutu panoyla **aynı boya çekiliyor** (`align-items:stretch`, gövde
+  `flex:1` ve liste dikeyde ortalı): 6 kalem iki sütunda ~180 px sürüyor,
+  yoksa panonun 250 px'i yanında beyaz kutunun altında 70 px boşluk kalırdı.
+  Ölçüldü: ikisi de 250 px.
+- Liste anasayfada **iki sütun** (`genis` bayrağı); raylarda tek sütun.
+  Aynı parça iki yerleşimi de karşılıyor.
+- **Anasayfada kutu raydan kalktı.** `id="son-dakika"` sayfada tek olmak
+  zorunda; ölçüldü: 1 tane. Ray sürümü haber detay ve köşe yazısı
+  sayfalarında duruyor.
+- Dar ekran (≤1000 px): tek sütun, pano listenin **altına** geçer ve
+  ortalanır — 300 px sabit sütun 360 px'lik ekranda listeye 40 px bırakırdı.
+  ≤768 px'te liste de tek sütuna iner.
+- `.ust-blok` dar ekran sırası güncellendi: manşet 1 · **son dakika 2** ·
+  dörtlü 3 (eskiden 2. sıra GÜNÜN MANŞETLERİ idi).
+
+### Doğrulama
+
+Başsız Chrome 1600 · 1200 · 900 · 504 px: yatay taşma yok, `#son-dakika`
+sayfada tek, masaüstünde liste ve pano eşit boyda (250 px), 900 px altında
+pano listenin altına geçiyor. **598 test geçiyor.**
+
+
+---
+
+## §38 — SON DAKİKA paneli yeniden tasarlandı (30 Ağustos 2026)
+
+Kullanıcı isteği: "son dakika panelinin tasarımını değiştir ve daha dikkat
+çekici hale getir".
+
+### Sorun
+
+Panel beyaz `.kutu` + kırmızı `.kutu-bas.vurgu` idi — yani EN ÇOK OKUNANLAR,
+BURSASPOR ve sayfadaki öbür bütün kutularla **aynı kalıp**. Göz onu bir uyarı
+olarak değil sıradan bir liste olarak okuyordu. Ayrıca altı başlık eşit
+puntodaydı; "en yenisi hangisi" sorusu gözle cevaplanamıyordu.
+
+### Üç hamle
+
+1. **Kendi sahası.** Panel bütünüyle koyu kırmızı zemine alındı. Sayfadaki
+   tek dolu-renk blok o; manşetin hemen altında duruyor ve gri/beyaz ritmi
+   kesiyor.
+2. **Hiyerarşi.** İlk kalem manşet ağırlığında (`li.bas` — geniş yerleşimde
+   22 px display 900, iki sütunu birden kaplar), kalan beşi 14 px.
+3. **CANLI pili.** Nabız atan noktalı beyaz pil. `prefers-reduced-motion`'da
+   nabız durur, pil ve nokta **görünür kalır**.
+
+### Ölçülen kontrastlar (`:root` --sd-*)
+
+| Katman | Değer | Beyaz üstünde |
+|---|---|---|
+| Saha `--sd-zemin` | #B8161E | **6,62:1** |
+| Zaman `--sd-saat` | #FFD9A8 | 4,96:1 (saha üstünde) |
+| CANLI pili | beyaz zemin, --sd-zemin yazı | 6,62:1 |
+
+Düz `--kirmizi` üstünde beyaz **4,61** ölçülüyor ve 11-13 px yazı için
+sınırda kalıyor (`.ihbar-bag` ile aynı gerekçe) — saha bu yüzden koyu tonda,
+başlık şeridi parlak tonda.
+
+**Odak halkası panelin içinde BEYAZA çevrildi.** Sitenin varsayılan halkası
+`--kirmizi` ve kırmızı sahada görünmez olurdu. Kaldırma.
+
+**Liste `columns` değil `grid`:** manşet kalemi iki sütunu birden kaplasın
+diye (çok sütunda `column-span` güvenilir değil). Satır akışı DOM sırasını
+izler, odak sırası görsel sırayla aynı kalır.
+
+**SIRA ÖNEMLİ:** blok `.kutu` ve `.kutu-bas` tanımlarının **altında** durmak
+zorunda. Yukarıda dururken `.kutu`nun beyaz zemini kazandı ve beyaz yazı
+beyaz üstünde kayboldu — ekran görüntüsünde yakalandı, dosyada aşağı taşındı.
+
+### Bu turda yaşanan kaza ve kurtarma
+
+Panel stilini yazarken `site.css` **indeks dilimleyerek** düzenlendi; ikinci
+işaretin dosyanın 250. satırında olduğu varsayıldı, gerçekte 1466'daydı.
+**Aradaki ~1200 satır silindi** (dosya 1450 → 491 satır). Kurtarma:
+
+- Git yalnız 723 satırlık HEAD'i tutuyordu; §34/§35 turlarının CSS'i hiç
+  commit edilmemişti.
+- Tam kopya **Claude Code'un dosya geçmişinde** bulundu
+  (`~/.claude/file-history`, 30 Ağustos 00:11, 1329 satır).
+- Dosya o tabandan yeniden kuruldu: taban + hava paneli turu + bu oturumun
+  §36/§37/§38 düzenlemeleri. Sonuç 1664 satır, bitişik yinelenen seçici 0,
+  süslü parantezler dengeli.
+- Doğrulama: şablonlarda geçen 224 sınıfın karşılıksız kalanları yalnız
+  JS/işaret amaçlı olanlar (`.ray`, `.ses-*`, `.yazdir` …) — kurtarma
+  öncesiyle **aynı liste**. 2560·1600·1280·1100·900·504 px'te hava paneli,
+  yazar kuşağı, resmî ilan dizini, günün manşetleri ve en çok okunanlar
+  yerinde; yatay taşma yok. **605 test geçiyor.**
+
+**Ders (kurala geçti):** CSS/şablon dosyaları indeksle dilimlenmez. Düzenleme
+tam metin eşleşmesiyle ve `assert` ile yapılır; işaretin satır numarası
+varsayılmaz, önce ölçülür.
+
+### §38 eki — panel sütunları manşet alanıyla hizalandı
+
+Kullanıcı isteği: "son dakika panelini manşet alanının genişliğiyle aynı yap,
+aradaki boşluklar eşleşsin".
+
+`.sondakika-satir` kendi ölçüsünü kullanıyordu (sağ sütun 300 px, boşluk
+16 px); `.manset-alani` ise 320 px / 18 px. Panel manşetin tam altında
+durduğu için sütun kenarları üst üste binmiyordu. Ölçü artık manşetten
+kopyalanıyor:
+
+| | Manşet alanı | Son dakika satırı |
+|---|---|---|
+| Sağ sütun | 320 px | **320 px** |
+| Boşluk | 18 px | **18 px** |
+| ≤1140 px | 300 px | **300 px** |
+
+**Kırılma noktası dosyada nereye konacağı önemliydi:** 1140 kuralı önce
+`.manset-alani`nin yanına yazıldı ama o blok dosyada çok önce geçiyor ve
+satırın taban kuralı onu eziyordu — 1082 px'te sütun kenarları **20 px**
+kayıyordu (ölçüldü). Kural `.sondakika-satir` tanımlarının hemen ardına
+alındı.
+
+**Doğrulama (başsız Chrome):** 1582 · 1123 · 1122 · 1064 px'te sol sütunun
+sağ kenarı ve sağ sütunun sol kenarı **birebir aynı** (fark 0), boşluk iki
+blokta da 18 px. 605 test geçiyor.
+
+≤1000 px'te ikisi de tek sütuna iniyor ve dış genişlikleri eşit; iç düzen
+farklı kalıyor — manşetin sağ sütununda pano ile mini galeri yan yana
+diziliyor, son dakikada tek pano var ve ortalanıyor.
+
+### §38 eki 2 — ilk kalem de ikili sütuna girdi
+
+Kullanıcı isteği: "ilk haber tüm satırı kaplıyor sonra ikili sütunlara
+ayrılıyor, bu ilk satırı da iki sütun yap".
+
+`grid-column:1/-1` kalktı: altı kalem de ikili sütunda, **üç eşit satır**.
+Vurgu duruyor ama yarım sütuna sığacak ölçüde — ilk kalem **22 → 17 px**
+(komşusu 14 px, fark hâlâ okunuyor).
+
+Kaplayan hâlden kalan iki artık temizlendi, ikisi de ölçümle görüldü:
+- `padding-top:4px` komşusuyla eşitlendi (`9px 0`) — yoksa aynı satırdaki
+  iki başlığın üst hizası **5 px** kayıyordu.
+- Parlak ayraç (`--sd-bas-cizgi`) normale döndü; sağ hücrede karşılığı
+  olmayan bir çizgi bırakıyordu.
+- `:last-child` yerine `:nth-last-child(-n+2)`: ikili sütunda son SATIR iki
+  kalemdir, alt kenar düz bitsin. Altı kalem üç tam satır yapıyor —
+  `SON_DAKIKA_ADET` tek sayıya çekilirse bu kural yeniden ölçülmeli.
+
+**Doğrulama:** 1582 px'te iki sütun da 352 px, üç satırın kalemleri aynı
+hizada (üst=1180 · 1238 · 1295), son satırda ayraç 0. Panel ve pano yine
+250 px. 605 test geçiyor.

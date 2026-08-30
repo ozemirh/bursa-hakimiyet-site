@@ -98,8 +98,9 @@ class SayfalarVeritabanindanRender(TestCase):
         from django.core.management import call_command
         call_command("taksonomi_kur", verbosity=0)
         cls.ilce = Ilce.objects.first()
-        # Anasayfa 34 kayıt tüketiyor (15 + 5 + 4 + 10); havuz dolsun.
-        for n in range(40):
+        # Anasayfa 50 kayıt tüketiyor (15 manşet + 10 manşet listesi + 5
+        # ikincil + 4 dörtlü + 11 kutu + 5 en çok); havuz dolsun.
+        for n in range(56):
             tur = KategoriTur.objects.filter(
                 tur=Kategori.TUR_HABER, slug="gundem").first()
             Haber.objects.create(
@@ -110,20 +111,31 @@ class SayfalarVeritabanindanRender(TestCase):
                 yayin_zamani=timezone.now())
 
     def test_anasayfa_bilesen_sayilari(self):
+        """Manşet 15 slayt (30 Ağustos 2026); altındaki liste 10 başlık."""
         yanit = self.client.get("/")
         self.assertEqual(yanit.status_code, 200)
         icerik = yanit.content.decode()
         self.assertEqual(icerik.count('aria-roledescription="slayt"'), 15 + 5)
         self.assertEqual(len(yanit.context["manset"]), 15)
+        self.assertEqual(len(yanit.context["manset_liste"]), 10)
         self.assertEqual(len(yanit.context["ikincil"]), 5)
         self.assertEqual(len(yanit.context["dortlu"]), 4)
-        self.assertEqual(len(yanit.context["kutular"]), 10)
+        self.assertEqual(len(yanit.context["kutular"]), 11)
 
     def test_anasayfa_bloklari_ayni_haberi_tekrarlamiyor(self):
+        """Manşet listesi de havuzun kendi dilimidir; hiçbir blokla kesişmez."""
         yanit = self.client.get("/")
-        kimlikler = [h.id for anahtar in ("manset", "ikincil", "dortlu", "kutular")
+        kimlikler = [h.id for anahtar in ("manset", "manset_liste", "ikincil",
+                                          "dortlu", "kutular", "en_cok")
                      for h in yanit.context[anahtar]]
         self.assertEqual(len(kimlikler), len(set(kimlikler)))
+
+    def test_manset_listesi_slayttan_sonraki_dilim(self):
+        """§34 güvencesi sürüyor: en çok okunanlar manşetin kopyası değil."""
+        yanit = self.client.get("/")
+        manset = {h.id for h in yanit.context["manset"]}
+        self.assertFalse(manset & {h.id for h in yanit.context["en_cok"]})
+        self.assertFalse(manset & {h.id for h in yanit.context["manset_liste"]})
 
     def test_haber_detay(self):
         haber = Haber.objects.get(id=700000)
@@ -133,14 +145,19 @@ class SayfalarVeritabanindanRender(TestCase):
         self.assertContains(yanit, "Gövde 0")
 
     def test_kategori_sayfasi(self):
+        """Sayim VERIDEN turetilir: fikstur buyudugunde test kirilmasin,
+        olcut "kategorideki tum yayindaki kayitlar listeleniyor mu"dur."""
         yanit = self.client.get("/gundem")
         self.assertEqual(yanit.status_code, 200)
-        self.assertEqual(yanit.context["sayfa"].paginator.count, 40)
+        self.assertEqual(yanit.context["sayfa"].paginator.count,
+                         Haber.yayindakiler().filter(
+                             kategori__turler__slug="gundem").distinct().count())
 
     def test_ilce_sayfasi(self):
         yanit = self.client.get(f"/ilce/{self.ilce.slug}")
         self.assertEqual(yanit.status_code, 200)
-        self.assertEqual(yanit.context["sayfa"].paginator.count, 20)
+        self.assertEqual(yanit.context["sayfa"].paginator.count,
+                         Haber.yayindakiler().filter(ilce=self.ilce).count())
 
     def test_arama_bulur(self):
         yanit = self.client.get("/ara", {"q": "Deneme başlığı 3"})
@@ -242,3 +259,373 @@ class ProjeKurallariSayiyla(TestCase):
         self.assertNotIn("Wikimedia Commons", metin)
         for kaynak in ("TCMB", "MGM", "TFF", "Diyanet"):
             self.assertIn(kaynak, metin)
+
+
+class ResmiIlanBolumu(TestCase):
+    """Anasayfadaki RESMÎ İLANLAR bölümü — 29 Ağustos 2026 düzenlemesi.
+
+    Bölüm eskiden şablona ELLE YAZILMIŞ altı `<li>` idi. Kayıtlar
+    veritabanında dururken şablonda sabit metin olması, göç ilerledikçe
+    yanlışlaşan bir bölüm demekti.
+    """
+
+    def setUp(self):
+        from .models import ResmiIlan
+        self.ResmiIlan = ResmiIlan
+        import datetime
+        ResmiIlan.objects.create(
+            baslik="ARŞİVLENMİŞ İHALE KAYDI", tur=ResmiIlan.TUR_IHALE,
+            yayin_tarihi=datetime.date(2026, 8, 24), durum=ResmiIlan.DURUM_ARSIV)
+        ResmiIlan.objects.create(
+            baslik="PASİF TEBLİGAT KAYDI", tur=ResmiIlan.TUR_TEBLIGAT,
+            yayin_tarihi=datetime.date(2026, 8, 23), durum=ResmiIlan.DURUM_PASIF)
+        ResmiIlan.objects.create(
+            baslik="AKTİF TEBLİGAT KAYDI", tur=ResmiIlan.TUR_TEBLIGAT,
+            yayin_tarihi=datetime.date(2026, 8, 22), durum=ResmiIlan.DURUM_AKTIF)
+
+    def test_bolum_veritabanindan_ciziliyor(self):
+        metin = self.client.get("/").content.decode()
+        self.assertIn("ARŞİVLENMİŞ İHALE KAYDI", metin)
+        self.assertIn("AKTİF TEBLİGAT KAYDI", metin)
+
+    def test_pasif_kayit_yayimlanmaz(self):
+        """Pasif = editörün yayından ÇEKTİĞİ kayıt; arşivden farklıdır.
+
+        Arşiv "yayımlandı, güncelliğini yitirdi" demek ve bölümde kalır;
+        ölçülen 24 kaydın 23'ü arşiv, biri pasif, hiçbiri aktif değil.
+        `durum=AKTİF` süzgeci bölümü tamamen boşaltırdı.
+        """
+        self.assertNotIn("PASİF TEBLİGAT KAYDI",
+                         self.client.get("/").content.decode())
+        self.assertEqual(self.ResmiIlan.yayimlananlar().count(), 2)
+
+    def test_dort_tur_de_gosterilir_sifir_olanlar_sonda(self):
+        """§16: dört türün yasal karşılığı var, kayıt yoksa da gösterilir."""
+        dagilim = self.ResmiIlan.tur_dagilimi(self.ResmiIlan.yayimlananlar())
+        self.assertEqual(len(dagilim), 4)
+        adetler = [t["adet"] for t in dagilim]
+        self.assertEqual(adetler, sorted(adetler, reverse=True),
+                         "kaydı olan türler önce gelmeli")
+        bos = [t["anahtar"] for t in dagilim if t["adet"] == 0]
+        self.assertEqual(set(bos), {"icra", "personel"})
+
+    def test_olmayan_detay_sayfasina_bag_verilmez(self):
+        """İlan metinleri göç etmedi; başlık `href="#"` ile bağ taklidi yapmaz."""
+        metin = self.client.get("/").content.decode()
+        bolum = metin[metin.index('id="resmi-ilan"'):]
+        bolum = bolum[:bolum.index("</section>")]
+        self.assertNotIn('href="#"', bolum)
+        self.assertIn("/resmi-ilan", bolum)
+
+    def test_uydurma_son_basvuru_tarihi_yok(self):
+        """Kayıtların bitiş tarihi alanı boş; bölüm son başvuru vaat etmez."""
+        bolum = (self.KOK if hasattr(self, "KOK") else Path(__file__).resolve().parent.parent)
+        metin = (bolum / "sablonlar" / "anasayfa.html").read_text(encoding="utf-8")
+        self.assertNotIn("bitis_tarihi", metin)
+
+    def test_turkce_kucult_suzgeci_i_harfini_bozmuyor(self):
+        """`|lower` "İHALE"yi "i̇hale" (i + U+0307) yapıyordu."""
+        from .templatetags.site_etiket import kucult
+        self.assertEqual(kucult("İHALE"), "ihale")
+        self.assertEqual(kucult("TEBLİGAT"), "tebligat")
+        self.assertNotIn("̇", kucult("İHALE"))
+
+
+class BolumDurustlugu(TestCase):
+    """Bölümlerin okura verdiği beyan veriyle uyumlu mu — 29 Ağustos 2026.
+
+    İki bölüm denetimden geçti (URUN-PLANI.md §32). Buradaki testler
+    denetimin vardığı kararları kilitler: bölüm notu şablona çakılı
+    cümle taşımaz, resmî ilan bölümü "açık ilan listesi" gibi görünmez,
+    Bursaspor listesi kartları tekrarlamaz.
+    """
+
+    KOK = Path(__file__).resolve().parent.parent
+
+    @classmethod
+    def setUpTestData(cls):
+        from django.core.management import call_command
+        call_command("taksonomi_kur", verbosity=0)
+
+    def setUp(self):
+        import datetime
+        from .models import ResmiIlan
+        self.ResmiIlan = ResmiIlan
+        ResmiIlan.objects.create(
+            baslik="ARŞİV İHALE", tur=ResmiIlan.TUR_IHALE,
+            yayin_tarihi=datetime.date(2026, 8, 24), durum=ResmiIlan.DURUM_ARSIV)
+        ResmiIlan.objects.create(
+            baslik="ARŞİV TEBLİGAT", tur=ResmiIlan.TUR_TEBLIGAT,
+            yayin_tarihi=datetime.date(2026, 8, 16), durum=ResmiIlan.DURUM_ARSIV)
+
+    def _bolum(self, kimlik):
+        metin = self.client.get("/").content.decode()
+        bolum = metin[metin.index(f'id="{kimlik}"'):]
+        return bolum[:bolum.index("</section>")]
+
+    # -- resmî ilan --------------------------------------------------------
+
+    def test_bos_tur_cumlesi_sablona_cakili_degil(self):
+        """Not "İCRA ve PERSONEL ALIMI'nda ilan yok" cümlesini ELLE taşıyordu.
+
+        Veri değişince not yalan söyleyecekti; boş türler dağılımdan
+        okunuyor. İCRA kaydı eklendiğinde cümle kendiliğinden daralmalı.
+        """
+        sablon = (self.KOK / "sablonlar" / "anasayfa.html").read_text(encoding="utf-8")
+        govde = re.sub(r"\{% comment %\}.*?\{% endcomment %\}", "", sablon, flags=re.S)
+        self.assertNotIn("İCRA ve PERSONEL ALIMI", govde)
+
+        self.assertIn("İCRA ve PERSONEL ALIMI", self._bolum("resmi-ilan"))
+        import datetime
+        self.ResmiIlan.objects.create(
+            baslik="ARŞİV İCRA", tur=self.ResmiIlan.TUR_ICRA,
+            yayin_tarihi=datetime.date(2026, 8, 20),
+            durum=self.ResmiIlan.DURUM_ARSIV)
+        yeni = self._bolum("resmi-ilan")
+        self.assertNotIn("İCRA ve PERSONEL ALIMI", yeni)
+        self.assertIn("PERSONEL ALIMI türünde yayımlanmış ilan yok", yeni)
+
+    def test_bolum_acik_ilan_listesi_gibi_gorunmuyor(self):
+        """Kayıtların tamamı arşiv ve `bitis_tarihi` boş.
+
+        Okur "bunlar bugünün açık ihaleleri mi?" sorusunu satır satır
+        tarihlere bakarak yanıtlıyordu. Başlıktaki dönem etiketi ve nottaki
+        açık cümle bunu söylüyor; ikisi de kaybolmamalı.
+        """
+        bolum = self._bolum("resmi-ilan")
+        self.assertIn("açık ilanların listesi değil", bolum)
+        self.assertIn('class="donem"', bolum)
+        self.assertIn("16 Ağustos", bolum)
+        self.assertIn("24 Ağustos 2026", bolum)
+
+    def test_tek_tarihli_ilanda_donem_araligi_yazilmaz(self):
+        self.ResmiIlan.objects.filter(baslik="ARŞİV TEBLİGAT").delete()
+        bolum = self._bolum("resmi-ilan")
+        self.assertIn("24 Ağustos 2026", bolum)
+        self.assertNotIn("&ndash; 24 Ağustos 2026", bolum)
+
+    # -- Bursaspor ---------------------------------------------------------
+
+    def test_bursaspor_listesi_kartlari_tekrarlamiyor(self):
+        """Liste kartların DEVAMIDIR; aynı haber iki kez görünmez.
+
+        Liste, tam kadro tablonun açtığı 412 px'lik boşluğu kapatmak için
+        var (URUN-PLANI.md §32); havuzu kartlarla ortak.
+        """
+        from .views import BURSASPOR, BURSASPOR_LISTE
+        tur = KategoriTur.objects.filter(
+            tur=Kategori.TUR_HABER, slug="bursaspor").first()
+        for n in range(BURSASPOR + BURSASPOR_LISTE + 3):
+            Haber.objects.create(
+                id=810000 + n, slug=f"bs-{n}", baslik=f"Bursaspor başlığı {n}",
+                spot="spot", govde="<p>gövde</p>", kategori=tur.kategori,
+                yayin_zamani=timezone.now() - timezone.timedelta(hours=n))
+        yanit = self.client.get("/")
+        kart = [h.id for h in yanit.context["bursaspor_haberleri"]]
+        liste = [h.id for h in yanit.context["bursaspor_liste"]]
+        self.assertEqual(len(kart), BURSASPOR)
+        self.assertEqual(len(liste), BURSASPOR_LISTE)
+        self.assertEqual(set(kart) & set(liste), set())
+
+    def test_kisa_zaman_yili_gizlemiyor(self):
+        """Yılsız "31 Eki" 2025 haberini bu yılın haberi gibi gösteriyordu.
+
+        Ölçüldü (29 Ağustos 2026): Bursaspor bölümündeki en yeni haber
+        31 Ekim 2025 tarihli; arşiv taraması güncele yetişmedi.
+        """
+        from datetime import timedelta
+        from .templatetags.site_etiket import kisa_zaman
+        simdi = timezone.localtime()
+        self.assertEqual(kisa_zaman(simdi), simdi.strftime("%H:%M"))
+        gecen_yil = simdi.replace(year=simdi.year - 1)
+        self.assertIn(str(simdi.year - 1), kisa_zaman(gecen_yil))
+        self.assertEqual(kisa_zaman(None), "")
+
+
+class ResmiIlanDizini(TestCase):
+    """`/resmi-ilan` — anasayfadaki seçkinin DİZİN hâli (29 Ağustos 2026).
+
+    Sayfa yer tutucuydu (`bekleyen.html`) ve anasayfadaki "TÜM İLANLAR"
+    bağlantısı okuru boş bir sayfaya düşürüyordu. Buradaki testler dizinin
+    seçkiden ayrıldığı üç noktayı kilitler — süzgecin adreste olması,
+    sayıların arşivi sayması, listenin tamamının gelmesi — ve §32.5'in
+    dersini sürdürür: okura verilen her olgu VERİDEN okunmalı, şablona
+    çakılı olmamalı.
+    """
+
+    def _ilan(self, baslik, tur, gun, **fazla):
+        import datetime
+        from .models import ResmiIlan
+        return ResmiIlan.objects.create(
+            baslik=baslik, tur=tur, yayin_tarihi=datetime.date(2026, 8, gun),
+            durum=fazla.pop("durum", ResmiIlan.DURUM_ARSIV), **fazla)
+
+    def setUp(self):
+        import datetime
+        from .models import ResmiIlan
+        self.ResmiIlan = ResmiIlan
+        self._ilan("YENI IHALE KAYDI", ResmiIlan.TUR_IHALE, 24)
+        self._ilan("ESKI IHALE KAYDI", ResmiIlan.TUR_IHALE, 3)
+        self._ilan("TEBLIGAT KAYDI", ResmiIlan.TUR_TEBLIGAT, 2)
+        self._ilan("PASIF KAYIT", ResmiIlan.TUR_IHALE, 20,
+                   durum=ResmiIlan.DURUM_PASIF)
+        # Temmuz kaydı: ay omurgasının iki başlık üretmesi için.
+        ResmiIlan.objects.create(
+            baslik="TEMMUZ TEBLIGATI", tur=ResmiIlan.TUR_TEBLIGAT,
+            yayin_tarihi=datetime.date(2026, 7, 30),
+            durum=ResmiIlan.DURUM_ARSIV)
+
+    def _metin(self, adres="/resmi-ilan"):
+        return self.client.get(adres).content.decode()
+
+    # -- dizin seçki değil ------------------------------------------------
+    def test_sayfa_yayimlanan_kayitlarin_tamamini_listeliyor(self):
+        metin = self._metin()
+        for baslik in ("YENI IHALE KAYDI", "ESKI IHALE KAYDI",
+                       "TEBLIGAT KAYDI", "TEMMUZ TEBLIGATI"):
+            self.assertIn(baslik, metin)
+        self.assertNotIn("PASIF KAYIT", metin)
+
+    def test_yer_tutucu_sablonu_kullanilmiyor(self):
+        """`bekleyen.html` "henüz göç etmedi" diyor ve `noindex` basıyor."""
+        yanit = self.client.get("/resmi-ilan")
+        self.assertEqual([s.name for s in yanit.templates
+                          if s.name == "bekleyen.html"], [])
+        metin = yanit.content.decode()
+        self.assertNotIn("göç etmedi", metin)
+        self.assertNotIn("noindex", metin)
+
+    def test_h1_ve_kanonik_adres_kurulu(self):
+        metin = self._metin()
+        self.assertEqual(metin.count("<h1"), 1)
+        self.assertIn("<h1>RESMÎ İLANLAR</h1>", metin)
+        self.assertIn("<title>Resmî ilanlar — Bursa Hakimiyet</title>", metin)
+        self.assertIn('rel="canonical"', metin)
+
+    def test_suzgec_adresi_kanonikte_gorunmuyor(self):
+        """`?tur=…` bir sayfa değil, dizinin kesiti: kanonik dizini gösterir."""
+        metin = self._metin("/resmi-ilan?tur=ihale")
+        kanonik = re.search(r'rel="canonical" href="([^"]+)"', metin).group(1)
+        self.assertTrue(kanonik.endswith("/resmi-ilan"), kanonik)
+
+    # -- süzgeç adreste ---------------------------------------------------
+    def test_tur_suzgeci_adres_satirindan_calisiyor(self):
+        metin = self._metin("/resmi-ilan?tur=tebligat")
+        self.assertIn("TEBLIGAT KAYDI", metin)
+        self.assertIn("TEMMUZ TEBLIGATI", metin)
+        self.assertNotIn("YENI IHALE KAYDI", metin)
+        self.assertIn('href="/resmi-ilan?tur=ihale"', metin)
+        self.assertIn('href="/resmi-ilan?tur=tebligat" aria-current="true"',
+                      metin)
+
+    def test_tanimsiz_tur_hata_vermiyor_dizine_dusuyor(self):
+        """Adres satırından gelen bozuk süzgeç okura 404 göstermez."""
+        for adres in ("/resmi-ilan?tur=uydurma", "/resmi-ilan?tur="):
+            yanit = self.client.get(adres)
+            self.assertEqual(yanit.status_code, 200)
+            self.assertIn("YENI IHALE KAYDI", yanit.content.decode())
+
+    def test_kaydi_olmayan_tur_baglanti_degil(self):
+        """Boş listeye götüren bağlantı, bağlantı değildir (§16 dört tür)."""
+        metin = self._metin()
+        self.assertIn("PERSONEL ALIMI", metin)
+        self.assertIn('<span class="tur icra bos"', metin)
+        self.assertNotIn('href="/resmi-ilan?tur=icra"', metin)
+
+    def test_suzgec_sayilari_sayfayi_degil_arsivi_sayiyor(self):
+        """Anasayfada sayı SAYFAYI sayar (tıklama sayfayı süzer); dizinde
+        tıklama arşivi süzdüğü için sayı da arşivi saymalı."""
+        from .views import ILAN_SAYFA_BOYU
+        for n in range(ILAN_SAYFA_BOYU + 5):
+            self._ilan("TOPLU IHALE %d" % n, self.ResmiIlan.TUR_IHALE, 10)
+        metin = self._metin()
+        toplam = self.ResmiIlan.yayimlananlar().count()
+        self.assertGreater(toplam, ILAN_SAYFA_BOYU)
+        self.assertIn('>TÜMÜ <span class="adet">%d</span>' % toplam, metin)
+        # Aynı sayfada listelenen satır sayısı sayfa boyuyla sınırlı.
+        self.assertEqual(metin.count('class="ilan-govde"'), ILAN_SAYFA_BOYU)
+
+    def test_sayfalama_suzgeci_koruyor(self):
+        from .views import ILAN_SAYFA_BOYU
+        for n in range(ILAN_SAYFA_BOYU + 5):
+            self._ilan("TOPLU IHALE %d" % n, self.ResmiIlan.TUR_IHALE, 10)
+        metin = self._metin("/resmi-ilan?tur=ihale")
+        self.assertIn("tur=ihale&amp;sayfa=2", metin)
+
+    def test_tur_dagilimi_iki_yolda_da_ayni(self):
+        """Dizin sayımı veritabanına bırakıyor, anasayfa listeden sayıyor."""
+        sorgu = self.ResmiIlan.yayimlananlar()
+        self.assertEqual(self.ResmiIlan.tur_dagilimi(sorgu),
+                         self.ResmiIlan.tur_dagilimi(list(sorgu)))
+
+    # -- ay omurgası ------------------------------------------------------
+    def test_ay_basliklari_veriden_geliyor(self):
+        metin = self._metin()
+        self.assertIn('id="ay-2026-08"', metin)
+        self.assertIn('id="ay-2026-07"', metin)
+        self.assertIn("AĞUSTOS 2026", metin)
+        self.assertIn("TEMMUZ 2026", metin)
+        self.assertLess(metin.index("AĞUSTOS 2026"), metin.index("TEMMUZ 2026"))
+        # Ağustos'ta 3, Temmuz'da 1 kayıt var.
+        self.assertIn('<span class="adet">3 ilan</span>', metin)
+        self.assertIn('<span class="adet">1 ilan</span>', metin)
+
+    def test_tarihsiz_kayit_kendi_grubunda_ve_sonda(self):
+        """`yayin_tarihi` boş olabiliyor; ay omurgası bunu kırmamalı."""
+        self.ResmiIlan.objects.create(
+            baslik="TARIHSIZ KAYIT", tur=self.ResmiIlan.TUR_IHALE,
+            yayin_tarihi=None, durum=self.ResmiIlan.DURUM_ARSIV)
+        metin = self._metin()
+        self.assertIn("Yayın tarihi kayıtlı olmayanlar", metin)
+        self.assertLess(metin.index("TEMMUZ 2026"),
+                        metin.index("Yayın tarihi kayıtlı olmayanlar"))
+
+    def test_donem_etiketi_suzulen_kumeden_okunuyor(self):
+        self.assertIn("30 Temmuz &ndash; 24 Ağustos 2026", self._metin())
+        # Tek güne düşen süzgeçte aralık yazılmaz.
+        self.ResmiIlan.objects.filter(tur=self.ResmiIlan.TUR_TEBLIGAT).delete()
+        self.ResmiIlan.objects.filter(baslik="ESKI IHALE KAYDI").delete()
+        metin = self._metin("/resmi-ilan?tur=ihale")
+        self.assertIn('<span class="donem">24 Ağustos 2026</span>', metin)
+
+    # -- dürüstlük çizgisi ------------------------------------------------
+    def test_olu_baglanti_ve_baslik_bagi_yok(self):
+        """İlan metni göç etmedi; başlık bağ taklidi yapmaz."""
+        metin = self._metin()
+        bolum = metin[metin.index('class="kutu ilan-dizin"'):]
+        bolum = bolum[:bolum.index("</section>")]
+        self.assertNotIn('href="#"', bolum)
+        self.assertNotIn('<a class="ilan-adi"', bolum)
+
+    def test_son_basvuru_cumlesi_veriden_geliyor(self):
+        """Cümle şablona çakılı olsaydı bitiş tarihi gelince yalan söylerdi."""
+        import datetime
+        self.assertIn("Son başvuru tarihi gösterilmez", self._metin())
+        kayit = self.ResmiIlan.objects.get(baslik="YENI IHALE KAYDI")
+        kayit.bitis_tarihi = datetime.date(2026, 9, 10)
+        kayit.save(update_fields=["bitis_tarihi"])
+        self.assertNotIn("Son başvuru tarihi gösterilmez", self._metin())
+
+    def test_ilan_metni_cumlesi_veriden_geliyor(self):
+        self.assertIn("arşiv dökümünde yok", self._metin())
+        kayit = self.ResmiIlan.objects.get(baslik="YENI IHALE KAYDI")
+        kayit.metin = "İhale ilanının tam metni."
+        kayit.save(update_fields=["metin"])
+        metin = self._metin()
+        self.assertNotIn("arşiv dökümünde yok", metin)
+        self.assertIn("tek tek ilan sayfaları henüz açılmadı", metin)
+
+    def test_bos_tur_cumlesi_veriden_geliyor(self):
+        self.assertIn("İCRA ve PERSONEL ALIMI türünde yayımlanmış ilan yok",
+                      self._metin())
+        self._ilan("ICRA KAYDI", self.ResmiIlan.TUR_ICRA, 12)
+        metin = self._metin()
+        self.assertIn("PERSONEL ALIMI türünde yayımlanmış ilan yok", metin)
+        self.assertNotIn("İCRA ve PERSONEL ALIMI türünde", metin)
+
+    def test_kayit_yokken_sayfa_ayakta_kaliyor(self):
+        self.ResmiIlan.objects.all().delete()
+        yanit = self.client.get("/resmi-ilan")
+        self.assertEqual(yanit.status_code, 200)
+        self.assertIn("Yayımlanabilir resmî ilan kaydı yok.",
+                      yanit.content.decode())

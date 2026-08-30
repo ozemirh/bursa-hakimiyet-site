@@ -8,13 +8,39 @@
 {% block kanonik %}{% endblock %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+{% comment %}Roboto Serif YALNIZ haber gövdesi ve spot için (§35): gazeteye
+ses veren tek tipografik hamle, listelerde ve başlıklarda sans kalır.
+İtalik kesim alınmadı — ağırlık getirisi yok. Tek istek: üç aile aynı
+bağlantıda. İnternetsizde Georgia'ya düşer, sayfa açılmaya devam eder.{% endcomment %}
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500;700&family=Roboto+Serif:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'stil/site.css' %}">
-</head>
+{% if reklam_dugmesi %}{% comment %}Reklam anahtarinin tercihi sayfa cizilmeden
+  okunur; sonradan okunsaydi panolar bir an gorunup kaybolurdu. Dugmenin
+  kendisi ust serittedir ve yalniz gelistirme/panel oturumunda cizilir
+  (icerik/baglam.py, `_reklam_dugmesi`).{% endcomment %}
+<script>try{if(localStorage.getItem('bh-reklam')==='kapali'){document.documentElement.setAttribute('data-reklam','kapali');}}catch(e){}</script>
+{% endif %}</head>
 <body>
 <a class="atla" href="#ana-icerik">İçeriğe atla</a>
 {% include "parca/simgeler.html" %}
 {% include "parca/ust_bant.html" %}
+
+{% comment %}Kategori bandi 30 Agustos 2026'da (§36) `.orta` sutunundan
+CIKARILDI ve `.sayfa` izgarasinin ustune, dogrudan `<body>` altina alindi.
+Gerekce: bant orta sutunun icindeyken lacivert zemin 1100 px'te kesiliyor,
+genis ekranda iki yanda gri serit kaliyordu — ustundeki servis seridi ise
+zaten tam ekran genisligindeydi, yani iki serit hizasizdi. Simdi zemin
+ekranin bir ucundan otekine gidiyor, ic kutu servis seridiyle ayni 1480
+px'e oturuyor.
+
+`position:sticky` icin bu tasima GUVENLI: bandin yeni ebeveyni `<body>` ve
+kutusu tum sayfa boyunca uzuyor. Yine de bandin etrafina SARMALAYICI EKLEME —
+nav'i yuksekligi kendisiyle ayni bir `<header>` icine almak yapiskanligi
+olduruyor, bant ilk kaydirmada ekrandan cikiyordu (eski olcum).
+
+Logo artik kendi seridinde degil, bandin icinde (29 Agustos 2026 karari) —
+bkz. parca/kategori_bandi.html.{% endcomment %}
+{% include "parca/kategori_bandi.html" %}
 
 <div class="sayfa">
 
@@ -24,18 +50,16 @@
 
   <div class="orta">
 
-    <header class="bant">
-      <a href="/"{% if anasayfa_mi %} aria-current="page"{% endif %}>
-        <img class="logo-gorsel" width="406" height="120" src="{% static 'logo-seffaf.png' %}" alt="Bursa Hakimiyet">
-      </a>
-      {% comment %}Site adi yalniz anasayfada h1; ic sayfalarda h1 sayfanin kendi
-         basligidir, yoksa her sayfada iki h1 olur.{% endcomment %}
-      {% if anasayfa_mi %}<h1 class="gorsel-gizli">Bursa Hakimiyet — Bursa'nın günlük haber gazetesi</h1>
-      {% else %}<p class="gorsel-gizli">Bursa Hakimiyet</p>{% endif %}
-    </header>
+    {% comment %}Site adi yalniz anasayfada h1; ic sayfalarda h1 sayfanin
+       kendi basligidir, yoksa her sayfada iki h1 olur. Baslik `nav`in
+       DISINDA duruyor: gezinme yer isaretinin icinde okunmasin.{% endcomment %}
+    {% if anasayfa_mi %}<h1 class="gorsel-gizli">Bursa Hakimiyet — Bursa'nın günlük haber gazetesi</h1>
+    {% else %}<p class="gorsel-gizli">Bursa Hakimiyet</p>{% endif %}
 
-    {% include "parca/kategori_bandi.html" %}
-    {% include "parca/son_dakika.html" %}
+    {% comment %}SON DAKİKA burada DEĞİL artık (30 Ağustos 2026, §36):
+       bandın altındaki kayan kırmızı şerit kaldırıldı, yerine sayfa
+       raylarında sabit liste kutusu geldi — bkz. parca/son_dakika.html.
+       Şablonun tepesine yeni bir şerit eklemeden önce o kararı oku.{% endcomment %}
 
     <div class="reklam tam"><span><b>REKLAM ALANI</b><span class="olcu">1100x150</span></span></div>
 

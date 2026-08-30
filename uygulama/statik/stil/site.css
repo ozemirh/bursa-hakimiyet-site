@@ -19,8 +19,14 @@
   --ak-yazi:#DDE4EC; --ak-cizgi:rgba(255,255,255,.55); --ak-zemin:rgba(255,255,255,.12);
   --saha:#0E5C36; --afis-zemin:#243044; --afis-yazi:#A3B2C6;
   --bant-golge:rgba(17,27,71,.28); --afis-cizik:rgba(255,255,255,.07);
-  --bant-ara-cizgi:rgba(255,255,255,.34); --bant-dugme:rgba(255,255,255,.10); --menu-bas:#94A6D9;
+  --bant-ara-cizgi:rgba(255,255,255,.34); --bant-dugme:rgba(255,255,255,.10); --menu-bas:#94A6D9;  /* kullanımı kalmadı: eski koyu sidebar başlığıydı */
   --perde:rgba(6,14,28,.55);
+  /* Bursaspor bölümü — kulüp kimliği yeşil-beyaz. Bu dört simge YALNIZ
+     `#bursaspor` içinde kullanılır; sitenin geri kalanı lacivert-kırmızı
+     kalır (29 Ağustos 2026 kararı). Beyaz üstünde --yesil 6,7:1 ve
+     --yesil-koyu 10,4:1 ölçüldü; ikisi de AA eşiğinin üstünde. Açık yeşil
+     (--yesil-ak) yalnız ZEMİN, yazı rengi olarak kullanılmaz. */
+  --yesil:#00693E; --yesil-koyu:#004B2C; --yesil-ak:#EAF4EE; --yesil-cizgi:#B6D9C5;
   /* Piyasa bandı ve kart gölgeleri — doğrudan hex/rgba yazılmaz (§3.1 madde 10) */
   --artis-yazi:#7EF0AE; --artis-zemin:rgba(126,240,174,.14);
   --azalis-yazi:#FF9C9C; --azalis-zemin:rgba(255,156,156,.15);
@@ -29,6 +35,63 @@
   --bant-ic-cizgi:rgba(255,255,255,.13);
   --piyasa-golge:0 2px 10px rgba(17,27,71,.18); --kart-golge:0 4px 16px rgba(17,27,71,.13);
   --yazi-golge:0 2px 14px rgba(0,0,0,.55); --yazi-golge-ince:0 1px 10px rgba(0,0,0,.5);
+  /* Sesli okuma vurgusu — demodan taşındı (tasarim-1-haber-detay.html).
+     29 Ağustos 2026 denetimi: değişken TANIMSIZDI ve .ses-okunan hiç
+     çizilmiyordu. Koyu mürekkep üstünde 15,6:1 hesaplandı; vurgu yazıyı
+     karartmaz. */
+  --ses-isaret:#FFF1B8;
+  /* Tembel yüklenen görselin yer tutucusu. --gece (#0B2A4A) bekleme
+     sırasında sayfanın alt yarısını koyu blok duvarına çeviriyordu
+     (29 Ağustos ölçümü); açık nötr "boş kutu" okunur, "bozuk blok" değil.
+     Slayt penceresi --gece kalır: üstündeki beyaz yazı karartma
+     gradyanıyla birlikte çalışıyor. */
+  --foto-bekleme:#DDE3EA;
+  /* Gövde serifi (§35). Yalnız `.metin` ve `.detay .spot` kullanır;
+     listeler ve başlıklar sans kalır. İnternetsizde Georgia'ya düşer. */
+  --serif:"Roboto Serif",Georgia,"Times New Roman",serif;
+  /* Kategori işaret rengi DENEMESİ (§35) — yalnız iki kategori, yalnız
+     `.kart .ust` etiketinde, yalnız açık zeminde. Ölçülen kontrast:
+       --isaret-bursa  #0E6E8C  beyaz üstünde 5,79 · --zemin üstünde 5,10
+       --isaret-ekonomi #7A5200 beyaz üstünde 6,93 · --zemin üstünde 6,10
+     İkisi de AA metin eşiğini (4,5) geçer. Koyu zeminde KULLANILMAZ. */
+  --isaret-bursa:#0E6E8C;
+  --isaret-ekonomi:#7A5200;
+  /* Hava durumu simgeleri ve sıcaklık çubuğu (§35). Bu altı renk YALNIZ
+     `#panel-hava` içinde, yalnız GRAFİK öğede kullanılır — hiçbiri yazı
+     rengi değil, o yüzden metin kontrast eşiğine tabi değiller. Simgeler
+     `currentColor` yerine bu değişkenleri kullanıyor: bir bulut ile bir
+     güneş aynı renkte çizilince ikisi de okunmuyordu. */
+  --hv-gunes:#E8A020; --hv-bulut:#8CA0B6; --hv-yagmur:#2C79B8; --hv-kar:#8FBBD9;
+  --hv-serin:#4F9BD1; --hv-ilik:#E8A020; --hv-ay:#E8F0FA; --hv-damla:#EAF4FC;
+  /* Beş gün listesindeki hava hali yazısı aileye göre renklenir. Bunlar
+     METİN rengi, o yüzden ölçüldüler — beyaz üstünde sırasıyla 5,93 ·
+     6,97 · 6,77 · 5,74; dördü de AA eşiğini (4,5) geçiyor. */
+  --hv-yazi-gunes:#8A5A00; --hv-yazi-bulut:#4A5B6E;
+  --hv-yazi-yagis:#1C5F92; --hv-yazi-kar:#3E6B87;
+  /* Saatlik şeritteki hücre zeminleri. Neredeyse beyaz kalıyorlar:
+     üstlerindeki sıcaklık --lacivert ile yazılıyor ve okunaklılık
+     tartışma konusu olmamalı; renk yalnız "hangi saat nasıl" ipucu. */
+  --hv-ak-gunes:#FFF7E8; --hv-ak-bulut:#F1F4F8; --hv-ak-yagis:#E9F2FA;
+  --hv-ak-kar:#F1F8FC; --hv-ak-gece:#ECF0F8;
+  /* Manzaranın üstündeki büyük simge açık gökyüzünde eriyordu. */
+  --hv-ikon-golge:0 2px 7px rgba(6,14,28,.42);
+  /* Hava bloğunun karartması. --gradyan FOTOĞRAF için ayarlıydı ve %20'den
+     itibaren bastırıyordu; gökyüzünün rengi bu panelde bilgi taşıdığı için
+     üst yarı neredeyse açık bırakıldı, karartma yazının oturduğu alt yarıda
+     toplandı. Ölçüm: en aydınlık palette (m-gunes) yazı hizasında beyaz
+     7,26:1, ikincil satır (--ak-yazi) 5,66:1 — ikisi de AA üstü. */
+  --hv-perde:linear-gradient(180deg,rgba(6,14,28,0) 0%,rgba(6,14,28,.10) 32%,
+             rgba(6,14,28,.52) 58%,rgba(6,14,28,.86) 100%);
+  /* SON DAKİKA sahası (30 Ağustos 2026, §38). Panel beyaz kutudan çıkıp
+     kendi kırmızı zeminine alındı; ölçülen kontrastlar:
+       beyaz yazı --sd-zemin (#B8161E) üstünde  6,62:1
+       --sd-saat  (#FFD9A8) aynı zemin üstünde  4,96:1
+       CANLI pili BEYAZ zeminli, --sd-zemin yazılı: 6,62:1
+     Düz --kirmizi üstünde beyaz 4,61 ölçülüyor ve 11-13 px yazı için
+     sınırda kalıyor (`.ihbar-bag` ile aynı gerekçe) — saha bu yüzden koyu
+     tonda, başlık şeridi parlak tonda. */
+  --sd-zemin:#B8161E; --sd-serit:#E4222B; --sd-saat:#FFD9A8;
+  --sd-cizgi:rgba(255,255,255,.22); --sd-bas-cizgi:rgba(255,255,255,.34);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--zemin);color:var(--murekkep);font-family:var(--govde);font-size:15px;line-height:1.45}
@@ -36,16 +99,20 @@ a{color:inherit;text-decoration:none}
 /* `summary` de listede: menü bölümleri <details> ile katlanıyor ve
    katlanır başlıklar klavyeyle geziliyor. Listede olmasaydı tarayıcının
    kendi soluk halkasına düşerlerdi — sitenin geri kalanıyla tutarsız. */
+/* `[tabindex]` de listede: sekme panelleri ve yatay kayan tablo kapları
+   (`.puan-sar`, `.panel`) tabindex taşıyan DIV'ler ve bu kuralın dışında
+   kalıyorlardı — gerçek Tab tuşuyla ölçüldü (29 Ağustos 2026), Chrome'un
+   kendi `auto 1px` halkasını alıyorlardı, sitenin kırmızı halkasını değil. */
 a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,
-summary:focus-visible{outline:3px solid var(--kirmizi);outline-offset:2px}
+summary:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--kirmizi);outline-offset:2px}
 img{max-width:100%}
 .gorsel-gizli{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 /* içeriğe atla: .gorsel-gizli'nin odakta görünen biçimi — sayfanın ilk odaklanabilir öğesi */
 .atla{position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden}
 .atla:focus{position:fixed;left:10px;top:10px;z-index:90;width:auto;height:auto;overflow:visible;background:var(--lacivert);color:var(--kagit);font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.8px;padding:11px 18px;box-shadow:var(--golge)}
-main{scroll-margin-top:52px}
+main{scroll-margin-top:62px}
 main:focus-visible{outline:3px solid var(--kirmizi);outline-offset:-3px}
-.foto{position:relative;overflow:hidden;background:var(--gece)}
+.foto{position:relative;overflow:hidden;background:var(--foto-bekleme)}
 .foto img{width:100%;height:100%;object-fit:cover;display:block}
 /* görselsiz haberde boş foto kutusu koyu blok bırakmasın */
 .foto:empty{display:none}
@@ -65,7 +132,12 @@ main:focus-visible{outline:3px solid var(--kirmizi);outline-offset:-3px}
 .servis strong{color:var(--kagit);font-weight:500}
 .servis .ayrac{width:1px;height:14px;background:var(--ust-cizgi)}
 .servis .sag{margin-left:auto;display:flex;align-items:center;gap:10px}
-.servis .sag a{border-bottom:1px solid transparent;padding-bottom:1px}
+/* Dikey dolgu dokunma hedefi için (WCAG 2.5.8): bağlantı 19 px ölçülmüştü.
+   Hedef `.ust-baglar` ile SINIRLI: kural `.servis .sag a` iken özgüllüğü
+   (0,2,1) sonradan gelen ihbar pilini, sosyal ikonları ve ≤420 gizleme
+   kuralını eziyordu — pil flex olamıyor, ikon ile yazı alt alta düşüyordu
+   (30 Ağustos ölçümü, K1). */
+.servis .ust-baglar a{display:inline-block;border-bottom:1px solid transparent;padding:6px 0 5px}
 .servis .sag a:hover{color:var(--kagit);border-bottom-color:var(--kirmizi)}
 
 /* --- üç sütunlu sayfa kalıbı: yan bannerlar + içerik --- */
@@ -73,7 +145,10 @@ main:focus-visible{outline:3px solid var(--kirmizi);outline-offset:-3px}
    1480 px ve üzerinde açılır (kırılma noktaları bölümüne bakın). */
 .sayfa{display:grid;grid-template-columns:minmax(0,1100px);gap:20px;justify-content:center;align-items:start;max-width:1480px;margin:0 auto;padding:0 10px 0}
 .orta{min-width:0}
-.yan-reklam{display:none;position:sticky;top:14px}
+/* `top` yapışkan bandın yüksekliğinden (50 px) türetilir: 14 px iken
+   ray panosunun üst 36 px'i bandın ARKASINA giriyordu — bant z-index 40
+   ve opak, pano onun altında kayboluyordu (30 Ağustos ölçümü, §36). */
+.yan-reklam{display:none;position:sticky;top:64px}
 .yan-reklam .reklam{height:600px;margin-bottom:14px}
 
 /* --- reklam yuvaları --- */
@@ -83,82 +158,134 @@ main:focus-visible{outline:3px solid var(--kirmizi);outline-offset:-3px}
 .reklam.tam{height:150px;padding:0}
 .reklam.kare-300{height:250px;padding:0}
 
-/* --- logo bandı: logo tek başına --- */
-.bant{background:var(--kagit);border-bottom:3px solid var(--kirmizi);padding:16px 14px}
-.logo-gorsel{height:58px;width:auto;display:block}
+/* --- bant logosu --- */
+/* Logo artik bandin icinde; kendi 93 px'lik serit kalkti (29 Agustos 2026).
+   Yukseklik 30 -> 36 px (30 Agustos, §36): bant tam ekrana acilinca ic
+   kutu 1100'den 1480 px'e cikti ve dar olcuye gerek kalmadi. 406x120
+   orani 36 px'te 122 px genislik veriyor. */
+.bant-logo{flex:none;display:flex;align-items:center;background:var(--kagit);padding:0 16px;border-right:1px solid var(--menu-cizgi)}
+.logo-gorsel{height:36px;width:auto;display:block}
 
-/* --- kategori bandı: 10 kalem + arama + menü düğmesi --- */
+/* --- kategori bandı: 10 kalem + arama + menü düğmesi ---------------
+   30 Agustos 2026 (§36), kullanici istegi: "seridi biraz daha buyut ve tum
+   ekrana genislet". Iki ayri is yapiliyor:
+
+   1) TAM EKRAN. Bant `.orta` sutunundan cikip `<body>` altina alindi
+      (bkz. taban.html) ve ic kutusuna GENISLIK KAPAGI KONULMADI: logo
+      ekranin sol kenarina, MENU dugmesi sag kenarina degiyor.
+      Ilk denemede ic kutu `.servis-ic` gibi 1480 px'e kapatilmisti;
+      1600 px'lik ekranda zemin tam ekran ama kalemler iki yanda 60'ar
+      px bos lacivert birakiyordu ve bant "tam ekrani kaplamiyor"
+      goruntusu veriyordu (kullanici bildirimi + olcum, 30 Agustos).
+
+      Bosluk kalemlere dagitiliyor: `.kategori-liste a{flex:1 1 auto}`
+      ile 10 kalem artan genisligi ESIT pay ederek buyuyor. Sabit
+      genislikte biraksaydik 2560 px'lik ekranda saga dogru buyuk bir
+      bosluk kalirdi. Yatay dolgu `padding` ile degil kalemin kendi
+      dolgusuyla veriliyor — ayrac cizgileri kenara kadar sursun.
+
+   2) BUYUME. Yazi 13,5 -> 15 px, dikey dolgu 11 -> 14 px. Bant yuksekligi
+      40 px'ten ~50 px'e cikiyor ve logo 36 px'e sigiyor. */
 .kategori{background:var(--lacivert);position:sticky;top:0;z-index:40;box-shadow:0 2px 6px var(--bant-golge)}
 .kategori-ic{display:flex;align-items:stretch;flex-wrap:wrap}
-.kategori-liste{display:flex;flex:1 0 auto;align-items:stretch}
-.kategori-liste a{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.3px;color:var(--kagit);padding:11px 11px;white-space:nowrap;border-right:1px solid var(--menu-cizgi);display:flex;align-items:center}
+.kategori-liste{display:flex;flex:1 1 auto;min-width:0;align-items:stretch}
+.kategori-liste a{flex:1 1 auto;justify-content:center;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.3px;color:var(--kagit);padding:14px 13px;white-space:nowrap;border-right:1px solid var(--menu-cizgi);display:flex;align-items:center}
 .kategori-liste a:hover,.kategori-liste a[aria-current="page"]{background:var(--kirmizi)}
 
 /* bandın sağ ucu: önce arama, onun sağında menü düğmesi */
 .simge{width:16px;height:16px;display:block;fill:none;stroke:currentColor;stroke-width:2}
-.ara{display:flex;align-self:center;flex:0 1 auto;min-width:0;margin:0 8px;border:1px solid var(--bant-ara-cizgi);background:var(--kagit)}
-.ara input{flex:1 1 auto;width:132px;min-width:0;border:0;background:transparent;padding:5px 9px;font:inherit;font-size:12.5px;color:var(--murekkep)}
+/* Kutu 136 px: yer tutucu ("Haberlerde ara") kırpılmadan sığan en dar ölçü.
+   Bandın en dar hâlinde (1120 px ekran, bant 1085 px) ölçülen boşluk 45 px
+   idi; 32'si kutuya verildi, 13'ü pay bırakıldı. `flex:0 1 auto` daralmaya
+   izin veriyor, yani pay tükenirse bant taşmak yerine kutuyu kısıyor. */
+.ara{display:flex;align-self:center;flex:0 1 auto;min-width:0;margin:0 10px;border:1px solid var(--bant-ara-cizgi);background:var(--kagit)}
+.ara input{flex:1 1 auto;width:160px;min-width:0;border:0;background:transparent;padding:7px 10px;font:inherit;font-size:13.5px;color:var(--murekkep)}
 .ara input:focus-visible{outline-offset:-3px}
-.ara-git{flex:none;display:flex;align-items:center;border:0;background:var(--kirmizi);color:var(--kagit);padding:0 9px;cursor:pointer}
+.ara-git{flex:none;display:flex;align-items:center;border:0;background:var(--kirmizi);color:var(--kagit);padding:0 11px;cursor:pointer}
 .ara-git:hover{background:var(--kirmizi-koyu)}
-.ara-ac{display:none;flex:none;align-items:center;border:0;background:none;color:var(--kagit);padding:11px 13px;cursor:pointer}
+.ara-ac{display:none;flex:none;align-items:center;border:0;background:none;color:var(--kagit);padding:14px 15px;cursor:pointer}
 .ara-ac:hover,.ara-ac[aria-expanded="true"]{background:var(--bant-dugme)}
-.menu-dugme{flex:none;display:flex;align-items:center;gap:7px;font-family:var(--display);font-weight:700;font-size:14.5px;letter-spacing:.7px;color:var(--kagit);background:var(--bant-dugme);border:0;border-left:1px solid var(--menu-cizgi);padding:11px 13px;cursor:pointer;white-space:nowrap}
+.menu-dugme{flex:none;display:flex;align-items:center;gap:7px;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.4px;color:var(--kagit);background:var(--bant-dugme);border:0;border-left:1px solid var(--menu-cizgi);padding:14px 14px;cursor:pointer;white-space:nowrap}
 .menu-dugme:hover,.menu-dugme[aria-expanded="true"]{background:var(--kirmizi)}
 
-/* tam menü: banda sığmayan kategoriler ve bölümler */
-/* --- Tam menü: sağdan kayan SIDEBAR ------------------------------------
-   28 Ağustos 2026: tam genişlikte beş sütunlu levhadan dikey panele geçildi.
-   Ölçüm: eski hâli açıkken 780 px yüksekliğinde ve ekranın %60-85'ini
-   kaplıyordu.
+/* --- Tam menü: banda asılı BEYAZ MEGA LEVHA -------------------------
+   30 Ağustos 2026 (§35), kullanıcı kararı: sağdan kayan koyu sidebar
+   kaldırıldı. Levha bandın altına asılır ve masaüstünde BEŞ SÜTUNLU bir
+   tablo olarak açılır — Türk haber sitelerinin tanıdık mega menüsü.
 
-   Perde ayrı bir öğe DEĞİL: `0 0 0 100vmax` yayılımlı ikinci bir gölge
-   ekranı karartıyor. Gölge tıklamayı yakalamaz, o yüzden dışarı tıklayınca
-   kapanma davranışı (site.js) olduğu gibi çalışır. */
-.tam-menu{position:fixed;top:0;right:0;bottom:0;width:320px;max-width:88vw;
-  background:var(--lacivert-koyu);color:var(--kagit);
-  border-left:2px solid var(--kirmizi);
-  box-shadow:-14px 0 30px var(--bant-golge),0 0 0 100vmax var(--perde);
-  overflow-y:auto;overscroll-behavior:contain;z-index:60;
-  animation:menu-kay .22s ease}
+   `.kategori` position:sticky olduğu için absolute torununa kapsayıcı
+   blok kurar; levha bandla birlikte hareket eder.
+
+   Perde ayrı öğe DEĞİL: ikinci gölgenin y-ofseti yayılıma eşit olunca
+   (0 100vmax 0 100vmax) karartma panelin ÜST kenarından başlayıp aşağı
+   uzanır — levhanın ÜSTÜNDE kalan bant ve MENÜ düğmesi aydınlık kalır,
+   yani kapatma denetimi görünür durur. Panelin kendi zemini gölgenin
+   üstünde boyandığı için levha beyaz görünmeye devam eder.
+   Gölge tıklamayı yakalamaz; dışarı tıklayınca kapanma (site.js) sürer.
+
+   Bölümlerin masaüstünde açılmasını JS yapar (site.js `menuAc`), şablona
+   `open` yazılmaz: sunucu HTML'i değişmeyince menünün DOM sözleşmeleri
+   (17 ilçe + tüm ilçeler, 50 bağlantı, tek açık bölüm) olduğu gibi kalır. */
+.tam-menu{position:absolute;top:100%;left:0;right:0;z-index:60;
+  background:var(--kagit);color:var(--murekkep);
+  border-top:3px solid var(--kirmizi);border-bottom:1px solid var(--cizgi);
+  box-shadow:0 18px 30px -12px var(--bant-golge),0 100vmax 0 100vmax var(--perde);
+  max-height:min(72vh,560px);overflow-y:auto;overscroll-behavior:contain;
+  animation:menu-in .18s ease}
 .tam-menu[hidden]{display:none}
-@keyframes menu-kay{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes menu-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 .tam-menu-ic{display:block;padding:0 0 4px}
 
-.menu-bolum{border-bottom:1px solid var(--kunye-cizgi)}
+/* Taban = dar ekran akordeonu (beyaz zemin). */
+.menu-bolum{border-bottom:1px solid var(--cizgi)}
 /* `list-style:none` + `::-webkit-details-marker` ikisi birden gerekiyor:
    tarayıcılar üçgen işaretini iki ayrı yoldan çiziyor. */
 .menu-bolum>summary{display:flex;align-items:center;justify-content:space-between;
-  gap:10px;cursor:pointer;padding:10px 14px;list-style:none}
+  gap:10px;cursor:pointer;padding:12px 14px;list-style:none;min-height:44px}
 .menu-bolum>summary::-webkit-details-marker{display:none}
-.menu-bolum>summary::after{content:"BE";font-size:11px;line-height:1;
-  color:var(--menu-bas);transition:transform .18s ease}
+.menu-bolum>summary::after{content:"\25BE";font-size:11px;line-height:1;
+  color:var(--gri);transition:transform .18s ease}
 .menu-bolum[open]>summary::after{transform:rotate(180deg)}
-.menu-bolum>summary:hover{background:var(--bant-dugme)}
+.menu-bolum>summary:hover{background:var(--yumusak)}
 .menu-bolum>summary h2{font-family:var(--display);font-size:13px;
-  letter-spacing:1.4px;color:var(--menu-bas)}
-.menu-bolum[open]>summary h2{color:var(--kagit)}
+  letter-spacing:1.4px;color:var(--lacivert)}
 .menu-bolum ul{list-style:none;padding:0 0 8px}
-.menu-bolum a{display:block;color:var(--kagit);font-size:13.5px;padding:5px 14px 5px 24px}
-/* Uzun listeler (13 kategori, 18 ilçe) iki sütuna iniyor: 13 satır 7'ye,
-   18 satır 9'a düşüyor. Çok sütunda görsel sıra DOM sırasıyla aynıdır
-   (önce birinci sütun dolar), o yüzden odak sırası görsel sırayı izler. */
+.menu-bolum a{display:block;color:var(--murekkep);font-size:13.5px;padding:8px 14px 8px 24px}
+.menu-bolum a:hover{background:var(--yumusak);color:var(--kirmizi-koyu)}
+/* Uzun listeler (13 kategori, 18 ilçe) iki sütuna iniyor. Çok sütunda
+   görsel sıra DOM sırasıyla aynıdır, o yüzden odak sırası görsel sırayı
+   izler. */
 .menu-iki-sutun ul{columns:2;column-gap:2px}
 .menu-iki-sutun a{padding-left:16px;padding-right:8px;break-inside:avoid}
-.menu-bolum a:hover{background:var(--kirmizi)}
-.menu-not{border-top:1px solid var(--kunye-cizgi);margin:0;
-  padding:10px 14px;font-size:11.5px;line-height:1.45;color:var(--kunye-yazi)}
+.menu-not{border-top:1px solid var(--cizgi);margin:0;
+  padding:10px 14px;font-size:11.5px;line-height:1.45;color:var(--gri)}
+@media(max-width:1000px){.tam-menu{max-height:calc(100dvh - 96px)}}
 
-/* --- son dakika --- */
-.sondakika{background:var(--kirmizi);color:var(--kagit);overflow:hidden}
-.sondakika-ic{display:flex;align-items:center;height:40px;gap:14px;padding:0 12px}
-.sondakika .rozet{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:1.2px;background:var(--kagit);color:var(--kirmizi);padding:4px 10px;flex:none}
-.akis{overflow:hidden;flex:1;min-width:0}
-.akis ul{display:flex;gap:44px;list-style:none;white-space:nowrap;animation:kay 40s linear infinite}
-.akis li{font-size:14.5px}
-.akis time{opacity:.8;font-size:12.5px;margin-right:7px}
-@keyframes kay{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@media(prefers-reduced-motion:reduce){.akis ul{animation:none}}
+/* Masaüstü: beş sütunlu levha. İLÇELER en geniş sütun — yerel gazetenin
+   omurgası; vurgu sıra değiştirerek değil yer vererek kuruluyor. */
+/* Levha da bant gibi kenardan kenara (30 Ağustos, §36): genişlik kapağı
+   konsaydı tam ekran bandın altında dar bir ada gibi durur, sütunlar bandın
+   kalemleriyle hizasını kaybederdi. Yorum `@media`nin DIŞINDA: beş sütun
+   sözleşmesini sınayan test (tests_menu) `@media(min-width:1001px){` ile
+   `.tam-menu-ic{` arasında yalnız boşluk bekliyor. */
+@media(min-width:1001px){
+  .tam-menu-ic{display:grid;padding:18px 20px 8px;gap:0 24px;
+    grid-template-columns:1.3fr .9fr 1.5fr .9fr .9fr}
+  .menu-bolum{border-bottom:0;border-left:1px solid var(--cizgi);padding-left:16px}
+  .menu-bolum:first-child{border-left:0;padding-left:0}
+  /* Başlıklar masaüstünde sütun başlığıdır, düğme değil: fare tıklaması
+     kesilir (klavye erişimi sürer — okur Enter'la kapatırsa her açılışta
+     yeniden açılır, kalıcı bozulma yok). */
+  .menu-bolum>summary{padding:0 0 8px;min-height:0;pointer-events:none}
+  .menu-bolum>summary::after{content:none}
+  .menu-bolum>summary:hover{background:none}
+  .menu-bolum>summary h2{border-bottom:2px solid var(--kirmizi);padding-bottom:6px;flex:1}
+  .menu-bolum a{padding:6px 8px 6px 0}
+  .menu-bolum a:hover{background:none;text-decoration:underline}
+  .menu-iki-sutun ul{column-gap:16px}
+  .menu-not{grid-column:1/-1;margin-top:12px;padding:10px 0}
+}
+
 
 main{display:block;padding-top:14px}
 .suz-bilgi{display:none;background:var(--kagit);border:1px solid var(--cizgi);border-left:5px solid var(--kirmizi);padding:9px 12px;margin-bottom:14px;font-size:13.5px}
@@ -170,43 +297,65 @@ main{display:block;padding-top:14px}
 .kutu-bas{display:flex;align-items:center;gap:8px;background:var(--lacivert);color:var(--kagit);padding:8px 12px}
 .kutu-bas h2{font-family:var(--display);font-size:16.5px;letter-spacing:.7px;font-weight:700}
 .kutu-bas .tumu{margin-left:auto;font-size:11.5px;color:var(--ust-yazi)}
+/* 14 px'lik bağlantı 24 px hedefe çıkar; bant büyümez, h2 zaten daha yüksek. */
+.kutu-bas .tumu a{display:inline-block;padding:6px 0}
 .kutu-bas .tumu a:hover{color:var(--kagit);text-decoration:underline}
 .kutu-bas.vurgu{background:var(--kirmizi)}
 .kutu-bas.vurgu .tumu{color:var(--kagit)}
 .kutu-ic{padding:12px}
+/* Kart ızgarası zemine oturur (29 Ağustos 2026 denetimi): beyaz kart beyaz
+   kutuda yalnız 1,29:1'lik çizgiyle ayrışıyordu — 20 kart tek duvar gibi
+   okunuyordu. Dörtlüdeki kartlar --zemin üstünde durdukları için
+   seçiliyordu; aynı ton kutunun içine alındı. */
+.kutu-ic:has(>.kutu-izgara),.kutu-ic:has(>.galeri-izgara),.kutu-ic:has(>.video-izgara),
+.kutu-ic:has(>.vizyon-izgara),.kutu-ic:has(>.bursaspor-izgara){background:var(--zemin)}
 .yer-not{font-size:12px;color:var(--gri);background:var(--yumusak);border-top:1px dotted var(--cizgi);padding:8px 12px;line-height:1.5}
 
 /* --- haber kartı --- */
 .kart{background:var(--kagit);border:1px solid var(--cizgi);display:flex;flex-direction:column}
 .kart .foto{height:150px}
 .kart .ic{padding:10px 11px 13px}
-.kart .ust{font-size:11px;font-weight:700;color:var(--kirmizi);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px}
+.kart .ust{display:flex;align-items:baseline;gap:6px;font-size:11px;font-weight:700;color:var(--kirmizi);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px}
+/* Kartta yayın zamanı (29 Ağustos 2026): "bu yeni mi?" sorusu tıklamadan
+   yanıtlanır. Zaman gri ve normal ağırlıkta — kategori etiketiyle yarışmaz.
+   Nokta yalnız önünde etiket varken çizilir. */
+.kart .ust time{font-family:var(--govde);font-weight:400;font-size:11.5px;color:var(--gri);letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kart .ust span+time::before{content:"·";margin-right:6px}
 .kart h3{font-family:var(--display);font-size:18px;line-height:1.16;font-weight:700}
 .kart p{font-size:12.5px;color:var(--gri);margin-top:5px}
 
 /* --- 6 · dört haber kutucuğu --- */
 .dortlu{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
 .dortlu .kart .foto{height:132px}
-.dortlu .kart h3{font-size:17px}
+.dortlu .kart h3{font-size:21px}
 
 /* --- 7/8 · manşet alanı --- */
-.manset-alani{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start;margin-bottom:16px}
+/* Sağ ray 320 px ve bu ölçü SİTE GENELİNDE aynı olmak zorunda: ana ızgara
+   (.ana-izgara) ve haber detayın `.izgara`sı da 320. Manşet satırı 340 idi ve
+   sayfanın dikey ek yeri manşetin altında 20 px kayıyordu — sol sütun 742'den
+   762'ye atlıyor, göz kaymayı yakalıyordu (ölçüldü: dikiş x=1003 iken alttaki
+   bölümde x=1023). */
+.manset-alani{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start;margin-bottom:16px}
 .slayt-kap{background:var(--kagit);border:1px solid var(--cizgi);position:relative}
 .slayt-pencere{position:relative;height:428px;background:var(--gece);overflow:hidden}
 .slayt{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .32s ease}
 .slayt[data-aktif="true"]{opacity:1;visibility:visible}
 @media(prefers-reduced-motion:reduce){.slayt{transition:none}}
 .slayt .foto{height:100%}
-.slayt .yazi{position:absolute;left:0;right:0;bottom:0;padding:20px 54px;z-index:2;color:var(--kagit)}
+.slayt .yazi{position:absolute;left:0;right:0;bottom:0;padding:20px 24px;z-index:2;color:var(--kagit)}
 .rozet-k{display:inline-block;background:var(--kirmizi);font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:1px;padding:3px 9px;margin-bottom:9px}
-.slayt h3{font-family:var(--display);font-size:34px;line-height:1.06;font-weight:900;letter-spacing:-.3px}
+.slayt h3{font-family:var(--display);font-size:42px;line-height:1.06;font-weight:900;letter-spacing:-.3px}
 .slayt p{font-size:14.5px;color:var(--ak-yazi);margin-top:8px;max-width:62ch}
 .slayt .dinle-bag{display:inline-flex;align-items:center;gap:7px;margin-top:12px;border:1px solid var(--ak-cizgi);font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:1px;padding:6px 12px}
 .slayt .dinle-bag:hover{background:var(--kirmizi);border-color:var(--kirmizi)}
-.slayt-ok{position:absolute;top:50%;transform:translateY(-50%);z-index:5;background:var(--lacivert-koyu);color:var(--kagit);border:1px solid var(--ak-cizgi);font-size:20px;line-height:1;width:40px;height:56px;cursor:pointer;display:grid;place-items:center}
+/* Oklar üst sağda ikili grup (29 Ağustos 2026): dikey ortada iki yanda
+   dururken .slayt .yazi 54 px yatay pay bırakıyor, başlık fotoğraf
+   genişliğinin %14'ünü hiç kullanamıyordu (652/762 ölçüldü). Üst köşe
+   görselin üstünde, yazı bloğunun tümüyle dışında. */
+.slayt-ok{position:absolute;top:12px;z-index:5;background:var(--lacivert-koyu);color:var(--kagit);border:1px solid var(--ak-cizgi);font-size:20px;line-height:1;width:40px;height:40px;cursor:pointer;display:grid;place-items:center}
 .slayt-ok:hover{background:var(--kirmizi)}
-.slayt-ok.geri{left:0}
-.slayt-ok.ileri{right:0}
+.slayt-ok.geri{left:auto;right:57px}
+.slayt-ok.ileri{right:12px}
 .slayt-denetim{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--cizgi);padding:8px 10px;background:var(--yumusak)}
 .slayt-sayac{font-family:var(--display);font-weight:700;font-size:13px;color:var(--lacivert);letter-spacing:.6px;flex:none}
 .slayt-noktalar{display:flex;flex-wrap:wrap;gap:4px;flex:1;min-width:0}
@@ -219,11 +368,13 @@ main{display:block;padding-top:14px}
 
 .manset-yan{display:flex;flex-direction:column}
 .mini-slayt .slayt-pencere{height:214px}
-.mini-slayt .slayt h3{font-size:20px;line-height:1.14}
-.mini-slayt .slayt .yazi{padding:12px 40px}
+.mini-slayt .slayt h3{font-size:26px;line-height:1.12}
+.mini-slayt .slayt .yazi{padding:12px 14px}
 .mini-slayt .rozet-k{font-size:11px;margin-bottom:6px;padding:2px 7px}
-.mini-slayt .slayt-ok{width:32px;height:44px;font-size:17px}
-.mini-slayt .slayt-noktalar button{width:24px;height:22px}
+/* Mini slaytta ok yok (29 Ağustos 2026): 320 px'lik sütunun %20'sini iki ok
+   yiyordu. Gezinme numaralı düğmelerle ve ok tuşlarıyla sürüyor. */
+.mini-slayt .slayt-ok{display:none}
+.mini-slayt .slayt-noktalar button{width:26px;height:24px}
 
 /* --- 9 · döviz bandı --- */
 .doviz{background:var(--kagit);border:1px solid var(--cizgi);margin-bottom:14px}
@@ -244,20 +395,49 @@ main{display:block;padding-top:14px}
 .ilan-bas{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--yumusak);border-bottom:1px solid var(--cizgi);padding:9px 12px}
 .ilan-bas h2{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:1.1px;color:var(--lacivert)}
 .ilan-bas .dayanak{font-size:11.5px;color:var(--gri)}
+/* Dönem etiketi: kayıtlar arşiv, bitiş tarihi yok. Aralık başlıkta
+   durunca okur listeyi "bugünün açık ihaleleri" sanmıyor. */
+.ilan-bas .donem{font-family:var(--display);font-weight:700;font-size:11.5px;letter-spacing:.4px;color:var(--lacivert);background:var(--yumusak);border:1px solid var(--cizgi);padding:2px 8px;white-space:nowrap}
 .ilan-bas .tumu{margin-left:auto;font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.6px;color:var(--kirmizi-koyu);white-space:nowrap}
 .ilan-bas .tumu:hover{text-decoration:underline}
 .ilan-liste{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--cizgi)}
-.ilan-liste li{background:var(--kagit);padding:10px 12px;display:flex;flex-direction:column;gap:5px}
+/* Satırın omurgası TARİH. Düz listede altı başlık aynı ağırlıkta duruyordu
+   ve okur "bu ne kadar yeni" sorusunu ancak en alttaki gri satırı okuyarak
+   yanıtlıyordu; gün bloğu bu bilgiyi sola, ilk bakılan yere alır. */
+.ilan-liste li{background:var(--kagit);padding:10px 12px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:11px;align-items:start}
+.ilan-liste li.bos{display:block;color:var(--gri);font-size:13px}
+.ilan-gun{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:46px;padding:5px 5px 4px;background:var(--yumusak);border:1px solid var(--cizgi);border-radius:3px}
+.ilan-gun b{font-family:var(--display);font-weight:900;font-size:20px;line-height:1;letter-spacing:-.3px;color:var(--lacivert);font-variant-numeric:tabular-nums}
+.ilan-gun .ay{font-family:var(--display);font-weight:700;font-size:10px;line-height:1.4;letter-spacing:.9px;text-transform:uppercase;color:var(--gri)}
+.ilan-govde{display:flex;flex-direction:column;gap:5px;min-width:0}
 .ilan-liste .ilan-adi{font-family:var(--display);font-weight:700;font-size:13.5px;line-height:1.22;letter-spacing:.2px}
-.ilan-liste a.ilan-adi:hover{color:var(--kirmizi-koyu);text-decoration:underline}
-.ilan-liste .kayit{font-size:11.5px;color:var(--gri);display:flex;gap:6px;flex-wrap:wrap}
+.ilan-liste .kayit{font-size:11.5px;color:var(--gri);display:flex;gap:6px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
 .tur{align-self:flex-start;font-family:var(--display);font-weight:700;font-size:10.5px;letter-spacing:1.1px;padding:2px 7px;border:1px solid currentColor}
 .tur.ihale{color:var(--lacivert)}
 .tur.tebligat{color:var(--kirmizi-koyu)}
+.tur.hepsi{color:var(--murekkep)}
+/* İCRA ve PERSONEL ALIMI türünde kayıt yok; süzgeçte `bos` ile gri
+   çiziliyorlar. Kayıt gelirse mürekkep rengiyle okunur dururlar —
+   ayırt edici bir renk gerekiyorsa önce :root'a Türkçe adla tanımlanmalı,
+   burada uydurulmaz. */
+.tur.icra,.tur.personel{color:var(--murekkep)}
 .tur.bos{color:var(--gri)}
-.ilan-turler{display:flex;flex-wrap:wrap;align-items:center;gap:7px;background:var(--yumusak);border-top:1px solid var(--cizgi);padding:8px 12px}
+.ilan-turler .tur{align-self:center}
+/* Tür şeridi listenin ÜSTÜNDE: lejant değil, süzgeç. Altta dururken
+   yalnızca renk kodunu tanıtıyordu; üstte ve tıklanabilirken bölümün
+   gezinme aracı oluyor. Kayıtsız türler kesikli çerçeveyle ve gerçek
+   sıfırla durur — §16 dört türü de göstermeyi gerektiriyor. */
+.ilan-turler{display:flex;flex-wrap:wrap;align-items:center;gap:7px;background:var(--yumusak);border-bottom:1px solid var(--cizgi);padding:8px 12px}
 .ilan-turler b{font-family:var(--display);font-weight:700;font-size:11.5px;letter-spacing:.9px;color:var(--gri)}
-.ilan-turler .tur-not{font-size:11.5px;color:var(--gri)}
+.ilan-turler .tur-not{font-size:11.5px;color:var(--gri);flex:1 1 100%}
+.ilan-turler button.tur{display:inline-flex;align-items:center;gap:5px;background:var(--kagit);cursor:pointer;padding:3px 8px;transition:background .15s ease,color .15s ease}
+.ilan-turler button.tur .adet{font-variant-numeric:tabular-nums;font-size:11px;opacity:.72}
+.ilan-turler button.tur:hover:not(:disabled){background:var(--zemin)}
+.ilan-turler button.tur:disabled{cursor:default;border-style:dashed;background:none}
+.ilan-turler button.tur[aria-pressed="true"] .adet{opacity:.85}
+.ilan-turler .tur.hepsi[aria-pressed="true"]{background:var(--murekkep);color:var(--kagit)}
+.ilan-turler .tur.ihale[aria-pressed="true"]{background:var(--lacivert);color:var(--kagit)}
+.ilan-turler .tur.tebligat[aria-pressed="true"]{background:var(--kirmizi-koyu);color:var(--kagit)}
 
 /* --- 11 · haber kutuları + sağ ray --- */
 .ana-izgara{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
@@ -271,12 +451,156 @@ main{display:block;padding-top:14px}
 .sek button[aria-selected="true"]{background:var(--kagit);color:var(--lacivert);box-shadow:inset 0 -3px 0 var(--kirmizi)}
 .panel{padding:12px;display:none}
 .panel[data-acik="true"]{display:block}
-.hava-ana{display:flex;align-items:center;gap:12px}
-.hava-ana .derece{font-family:var(--display);font-size:44px;font-weight:900;color:var(--lacivert);line-height:1}
-.hava-ana .aciklama{font-size:13px;color:var(--gri)}
-.gunler{display:flex;gap:6px;margin-top:11px}
-.gunler div{flex:1;text-align:center;background:var(--yumusak);padding:7px 2px;font-size:12px}
-.gunler b{display:block;font-family:var(--display);font-size:15px;color:var(--lacivert)}
+/* --- HAVA DURUMU PANELİ (§35, 30 Ağustos 2026) -----------------------
+   Eski `.hava-ana` / `.gunler` ikilisinin yerini alır: panel üçte bir
+   sütunda duruyor, MGM paketinin beş alanını basıyordu. Artık satırın
+   tamamını kaplıyor ve dört bölmeden oluşuyor — anlık blok, saatlik
+   şerit, beş günlük çubuk listesi, ölçüm kutucukları.
+
+   Bölmeler arası boşluk yerine ÇİZGİ var: gazete sayfasının tablo
+   mantığı bu, kutucuklar arası hava panelin bütünlüğünü dağıtıyordu. */
+.hava-panel{display:grid;grid-template-columns:minmax(178px,214px) minmax(0,1fr);
+  grid-template-areas:"simdi saatlik" "simdi gunler" "olcum olcum" "damga damga";
+  border:1px solid var(--cizgi);background:var(--kagit)}
+
+/* Anlık blok: arkasında Uludağ çizimi, önünde karartma perdesi. Yazı
+   bloğu ALTTA duruyor çünkü perde orada koyulaşıyor; üstteki aydınlık
+   gökyüzünde yalnız simge var.
+
+   Ölçüldü (30 Ağustos, başsız Chrome + piksel örneklemesi): yazının
+   arkasındaki EN AÇIK zemin geniş ekranda #48657A — beyaz 6,14:1,
+   --ak-yazi 4,79:1; dar ekranda en kötü 8,88:1. Hepsi AA üstü. */
+.hava-simdi{grid-area:simdi;position:relative;isolation:isolate;
+  background:var(--gece);color:var(--kagit);overflow:hidden;min-height:230px}
+.hava-manzara{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.hava-manzara.yatay{display:none}
+.hava-simdi::after{content:"";position:absolute;inset:0;z-index:1;
+  background:var(--hv-perde)}
+.hava-simdi-ic{position:relative;z-index:2;height:100%;padding:14px 14px 16px;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+  text-align:center;gap:10px;text-shadow:var(--yazi-golge-ince)}
+.hava-simdi-alt{display:flex;flex-direction:column;align-items:center;gap:2px}
+
+/* Manzara paletleri: aynı çizim, beş hava. --s1..--s5 sahne
+   kütüphanesinin sözleşmesi (`.t-mavi` ve kardeşleriyle aynı adlar);
+   --hv-yildiz, --hv-hilal, --hv-cizgi ve --hv-cisim çizimdeki dört
+   anahtarı açıp kapatır. */
+.hava-simdi.m-gunes{--s1:#5893C2;--s2:#9ED6F5;--s3:#35709B;--s4:#1E4A6E;--s5:#F9C63C}
+.hava-simdi.m-bulut{--s1:#75899E;--s2:#C3D2E0;--s3:#4A6076;--s4:#2F4152;--s5:#EAF0F6}
+.hava-simdi.m-yagis{--s1:#48607A;--s2:#7B95AC;--s3:#2C405A;--s4:#1B2A3C;--s5:#B2C3D2;
+  --hv-cizgi:.5}
+.hava-simdi.m-kar{--s1:#9DB4C6;--s2:#E1EDF6;--s3:#5D7284;--s4:#3D5060;--s5:#FFFFFF;
+  --hv-damla:#AFCADF;--hv-cizgi:.6}
+.hava-simdi.m-gece{--s1:#24406B;--s2:#16294A;--s3:#101F38;--s4:#0A1526;--s5:#E2EAF5;
+  --hv-yildiz:.85;--hv-hilal:1;--hv-cisim:.9}
+
+.hava-simdi .derece{font-family:var(--display);font-weight:900;font-size:58px;
+  line-height:.94;letter-spacing:-2px;font-variant-numeric:tabular-nums}
+.hava-simdi .derece .birim{font-size:22px;font-weight:700;letter-spacing:0;
+  vertical-align:super;margin-left:1px}
+.hava-simdi .hal{font-family:var(--display);font-weight:700;font-size:14.5px;
+  letter-spacing:.4px;margin-top:5px}
+.hava-simdi .hissedilen{font-size:12px;color:var(--ak-yazi);margin-top:1px}
+.hava-simdi .uc-nokta{display:flex;gap:10px;margin-top:9px;padding-top:9px;
+  border-top:1px solid var(--ak-cizgi);font-size:11.5px;color:var(--ak-yazi);
+  font-variant-numeric:tabular-nums}
+
+.hava-ikon{width:26px;height:26px;flex:0 0 auto}
+.hava-ikon.buyuk{width:54px;height:54px;filter:drop-shadow(var(--hv-ikon-golge))}
+
+.hava-panel h4{font-family:var(--display);font-size:10.5px;letter-spacing:1.3px;
+  color:var(--gri);font-weight:700;margin-bottom:7px}
+.hava-panel ol{list-style:none}
+
+/* Saatlik şerit: dar ekranda yatay kayar, sayfa gövdesi kaymaz. */
+.hava-saatlik{grid-area:saatlik;padding:12px 14px 13px;border-bottom:1px solid var(--cizgi)}
+.hava-saatlik ol{display:flex;gap:1px;background:var(--cizgi);overflow-x:auto;
+  border:1px solid var(--cizgi)}
+.hava-saatlik li{flex:1 0 66px;background:var(--kagit);display:flex;
+  flex-direction:column;align-items:center;gap:3px;padding:6px 4px 7px;
+  border-top:3px solid var(--hv-bulut)}
+/* Hücre zemini ve üst çizgisi o saatin havasını söyler. Zeminler bilerek
+   neredeyse beyaz: üstlerindeki sıcaklık okunaklılığını kaybetmemeli. */
+.hava-saatlik li.a-gunes{background:var(--hv-ak-gunes);border-top-color:var(--hv-gunes)}
+.hava-saatlik li.a-bulut{background:var(--hv-ak-bulut);border-top-color:var(--hv-bulut)}
+.hava-saatlik li.a-yagis{background:var(--hv-ak-yagis);border-top-color:var(--hv-yagmur)}
+.hava-saatlik li.a-kar{background:var(--hv-ak-kar);border-top-color:var(--hv-kar)}
+.hava-saatlik li.a-gece{background:var(--hv-ak-gece);border-top-color:var(--lacivert)}
+.hava-saatlik .saat{font-family:var(--display);font-weight:700;font-size:11.5px;
+  color:var(--gri);letter-spacing:.3px;font-variant-numeric:tabular-nums}
+.hava-saatlik b{font-family:var(--display);font-weight:900;font-size:19px;
+  color:var(--lacivert);line-height:1;font-variant-numeric:tabular-nums}
+.hava-saatlik .ruzgar{font-size:10.5px;color:var(--gri);font-variant-numeric:tabular-nums}
+.hava-saatlik .ruzgar i{font-style:normal;letter-spacing:.2px}
+
+/* Beş gün: çubuklar ORTAK ölçekte (yüzdeler `hava_paneli`de hesaplanır),
+   satırlar arası ince çizgi. */
+.hava-gunler{grid-area:gunler;padding:12px 14px 13px}
+.hava-gunler li{display:grid;
+  grid-template-columns:60px 22px minmax(0,1fr) 30px minmax(64px,1.15fr) 30px;
+  align-items:center;gap:9px;padding:6px 0;border-top:1px solid var(--cizgi)}
+.hava-gunler li:first-child{border-top:0}
+.hava-gunler .gun{display:flex;flex-direction:column;line-height:1.2}
+.hava-gunler .gun time{font-family:var(--display);font-weight:700;font-size:12.5px;
+  color:var(--lacivert);letter-spacing:.3px}
+.hava-gunler .gun i{font-style:normal;font-size:10.5px;color:var(--gri)}
+.hava-gunler li.bugun .gun time{color:var(--kirmizi-koyu)}
+.hava-gunler .hal{font-size:12px;color:var(--gri);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+/* Hava hali yazısı aileye göre renklenir. Beyaz üstünde ölçülen kontrast
+   sırasıyla 5,93 · 6,97 · 6,77 · 5,74 — dördü de AA eşiğini geçiyor. */
+.hava-gunler .hal.a-gunes{color:var(--hv-yazi-gunes)}
+.hava-gunler .hal.a-bulut{color:var(--hv-yazi-bulut)}
+.hava-gunler .hal.a-yagis{color:var(--hv-yazi-yagis)}
+.hava-gunler .hal.a-kar{color:var(--hv-yazi-kar)}
+.hava-gunler .dusuk,.hava-gunler .yuksek{font-family:var(--display);font-weight:700;
+  font-size:13px;font-variant-numeric:tabular-nums}
+.hava-gunler .dusuk{color:var(--gri);text-align:right}
+.hava-gunler .yuksek{color:var(--lacivert)}
+.hava-gunler .cubuk{position:relative;height:6px;background:var(--yumusak);
+  border:1px solid var(--cizgi);border-radius:4px}
+.hava-gunler .dolgu{position:absolute;top:-1px;bottom:-1px;border-radius:4px;
+  background:linear-gradient(90deg,var(--hv-serin),var(--hv-ilik))}
+
+/* Ölçüm kutucukları: yalnız MGM'nin ÖLÇEBİLDİĞİ alanlar gelir; boş alan
+   sözlüğe girmediği için burada "veri yok" durumu çizilmez. */
+.hava-olcum{grid-area:olcum;display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:1px;
+  background:var(--cizgi);border-top:1px solid var(--cizgi)}
+.hava-olcum>div{background:var(--yumusak);padding:8px 10px}
+.hava-olcum dt{font-family:var(--display);font-size:10.5px;letter-spacing:1px;
+  color:var(--gri);font-weight:700}
+/* Dar ekranda "kuzeydoğu" kutucuğun dışında kalıyordu (390 px ölçümü);
+   yön değeri artık alt satıra sarkıyor. */
+.hava-olcum dd{font-family:var(--display);font-weight:900;font-size:16px;
+  color:var(--lacivert);line-height:1.25;font-variant-numeric:tabular-nums;
+  display:flex;flex-wrap:wrap;align-items:baseline;column-gap:5px}
+.hava-olcum dd i{font-style:normal;font-weight:400;font-size:11px;color:var(--gri);
+  letter-spacing:.2px}
+
+.hava-damga{grid-area:damga;padding:7px 14px 8px;font-size:11.5px;color:var(--gri);
+  border-top:1px solid var(--cizgi)}
+.hava-damga.bayat{color:var(--kirmizi-koyu)}
+
+@media(max-width:880px){
+  .hava-panel{grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"simdi" "saatlik" "gunler" "olcum" "damga"}
+  /* Dar ekranda blok yassılaşıyor: çizimin yatay eşi devreye girer ve
+     karartma da yön değiştirir — yazı SOLDA duruyor, gökyüzü sağda açık
+     kalsın diye perde soldan sağa açılıyor. */
+  .hava-simdi{min-height:150px;
+    --hv-perde:linear-gradient(90deg,rgba(6,14,28,.86) 0%,rgba(6,14,28,.72) 46%,
+               rgba(6,14,28,.34) 76%,rgba(6,14,28,.10) 100%)}
+  .hava-manzara.dikey{display:none}
+  .hava-manzara.yatay{display:block}
+  .hava-simdi-ic{flex-direction:row;flex-wrap:wrap;align-items:center;gap:14px;
+    justify-content:flex-start;text-align:left;padding:13px 14px}
+  .hava-simdi-alt{align-items:flex-start}
+  .hava-ikon.buyuk{width:50px;height:50px}
+  .hava-gunler li{grid-template-columns:56px 22px 28px minmax(52px,1fr) 28px}
+  .hava-gunler .hal{display:none}
+}
+
 .vakit{list-style:none;font-size:13.5px}
 .vakit li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dotted var(--cizgi)}
 .vakit li:last-child{border:0}
@@ -286,7 +610,68 @@ main{display:block;padding-top:14px}
 .eczane span{color:var(--gri)}
 .eczane .ayirac{border:0;border-top:1px dotted var(--cizgi);margin:9px 0}
 
-/* --- 13 · yazarlar rayı --- */
+/* --- 13 · yazar kuşağı (tam genişlik, portreli) ---------------------
+   30 Ağustos 2026 (§35), kullanıcı isteği: yazarların sunuluşu tamamen
+   değişti. Sağ raydaki beş satırlık silik liste, manşetin altında tam
+   genişlik bir şeride dönüştü — imzalar gazetenin yüzüdür.
+
+   Kaydırma JS'siz: sütun akışlı ızgara + scroll-snap. Kartlar bağlantı
+   olduğu için Tab zaten gezer, odak global kırmızı halkayı alır.
+
+   `.yazar-ray` kuralları köşe yazısı sayfasının rayında HÂLÂ kullanılıyor
+   (medya/kose_yazisi.html), o yüzden aşağıda korunuyor. */
+.kutu-ic:has(>.yazar-kusak){background:var(--zemin)}
+.yazar-kusak{list-style:none;display:grid;grid-auto-flow:column;
+  grid-auto-columns:minmax(178px,1fr);gap:14px;overflow-x:auto;
+  scroll-snap-type:x proximity;padding-bottom:4px;scrollbar-width:thin}
+.yazar-kusak li{scroll-snap-align:start;min-width:0}
+.yazar-kusak a{display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:8px;height:100%;background:var(--kagit);border:1px solid var(--cizgi);
+  border-top:3px solid var(--kirmizi);padding:14px 12px 12px}
+/* Arşivdeki görsellerin 19'u gerçek kare portre (270x270), 18'i gazetenin
+   AFİŞ şablonu (750x500: solda ad ve harita, sağ üçte birde yüz) —
+   dosyalar açılıp görüldü. Afişi ortadan kırpmak avatarda yüz yerine
+   harita gösteriyordu; `-afis` adlı dosyalar bu yüzden SAĞDAN kırpılır.
+   Ayrımı dosya adı taşıyor: model alanı ve migration gerekmedi. */
+/* Portre bir SARMALAYICIDIR, görselin kendisi değil: afişten yüzü
+   yakınlaştırarak kırpabilmek için. Afişler 750x500 ve **iki şablonda**
+   geliyor (dosyalar açılıp görüldü): "harita"da yüz x∈[490,750],
+   "beton"da x∈[440,700] penceresinde. Her iki pencere de 260x260 ve
+   daireye oturtuluyor; yüzde kullanıldığı için 96/80/72 px'lik üç boyda
+   da aynı kırpım çıkıyor. Şablonu dosya adı taşıyor. */
+.yazar-kusak .portre{position:relative;overflow:hidden;flex:none;
+  width:96px;height:96px;border-radius:50%;background:var(--foto-bekleme);
+  border:3px solid var(--kagit);box-shadow:0 0 0 2px var(--cizgi)}
+.yazar-kusak .portre img{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center;max-width:none}
+/* Kare portreler YARIM BOY çekim: baş kaynağın üst yarısında ve daireyi
+   ancak %33'ünü dolduruyordu, afiş kırpımlarında ise %56 — şeritte baş
+   ölçeği iki kata yakın oynuyordu (ölçüldü). x∈[40,230] · y∈[0,190]
+   penceresi başı %47'ye çıkarıp gövdeyi düşürüyor; pencere karenin üst
+   %70'ini kapsadığı için baş kesme riski yok. */
+.yazar-kusak .portre img[src*="-portre"]{inset:auto;left:-21%;top:0;
+  width:142%;height:auto}
+.yazar-kusak .portre img[src*="-afis"]{inset:auto;top:-7.7%;width:288%;height:auto}
+.yazar-kusak .portre img[src*="-afis-harita"]{left:-188%}
+.yazar-kusak .portre img[src*="-afis-beton"]{left:-169%}
+/* ÖLÇÜLEN İSTİSNA. İki şablon kabaca doğru ama tek tek pozlar oynuyor:
+   beton grubunun altısında yüz ekseni x≈565-600 (varsayılan pencere
+   merkezi 570 isabetli), Av. Veysel Tayyar'da ise x≈530 — daire çapının
+   %11'i kadar kaçık kalıyor ve sağ üçte bire duvar giriyor. Bu satır bir
+   yamadır, kural değil: yeni bir aykırı ölçülürse buraya eklenir. */
+.yazar-kusak .portre img[src*="av-veysel-tayyar"]{left:-158%}
+.yazar-kusak .vesika{display:grid;place-items:center;background:var(--lacivert);
+  color:var(--kagit);font-family:var(--display);font-weight:900;font-size:30px;
+  letter-spacing:.5px;box-shadow:0 0 0 2px var(--cizgi),inset 0 -6px 0 var(--kirmizi)}
+.yazar-kusak b{font-family:var(--display);font-size:15.5px;color:var(--lacivert);letter-spacing:.3px}
+.yazar-kusak .yazi-bas{font-size:12.5px;line-height:1.35;color:var(--gri);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.yazar-kusak a:hover .portre,.yazar-kusak a:focus-visible .portre{box-shadow:0 0 0 2px var(--kirmizi)}
+.yazar-kusak a:hover b{color:var(--kirmizi-koyu)}
+.yazar-kusak .bos{color:var(--gri);font-size:13px}
+
+/* Köşe yazısı sayfasının rayındaki yazar listesi — anasayfadan kalktı,
+   burada duruyor. */
 .yazar-ray{list-style:none}
 .yazar-ray li{border-bottom:1px dotted var(--cizgi)}
 .yazar-ray li:last-child{border:0}
@@ -303,26 +688,82 @@ main{display:block;padding-top:14px}
 .sira li{display:flex;gap:10px;padding:9px 0;border-bottom:1px dotted var(--cizgi)}
 .sira li:last-child{border:0;padding-bottom:0}
 .sira .no{font-family:var(--display);font-size:24px;font-weight:900;color:var(--kirmizi);line-height:1;width:26px;flex:none}
-.sira h3{font-size:14px;font-weight:500;line-height:1.3}
+.sira h3{font-size:15px;font-weight:500;line-height:1.3}
 
 /* --- 15 · Bursaspor alanı --- */
-.bursaspor-izgara{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;align-items:start}
-.puan-kutu{border:1px solid var(--cizgi);background:var(--kagit)}
-.puan-kutu .sek button{font-size:11.5px;padding:8px 2px;letter-spacing:.3px}
-.puan{width:100%;border-collapse:collapse;font-size:13px}
-.puan caption{text-align:left;font-size:11.5px;color:var(--gri);padding:0 0 7px}
-.puan th,.puan td{padding:6px 5px;border-bottom:1px dotted var(--cizgi);text-align:right}
-.puan th:nth-child(2),.puan td:nth-child(2){text-align:left;width:100%}
-.puan thead th{font-family:var(--display);font-size:11.5px;letter-spacing:.6px;color:var(--lacivert);border-bottom:1px solid var(--cizgi)}
+/* Bölüm bilerek yeşil-beyaz: kulüp kimliği. Kurallar `#bursaspor` ya da
+   yalnız bu bölümde geçen sınıflarla sınırlıdır, dışarı taşmaz. */
+#bursaspor .kutu-bas.vurgu{background:var(--yesil)}
+#bursaspor .kutu-bas h2::before{background:var(--kagit)}
+/* Sol sütun 380 px (29 Ağustos 2026, ölçümle seçildi). 300 px'te on sütunlu
+   tabloda DOKUZ takım adı alt satıra sarıyordu ("Metro Holding Kayserispor",
+   "Mısırlıcomtr Fatih Karagümrük A.Ş."…); 380 sarmanın sıfırlandığı ilk
+   genişlik. Ötesi işe yaramıyor: sol sütun 861 px'te dibe vuruyor, fazladan
+   genişlik yalnız sağdaki haber kartlarını daraltır (380'de 217 px). */
+.bursaspor-izgara{display:grid;grid-template-columns:380px minmax(0,1fr);gap:14px;align-items:start}
+.puan-kutu{border:1px solid var(--yesil-cizgi);background:var(--kagit)}
+.puan-kutu .sek{border-bottom:1px solid var(--yesil-cizgi)}
+.puan-kutu .sek button{font-size:11.5px;padding:8px 2px;letter-spacing:.3px;border-right-color:var(--yesil-cizgi)}
+.puan-kutu .sek button[aria-selected="true"]{background:var(--kagit);color:var(--yesil-koyu);box-shadow:inset 0 -3px 0 var(--yesil)}
+
+/* Grup sekmeleri: 2. ve 3. Lig grup usulü oynanıyor. Lig sekmelerinden
+   ayrışsın diye düğme değil, çerçeveli seçim şeridi. */
+.grup-sek{margin:0 0 10px}
+.grup-sek .sek{border-bottom:0;gap:5px;background:none}
+.grup-sek .sek button{border:1px solid var(--yesil-cizgi);background:var(--kagit);color:var(--yesil-koyu);font-size:11px;padding:5px 4px;letter-spacing:.4px}
+.grup-sek .sek button[aria-selected="true"]{background:var(--yesil);color:var(--kagit);border-color:var(--yesil);box-shadow:none}
+.grup-panel{display:none}
+.grup-panel[data-acik="true"]{display:block}
+
+/* Tam sütunlu tablo (O G B M A Y Av P) 300 px'lik kutuya sığsın diye
+   sayı sütunları sıkı; yine de sığmazsa tablo KENDİ kabında yatay kayar,
+   sayfa taşmaz. Kap klavyeyle de gezilebilsin diye odak alır. */
+.puan-sar{overflow-x:auto}
+.puan{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto}
+.puan caption{text-align:left;font-size:11.5px;color:var(--gri);padding:0 0 7px;line-height:1.35}
+.puan th,.puan td{padding:5px 3px;border-bottom:1px dotted var(--cizgi);text-align:right;white-space:nowrap}
+/* Puan sütunu sayı yığınından ayrılsın: sekiz sütun yan yana okunmuyordu. */
+.puan td.p,.puan thead th:last-child{padding-left:7px;font-family:var(--display);font-weight:700}
+.puan th.ad,.puan td.ad,.puan th:nth-child(2){text-align:left;width:100%;white-space:normal;padding-left:0;padding-right:5px;line-height:1.2}
+.puan thead th{font-family:var(--display);font-size:11px;letter-spacing:.2px;color:var(--yesil-koyu);border-bottom:1px solid var(--yesil-cizgi)}
+.puan thead th abbr{text-decoration:none;cursor:help}
 .puan tbody tr:last-child td{border-bottom:0}
 .puan .sira-no{font-family:var(--display);font-weight:700;color:var(--gri)}
-.skor{border-top:1px solid var(--cizgi);background:var(--yumusak);padding:11px 12px;text-align:center}
-.skor .hafta{display:block;font-size:11px;letter-spacing:.8px;color:var(--gri);font-family:var(--display);font-weight:700}
-.skor .takimlar{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:7px}
-.skor .takimlar b{font-family:var(--display);font-size:14px;color:var(--lacivert);flex:1;line-height:1.15}
-.skor .sonuc{font-family:var(--display);font-weight:900;font-size:22px;color:var(--saha);background:var(--kagit);border:1px solid var(--cizgi);padding:3px 11px;flex:none}
+/* Bursa kulüpleri işaretli: okur kendi takımını 20 satırlık tabloda arasın
+   istemiyoruz. Bursaspor satırı dolu yeşil, beyaz yazı (6,7:1). */
+.puan tr.bursali td{background:var(--yesil-ak)}
+.puan tr.bizim td{background:var(--yesil);color:var(--kagit);font-weight:700}
+.puan tr.bizim .sira-no{color:var(--kagit)}
+
+/* Haftanın maçı tablonun ÜSTÜNDE duruyor: tablolar tam kadro olduğundan
+   (18-20 satır) altta kalsaydı görünmezdi. */
+.skor{border-bottom:1px solid var(--yesil-cizgi);background:var(--yesil-ak);padding:11px 12px;text-align:center}
+.skor .hafta{display:block;font-size:11px;letter-spacing:.8px;color:var(--yesil-koyu);font-family:var(--display);font-weight:700;text-transform:uppercase}
+.skor .takimlar{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px}
+.skor .takimlar b{font-family:var(--display);font-size:13.5px;flex:1;line-height:1.15}
+.skor .takimlar b.bizim{color:var(--yesil-koyu)}
+.skor .sonuc{font-family:var(--display);font-weight:900;font-size:22px;color:var(--kagit);background:var(--yesil);border:1px solid var(--yesil);padding:3px 11px;flex:none;line-height:1.2}
+.skor .sonuc.bekliyor{font-size:16px;background:var(--kagit);color:var(--yesil-koyu);border-color:var(--yesil-cizgi)}
+.skor .durum{display:block;margin-top:8px;font-size:11.5px;color:var(--gri)}
+.skor .konum{display:block;margin-top:3px;font-size:11px;color:var(--gri);line-height:1.4}
+
 .bursaspor-haber{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .bursaspor-haber .kart .foto{height:140px}
+
+/* Kartların altındaki başlık listesi — 29 Ağustos 2026.
+   Tablo tam kadro olunca sol sütun 958 px'e çıktı, altı kart 546 px'te
+   bitiyordu: 1280 ve 1600 px'te sağ altta 412 px boşluk kalıyordu
+   (ölçüldü). Boşluk kart EKLEYEREK değil, başlık listesiyle kapatılıyor;
+   liste dikeyde ucuz ve on iki eşit kart bölümü kart duvarına çevirirdi.
+   Tarih solda, başlıktan önce: kulüp haberi zamana duyarlıdır. */
+.bursaspor-liste{margin-top:14px;border-top:2px solid var(--yesil);padding-top:8px}
+.bursaspor-liste h3{font-family:var(--display);font-weight:900;font-size:11.5px;letter-spacing:1.1px;color:var(--yesil-koyu);padding-bottom:3px}
+.bursaspor-liste ul{list-style:none}
+.bursaspor-liste li{display:flex;gap:12px;align-items:baseline;padding:11px 0;border-bottom:1px dotted var(--cizgi)}
+.bursaspor-liste li:last-child{border-bottom:0;padding-bottom:0}
+.bursaspor-liste time{flex:none;width:70px;font-size:11.5px;color:var(--gri);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bursaspor-liste a{font-family:var(--display);font-weight:700;font-size:13.5px;line-height:1.25;letter-spacing:.2px}
+.bursaspor-liste a:hover{color:var(--yesil-koyu)}
 
 /* --- 16 · galeriler --- */
 .galeri-izgara{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
@@ -370,6 +811,22 @@ footer strong{color:var(--kagit)}
 .yukari:hover{background:var(--kirmizi)}
 @media(prefers-reduced-motion:reduce){.yukari{transition:none}}
 
+/* --- reklam anahtarı (sunum aracı) ---------------------------------
+   Tercih `<html data-reklam>` üzerinde durur ve `<head>` içindeki minik
+   betikle sayfa çizilmeden önce okunur; sonradan okunsaydı panolar bir an
+   görünüp kaybolurdu. Beş yuvanın hepsi tek kuralla kapanıyor: yan
+   pageskin'ler, 1100x150 yatay ve gövdedeki 300x250'ler. */
+.reklam-anahtar{font:inherit;font-size:12px;color:var(--ust-yazi);background:none;border:1px solid var(--ust-cizgi);padding:1px 8px;cursor:pointer;line-height:1.6}
+.reklam-anahtar:hover{color:var(--kagit);border-color:var(--kirmizi)}
+.reklam-anahtar[aria-pressed="true"]{background:var(--kirmizi);border-color:var(--kirmizi);color:var(--kagit)}
+html[data-reklam="kapali"] .reklam,
+html[data-reklam="kapali"] .yan-reklam{display:none}
+/* IZGARA DA TEK SÜTUNA İNMELİ. 1480 px üstünde `.sayfa` üç sütundur
+   (160 · 1100 · 160); yan raylar `display:none` olunca ızgaradan düşüyor ve
+   orta sütun BİRİNCİ sütuna, yani 160 px'lik raya yerleşiyordu — sayfa
+   160 px'e sıkışıyordu. Sütun sayısı içerikle birlikte azalmak zorunda. */
+html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
+
 /* --- kırılma noktaları --- */
 /* 1480 px: içerik 1100 + iki yanda 160 px ray + 2×20 boşluk + 2×10 iç boşluk.
    Ray ancak içerik sütunu tam 1100 px kalabildiğinde açılır. Orta sütun sabit
@@ -379,17 +836,37 @@ footer strong{color:var(--kagit)}
   .yan-reklam{display:block}
 }
 @media(max-width:1140px){
-  .slayt h3{font-size:30px}
+  .slayt h3{font-size:34px}
   .manset-alani{grid-template-columns:minmax(0,1fr) 300px}
-  .slayt-pencere{height:392px}
+  /* 392 idi: sağ sütunun katı asgarisi (reklam 250 + mini) 472 px ve
+     stretch'li ızgarada 36 px boş şerit kalıyordu (doğrulama 2. tur).
+     428'de iki sütun 1141+ ile aynı biçimde buluşuyor. */
+  .slayt-pencere{height:428px}
   .ana-izgara{grid-template-columns:minmax(0,1fr) 300px}
 }
-/* 1001-1119 px: band dolu; arama simgeye dönüyor, tıklayınca bandın alt satırında açılıyor */
-@media(min-width:1001px) and (max-width:1119px){
+/* Bandın tek satırda kalma bütçesi (30 Ağustos 2026, §36 ölçümü).
+   Bant büyüyünce eski 1119 px eşiği yetmez oldu: 1262 px'te MENÜ düğmesi
+   ikinci satıra düşüyor, bant 50 px'ten 98 px'e çıkıyordu.
+
+   Ölçülen genişlikler: logo 155 · 10 kalem 863 · arama kutusu 220
+   (kenar boşluklarıyla) · MENÜ 88. Toplam ~1350 px. Arama simgeye inince
+   kutunun 220'si 46'ya düşer → ~1176 px. İki kademe: */
+/* 1176-1359 px: arama simgeye dönüyor, tıklayınca bandın alt satırında açılıyor */
+@media(min-width:1001px) and (max-width:1359px){
   .ara-ac{display:flex}
   .ara{display:none;order:9;flex:1 1 100%;align-self:auto;margin:0 10px 8px}
   .ara[data-acik="true"]{display:flex}
   .ara input{width:auto}
+}
+/* 1001-1175 px: 10 kalem 1176'ya da sığmıyor; bant BÜYÜMEDEN ÖNCEKİ dar
+   ölçüsüne dönüyor (13,5 px yazı · 30 px logo). Kalem düşürmek yerine
+   ölçü küçültmek seçildi: onlu bant sözleşmesi masaüstünde bozulmasın. */
+@media(min-width:1001px) and (max-width:1175px){
+  .kategori-liste a{font-size:13.5px;letter-spacing:.2px;padding:11px 8px}
+  .bant-logo{padding:0 12px}
+  .logo-gorsel{height:30px}
+  .menu-dugme{font-size:13.5px;padding:11px 11px}
+  .ara-ac{padding:11px 13px}
 }
 @media(max-width:1000px){
   .manset-alani{grid-template-columns:minmax(0,1fr)}
@@ -399,11 +876,33 @@ footer strong{color:var(--kagit)}
   .mini-slayt .slayt-pencere{height:250px}
   .ana-izgara{grid-template-columns:minmax(0,1fr)}
   .bursaspor-izgara{grid-template-columns:minmax(0,1fr)}
+  /* Sütunlar üst üste binince puan kutusu tam genişliğe çıkıyor ve takım
+     adı ile sayı sütunları arasında 768 px'te ~400 px boşluk kalıyordu:
+     okur satırı gözle takip edemiyordu (ölçüldü, 29 Ağustos 2026).
+     Tablonun ölçüsü sınırlanıyor; kutu geniş kalabilir. */
+  .puan-sar table.puan{max-width:560px}
   .galeri-izgara,.video-izgara,.vizyon-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ilan-liste{grid-template-columns:repeat(2,minmax(0,1fr))}
   .kunye-ust{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .kategori-liste{display:none}
-  .ara{flex:1 1 auto;margin:6px 8px}
+  /* Dar ekranda bant IKI SATIR: ustte logo + arama simgesi + menü,
+     altta dört kategori. Eskiden liste bütünüyle `display:none` idi ve
+     360 px'te görünen kategori sayısı SIFIRDI (ölçüldü). Onlu bant hâlâ
+     DOM'da; altısını burada gizliyoruz, hepsi tam menüde de var. */
+  .kategori-liste{order:9;flex:1 0 100%;border-top:1px solid var(--menu-cizgi)}
+  .kategori-liste a:not(.mobil){display:none}
+  .kategori-liste a.mobil{flex:1 1 0;justify-content:center;font-size:13px;padding:9px 4px}
+  .kategori-liste a.mobil-son{border-right:0}
+  /* Bandın 30 Ağustos büyümesi (§36) DAR EKRANDA GEÇERSİZ. İstek "tüm
+     ekrana genişlet" idi; dar ekranda bant zaten tam genişlikte, yani
+     orada büyütmenin kazancı yok — bedeli var: mobil tepe bütçesi
+     (§34 K8, ilk haber ≤322 px) piksel piksel kazanılmıştı ve büyüme
+     bandın üst satırını 38'den 48 px'e çıkarıyordu. */
+  .bant-logo{margin-right:auto;padding:0 12px}
+  .logo-gorsel{height:30px}
+  .menu-dugme{font-size:13.5px;padding:11px 11px}
+  .ara-ac{display:flex;padding:11px 13px}
+  .ara{display:none;order:10;flex:1 1 100%;align-self:auto;margin:0 8px 8px}
+  .ara[data-acik="true"]{display:flex}
   .ara input{width:auto}
   .slayt-pencere{height:360px}
   .reklam.tam{height:120px}
@@ -411,7 +910,7 @@ footer strong{color:var(--kagit)}
 @media(max-width:768px){
   .dortlu{grid-template-columns:repeat(2,minmax(0,1fr))}
   .bursaspor-haber{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .slayt h3{font-size:26px}
+  .slayt h3{font-size:30px}
   .slayt-pencere{height:300px}
   .manset-yan{flex-direction:column}
   .manset-yan .reklam{flex:none;width:100%;margin-bottom:14px}
@@ -422,7 +921,12 @@ footer strong{color:var(--kagit)}
 }
 @media(max-width:600px){
   .servis-ic{gap:9px;padding:6px 12px}
-  .servis .sag{margin-left:0;flex-basis:100%}
+  /* Mobil tepe kalabalığı (29 Ağustos, Ö7a): üç METİN bağlantısı künyede
+     zaten var; şerit tek satıra iner, ilk ekran habere kalır. Sosyal
+     ikonlar ve ihbar pili KALIR (§35) — kullanıcı isteği üstte olmaları;
+     pilin yalnız yazısı düşer, simgesi durur. */
+  .servis .ust-baglar{display:none}
+  .ihbar-bag span{display:none}
   .logo-gorsel{height:44px}
   .dortlu{grid-template-columns:minmax(0,1fr)}
   .kutu-izgara{grid-template-columns:minmax(0,1fr)}
@@ -430,14 +934,26 @@ footer strong{color:var(--kagit)}
   .galeri-izgara,.video-izgara,.vizyon-izgara{grid-template-columns:minmax(0,1fr)}
   .ilan-liste{grid-template-columns:minmax(0,1fr)}
   .kunye-ust{grid-template-columns:minmax(0,1fr)}
-  .slayt h3{font-size:22px}
+  /* 360'ta manşet/kart oranı 26/17 = 1,53 — 22/18'lik eski oran 1,22 idi
+     ve ana manşet sıradan karttan ayrışmıyordu (29 Ağustos ölçümü). */
+  .slayt h3{font-size:26px}
+  .kart h3{font-size:17px}
   .slayt p{display:none}
-  .slayt .yazi{padding:12px 42px}
+  .slayt .yazi{padding:12px 14px}
   .slayt-pencere{height:250px}
   .mini-slayt .slayt-pencere{height:212px}
   .slayt-noktalar{order:3;flex-basis:100%}
-  .doviz dl>div{flex:1 0 42%;justify-content:space-between;padding:7px 8px 7px 0}
-  .doviz dl>div:nth-child(2n){border-right:0;padding-right:0}
+  /* Mobil tepe (Ö7b): 3 satırlık piyasa ızgarası 229 px alıyordu — tek
+     satır yatay kaydırmaya döner; okur habere ~280 px erken ulaşır. */
+  .doviz-ic{flex-wrap:nowrap;overflow-x:auto}
+  .doviz dl{flex:0 0 auto;flex-wrap:nowrap;order:0;border-top:0}
+  .doviz dl>div{flex:0 0 auto;padding:8px 14px 8px 2px}
+  /* Mobil tepe (Ö7c): boş reklam yuvası 120 px rezerve etmesin.
+     48 + main 8 + piyasa altı 10: ilk haber kartı y=354'ten ≤320'ye
+     (doğrulama K8; kalan kalemler bant 82 + servis 56, ikisi de dolu). */
+  .reklam.tam{height:44px}
+  main{padding-top:8px}
+  .doviz{margin-bottom:8px}
   .film .afis{height:240px}
 }
 
@@ -474,7 +990,6 @@ footer strong{color:var(--kagit)}
 .ilce a{font-size:12.5px;color:var(--gri);padding:8px 11px;white-space:nowrap;border-right:1px dotted var(--cizgi)}
 .ilce a:hover{color:var(--kirmizi)}
 .ilce .etiket{font-family:var(--display);font-weight:700;color:var(--lacivert);font-size:12.5px;padding:8px 11px 8px 0;white-space:nowrap;letter-spacing:.5px}
-.sondakika .kapsa{display:flex;align-items:center;height:40px;gap:14px}
 .govde{padding:16px 0 40px}
 .izgara{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start}
 .sutunlar{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:18px}
@@ -569,6 +1084,9 @@ footer .kapsa{grid-template-columns:repeat(2,minmax(0,1fr))}
 .detay .spot{font-size:16.5px;line-height:1.5;border-left:4px solid var(--kirmizi);padding-left:12px;margin-bottom:14px}
 .detay-kunye{display:flex;flex-wrap:wrap;gap:7px 14px;align-items:center;border-top:1px solid var(--cizgi);border-bottom:1px solid var(--cizgi);padding:9px 0;font-size:12.5px;color:var(--gri);margin-bottom:16px}
 .detay-kunye .yazan{font-family:var(--display);font-weight:700;color:var(--lacivert);font-size:14.5px;letter-spacing:.3px}
+/* Dokunma hedefi 18 px ölçülmüştü (WCAG 2.5.8) — satır yüksekliği
+   büyümesin diye negatif kenar boşluğuyla. */
+.detay-kunye .yazan a{display:inline-block;padding:4px 0;margin:-4px 0}
 .arac{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .arac button,.arac a{border:1px solid var(--cizgi);background:var(--yumusak);font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.5px;padding:5px 9px;cursor:pointer;color:var(--lacivert)}
 .arac button:hover,.arac a:hover{background:var(--lacivert);color:var(--kagit);border-color:var(--lacivert)}
@@ -600,11 +1118,21 @@ footer .kapsa{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(prefers-reduced-motion:reduce){
 .ses-cubuk span{transition:none}
 }
-.metin{font-size:16px;line-height:1.72}
-.metin[data-boyut="kucuk"]{font-size:14.5px;line-height:1.66}
-.metin[data-boyut="buyuk"]{font-size:18.5px;line-height:1.76}
+/* 18 px / 66-70 karakter (29 Ağustos 2026): 16 px'te satır 79 karakter
+   ölçülmüştü; rahat okuma bandı 60-75. NYT 20, BBC 19, Guardian 17.
+   Ölçü 54ch, 68 DEĞİL: `ch` birimi "0" rakamının genişliği (10,1 px),
+   Türkçe gövdenin ortalama karakteri 7,9 px — 68ch fiilen 87 karakter
+   veriyordu. Serife geçince (§35) yeniden ölçüldü: `ch` neredeyse aynı
+   kaldı (10,08 ↔ 10,12) ama Türkçe gövdenin gerçek karakter genişliği
+   7,79'dan 9,14 px'e çıktı (%17,4) ve 55ch ile satır 55,1 karaktere
+   düştü. 68ch ≈ 685 px ≈ 66-70 gerçek karakter. Not: 1024 px'te makale
+   sütunu 623 px olduğu için orada satır ~62'de kalır — bu ızgara
+   geometrisidir, `max-width` kusuru değil. */
+.metin{font-size:18px;line-height:1.62;max-width:68ch}
+.metin[data-boyut="kucuk"]{font-size:16px;line-height:1.66}
+.metin[data-boyut="buyuk"]{font-size:20px;line-height:1.6}
 .metin p{margin-bottom:14px}
-.metin h2{font-family:var(--display);font-size:22px;line-height:1.2;font-weight:700;color:var(--lacivert);margin:20px 0 10px}
+.metin h2{font-family:var(--display);font-size:24px;line-height:1.2;font-weight:700;color:var(--lacivert);margin:20px 0 10px}
 .alinti{border-left:5px solid var(--kirmizi);background:var(--yumusak);padding:14px 16px;margin:18px 0;font-family:var(--display);font-size:19px;line-height:1.34;font-weight:700;color:var(--lacivert)}
 .alinti cite{display:block;font-family:var(--govde);font-style:normal;font-size:12.5px;font-weight:400;color:var(--gri);margin-top:8px}
 .etiketler{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:20px;padding-top:14px;border-top:1px solid var(--cizgi)}
@@ -673,8 +1201,10 @@ footer .kapsa{grid-template-columns:repeat(2,minmax(0,1fr))}
    geçmemeli ama görünür kalmalı. Üç sütun dar ekranda okunmuyordu. */
 .ilan{border-left-width:4px;border-radius:3px;overflow:hidden}
 .ilan-liste{grid-template-columns:repeat(2,minmax(0,1fr))}
-.ilan-liste li{padding:12px 14px;transition:background .15s ease}
-.ilan-liste li:hover{background:var(--yumusak)}
+/* Satır vurgusu KALDIRILDI (29 Ağustos): başlıklar artık bağlantı değil —
+   ilan metinleri göç etmedi, detay sayfası yok. Tıklanamayan satırın
+   imleçle boyanması "buraya tıkla" sözü veriyordu. */
+.ilan-liste li{padding:12px 14px}
 .ilan-liste .ilan-adi{font-size:14px}
 @media(max-width:820px){.ilan-liste{grid-template-columns:1fr}}
 
@@ -706,7 +1236,7 @@ footer .kapsa{grid-template-columns:repeat(2,minmax(0,1fr))}
 
 @media(prefers-reduced-motion:reduce){
   .kart,.kart .foto img,.galeri-kart .foto img,.video-kart .foto img,
-  .kart h3 a,.ilan-liste li{transition:none}
+  .kart h3 a,.ilan-turler button.tur{transition:none}
   .kart:hover .foto img,.galeri-kart:hover .foto img,
   .video-kart:hover .foto img{transform:none}
 }
@@ -716,8 +1246,443 @@ footer .kapsa{grid-template-columns:repeat(2,minmax(0,1fr))}
    #333E51'e açıyor ve orada oran 4,15'e düşüyordu. #A3B2C6 ile iki
    şeritte de eşik aşılıyor (5,00 ve 6,16). */
 
-/* Sidebar hareketi: hareket azaltma isteyen kullanıcıda anında açılır. */
+/* Mega levha hareketi: hareket azaltma isteyen kullanıcıda anında açılır. */
 @media(prefers-reduced-motion:reduce){
   .tam-menu{animation:none}
   .menu-bolum>summary::after{transition:none}
+}
+
+/* --- resmî ilan DİZİNİ (/resmi-ilan) — 29 Ağustos 2026 --------------
+   Anasayfadaki bölüm bir SEÇKİ: sekiz kayıt, iki sütun, kart benzeri
+   satırlar. Dizin seçki değil, TARANARAK okunan bir liste; bu yüzden
+   satırlar tek sütuna alınıp tablo gibi hizalanıyor — tarih, tür, başlık
+   ve ilan numarası her satırda aynı x'te başlıyor, göz tek bir sütunu
+   yukarıdan aşağı tarayabiliyor. Resmî ilan/tebliğ dizinlerinin klasik
+   çözümü; iki sütunlu kart duvarı uzun listede bu taramayı öldürüyor.
+
+   Kuralların tamamı `.ilan-dizin` altına kilitli: anasayfadaki bölüm
+   (URUN-PLANI.md §30, §32.5) bu turda DEĞİŞMİYOR. */
+.ilan-dizin .kutu-bas{flex-wrap:wrap}
+.ilan-dizin .kutu-bas h1{font-family:var(--display);font-weight:900;font-size:22px;
+  letter-spacing:.8px;position:relative;padding-left:11px}
+.ilan-dizin .kutu-bas h1::before{content:"";position:absolute;left:0;top:.12em;bottom:.12em;
+  width:4px;background:var(--kirmizi);border-radius:2px}
+/* Dönem çipi koyu şeridin üstünde, yani anasayfadakinin tersi biçimde:
+   beyaz yazı --lacivert-koyu üstünde 15,9 ölçüldü. */
+.ilan-dizin .kutu-bas .donem{font-family:var(--display);font-weight:700;font-size:12px;
+  letter-spacing:.4px;color:var(--kagit);background:var(--lacivert-koyu);
+  border:1px solid var(--ust-cizgi);padding:3px 9px;white-space:nowrap}
+.ilan-dizin .kutu-bas .tumu{font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.5px}
+
+/* Süzgeç: anasayfada `button`, burada `a`. Görünüş aynı kalıyor ki iki
+   sayfa arasında geçen okur aynı şeridi tanısın; mekanizma farklı. */
+.ilan-dizin .ilan-turler{border-top:1px solid var(--cizgi)}
+.ilan-dizin .ilan-turler .tur{display:inline-flex;align-items:center;gap:5px;padding:3px 8px}
+.ilan-dizin .ilan-turler a.tur{background:var(--kagit);transition:background .15s ease,color .15s ease}
+.ilan-dizin .ilan-turler a.tur:hover{background:var(--zemin)}
+.ilan-dizin .ilan-turler .tur .adet{font-variant-numeric:tabular-nums;font-size:11px;opacity:.72}
+/* Kaydı olmayan tür bağlantı DEĞİL, `span`: kesikli çerçeve ve gerçek 0. */
+.ilan-dizin .ilan-turler span.tur.bos{border-style:dashed;background:none}
+.ilan-dizin .ilan-turler .tur[aria-current] .adet{opacity:.85}
+.ilan-dizin .ilan-turler .tur.hepsi[aria-current]{background:var(--murekkep);color:var(--kagit)}
+.ilan-dizin .ilan-turler .tur.ihale[aria-current]{background:var(--lacivert);color:var(--kagit)}
+.ilan-dizin .ilan-turler .tur.tebligat[aria-current]{background:var(--kirmizi-koyu);color:var(--kagit)}
+.ilan-dizin .ilan-turler .tur.icra[aria-current],
+.ilan-dizin .ilan-turler .tur.personel[aria-current]{background:var(--murekkep);color:var(--kagit)}
+
+/* Ay omurgası: listeyi kaydırırken "hangi dönemdeyim" sorusunu yanıtlar.
+   Türkçe büyütme CSS'e bırakılmadı — `text-transform` yerine şablondaki
+   `buyult` süzgeci kullanılıyor (§30'daki "İ" kusurunun aynısı). */
+.ilan-ay{display:flex;align-items:baseline;gap:9px;font-family:var(--display);font-weight:900;
+  font-size:13px;letter-spacing:1.2px;color:var(--lacivert);background:var(--yumusak);
+  border-top:1px solid var(--cizgi);border-bottom:1px solid var(--cizgi);padding:7px 12px}
+.ilan-ay .adet{margin-left:auto;font-family:var(--govde);font-weight:400;font-size:11.5px;
+  letter-spacing:0;color:var(--gri);font-variant-numeric:tabular-nums}
+
+/* Satır: tek sütun, dört hizalı alan. Tür sütunu SABİT genişlikte, yoksa
+   rozetler satır satır kayar ve tarama sütunu diye bir şey kalmaz. */
+.ilan-dizin .ilan-liste{grid-template-columns:minmax(0,1fr);border-bottom:1px solid var(--cizgi)}
+.ilan-dizin .ilan-liste li{grid-template-columns:52px minmax(0,1fr);align-items:center;padding:9px 12px}
+.ilan-dizin .ilan-govde{display:grid;grid-template-columns:124px minmax(0,1fr) auto;
+  align-items:center;gap:6px 14px}
+.ilan-dizin .ilan-govde .tur{align-self:center;justify-self:start}
+.ilan-dizin .ilan-liste .kayit{justify-self:end;white-space:nowrap}
+/* Dar ekranda hizalı sütun taşıyacak yer yok: satır anasayfadaki yığılmış
+   biçimine döner. 720 px, "İlan no" sütununun başlığı sıkıştırmaya
+   başladığı ölçülen genişliktir. */
+@media(max-width:720px){
+.ilan-dizin .ilan-liste li{align-items:start}
+.ilan-dizin .ilan-govde{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+/* `align-self:center` yalnız IZGARADA doğru; sütun yönlü flex'te aynı
+   değer rozeti YATAYDA ortalıyordu — 360 px'te ölçüldü: başlık x=86,
+   rozet x=171 ve 180. Yığılmış satırda rozet başlıkla aynı hizada. */
+.ilan-dizin .ilan-govde .tur{align-self:flex-start}
+.ilan-dizin .ilan-liste .kayit{justify-self:start}
+}
+
+/* --- sayfalama ------------------------------------------------------
+   ÖLÇÜLDÜ (29 Ağustos 2026, /bursa?sayfa=2): parçanın hiç biçimi yoktu.
+   "← Önceki 2 / 50 Sonraki →" tek satırda, gövde metniyle aynı renkte,
+   sayfanın sol kenarına yapışık akıyordu; bağlantı olduğu ancak imleçle
+   anlaşılıyor, dokunma hedefi 18 px yüksekliğinde kalıyordu. Kural resmî
+   ilan dizini aynı parçayı kullandığı için yazıldı; kategori, ilçe ve
+   arama sayfaları da aynı anda düzeliyor. */
+.sayfalama{display:flex;align-items:center;gap:10px;background:var(--kagit);
+  border:1px solid var(--cizgi);padding:9px 12px;margin-bottom:16px}
+.sayfalama a{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.4px;
+  color:var(--lacivert);background:var(--yumusak);border:1px solid var(--cizgi);padding:8px 12px}
+.sayfalama a:hover{background:var(--lacivert);border-color:var(--lacivert);color:var(--kagit)}
+.sayfalama .konum{margin-left:auto;margin-right:auto;font-family:var(--display);font-weight:700;
+  font-size:12.5px;color:var(--gri);font-variant-numeric:tabular-nums}
+
+/* Hareket azaltma — bu blok dizin kurallarından SONRA gelmek zorunda.
+   ÖLÇÜLDÜ (29 Ağustos 2026): aynı seçici yukarıdaki `prefers-reduced-motion`
+   bloğuna eklenmişti ve işe yaramıyordu; özgüllük eşit olunca dosyada
+   sonra gelen kural kazanıyor ve süzgeç bağlantısı `0.15s` geçişte
+   kalıyordu (anasayfadaki düğme 0s ölçülürken). */
+@media(prefers-reduced-motion:reduce){
+.ilan-dizin .ilan-turler a.tur{transition:none}
+}
+
+/* =================================================================
+   29 AĞUSTOS 2026 — GÖRSEL DENETİM, AŞAMA 1+2
+   web-tasarim-direktoru denetiminin kural değişikliği gerektirmeyen
+   kalemleri. Tip merdiveni ve dokunma hedefleri yukarıda kendi
+   satırlarında değişti; buraya yalnız YENİ seçiciler eklendi.
+   ================================================================= */
+
+/* --- kategori sayfasının ilk haberi büyük yerleşim (Ö15) -----------
+   20 eşit kart "bu bölümde bugün ne var" sorusunu yanıtlamıyordu.
+   Kart bileşeni aynı; ilk çocuk iki sütuna yayılır, fotoğraf sola geçer.
+   Yalnız 1. sayfada kullanılır (kategori.html karar veriyor). */
+.kutu-izgara .kart.genis{grid-column:1/-1;flex-direction:row}
+.kart.genis .foto{flex:0 0 min(420px,46%);height:auto;min-height:236px}
+.kart.genis .ic{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:16px 18px 18px}
+.kart.genis h3{font-size:26px;line-height:1.12}
+.kart.genis p{font-size:14px;margin-top:8px}
+@media(max-width:768px){
+  /* Özgüllük taban kuralla eşit (0,3,0) olmak ZORUNDA: `.kart.genis`
+     (0,2,0) yazılınca 360 px'te kart sütuna dönmüyor, başlık kartın
+     dışına 126 px taşıyordu (doğrulama K1, dogrulama-kare-gundem360). */
+  .kutu-izgara .kart.genis{flex-direction:column}
+  .kart.genis .foto{flex:none;height:200px;min-height:0}
+  .kart.genis h3{font-size:21px}
+}
+
+/* --- numaralı sayfalama (Ö10) --------------------------------------
+   "← Önceki · 1 … 4 [5] 6 … 50 · Sonraki →". 50 sayfalık listede tek
+   "1 / 50" göstergesi son sayfaya ve aralara erişim vermiyordu. */
+.sayfalama{flex-wrap:wrap}
+.sayfalama .sayfalar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 auto}
+.sayfalama .simdiki{font-family:var(--display);font-weight:700;font-size:13px;color:var(--kagit);background:var(--lacivert);border:1px solid var(--lacivert);padding:8px 11px}
+.sayfalama .uc-nokta{font-weight:700;color:var(--gri);padding:0 2px}
+
+/* --- yer-not katlanır oldu (Ö16) -----------------------------------
+   Dokuz notun 495 px'i anasayfada manşetten (471 px) fazla yer
+   kaplıyordu. Beyan metinleri SİLİNMEDİ: <details> içinde, bir
+   tıklama uzağında ve ait oldukları bölümün altında duruyorlar.
+   JS'siz çalışır; kapalıyken yalnız başlık satırı görünür. */
+details.yer-not{padding:0 12px}
+details.yer-not>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--display);font-weight:700;letter-spacing:.5px;font-size:11px;min-height:24px}
+details.yer-not>summary::-webkit-details-marker{display:none}
+details.yer-not>summary::after{content:"\25BE";transition:transform .18s ease}
+details.yer-not[open]>summary::after{transform:rotate(180deg)}
+details.yer-not[open]{padding-bottom:8px}
+details.yer-not p{margin-top:6px}
+@media(prefers-reduced-motion:reduce){details.yer-not>summary::after{transition:none}}
+
+/* --- doğrulama turu düzeltmeleri (29 Ağustos, aynı gün) --------------
+   Başsız Chrome denetiminin KALDI bulguları; K1/K2/K4/K5/K7/K8 yukarıda
+   kendi satırlarında düzeldi, buraya K3 ve K6 kalanları eklendi. */
+
+/* K6: 24 px altında kalan dokunma hedefleri (WCAG 2.5.8). Negatif kenar
+   boşluğu görünümü değiştirmeden tıklama kutusunu büyütür; satır araları
+   aynı kalır. Künye listeleri, ilçe şeridi, Bursaspor başlık listesi,
+   kart/sıra başlıkları, ilan tür düğmeleri, reklam anahtarı. */
+footer ul{line-height:1.45}
+footer ul a{display:inline-block;padding:4px 0;min-width:24px}
+.kunye-ilce a{display:inline-block;padding:5px 0}
+.bursaspor-liste a{display:inline-block;padding:4px 0;margin:-4px 0}
+.kart h3 a{display:inline-block;padding:2px 0;margin:-2px 0}
+.sira h3 a{display:inline-block;padding:3px 0;margin:-3px 0}
+.ilan-bas .tumu{padding:4px 0;margin-top:-4px;margin-bottom:-4px}
+.ilan-turler button.tur{padding:5px 9px}
+.ilan-dizin .ilan-turler .tur{padding:5px 9px}
+.reklam-anahtar{padding:3px 8px}
+.galeri-kart h3 a,.video-kart h3 a{display:inline-block;padding:3px 0;margin:-3px 0}
+.kirinti a{display:inline-block;padding:5px 0;margin:-5px 0}
+
+/* K4: makale ızgarası ana ızgarayla birlikte daralır — 1001-1140 bandında
+   anasayfa↔makale geçişinde ray dikişi 20 px kayıyordu (doğrulama turu).
+   Aralık İKİ uçtan sınırlı ve kural dosyanın sonunda: ≤1000'de `.izgara`
+   tek sütuna iner; açık uçlu (max-width) yazılsaydı sonra geldiği için o
+   kuralı ezerdi. Ayrıca `tests_yerlesim.sag_ray` ilk `.izgara{` eşleşmesini
+   okur — taban kural (320) dosyada önce kalmalı, bu blok 1140 bloğuna
+   giremez (o blok tabandan önce duruyor). */
+@media(min-width:1001px) and (max-width:1140px){
+  .izgara{grid-template-columns:minmax(0,1fr) 300px}
+}
+
+/* =================================================================
+   30 AĞUSTOS 2026 — TUR 2 (URUN-PLANI.md §35)
+   Kullanıcı istekleri: yazar sunumu değişsin · menü değişsin · sosyal
+   üste çıksın · servis paneli aşağı insin · haber sunumu çarpıcı olsun.
+   Mega levha ve yazar kuşağı yukarıda kendi bölümlerinde; buraya YENİ
+   seçiciler eklendi.
+   ================================================================= */
+
+/* --- üst şeritte sosyal + ihbar pili ------------------------------- */
+.sosyal-simge{width:17px;height:17px;display:block}
+.sosyal-ust{display:flex;gap:2px}
+.sosyal-ust a{display:grid;place-items:center;width:28px;height:28px;color:var(--ust-yazi)}
+.sosyal-ust a:hover{background:var(--kirmizi);color:var(--kagit)}
+/* Pil `--kirmizi-koyu`: düz kırmızı üstünde beyaz 11,5 px yazı 4,6 ile
+   sınırda kalıyordu, koyu tonda 6,6 ölçülüyor. */
+.ihbar-bag{display:inline-flex;align-items:center;gap:6px;background:var(--kirmizi-koyu);
+  color:var(--kagit);font-family:var(--display);font-weight:700;font-size:11.5px;
+  letter-spacing:.8px;padding:5px 10px;border-radius:3px}
+.ihbar-bag:hover{background:var(--kirmizi)}
+.ihbar-bag .sosyal-simge{width:14px;height:14px}
+.ust-baglar{display:flex;align-items:center;gap:10px}
+/* Künyedeki aynı semboller, çerçeveli düğme dilinde. */
+.sosyal a{display:inline-flex;align-items:center;gap:6px}
+.sosyal .sosyal-simge{width:14px;height:14px}
+
+/* --- .ust-blok: dar ekranda manşet dörtlünün önüne ------------------
+   Sapma yalnız bu üç kardeş arasında; DOM ve odak sırası değişmiyor. */
+.ust-blok{display:flex;flex-direction:column}
+.ust-blok>*{min-width:0}
+
+/* SIRA ÖNEMLİ (30 Ağustos 2026): bu blok `.kutu` ve `.kutu-bas`
+   tanımlarının ALTINDA durmak zorunda. Panel o iki bileşenin iskeletini
+   kullanıp zeminini ve yazı rengini eziyor; yukarıda dursaydı `.kutu`nun
+   beyaz zemini kazanır, beyaz yazı beyaz üstünde kaybolurdu (ölçüldü).
+   Yukarı taşıma. */
+/* --- SON DAKİKA paneli (30 Ağustos 2026, §38) ----------------------
+   Kullanıcı isteği: "daha dikkat çekici hale getir".
+
+   Önceki hâli beyaz `.kutu` + kırmızı `.kutu-bas.vurgu` idi — yani sayfadaki
+   EN ÇOK OKUNANLAR, BURSASPOR ve öbür bütün kutularla AYNI kalıptı; göz onu
+   bir uyarı olarak değil sıradan bir liste olarak okuyordu. Üç hamle:
+
+   1) KENDİ SAHASI. Panel bütünüyle koyu kırmızı zemine alındı. Sayfadaki tek
+      dolu-renk blok o; manşetin hemen altında duruyor ve gri/beyaz ritmi
+      kesiyor. Renk seçimi kontrast ölçümünden (bkz. `:root`, --sd-zemin).
+   2) HİYERARŞİ. İlk kalem manşet ağırlığında (`li.bas`), kalan beşi 14 px.
+      Altı başlık eşit puntoda basılınca liste düzleşiyor ve "en yenisi
+      hangisi" sorusu gözle cevaplanamıyordu.
+   3) CANLI PİLİ. Nabız atan noktalı beyaz pil — panelin tazeliğini söyleyen
+      tek işaret. `prefers-reduced-motion`'da nabız durur, pil ve nokta
+      GÖRÜNÜR kalır.
+
+   ODAK HALKASI: sitenin varsayılan halkası `--kirmizi` ve kırmızı sahada
+   görünmez olurdu; bu panelin içinde BEYAZA çevriliyor. Kaldırma. */
+.sondakika{background:var(--sd-zemin);border-color:var(--sd-zemin);
+  color:var(--kagit);box-shadow:var(--kart-golge)}
+.sondakika .kutu-ic{padding:10px 14px 12px}
+.sondakika a{color:var(--kagit)}
+.sondakika a:hover{color:var(--kagit);text-decoration:underline}
+.sondakika a:focus-visible{outline-color:var(--kagit)}
+
+/* Başlık şeridi parlak tonda: sahanın üstünde kendi katmanı olsun. */
+.sondakika-bas{background:var(--sd-serit);color:var(--kagit);padding:8px 14px;gap:10px}
+.sondakika-bas h2{font-family:var(--display);font-weight:900;font-size:16px;
+  letter-spacing:1.4px}
+.sondakika-bas .tumu{margin-left:auto;font-size:11.5px;color:var(--kagit)}
+.sondakika-bas .tumu a{display:inline-block;padding:6px 0}
+
+/* CANLI pili: beyaz zemin + koyu kırmızı yazı (parlak şerit üstünde beyaz
+   11 px yazı 4,6 ile sınırda kalıyordu — `.ihbar-bag` ile aynı ölçüm). */
+.sondakika-canli{display:inline-flex;align-items:center;gap:5px;flex:none;
+  background:var(--kagit);color:var(--sd-zemin);
+  font-family:var(--display);font-weight:900;font-size:11px;letter-spacing:1.1px;
+  padding:3px 8px;border-radius:2px}
+.sondakika-canli .nokta{width:7px;height:7px;border-radius:50%;
+  background:var(--sd-zemin);animation:sd-nabiz 1.6s ease-in-out infinite}
+@keyframes sd-nabiz{0%,100%{opacity:1;transform:scale(1)}
+                    50%{opacity:.3;transform:scale(.72)}}
+@media(prefers-reduced-motion:reduce){.sondakika-canli .nokta{animation:none}}
+
+/* Liste IZGARA: geniş yerleşimde manşet kalemi iki sütunu birden kaplasın
+   diye `columns` değil `grid` kullanılıyor (çok sütunda `column-span`
+   güvenilir değil). Satır akışı DOM sırasını izler — odak sırası görsel
+   sırayla aynı kalır. */
+.sondakika-liste{list-style:none;display:grid;grid-template-columns:minmax(0,1fr)}
+/* Zaman sabit sütunda: başlık sarınca zamanın altına kaymaz, göz zaman
+   sütununu dikey tarayabilir. 64 px `kisa_zaman`ın en uzun çıktısına göre:
+   "31 Eki 2025" (bugün olmayan, başka yıla ait kayıt). */
+.sondakika-liste li{display:grid;grid-template-columns:64px minmax(0,1fr);
+  gap:10px;align-items:baseline;padding:9px 0;
+  border-bottom:1px solid var(--sd-cizgi)}
+.sondakika-liste li:last-child{border-bottom:0;padding-bottom:2px}
+.sondakika-liste time{font-family:var(--display);font-weight:700;font-size:12.5px;
+  color:var(--sd-saat);letter-spacing:.3px;white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.sondakika-liste a{font-size:14px;line-height:1.34;font-weight:500}
+
+/* Manşet kalemi: en yeni haber gözle ilk bulunan olsun. */
+.sondakika-liste li.bas{padding-top:4px;padding-bottom:11px;
+  border-bottom:1px solid var(--sd-bas-cizgi)}
+.sondakika-liste li.bas time{font-size:13px}
+.sondakika-liste li.bas a{font-family:var(--display);font-weight:900;
+  font-size:19px;line-height:1.16;letter-spacing:.1px}
+
+/* --- SON DAKİKA satırı: liste + 300x250 pano (30 Ağustos 2026, §37) --
+   Manşetin hemen altında, iki sütun. Sağ sütun panonun kendi ölçüsü olan
+   300 px; sol sütun kalan genişliği alıyor.
+
+   Kutu panoyla AYNI BOYA çekiliyor (`align-items:stretch`): 6 kalem iki
+   sütunda ~180 px sürüyor, panonun 250 px'i yanında beyaz kutunun altında
+   70 px'lik boşluk kalırdı. Liste esneyen gövdede dikeyde ortalanıyor.
+
+   Dar ekranda (≤1000) tek sütuna iner ve pano listenin ALTINA geçer:
+   300 px sabit sütun 360 px'lik ekranda listeye 40 px bırakırdı. */
+/* SÜTUNLAR MANŞET ALANIYLA AYNI (30 Ağustos 2026, kullanıcı isteği:
+   "son dakika panelini manşet alanının genişliğiyle aynı yap, aradaki
+   boşluklar eşleşsin"). Ölçü `.manset-alani`den kopyalanır — 320 px sağ
+   sütun, 18 px boşluk — ve 1140 px'te onunla BİRLİKTE 300 px'e iner.
+   Panel manşetin tam altında durduğu için sütun kenarları üst üste
+   binmezse göz kaymayı hemen görüyor.
+   Bu iki değer değişirse `.manset-alani` ile birlikte değiştir. */
+.sondakika-satir{display:grid;grid-template-columns:minmax(0,1fr) 320px;
+  gap:18px;align-items:stretch;margin-bottom:16px}
+.sondakika-satir .reklam{margin-bottom:0;align-self:start}
+.sondakika-satir .sondakika{display:flex;flex-direction:column;margin-bottom:0}
+.sondakika-satir .kutu-ic{flex:1;display:flex;align-items:center}
+.sondakika-satir .sondakika-liste{width:100%}
+/* Manşet alanı 1140 px'te sağ sütunu 320 -> 300 px'e indiriyor; satır onunla
+   BİRLİKTE inmeli. Kural burada, çünkü `.manset-alani`nin 1140 bloğu dosyada
+   çok önce geçiyor ve satırın taban kuralı onu eziyordu (ölçüldü: 1082 px'te
+   sütun kenarları 20 px kayıyordu). */
+@media(max-width:1140px){
+  .sondakika-satir{grid-template-columns:minmax(0,1fr) 300px}
+}
+/* İki sütun: tek sütunda 6 kalem 320 px'lik bir merdiven olurdu.
+   30 Ağustos 2026, kullanıcı kararı: ilk kalem artık SATIRI KAPLAMIYOR
+   (`grid-column:1/-1` kalktı) — altı kalem de ikili sütunda, üç eşit satır.
+
+   Vurgu duruyor ama yarım sütuna sığacak ölçüde: 22 -> 17 px. Ayraç ve
+   dolgu komşusuyla eşitlendi; kaplayan hâlinden kalan `padding-top:4px`
+   ve parlak ayraç, aynı satırdaki iki başlığın üst hizasını 5 px
+   kaydırıyor ve sağ hücrede karşılığı olmayan bir çizgi bırakıyordu. */
+.sondakika.genis .sondakika-liste{grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0 28px}
+.sondakika.genis .sondakika-liste li.bas{grid-column:auto;padding:9px 0;
+  border-bottom:1px solid var(--sd-cizgi)}
+.sondakika.genis .sondakika-liste li.bas a{font-size:17px}
+/* Alt kenar düz bitsin: `:last-child` tek sütunda son satırdı, ikili
+   sütunda son SATIR iki kalemdir. Altı kalem üç tam satır yapıyor —
+   `SON_DAKIKA_ADET` tek sayıya çekilirse bu kural yeniden ölçülmeli. */
+.sondakika.genis .sondakika-liste li:nth-last-child(-n+2){border-bottom:0}
+@media(max-width:1000px){
+  .sondakika-satir{grid-template-columns:minmax(0,1fr)}
+  .sondakika-satir .reklam{margin-bottom:0;justify-self:center;width:300px;max-width:100%}
+}
+@media(max-width:768px){
+  .sondakika.genis .sondakika-liste{grid-template-columns:minmax(0,1fr)}
+  .sondakika.genis .sondakika-liste li.bas a{font-size:19px}
+}
+
+/* --- GÜNÜN MANŞETLERİ listesi (manşet 15 -> 5 + 10) ----------------- */
+.manset-liste{background:var(--kagit);border:1px solid var(--cizgi);
+  border-top:3px solid var(--kirmizi);padding:8px 14px 6px;margin-bottom:16px}
+.manset-liste h2{font-family:var(--display);font-weight:900;font-size:11.5px;
+  letter-spacing:1.1px;color:var(--kirmizi-koyu);padding-bottom:4px}
+.manset-liste ul{list-style:none;columns:2;column-gap:32px}
+.manset-liste li{display:flex;gap:12px;align-items:baseline;padding:8px 0;
+  border-bottom:1px dotted var(--cizgi);break-inside:avoid}
+.manset-liste time{flex:none;width:64px;font-size:11.5px;color:var(--gri);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.manset-liste a{font-family:var(--display);font-weight:700;font-size:14px;
+  line-height:1.25;letter-spacing:.2px;display:inline-block;padding:3px 0;margin:-3px 0}
+.manset-liste a:hover{color:var(--kirmizi-koyu)}
+
+/* --- bölüm başlığı: ikinci ağırlık ---------------------------------
+   Editoryal bölümler beyaz zeminde lacivert başlık + kırmızı fitil;
+   servis ve yükümlülük bölümleri (piyasa, resmî ilan, şehir servisleri,
+   vizyon) dolu bantta kalır. BURSASPOR dokunulmaz — yeşil dolu bant
+   kulüp kimliğidir. Kırmızı `h2::before` fitili iki ağırlıkta da durur:
+   ortak görsel imza. */
+.kutu-bas.hafif{background:var(--kagit);color:var(--lacivert);
+  border-bottom:2px solid var(--lacivert);padding:9px 12px 7px}
+.kutu-bas.hafif h2{color:var(--lacivert);font-size:18px;font-weight:900;letter-spacing:.5px}
+.kutu-bas.hafif .tumu{color:var(--gri)}
+.kutu-bas.hafif .tumu a{color:var(--gri)}
+.kutu-bas.hafif .tumu a:hover{color:var(--kirmizi-koyu);text-decoration:underline}
+
+/* --- ŞEHİR SERVİSLERİ: tam genişlik, üç panel açık ------------------ */
+/* 30 Ağustos 2026: üç eşit sütun DEĞİL artık. Hava paneli satırın
+   tamamını kaplıyor, namaz ve eczane altında ikiye bölünüyor. Sekmesiz
+   "üçü de açık" kararı aynen sürüyor — yalnız ağırlıklar değişti.
+   Sınıf adı `servis-uclu` korundu: hâlâ üç servis var ve adı üç yerde
+   (şablon, betik, künye çapası) geçiyor. */
+.servis-uclu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.servis-dilim.genis{grid-column:1 / -1}
+.servis-dilim h3 .yer{float:right;font-weight:400;letter-spacing:.4px;
+  color:var(--gri);text-transform:none}
+/* `scroll-margin-top`: menüden gelen çapa bağlantısı yapışkan bandın
+   altına düşmesin. */
+.servis-dilim{background:var(--kagit);border:1px solid var(--cizgi);padding:12px;
+  scroll-margin-top:74px}
+.servis-dilim h3{font-family:var(--display);font-size:12px;letter-spacing:1.1px;
+  color:var(--lacivert);border-bottom:2px solid var(--kirmizi);
+  padding-bottom:6px;margin-bottom:10px}
+
+/* --- ray: ilçe ağı -------------------------------------------------- */
+.ilce-agi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.ilce-agi a{display:block;font-family:var(--display);font-weight:700;font-size:12.5px;
+  letter-spacing:.3px;color:var(--lacivert);background:var(--yumusak);
+  border:1px solid var(--cizgi);padding:7px 9px;text-align:center}
+.ilce-agi a:hover{background:var(--lacivert);color:var(--kagit);border-color:var(--lacivert)}
+
+/* --- dörtlü: dört EŞİT kutucuk --------------------------------------
+   30 Ağustos 2026, kullanıcı kararı: ilk kutucuk 1,5fr genişlikte ve
+   başlığı 25 px idi ("ölçülü asimetri"); dördü eşit olacak. Genişlik
+   `.dortlu`nun taban kuralından geliyor (repeat(4,1fr)), başlık 21 px.
+   Vurgu yalnız kırmızı üst çizgide kaldı: ızgarayı ve tipografiyi
+   bozmuyor, sıralamayı yine de belli ediyor. */
+.dortlu .kart{border-top:3px solid var(--lacivert)}
+/* `:first-child` DEĞİL: `.dortlu`nun ilk çocuğu ekran okuyucu için
+   duran gizli <h2>, kart değil — seçici hiçbir şeyle eşleşmiyordu
+   (30 Ağustos ölçümü, K3). `:first-of-type` ilk <article>'ı yakalar. */
+.dortlu .kart:first-of-type{border-top-color:var(--kirmizi)}
+
+/* --- kategori işaret rengi denemesi (yalnız iki kategori) ----------- */
+.kart .ust .etiket-bursa{color:var(--isaret-bursa)}
+.kart .ust .etiket-ekonomi{color:var(--isaret-ekonomi)}
+
+/* --- gövde serifi --------------------------------------------------- */
+/* Satır uzunluğu ölçümle ayarlanır: `ch` birimi "0" rakamının genişliği
+   ve serifte farklı çıkıyor (§34 K5 dersi). Değer ölçümden sonra
+   güncellenir. */
+.metin{font-family:var(--serif);line-height:1.66;letter-spacing:.1px}
+.detay .spot{font-family:var(--serif);font-size:17px;line-height:1.55}
+
+@media(max-width:768px){
+  .yazar-kusak{grid-auto-columns:minmax(158px,1fr)}
+  .yazar-kusak .portre{width:80px;height:80px}
+  .manset-liste ul{columns:1}
+  /* Dar ekranda manşet önce gelir: 360'ta okur dört ikincil kartı
+     geçmeden ana manşeti göremiyordu (1550 px aşağıdaydı).
+     30 Ağustos 2026 (§37): GÜNÜN MANŞETLERİ `.ust-blok`tan çıkıp aşağı
+     indi, SON DAKİKA satırı onun yerine girdi. Sıra üç değil ÜÇ KARDEŞ
+     üzerinden yeniden kuruldu — manşet · son dakika · dörtlü. */
+  .ust-blok .manset-alani{order:1}
+  .ust-blok .sondakika-satir{order:2}
+  .ust-blok .dortlu{order:3}
+}
+@media(max-width:700px){
+  .servis-uclu{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:600px){
+  .yazar-kusak{grid-auto-columns:150px}
+  .yazar-kusak .portre{width:72px;height:72px}
+  .yazar-kusak b{font-size:14.5px}
+  /* Listede ilk 6 satır görünür; onunun da DOM'da durması arama motoru
+     ve ekran okuyucu için gerekli. */
+  .manset-liste li:nth-child(n+7){display:none}
+}
+/* 420 altı: YouTube ve RSS şeritten düşer (künyede ikisi de var). */
+@media(max-width:420px){
+  .sosyal-ust .dar-gizle{display:none}
 }

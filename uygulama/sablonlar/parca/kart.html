@@ -1,12 +1,21 @@
 {% load site_etiket %}
 {% comment %}
-Tek haber kartı. Tasarımdaki `.kart` yapısı birebir korunur.
+Tek haber kartı. Tasarımdaki `.kart` yapısı korunur; iki ek 29 Ağustos 2026
+görsel denetiminden geldi (URUN-PLANI.md §34):
+
+- `.ust` satırında yayın zamanı: okur "bu yeni mi?" sorusunu tıklamadan
+  yanıtlar. Zaman yalnız kayıtta varsa basılır — 486.655/486.667 kayıtta var.
+- `genis` bayrağı: kategori sayfasının ilk haberi iki sütuna yayılır.
+
+`kategori_gizle` doluysa (kategori sayfası kendini yollar) kategori adı
+basılmaz — sayfa başlığının kartlarda yirmi kez tekrarı ölü satırdı; ilçe
+adı bilgi taşıdığı için basılmaya devam eder.
 
 Görsel: arşivin büyük bölümünde yerel dosya YOK (URUN-PLANI.md F3 notu).
 `gorsel_var` yanlışsa uzak adrese bağlanmak yerine kategori temsilî SVG'si
 çizilir — sayfa internetsiz de açılmalı ve kırık görsel görünmemeli.
 {% endcomment %}
-<article class="kart">
+<article class="kart{% if genis %} genis{% endif %}">
   {% if goster_foto %}
     <div class="foto {{ h|kart_rengi }}">
       {% if h.gorsel_yolu %}
@@ -17,7 +26,14 @@ Görsel: arşivin büyük bölümünde yerel dosya YOK (URUN-PLANI.md F3 notu).
     </div>
   {% endif %}
   <div class="ic">
-    <div class="ust">{{ h.ilce.ad|default:h.kategori.ad|baslikla }}</div>
+    <div class="ust">
+      {% comment %}`etiket-<slug>` sınıfı işaret rengi denemesi içindir
+      (§35): CSS yalnız BURSA ve EKONOMİ'yi tanır, kalan kategoriler
+      kırmızıda kalır. Renk KATEGORİDEN gelir — ilçe adı basılan kartta da
+      kategorinin işareti korunur.{% endcomment %}
+      {% if h.ilce %}<span{% if h.kategori %} class="etiket-{{ h.kategori.slug_al }}"{% endif %}>{{ h.ilce.ad|baslikla }}</span>{% elif not kategori_gizle %}<span{% if h.kategori %} class="etiket-{{ h.kategori.slug_al }}"{% endif %}>{{ h.kategori.ad|baslikla }}</span>{% endif %}
+      {% if h.yayin_zamani %}<time datetime="{{ h.yayin_zamani|date:'c' }}" title="{{ h.yayin_zamani|date:'j F Y, H:i' }}">{{ h.yayin_zamani|kisa_zaman }}</time>{% endif %}
+    </div>
     <h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3>
     {% if goster_spot and h.spot %}<p>{{ h.spot|truncatechars:120 }}</p>{% endif %}
   </div>

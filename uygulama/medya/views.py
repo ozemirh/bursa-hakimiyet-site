@@ -17,6 +17,7 @@ from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
 
+from icerik.models import Haber
 from taksonomi.models import Kategori, KategoriTur
 
 from .models import FotoGaleri, KoseYazisi, Video, Yazar
@@ -26,7 +27,13 @@ YAZAR_SAYFA_BOYU = 15
 
 
 def _sayfala(request, sorgu, boyut=SAYFA_BOYU):
-    return Paginator(sorgu, boyut).get_page(request.GET.get("sayfa") or 1)
+    sayfa = Paginator(sorgu, boyut).get_page(request.GET.get("sayfa") or 1)
+    # icerik._sayfala ile aynı sözleşme: parca/sayfalama.html numaraları
+    # bu listeden çizer (29 Ağustos, numaralı sayfalama).
+    sayfa.numaralar = (list(sayfa.paginator.get_elided_page_range(
+        sayfa.number, on_each_side=2, on_ends=1))
+        if sayfa.paginator.num_pages > 1 else [])
+    return sayfa
 
 
 def _kanoniklestir(request, kayit):
@@ -95,6 +102,12 @@ def kose_yazisi(request, dilim_slug, dilim_id, slug, kimlik):
         "baslik": kayit.baslik,
         # Aynı yazarın diğer yazıları; kendisi hariç.
         "digerleri": kayit.yazar.yazilari().exclude(pk=kayit.pk)[:5],
+        # Sağ ray (29 Ağustos görsel denetimi): makale ızgarasının ikinci
+        # sütunu boş kalıyordu — sayfa genişliğinin %31'i (342 px, ölçüldü).
+        "en_cok": Haber.yayindakiler()
+                       .select_related("kategori")
+                       .prefetch_related("kategori__turler")[:5],
+        "ray_yazarlar": Yazar.listedekiler()[:5],
     })
 
 

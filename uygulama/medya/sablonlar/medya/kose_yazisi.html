@@ -35,6 +35,7 @@ bağlantı durur.
               <span class="yazan"><a href="{{ yazar.get_absolute_url }}">{{ yazar.ad }}</a></span>
               {% if yazi.yayin_zamani %}<span><time datetime="{{ yazi.yayin_zamani|date:'c' }}">{{ yazi.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
               {% if yazi.kategori %}<span>{{ yazi.kategori.ad|baslikla }}</span>{% endif %}
+              {% if yazi.kelime_sayisi %}<span>{{ yazi.kelime_sayisi|okuma_dakikasi }} dk okuma</span>{% endif %}
               <div class="arac">
                 <button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button>
                 <button type="button" class="yazi-kucult" aria-label="Yazı boyutunu küçült">A&minus;</button>
@@ -74,6 +75,37 @@ bağlantı durur.
             </div>
           </div>
         </div>
+
+        <aside class="ray" aria-label="Öne çıkan listeler">
+          {% comment %}29 Ağustos 2026 görsel denetimi (Ö1): haber detayla
+          aynı gerekçe — `.izgara`nın ikinci sütunu boş kalıyordu. Köşe
+          sayfasının rayında yazar dizini öncelikli.{% endcomment %}
+          {% include "parca/son_dakika.html" %}
+
+          <div class="reklam kare-300"><span><b>REKLAM ALANI</b><span class="olcu">-Haber arası1- 300x250</span></span></div>
+
+          {% if ray_yazarlar %}
+          <div class="kutu">
+            <div class="kutu-bas"><h2>YAZARLAR</h2><span class="tumu"><a href="/yazarlar">Tüm yazarlar &rarr;</a></span></div>
+            <div class="kutu-ic">
+              <ul class="yazar-ray">
+{% for y in ray_yazarlar %}                <li><a href="{{ y.yol }}"><span class="vesika" aria-hidden="true">{{ y.basharfler }}</span><span><b>{{ y.ad }}</b><span class="yazi-bas">{{ y.son_yazi }}</span></span></a></li>
+{% endfor %}              </ul>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if en_cok %}
+          <div class="kutu">
+            <div class="kutu-bas vurgu"><h2>EN ÇOK OKUNANLAR</h2></div>
+            <div class="kutu-ic">
+              <ol class="sira">
+{% for h in en_cok %}                <li><span class="no">{{ forloop.counter }}</span><h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3></li>
+{% endfor %}              </ol>
+            </div>
+          </div>
+          {% endif %}
+        </aside>
       </div>
 {% endblock %}
 

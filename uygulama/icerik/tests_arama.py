@@ -447,14 +447,17 @@ class SayfaSorguProfili(TestCase):
         self.assertIn("Yazar 0 yazi 2", govde)     # en yeni yazı
         self.assertNotIn("Yazar 0 yazi 0", govde)  # en eski gösterilmemeli
 
-    def test_anasayfa_yazar_kutusu_cift_sormuyor(self):
-        """Sağ raydaki yazar kutusu 5 yazar gösteriyor; `son_yazi` yazar
-        başına bir kez sorulmalı (+1 arşiv sayımı meşru)."""
+    def test_anasayfa_yazar_kusagi_cift_sormuyor(self):
+        """Yazar kuşağı 10 yazar gösteriyor (§35: raydan tam genişliğe
+        çıktı); `son_yazi` yazar başına BİR kez sorulmalı, +1 arşiv sayımı
+        meşru. Sınır kuşağın boyuyla birlikte 5'ten 10'a çıktı — ölçüt
+        "yazar başına bir sorgu", sabit bir sayı değil."""
+        from icerik.views import anasayfa  # noqa: F401  (sözleşme belgesi)
         _, sorgular = self._sorgu_sayisi("/")
         kose = [s for s in sorgular if "medya_koseyazisi" in s["sql"]]
         sayim = [s for s in kose if "COUNT" in s["sql"].upper()]
-        self.assertLessEqual(len(kose) - len(sayim), 5,
-                             f"5 yazar için {len(kose) - len(sayim)} sorgu")
+        self.assertLessEqual(len(kose) - len(sayim), 10,
+                             f"10 yazar için {len(kose) - len(sayim)} sorgu")
 
     def test_kategori_sayimi_sinirli(self):
         from icerik.views import SinirliSayfalayici

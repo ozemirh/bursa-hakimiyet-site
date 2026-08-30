@@ -19,9 +19,15 @@
         </div>
         <div class="kutu-ic">
           <h2 class="gorsel-gizli">Haberler</h2>
+          {% comment %}İlk kayıt yalnız 1. SAYFADA büyük yerleşim alır
+          (29 Ağustos, Ö15): sonraki sayfalar kronolojik devamdır, "bölümde
+          bugün ne var" iddiası taşımaz. `kategori_gizle` kategori sayfasında
+          doludur; ilçe sayfası aynı şablonu kullanır ama kategori adı orada
+          bilgi taşıdığı için basılmaya devam eder.{% endcomment %}
           <div class="kutu-izgara">
-            {% for h in sayfa %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 %}
-            {% empty %}<p class="bos">Bu listede henüz haber yok.</p>
+            {% for h in sayfa %}{% if forloop.first and sayfa.number == 1 %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 genis=1 kategori_gizle=kategori %}
+            {% else %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 kategori_gizle=kategori %}
+            {% endif %}{% empty %}<p class="bos">Bu listede henüz haber yok.</p>
             {% endfor %}
           </div>
         </div>

@@ -70,6 +70,11 @@ def haber(request, kategori, slug, kimlik):
         "haber": kayit,
         "baslik": kayit.baslik,
         "ilgili": _ilgili(kayit),
+        # Sağ ray (29 Ağustos görsel denetimi): `.izgara` iki sütun ayırıyor
+        # ama şablon tekini dolduruyordu — her makale sayfasında 342 px ölü
+        # sütun (ölçüldü). Ray anasayfanın bileşenlerini yeniden kullanır.
+        "en_cok": _en_cok(kayit),
+        "ilcedekiler": _ilcedekiler(kayit),
     })
 
 
@@ -80,6 +85,26 @@ def _ilgili(kayit):
             .prefetch_related("kategori__turler")
             .filter(kategori=kayit.kategori)
             .exclude(pk=kayit.pk)[:5])
+
+
+def _en_cok(kayit):
+    """Raydaki liste. Okunma sayacı dolana kadar anasayfayla aynı kural:
+    editör seçkisi gibi davranan en yeniler (URUN-PLANI.md §4, madde 8)."""
+    return (Haber.yayindakiler()
+            .select_related("kategori")
+            .prefetch_related("kategori__turler")
+            .exclude(pk=kayit.pk)[:5])
+
+
+def _ilcedekiler(kayit):
+    """Aynı ilçeden son haberler; ilçesiz kayıtta bölüm hiç çizilmez."""
+    if not kayit.ilce_id:
+        return []
+    return (Haber.yayindakiler()
+            .select_related("kategori")
+            .prefetch_related("kategori__turler")
+            .filter(ilce=kayit.ilce)
+            .exclude(pk=kayit.pk)[:4])
 
 
 def _dilimli(request, tur, ad, dilim_slug, dilim_id, slug, kimlik):

@@ -64,10 +64,11 @@
     function sayacDur(){ if(sayac){ window.clearInterval(sayac); sayac = null; } }
     function sayacBaslat(){
       sayacDur();
-      if(azalt.matches){ return; }
+      if(!otoIstendi()){ return; }
       sayac = window.setInterval(function(){ goster(aktif + 1); }, 9000);
     }
-    // Otomatik gecis artik bir secim degil, VARSAYILAN (27 Agustos karari).
+    // Otomatik gecis bir secim degil, VARSAYILAN (27 Agustos karari;
+    // 29 Agustos'ta denenen duraklatma dugmesi kullanici karariyla kaldirildi).
     // Tek istisna erisilebilirlik: prefers-reduced-motion: reduce diyen
     // kullanicida hic donmez - hareket rahatsizlik verebiliyor. Fare ustune
     // gelince ve odak icerideyken de durur; okur bir seyi okumaya calisiyor.
@@ -81,7 +82,7 @@
     // Kullanici hareket azaltmayi sonradan acarsa da dursun.
     if(azalt.addEventListener){
       azalt.addEventListener('change', function(){
-        if(azalt.matches){ sayacDur(); } else { sayacBaslat(); }
+        if(otoIstendi()){ sayacBaslat(); } else { sayacDur(); }
       });
     }
 
@@ -103,6 +104,31 @@
     goster(0);
   }
   dizi('.slayt-kap').forEach(slaytKur);
+
+  /* ---- reklam anahtarı: sunum aracı, okur özelliği değil ----
+     Düğme yalnız geliştirme/panel oturumunda ÇİZİLİYOR (icerik/baglam.py);
+     burada da varlığı denetleniyor, yoksa betik sessizce geçiyor.
+     Tercih `<html data-reklam>` üzerinde; ilk okuması `<head>` içindeki
+     minik betikte, çünkü sayfa çizilmeden uygulanmalı. */
+  var reklamAnahtar = document.querySelector('.reklam-anahtar');
+  if(reklamAnahtar){
+    var kok = document.documentElement;
+    var yazi = reklamAnahtar.querySelector('.reklam-anahtar-yazi');
+    var uygula = function(kapali, yaz){
+      if(kapali){ kok.setAttribute('data-reklam', 'kapali'); }
+      else { kok.removeAttribute('data-reklam'); }
+      reklamAnahtar.setAttribute('aria-pressed', kapali ? 'true' : 'false');
+      if(yazi){ yazi.textContent = kapali ? 'Reklamları göster' : 'Reklamları gizle'; }
+      /* localStorage gizli sekmede ya da site verisi kapalıyken atar;
+         atması düğmeyi çalışmaz hâle getirmemeli, tercih o oturumda
+         yaşar. */
+      if(yaz){ try{ localStorage.setItem('bh-reklam', kapali ? 'kapali' : 'acik'); }catch(e){} }
+    };
+    uygula(kok.getAttribute('data-reklam') === 'kapali', false);
+    reklamAnahtar.addEventListener('click', function(){
+      uygula(reklamAnahtar.getAttribute('aria-pressed') !== 'true', true);
+    });
+  }
 
   /* ---- bandda arama: dar ekranda simgeyle açılır ---- */
   var aramaDugme = document.querySelector('.ara-ac');
@@ -158,6 +184,15 @@
   function menuAc(){
     menuDugme.setAttribute('aria-expanded', 'true');
     tamMenu.hidden = false;
+    /* MEGA LEVHA (30 Agustos 2026, §35): genis ekranda bes bolumun hepsi
+       acik gelir - levha bes sutunlu bir tablodur, akordeon degil. Sablona
+       `open` YAZILMAZ: sunucu HTML'i bayt bayt ayni kalsin ki menunun DOM
+       sozlesmeleri (18 ilce, 50 baglanti, tek acik bolum) oynamasin.
+       Dar ekranda akordeon KATEGORILER-acik haliyle gelir; hepsini acmak
+       100+ satirlik bir kaydirma duvari kurardi. */
+    if(window.matchMedia('(min-width:1001px)').matches){
+      dizi('.menu-bolum', tamMenu).forEach(function(b){ b.open = true; });
+    }
     /* Odak panelin ilk odaklanabilir öğesine gider — artık bu bir
        `summary`. Odak sırası görsel sırayla aynı kalsın diye DOM sırasının
        ilki alınıyor. */
@@ -219,6 +254,41 @@
     aramaKutusu.addEventListener('keydown', function(e){
       if(e.key !== 'Escape'){ return; }
       if(aramaKutusu.value !== ''){ e.stopPropagation(); aramaKutusu.value = ''; haberSuz(); }
+    });
+  }
+
+  /* ---- resmî ilan tür süzgeci ----
+     Şerit eskiden yalnızca renk kodunu tanıtan bir lejanttı. Kayıtlar
+     gerçek veriye bağlanınca gezinme aracına çevrildi. Betik yüklenmezse
+     bütün ilanlar görünür kalır: süzgeç bir ilerleme, bir bağımlılık
+     değil. Sayılar SAYFADAKİ ilanları sayar; arşiv toplamı bölümün
+     altındaki notta yazar. */
+  var ilanSerit = document.querySelector('.ilan-turler');
+  var ilanSatirlari = dizi('.ilan-liste li[data-tur]');
+  if(ilanSerit && ilanSatirlari.length){
+    var turNot = ilanSerit.querySelector('.tur-not');
+    /* Varsayılan metin sayfadan OKUNUYOR, `data-varsayilan` ile
+       kopyalanmıyor: aynı cümle iki yerde durunca biri güncellenip
+       diğeri unutuluyordu. */
+    var turVarsayilan = turNot ? turNot.textContent : '';
+    var ilanDugmeleri = dizi('button.tur', ilanSerit);
+    ilanSerit.addEventListener('click', function(e){
+      var dugme = e.target.closest ? e.target.closest('button.tur') : null;
+      if(!dugme || dugme.disabled){ return; }
+      var tur = dugme.getAttribute('data-tur');
+      var sayi = 0;
+      ilanDugmeleri.forEach(function(d){
+        d.setAttribute('aria-pressed', d === dugme ? 'true' : 'false');
+      });
+      ilanSatirlari.forEach(function(satir){
+        var uyar = !tur || satir.getAttribute('data-tur') === tur;
+        satir.classList.toggle('gizli', !uyar);
+        if(uyar){ sayi++; }
+      });
+      if(!turNot){ return; }
+      if(!tur){ turNot.textContent = turVarsayilan; return; }
+      var ad = (dugme.getAttribute('data-ad') || '').toLocaleLowerCase('tr');
+      turNot.textContent = 'Sayfadaki ' + sayi + ' ' + ad + ' ilanı gösteriliyor.';
     });
   }
 

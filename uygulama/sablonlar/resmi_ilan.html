@@ -1,0 +1,94 @@
+{% extends "taban.html" %}
+{% load site_etiket %}
+
+{% block baslik %}{% if secili_ad %}{{ secili_ad|baslikla }} ilanları · {% endif %}Resmî ilanlar — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}Bursa Hakimiyet'in yayımladığı resmî ilanların dizini: {{ arsiv_toplami }} arşiv kaydı{% if arsiv_ilk and arsiv_son %}, {{ arsiv_ilk|date:"j F Y" }} – {{ arsiv_son|date:"j F Y" }}{% endif %}. Açık ilan listesi değildir.{% endblock %}
+{% comment %}Kanonik adres HER ZAMAN dizinin kendisi. `?tur=…` bir sayfa
+değil, aynı dizinin bir kesiti; kesitler ayrı ayrı indekslenirse aynı
+başlıklar birden çok adreste görünür. `noindex` EKLENMEDİ: kanonik ile
+birlikte kullanılınca ikisi çelişik sinyal veriyor ve arama motorları
+hangisine uyacağını söylemiyor.{% endcomment %}
+{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{% url 'resmi-ilan' %}">{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Resmî ilanlar</span>
+      </nav>
+
+      <section class="kutu ilan-dizin">
+        <div class="kutu-bas">
+          <h1>RESMÎ İLANLAR</h1>
+          {% comment %}Dönem etiketi anasayfadan devralınan çözüm: kayıtların
+          tamamı arşiv, bitiş tarihi alanı boş. Aralık başlıkta durunca okur
+          listeyi "bugünün açık ihaleleri" sanmıyor. Dizinde daha da gerekli,
+          çünkü liste uzun ve okur alta indikçe ilk satırın tarihini unutur.{% endcomment %}
+          {% if son %}<span class="donem">{% if ilk %}{{ ilk|date:"j F" }} &ndash; {% endif %}{{ son|date:"j F Y" }}</span>{% endif %}
+          <span class="tumu">{% if secili_ad %}{{ secili_ad|baslikla }} &middot; {% endif %}{{ sayfa.paginator.count }} ilan</span>
+        </div>
+
+        {% comment %}Süzgeç ADRESTE, düğmede değil. Anasayfadaki şerit
+        JavaScript ile sayfadaki satırları gizliyor; burada liste sayfalanmış
+        olabildiği için aynı çözüm yalan söylerdi — tarayıcı yalnız o sayfayı
+        süzer, sayı ise arşivi sayar. Bağlantı olunca süzgeç paylaşılabilir,
+        geri tuşuyla geri alınabilir ve JavaScript kapalıyken de çalışır.
+
+        Sayıların ilkesi anasayfayla AYNI: düğmedeki sayı, basınca geleni
+        sayar. Orada tıklama sayfayı süzüyordu, sayı sayfayı sayıyordu;
+        burada tıklama arşivi süzüyor, sayı arşivi sayıyor.
+
+        Kaydı olan türler önce (`tur_dagilimi`), kaydı olmayan ikisi sonda ve
+        bağlantı DEĞİL: tıklanınca boş liste veren bir bağlantı, bağlantı
+        sayılmaz. Dördü de duruyor, çünkü dört türün yasal karşılığı var
+        (§16) ve "bu gazete bu türde ilan yayımlamıyor" da bilgidir.
+
+        `role="status"` YOK: burada canlı bölge gerekmiyor, süzgeç sayfayı
+        yeniden yüklüyor.{% endcomment %}
+        <nav class="ilan-turler" aria-label="İlan türüne göre süz">
+          <b>İLAN TÜRLERİ</b>
+          <a class="tur hepsi" href="{% url 'resmi-ilan' %}"{% if not tur %} aria-current="true"{% endif %}>TÜMÜ <span class="adet">{{ arsiv_toplami }}</span></a>
+{% for t in turler %}{% if t.adet %}          <a class="tur {{ t.anahtar }}" href="{% url 'resmi-ilan' %}?tur={{ t.anahtar }}"{% if tur == t.anahtar %} aria-current="true"{% endif %}>{{ t.ad }} <span class="adet">{{ t.adet }}</span></a>
+{% else %}          <span class="tur {{ t.anahtar }} bos"{% if tur == t.anahtar %} aria-current="true"{% endif %}>{{ t.ad }} <span class="adet">{{ t.adet }}</span></span>
+{% endif %}{% endfor %}          <span class="tur-not">Sayılar arşivin tamamını sayar; bir türe basınca yalnız o türün ilanları listelenir. Dört türün tamamı yasal olarak tanımlıdır{% if bos_turler %}, {{ bos_turler|join:" ve " }} türünde yayımlanmış ilan yok{% endif %}.</span>
+        </nav>
+
+        {% comment %}Ay omurgası. Dizin okunmaz, TARANIR: 23 kayıt 15 ayrı
+        güne dağılıyor, güne göre gruplamak 1-3 satırlık 15 küme demekti.
+        Günü zaten satırın solundaki tarih bloğu taşıyor; ay, kaydırırken
+        "neredeyim" sorusunu yanıtlayan tek kırılım.{% endcomment %}
+        {% for g in gruplar %}
+        <h2 class="ilan-ay"{% if g.anahtar %} id="ay-{{ g.anahtar }}"{% endif %}>{% if g.tarih %}{{ g.tarih|date:"F Y"|buyult }}{% else %}Yayın tarihi kayıtlı olmayanlar{% endif %} <span class="adet">{{ g.ilanlar|length }} ilan</span></h2>
+        <ul class="ilan-liste">
+{% comment %}Satırlarda `data-tur` YOK ve olmamalı: anasayfanın süzgeç
+          betiği `.ilan-turler` + `.ilan-liste li[data-tur]` ikilisini arıyor.
+          Nitelik dursaydı betik bu sayfada da bağlanır, ama şeritte düğme
+          olmadığı için hiçbir şey yapmazdı — çalışmayan bir bağ bırakmak,
+          bir sonraki değişiklikte sessiz bir hataya dönüşür.{% endcomment %}
+{% for i in g.ilanlar %}          <li>
+            {% if i.yayin_tarihi %}<time class="ilan-gun" datetime="{{ i.yayin_tarihi|date:'Y-m-d' }}"><b aria-hidden="true">{{ i.yayin_tarihi|date:"d" }}</b><span class="ay" aria-hidden="true">{{ i.yayin_tarihi|date:"M" }}</span><span class="gorsel-gizli">{{ i.yayin_tarihi|date:"j F Y" }}</span></time>{% else %}<span class="ilan-gun yoktur"><b aria-hidden="true">&ndash;</b><span class="gorsel-gizli">Tarihi kayıtlı değil</span></span>{% endif %}
+            <span class="ilan-govde">
+              <span class="tur {{ i.tur }}">{{ i.get_tur_display }}</span>
+              <span class="ilan-adi">{{ i.baslik }}</span>
+              <span class="kayit">İlan no {{ i.pk }}</span>
+            </span>
+          </li>
+{% endfor %}        </ul>
+        {% empty %}
+        <ul class="ilan-liste">
+          <li class="bos">{% if secili_ad %}{{ secili_ad|baslikla }} türünde yayımlanmış ilan kaydı yok.{% else %}Yayımlanabilir resmî ilan kaydı yok.{% endif %}</li>
+        </ul>
+        {% endfor %}
+
+        {% comment %}Sayfanın kendi notu. Anasayfadaki notun kopyası DEĞİL:
+        orada bölüm bir seçki olduğu için "toplam 23 kayıt" demek gerekiyordu,
+        burada liste zaten tamamı. Buranın söylemesi gereken şey, kaydın
+        NELERİ İÇERMEDİĞİ. İki olgu da veriden okunuyor (`metni_olan_var`,
+        `bitisi_olan_var`) — şablona çakılı bir olgu, veri değişince yalan
+        söyler (§32.5).{% endcomment %}
+        <p class="yer-not">Bu sayfa Bursa Hakimiyet'in <b>yayımladığı</b> resmî ilanların dizinidir, açık ilanların listesi değil. Başlık, tür, yayın tarihi ve ilan numarası kayıttan gelir.
+          {% if not bitisi_olan_var %}<b>Son başvuru tarihi gösterilmez</b> &mdash; kayıtlarda bitiş tarihi alanı boştur ve uydurulmaz;{% else %}Bitiş tarihi kayıtlı olmayan ilanlar da var;{% endif %} bir ihalenin ya da tebligatın hâlâ geçerli olup olmadığı ilanı veren kurumdan doğrulanmalıdır.
+          {% if not metni_olan_var %}İlan <b>metinleri</b> ve Basın İlan Kurumu numaraları arşiv dökümünde yok; bu yüzden başlıklar bağlantı değildir ve ilanın kendi sayfası açılmadı.{% else %}İlan metinleri gelmeye başladı ama tek tek ilan sayfaları henüz açılmadı; başlıklar şimdilik bağlantı değildir.{% endif %}
+        </p>
+      </section>
+
+      {% include "parca/sayfalama.html" %}
+{% endblock %}

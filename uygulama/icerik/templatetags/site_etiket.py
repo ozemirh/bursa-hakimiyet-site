@@ -108,6 +108,18 @@ def buyult(metin) -> str:
     return _buyult(str(metin)) if metin else ""
 
 
+@register.filter
+def kucult(metin) -> str:
+    '''"İHALE" -> "ihale". Django'nun `|lower` süzgeci İ harfini bozar.
+
+    Ölçüldü (29 Ağustos 2026): `"İHALE"|lower` tarayıcıda **"i̇hale"**
+    basıyor — Unicode "İ"yi "i" + birleşen nokta (U+0307) olarak küçültüyor
+    ve harfin üstünde iki nokta kalıyor. Resmî ilan bölümündeki tür adları
+    veriden büyük harfle geldiği için bu süzgeç gerekti.
+    '''
+    return _kucult(str(metin)) if metin else ""
+
+
 # -- canlı veri süzgeçleri ------------------------------------------------
 
 GUN_KISA = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -121,6 +133,66 @@ def kisa_gun(tarih_iso) -> str:
         return GUN_KISA[date.fromisoformat(str(tarih_iso)).weekday()]
     except (TypeError, ValueError):
         return ""
+
+
+AY_KISA = ["Oca", "Şub", "Mar", "Nis", "May", "Haz",
+           "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"]
+
+
+@register.filter
+def kisa_zaman(zaman) -> str:
+    """Başlık listelerinin tarih sütunu: bugünse SAAT, değilse TARİH.
+
+    Gazete masasının kuralı: aynı günün haberinde okur "kaçta" diye sorar,
+    eski haberde "ne zaman" diye. Yıl yalnız başka bir yıla aitse yazılır —
+    arşivde 2025 kayıtları var ve yılsız "31 Eki" onları bu yılın haberi
+    gibi gösteriyordu (29 Ağustos 2026'da ölçüldü: Bursaspor bölümündeki
+    en yeni haber 31 Ekim 2025 tarihli).
+    """
+    from django.utils import timezone
+    if not zaman:
+        return ""
+    try:
+        yerel = timezone.localtime(zaman)
+    except (ValueError, TypeError, AttributeError):
+        return ""
+    bugun = timezone.localdate()
+    if yerel.date() == bugun:
+        return yerel.strftime("%H:%M")
+    kisa = f"{yerel.day} {AY_KISA[yerel.month - 1]}"
+    return kisa if yerel.year == bugun.year else f"{kisa} {yerel.year}"
+
+
+@register.filter
+def iso_tarih(metin):
+    """`2026-08-29` -> `date` nesnesi; `|date:"j F Y"` ile zincirlenir.
+
+    Canlı veri paketleri tarihi ISO METİN olarak taşıyor ve Django'nun
+    `date` süzgeci metinle çalışmıyor. Ay adları Django'nun kendi Türkçe
+    çevirisinden gelsin diye burada biçimlendirme YAPILMIYOR — yalnız tür
+    dönüşümü. Çözülemeyen değerde boş döner, şablon o cümleyi basmaz.
+    """
+    from datetime import date
+    try:
+        return date.fromisoformat(str(metin)[:10])
+    except (TypeError, ValueError):
+        return ""
+
+
+@register.filter
+def okuma_dakikasi(kelime_sayisi):
+    """Kelime sayısından okuma süresi (dakika): 200 kelime/dk, en az 1.
+
+    Değer yoksa boş döner ve şablon `{% if %}` ile zaten hiç basmaz —
+    uydurma süre yazılmaz (29 Ağustos 2026, görsel denetim Ö12).
+    """
+    try:
+        kelime = int(kelime_sayisi)
+    except (TypeError, ValueError):
+        return ""
+    if kelime <= 0:
+        return ""
+    return max(1, round(kelime / 200))
 
 
 @register.filter

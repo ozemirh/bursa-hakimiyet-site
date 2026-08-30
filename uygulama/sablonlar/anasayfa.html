@@ -1,5 +1,9 @@
 {% extends "taban.html" %}
 {% load site_etiket %}
+{% comment %}`l10n`: sıcaklık çubuğunun yüzdesi satır içi CSS'e giriyor ve
+Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersiz CSS,
+çubuk hiç çizilmiyordu (30 Ağustos ölçümü).{% endcomment %}
+{% load l10n %}
 
 {% block icerik %}
 
@@ -29,6 +33,14 @@
         </div>
         {% endif %}
       </section>
+
+      {% comment %}`.ust-blok` üç bileşeni tek kapta toplar: dörtlü ·
+      manşet · manşet listesi. Kap, DAR EKRANDA SIRA DEĞİŞTİRMEK için var
+      (URUN-PLANI §35): 360 px'te okur önce dört ikincil kart görüyor, ana
+      manşete ancak 1550 px aşağıda varıyordu. `order` yalnız bu üç kardeşi
+      etkiler; `main`in tamamını flex yapmak her bölümün dikey ritmini
+      yeniden ölçmeyi gerektirirdi. DOM ve odak sırası değişmez.{% endcomment %}
+      <div class="ust-blok">
 
       <section class="dortlu" aria-label="Öne çıkan haberler">
         <h2 class="gorsel-gizli">Öne çıkanlar</h2>
@@ -88,42 +100,279 @@
         </div>
       </div>
 
+      {% comment %}SON DAKİKA manşetin hemen altında (30 Ağustos 2026, §37 ·
+      kullanıcı kararı): "günün manşetlerini daha aşağı koy, onun yerine son
+      dakikayı getir, yanına da bir reklam panosu daha koy".
 
+      Anasayfada kutu RAYDA DEĞİL burada — aynı sayfada iki kez çizilmemeli,
+      `id="son-dakika"` tek olmak zorunda. Ray sürümü haber detay ve köşe
+      yazısı sayfalarında duruyor; `genis` bayrağı yalnız buradaki iki
+      sütunlu yerleşimi açar.
+
+      Reklam yuvası uydurma değil, envanterden: "Manşet altı1" gerçekten
+      manşetin altındaki 300x250 yuvanın adı.{% endcomment %}
+      <div class="sondakika-satir">
+        {% include "parca/son_dakika.html" with genis=1 %}
+        <div class="reklam kare-300"><span><b>REKLAM ALANI</b><span class="olcu">-Manşet altı1- 300x250</span></span></div>
+      </div>
+
+      </div>{# /.ust-blok #}
+
+      {% comment %}YAZAR KUŞAĞI — sağ raydaki beş satırlık silik listenin
+      yerine tam genişlik, portreli şerit (§35). Portreler gazetenin kendi
+      arşivinden; `medya/management/commands/yazar_portre_indir.py` indirir,
+      portresi olmayan yazar baş harf vesikasıyla eksiksiz görünür.
+      Kaydırma JS'siz: CSS scroll-snap.{% endcomment %}
+      <section class="kutu yazar-serit" aria-labelledby="yazar-serit-bas">
+        <div class="kutu-bas hafif">
+          <h2 id="yazar-serit-bas">YAZARLAR</h2>
+          <span class="tumu"><a href="/yazarlar">Tüm yazarlar &rarr;</a></span>
+        </div>
+        <div class="kutu-ic">
+          <ul class="yazar-kusak">
+{% for y in yazarlar %}            <li>
+              <a href="{{ y.yol }}">
+                {% comment %}Görsel bir SARMALAYICININ içinde: arşivdeki
+                18 kayıt gerçek portre değil, gazetenin afiş şablonu (adı
+                solda, yüz sağ üçte birde) ve yüzü yakınlaştırarak kırpmak
+                gerekiyor. `alt=""` bilinçli: ad zaten yanında <b> olarak
+                duruyor, portre dekoratif.{% endcomment %}
+                {% if y.gorsel_yolu %}<span class="portre"><img src="{{ y.gorsel_yolu }}" alt="" loading="lazy"></span>
+                {% else %}<span class="portre vesika" aria-hidden="true">{{ y.basharfler }}</span>{% endif %}
+                <b>{{ y.ad }}</b>
+                <span class="yazi-bas">{{ y.son_yazi }}</span>
+              </a>
+            </li>
+{% empty %}            <li class="bos">Yazar dizini henüz göç etmedi.</li>
+{% endfor %}          </ul>
+        </div>
+        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>{% if yazar_adedi is not None %}Arşivden gelen {{ yazar_adedi }} yazar ve {{ kose_adedi }} köşe yazısı. {% endif %}Son yazı başlığı yazarın en yeni yazısından okunur; portreler gazetenin kendi yayınından alınmıştır.</p></details>
+      </section>
 
       <div class="ana-izgara">
         <div>
           <div class="kutu">
-            <div class="kutu-bas"><h2>SON HABERLER</h2><span class="tumu"><a href="/gundem">Tümü &rarr;</a></span></div>
+            <div class="kutu-bas hafif"><h2>SON HABERLER</h2><span class="tumu"><a href="/gundem">Tümü &rarr;</a></span></div>
             <div class="kutu-ic">
+              {% comment %}İlk kart iki sütuna yayılır (§35): 11 kayıt =
+              1 geniş + 10 kart, beş tam satır. Kart bileşeni aynı; `genis`
+              bayrağı kategori sayfasındakiyle ortak.{% endcomment %}
               <div class="kutu-izgara">
-{% for h in kutular %}                {% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 %}
+{% for h in kutular %}                {% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 genis=forloop.first %}
 {% endfor %}
               </div>
             </div>
           </div>
         </div>
 
-        <aside class="ray" aria-label="Şehir servisleri ve listeler">
-          <div class="servis-kutu">
-            <h2 class="gorsel-gizli">Şehir servisleri</h2>
-            <div class="sek" role="tablist" aria-label="Şehir servisleri">
-              <button type="button" role="tab" id="sek-hava" aria-selected="true" aria-controls="panel-hava" tabindex="0">HAVA</button>
-              <button type="button" role="tab" id="sek-vakit" aria-selected="false" aria-controls="panel-vakit" tabindex="-1">NAMAZ</button>
-              <button type="button" role="tab" id="sek-eczane" aria-selected="false" aria-controls="panel-eczane" tabindex="-1">ECZANE</button>
+        <aside class="ray" aria-label="Öne çıkan listeler">
+          <div class="kutu">
+            <div class="kutu-bas vurgu"><h2>EN ÇOK OKUNANLAR</h2></div>
+            <div class="kutu-ic">
+              <ol class="sira">
+{% for h in en_cok %}                <li><span class="no">{{ forloop.counter }}</span><h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3></li>
+{% endfor %}              </ol>
             </div>
-            <div class="panel" id="panel-hava" role="tabpanel" aria-labelledby="sek-hava" data-acik="true" tabindex="0">
-              {% if hava %}
-                <div class="hava-ana">
-                  <span class="derece">{{ hava.son_durum.sicaklik|floatformat:0 }}°</span>
-                  <span class="aciklama">{{ hava.gunler.0.hadise.ad }}<br>
-                    En düşük {{ hava.gunler.0.en_dusuk|floatformat:0 }}° &middot; en yüksek {{ hava.gunler.0.en_yuksek|floatformat:0 }}°</span>
+            <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>Şimdilik editör seçkisi: okunma sayacı yeni sistemde sıfırdan başlıyor, eski okunma verisi göçte kurtarılamadı.</p></details>
+          </div>
+
+          {% comment %}BURSA İLÇELERİ (§35): yerel gazetenin okuru önce
+          kendi ilçesine bakıyor; ilçeler menüde katlanmış duruyordu.
+          Bağlam `ilceler`i zaten taşıyor. Bu kutu anasayfa gövdesinde,
+          `#tam-menu` içinde DEĞİL — menü bağlantı sayısı sözleşmesi
+          (50) etkilenmez.{% endcomment %}
+          <div class="kutu">
+            <div class="kutu-bas hafif"><h2>BURSA İLÇELERİ</h2><span class="tumu"><a href="/ilceler">Tümü &rarr;</a></span></div>
+            <div class="kutu-ic">
+              <nav class="ilce-agi" aria-label="İlçe sayfaları">
+                {% for i in ilceler %}<a href="/ilce/{{ i.slug }}">{{ i.ad }}</a>{% endfor %}
+              </nav>
+            </div>
+          </div>
+
+          <div class="reklam kare-300"><span><b>REKLAM ALANI</b><span class="olcu">-Haber arası1- 300x250</span></span></div>
+        </aside>
+      </div>
+
+      {% comment %}GÜNÜN MANŞETLERİ — slayta girmeyen 10 kayıt (§35).
+      Slayt 30 Ağustos 2026'da yeniden 15 sayfaya çıktı; liste havuzun
+      slayttan SONRAKİ dilimini gösterdiği için hâlâ tekrarsız. Aynı gün
+      (§37) kullanıcı isteğiyle manşetin hemen altından BURAYA, SON HABERLER
+      ızgarasının altına indi; boşalan yeri SON DAKİKA aldı. Liste dikeyde
+      ucuz ve taranabilir olduğu için iki büyük bloğun arasında ayraç işi de
+      görüyor.{% endcomment %}
+      <section class="manset-liste" aria-labelledby="manset-liste-bas">
+        <h2 id="manset-liste-bas">GÜNÜN MANŞETLERİ</h2>
+        <ul>
+{% for h in manset_liste %}          <li><time datetime="{{ h.yayin_zamani|date:'c' }}" title="{{ h.yayin_zamani|date:'j F Y, H:i' }}">{{ h.yayin_zamani|kisa_zaman }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
+{% endfor %}        </ul>
+      </section>
+
+      <section class="ilan" id="resmi-ilan" aria-labelledby="resmi-ilan-bas">
+        <div class="ilan-bas">
+          <h2 id="resmi-ilan-bas">RESMÎ İLANLAR</h2>
+          <span class="dayanak">Basın İlan Kurumu aracılığıyla yayımlanır</span>
+          {% comment %}Dönem etiketi: kayıtların tamamı arşiv durumunda ve
+          bitiş tarihi alanı boş. Okur "bunlar bugünün açık ihaleleri mi?"
+          sorusunu ancak satır satır tarihlere bakarak yanıtlıyordu; aralık
+          bunu başlıkta söylüyor.{% endcomment %}
+          {% if ilan_son %}<span class="donem">{% if ilan_ilk %}{{ ilan_ilk|date:"j F" }} &ndash; {% endif %}{{ ilan_son|date:"j F Y" }}</span>{% endif %}
+          <a class="tumu" href="{% url 'resmi-ilan' %}">TÜM İLANLAR &rarr;</a>
+        </div>
+
+        {% comment %}Eskiden burası bir LEJANTTI: dört tür rengini tanıtan,
+        tıklanamayan bir şerit. Kayıtlar gerçek olunca lejantın işi kalmadı —
+        aynı şerit artık süzgeç. Sayılar sayfadaki ilanları sayar; arşivin
+        toplamı aşağıdaki nottadır. Betik yoksa bütün ilanlar görünür
+        kalır, hiçbir şey kaybolmaz.{% endcomment %}
+        <div class="ilan-turler" role="group" aria-label="İlan türüne göre süz">
+          <b>İLAN TÜRLERİ</b>
+          <button type="button" class="tur hepsi" data-tur="" aria-pressed="true">TÜMÜ <span class="adet">{{ ilanlar|length }}</span></button>
+{% for t in ilan_turleri %}          <button type="button" class="tur {{ t.anahtar }}{% if not t.adet %} bos{% endif %}" data-tur="{{ t.anahtar }}" data-ad="{{ t.ad }}" aria-pressed="false"{% if not t.adet %} disabled aria-disabled="true"{% endif %}>{{ t.ad }} <span class="adet">{{ t.adet }}</span></button>
+{% endfor %}          {% comment %}Not artık ŞABLONA ÇAKILI değil: "İCRA ve PERSONEL
+          ALIMI türünde ilan yok" cümlesi elle yazılmıştı ve veri değişince
+          yalan söyleyecekti. Boş türler dağılımdan okunuyor. Varsayılan
+          metni betik ilk açılışta buradan alır; `data-varsayilan` gerekmiyor,
+          iki yerde aynı cümleyi tutmak da bir sapma kaynağıydı.{% endcomment %}
+          <span class="tur-not" role="status" aria-live="polite">Sayılar bu sayfadaki {{ ilanlar|length }} ilanı sayar; dört türün tamamı yasal olarak tanımlıdır{% if ilan_bos_turler %}, {{ ilan_bos_turler|join:" ve " }} türünde yayımlanmış ilan yok{% endif %}.</span>
+        </div>
+
+        <ul class="ilan-liste">
+{% for i in ilanlar %}          <li data-tur="{{ i.tur }}">
+            {% if i.yayin_tarihi %}<time class="ilan-gun" datetime="{{ i.yayin_tarihi|date:'Y-m-d' }}"><b aria-hidden="true">{{ i.yayin_tarihi|date:"d" }}</b><span class="ay" aria-hidden="true">{{ i.yayin_tarihi|date:"M" }}</span><span class="gorsel-gizli">{{ i.yayin_tarihi|date:"j F Y" }}</span></time>{% else %}<span class="ilan-gun yoktur"><b aria-hidden="true">&ndash;</b><span class="gorsel-gizli">Tarihi kayıtlı değil</span></span>{% endif %}
+            <span class="ilan-govde">
+              <span class="tur {{ i.tur }}">{{ i.get_tur_display }}</span>
+              <span class="ilan-adi">{{ i.baslik }}</span>
+              <span class="kayit">İlan no {{ i.pk }}</span>
+            </span>
+          </li>
+{% empty %}          <li class="bos">Yayımlanabilir resmî ilan kaydı yok.</li>
+{% endfor %}        </ul>
+
+        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>Bu bölüm gazetenin <b>yayımladığı</b> resmî ilanların dizinidir, açık ilanların listesi değil: {{ ilan_toplami }} kayıt{% for t in ilan_tur_toplami %}{% if t.adet %}, {{ t.adet }} {{ t.ad|kucult }}{% endif %}{% endfor %}. Başlıklar, türler, tarihler ve ilan numaraları gerçektir. <b>Son başvuru tarihi gösterilmez</b> &mdash; kayıtlarda bitiş tarihi alanı boştur ve uydurulmaz; bir ihalenin ya da tebligatın hâlâ geçerli olup olmadığı ilanı veren kurumdan doğrulanmalıdır. İlan metinleri henüz göç etmediği için başlıklar bağlantı değildir; TÜM İLANLAR sayfası da metinler gelince dolacak.</p></details>
+      </section>
+
+      {% comment %}ŞEHİR SERVİSLERİ — 30 Ağustos 2026 (§35), kullanıcı isteği:
+      hava/namaz/eczane paneli sağ raydan alınıp sayfanın aşağısına, resmî
+      ilan ile Bursaspor arasına taşındı ("şehir bloğu": ilan → servisler →
+      kulüp).
+
+      Sekme mimarisi KALKTI: tam genişlikte üç panel yan yana AÇIK duruyor.
+      Rayda 300 px'e sıkışırken sekme zorunluydu — okur üç servisten ancak
+      birini görüyordu; burada üçü de tıklamadan görünüyor, erişilebilirlikte
+      net kazanım. `panel-hava` / `panel-vakit` / `panel-eczane` kimlikleri
+      KORUNDU: menüdeki ve künyedeki çapa bağlantıları kırılmasın.
+
+      `role="tablist"` DOM'u buradan kalktı; `site.js` `.sek` bulamayınca
+      dokunmadan geçer (Bursaspor'un lig sekmeleri sürüyor).{% endcomment %}
+      <section class="kutu" id="sehir-servisleri" aria-labelledby="sehir-servis-bas">
+        <div class="kutu-bas"><h2 id="sehir-servis-bas">ŞEHİR SERVİSLERİ</h2></div>
+        <div class="kutu-ic">
+          <div class="servis-uclu">
+
+            {% comment %}HAVA DURUMU — 30 Ağustos 2026 (§35), kullanıcı isteği:
+            panel genişledi ve yeniden çizildi. Eskiden üçte bir sütunda
+            duruyor, MGM paketinin yirmi küsur alanından beşini basıyordu.
+            Şimdi satırın TAMAMINI kaplıyor (namaz ve eczane altında ikiye
+            bölünüyor) ve dosyada zaten duran üç veri de sayfaya çıkıyor:
+            son durum ölçümleri, saatlik dizi, beş günün ortak ölçekli
+            sıcaklık çubuğu.
+
+            Dış bir hava servisi ALINMADI: MGM verisi hem resmî kaynak, hem
+            künyede zaten adı geçiyor, hem de eksik olan tek şey sunumdu.
+
+            Yapı `hava_panel`den gelir (`icerik/canli.py` → `hava_paneli`);
+            ölçülemeyen alan sözlüğe hiç girmediği için şablonda "veri yok"
+            koşulu yazmaya gerek kalmıyor.{% endcomment %}
+            <div class="servis-dilim genis" id="panel-hava">
+              <h3>HAVA DURUMU{% if hava_panel.merkez.il %}<span class="yer">{{ hava_panel.merkez.il }}{% if hava_panel.merkez.ilce %} &middot; {{ hava_panel.merkez.ilce }}{% endif %}</span>{% endif %}</h3>
+              {% if hava_panel %}
+              <div class="hava-panel">
+
+                {% comment %}Arka plandaki Uludağ çizimi BEZEME DEĞİL: gökyüzünün
+                rengi havayı ve günün saatini söylüyor (beş palet — güneş, bulut,
+                yağış, kar, gece). Palet `hava_panel.manzara`dan gelir; gece kararı
+                Diyanet'in doğuş/batış saatinden hesaplanır, kaba bir saat
+                aralığından değil. Çizim yereldir, dış adres yoktur; sayfa
+                internetsiz de aynı açılır.
+
+                `aria-hidden`: aynı bilgi hemen yanında yazıyla duruyor, ekran
+                okuyucuya iki kez söylenmemeli.{% endcomment %}
+                <div class="hava-simdi m-{{ hava_panel.manzara }}">
+                  <svg class="hava-manzara dikey" aria-hidden="true" focusable="false"><use href="#hv-manzara"></use></svg>
+                  <svg class="hava-manzara yatay" aria-hidden="true" focusable="false"><use href="#hv-manzara-yatay"></use></svg>
+                  <div class="hava-simdi-ic">
+                    <svg class="hava-ikon buyuk" aria-hidden="true"><use href="#{{ hava_panel.simdi.simge }}"></use></svg>
+                    <div class="hava-simdi-alt">
+                      <p class="derece">{{ hava_panel.simdi.sicaklik|floatformat:0 }}<span class="birim">°C</span></p>
+                      <p class="hal">{{ hava_panel.simdi.hadise.ad }}</p>
+                      {% if hava_panel.simdi.hissedilen is not None %}<p class="hissedilen">Hissedilen {{ hava_panel.simdi.hissedilen|floatformat:0 }}°</p>{% endif %}
+                      {% with bugun=hava_panel.gunler.0 %}{% if bugun.en_dusuk is not None %}
+                      <p class="uc-nokta"><span class="dusuk">En düşük {{ bugun.en_dusuk|floatformat:0 }}°</span><span class="yuksek">En yüksek {{ bugun.en_yuksek|floatformat:0 }}°</span></p>
+                      {% endif %}{% endwith %}
+                    </div>
+                  </div>
                 </div>
-                <div class="gunler">
-                  {% for g in hava.gunler|slice:"1:5" %}<div>{{ g.tarih|kisa_gun }}<b>{{ g.en_yuksek|floatformat:0 }}°</b></div>{% endfor %}
+
+                {% if hava_panel.saatlik %}
+                <div class="hava-saatlik">
+                  <h4>SAATLİK TAHMİN</h4>
+                  <ol>
+                    {% for s in hava_panel.saatlik %}
+                    <li class="a-{{ s.aile }}">
+                      <span class="saat"><time datetime="{{ s.zaman|date:'c' }}">{{ s.zaman|date:"H:i" }}</time></span>
+                      <svg class="hava-ikon" aria-hidden="true"><use href="#{{ s.simge }}"></use></svg>
+                      <span class="gorsel-gizli">{{ s.hadise.ad }}</span>
+                      <b>{{ s.sicaklik|floatformat:0 }}°</b>
+                      {% if s.ruzgar_hiz is not None %}<span class="ruzgar">{{ s.ruzgar_hiz|floatformat:0 }}<i> km/sa</i></span>{% endif %}
+                    </li>
+                    {% endfor %}
+                  </ol>
                 </div>
+                {% endif %}
+
+                {% if hava_panel.gunler %}
+                <div class="hava-gunler">
+                  <h4>BEŞ GÜNLÜK TAHMİN</h4>
+                  {% comment %}Çubuk beş günün ORTAK ölçeğinde çizilir; her
+                  satır kendi ölçeğinde olsaydı 17-31° ile 17-33° aynı boyda
+                  görünür, çubuk hiçbir şey anlatmazdı. Yüzdeler
+                  `hava_paneli`de hesaplanıyor.{% endcomment %}
+                  <ol>
+                    {% for g in hava_panel.gunler %}
+                    <li{% if g.bugun %} class="bugun"{% endif %}>
+                      <span class="gun"><time datetime="{{ g.tarih|date:'Y-m-d' }}">{% if g.bugun %}Bugün{% else %}{{ g.tarih|kisa_gun }}{% endif %}</time><i>{{ g.tarih|date:"j M" }}</i></span>
+                      <svg class="hava-ikon" aria-hidden="true"><use href="#{{ g.simge }}"></use></svg>
+                      <span class="hal a-{{ g.aile }}">{{ g.hadise.ad }}</span>
+                      <span class="dusuk">{{ g.en_dusuk|floatformat:0 }}°</span>
+                      <span class="cubuk">{% if g.cubuk %}<span class="dolgu" style="left:{{ g.cubuk.sol|unlocalize }}%;width:{{ g.cubuk.genislik|unlocalize }}%"></span>{% endif %}</span>
+                      <span class="yuksek">{{ g.en_yuksek|floatformat:0 }}°</span>
+                    </li>
+                    {% endfor %}
+                  </ol>
+                </div>
+                {% endif %}
+
+                {% if hava_panel.olcumler %}
+                <dl class="hava-olcum">
+                  {% for o in hava_panel.olcumler %}
+                  <div><dt>{{ o.ad }}</dt><dd>{{ o.deger }}{% if o.alt %}<i>{{ o.alt }}</i>{% endif %}</dd></div>
+                  {% endfor %}
+                </dl>
+                {% endif %}
+
+                {% if hava_panel.simdi.olcum_zamani %}
+                <p class="hava-damga{% if hava_panel.bayat %} bayat{% endif %}">
+                  <time datetime="{{ hava_panel.simdi.olcum_zamani|date:'c' }}">{{ hava_panel.simdi.olcum_zamani|date:"j F Y, H:i" }}</time> ölçümü{% if hava_panel.bayat %} &middot; veri tazelenemedi{% endif %}{% if hava_panel.kaynak.kisa %} &middot; {{ hava_panel.kaynak.kisa }}{% endif %}
+                </p>
+                {% endif %}
+
+              </div>
               {% else %}<p class="bos">Hava durumu şu an alınamıyor.</p>{% endif %}
             </div>
-            <div class="panel" id="panel-vakit" role="tabpanel" aria-labelledby="sek-vakit" tabindex="0">
+
+            <div class="servis-dilim" id="panel-vakit">
+              <h3>NAMAZ VAKİTLERİ</h3>
               {% if namaz %}
                 <ul class="vakit">
                   {% for anahtar, ad in namaz.vakit_adlari.items %}
@@ -132,11 +381,16 @@
                 </ul>
               {% else %}<p class="bos">Namaz vakitleri şu an alınamıyor.</p>{% endif %}
             </div>
-            <div class="panel" id="panel-eczane" role="tabpanel" aria-labelledby="sek-eczane" tabindex="0">
+
+            <div class="servis-dilim" id="panel-eczane">
+              <h3>NÖBETÇİ ECZANE</h3>
               {% if eczane %}
                 <div class="eczane">
                   <b>{{ eczane.eczane_sayisi }} nöbetçi eczane</b>
-                  <span>{{ eczane.gun }} &middot; {{ eczane.ilceler|length }} ilçe</span>
+                  {% comment %}`gun` kaynakta ISO metin ("2026-08-29");
+                  sayfanın geri kalanı "29 Ağustos 2026" biçimini
+                  kullanıyor.{% endcomment %}
+                  <span>{{ eczane.gun|iso_tarih|date:"j F Y" }} &middot; {{ eczane.ilceler|length }} ilçe</span>
                   <hr class="ayirac">
                   {% for e in eczane.eczaneler|slice:":3" %}
                     <b>{{ e.ad|baslikla }}</b><span>{{ e.ilce|baslikla }} &middot; {{ e.telefon }}</span>
@@ -144,78 +398,10 @@
                 </div>
               {% else %}<p class="bos">Nöbetçi eczane listesi şu an alınamıyor.</p>{% endif %}
             </div>
-            <p class="yer-not">Hava MGM'den, nöbetçi eczane Bursa Eczacı Odası'ndan; namaz vakitleri Diyanet ölçütleriyle hesaplanır (yayımlanan tabloya karşı azami sapma 1 dakika).</p>
+
           </div>
-
-          <div class="kutu">
-            <div class="kutu-bas"><h2>YAZARLAR</h2><span class="tumu"><a href="/yazarlar">Tüm yazarlar &rarr;</a></span></div>
-            <div class="kutu-ic">
-              <ul class="yazar-ray">
-{% for y in yazarlar %}                <li><a href="{{ y.yol }}"><span class="vesika" aria-hidden="true">{{ y.basharfler }}</span><span><b>{{ y.ad }}</b><span class="yazi-bas">{{ y.son_yazi }}</span></span></a></li>
-{% empty %}                <li class="bos">Yazar dizini henüz göç etmedi.</li>
-{% endfor %}              </ul>
-            </div>
-            <p class="yer-not">{% if yazar_adedi is not None %}Arşivden gelen {{ yazar_adedi }} yazar ve {{ kose_adedi }} köşe yazısı. {% endif %}Son yazı başlığı yazarın en yeni yazısından okunur.</p>
-          </div>
-
-          <div class="kutu">
-            <div class="kutu-bas vurgu"><h2>EN ÇOK OKUNANLAR</h2></div>
-            <div class="kutu-ic">
-              <ol class="sira">
-{% for h in en_cok %}                <li><span class="no">{{ forloop.counter }}</span><h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3></li>
-{% endfor %}              </ol>
-            </div>
-            <p class="yer-not">Şimdilik editör seçkisi: okunma sayacı yeni sistemde sıfırdan başlıyor, eski okunma verisi göçte kurtarılamadı.</p>
-          </div>
-
-          <div class="reklam kare-300"><span><b>REKLAM ALANI</b><span class="olcu">-Haber arası1- 300x250</span></span></div>
-        </aside>
-      </div>
-
-      <section class="ilan" id="resmi-ilan" aria-labelledby="resmi-ilan-bas">
-        <div class="ilan-bas">
-          <h2 id="resmi-ilan-bas">RESMÎ İLANLAR</h2>
-          <span class="dayanak">Basın İlan Kurumu aracılığıyla yayımlanır</span>
-          <a class="tumu" href="#">TÜM İLANLAR &rarr;</a>
         </div>
-        <ul class="ilan-liste">
-          <li>
-            <span class="tur ihale">İHALE</span>
-            <a class="ilan-adi" href="#">ELEKTRİK VE MEKANİK YANGIN RAPORU EKSİKLİKLERİ YAPIM İŞİ</a>
-            <span class="kayit"><time datetime="2026-08-24">24.08.2026</time><span>&middot; İlan no 1718</span></span>
-          </li>
-          <li>
-            <span class="tur ihale">İHALE</span>
-            <a class="ilan-adi" href="#">TOPRAK İŞLEME VE ARAZİ HAZIRLIĞI HİZMETİ ALINACAK</a>
-            <span class="kayit"><time datetime="2026-08-22">22.08.2026</time><span>&middot; İlan no 1715</span></span>
-          </li>
-          <li>
-            <span class="tur tebligat">TEBLİGAT</span>
-            <a class="ilan-adi" href="#">YILDIRIM'DA TAŞINMAZ SATIŞI</a>
-            <span class="kayit"><time datetime="2026-08-21">21.08.2026</time><span>&middot; İlan no 1712</span></span>
-          </li>
-          <li>
-            <span class="tur ihale">İHALE</span>
-            <a class="ilan-adi" href="#">MİLLİ EMLAK ŞEFLİĞİ'NDEN TAŞINMAZ SATIŞI</a>
-            <span class="kayit"><time datetime="2026-08-21">21.08.2026</time><span>&middot; İlan no 1688</span></span>
-          </li>
-          <li>
-            <span class="tur ihale">İHALE</span>
-            <a class="ilan-adi" href="#">AR-GE MERKEZİNE 2 ADET CİHAZ ALIMI</a>
-            <span class="kayit"><time datetime="2026-08-19">19.08.2026</time><span>&middot; İlan no 1709</span></span>
-          </li>
-          <li>
-            <span class="tur ihale">İHALE</span>
-            <a class="ilan-adi" href="#">TIBBİ CİHAZ VE DEMİRBAŞ SATIN ALINACAK</a>
-            <span class="kayit"><time datetime="2026-08-19">19.08.2026</time><span>&middot; İlan no 1706</span></span>
-          </li>
-        </ul>
-        <p class="ilan-turler">
-          <b>İLAN TÜRLERİ</b>
-          <span class="tur ihale">İHALE</span><span class="tur tebligat">TEBLİGAT</span><span class="tur bos">İCRA</span><span class="tur bos">PERSONEL ALIMI</span>
-          <span class="tur-not">Dört tür tanımlıdır; İCRA ve PERSONEL ALIMI türünde şu an yayımlanmış ilan yok.</span>
-        </p>
-        <p class="yer-not">Başlıklar, türler ve tarihler gazetenin ilan modülündeki gerçek kayıtlardır. İlan metinlerinin tam hali ve detay sayfaları yayın sistemi bağlanınca açılacak; TÜM İLANLAR bağlantısı henüz boştur.</p>
+        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>Hava durumu Meteoroloji Genel Müdürlüğü'nün açık uçlarından saat başı çekilir: anlık ölçüm Osmangazi istasyonundan, saatlik ve beş günlük tahmin MGM tahmin servisinden. Ölçülemeyen alan boş bırakılır, sıfır gibi gösterilmez. Nöbetçi eczane Bursa Eczacı Odası'ndan; namaz vakitleri Diyanet ölçütleriyle hesaplanır (yayımlanan tabloya karşı azami sapma 1 dakika).</p></details>
       </section>
 
       <section class="kutu" id="bursaspor">
@@ -225,31 +411,71 @@
 
             <div class="puan-kutu">
               <h3 class="gorsel-gizli">Puan durumu ve haftanın maçı</h3>
-              <div class="sek" role="tablist" aria-label="Lig seçimi">
-                {% for lig in puan.ligler %}<button type="button" role="tab" id="sek-{{ lig.anahtar }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="puan-{{ lig.anahtar }}" tabindex="{% if forloop.first %}0{% else %}-1{% endif %}">{{ lig.ad|kisa_lig }}</button>{% endfor %}
+
+              {% comment %}Haftanın maçı tablonun ÜSTÜNDE: tablolar artık tam
+              (18-20 satır) ve maç altta kalsa okur onu hiç görmezdi. Skor
+              yalnız maç oynandıysa basılır; oynanmadıysa tarih ve saat
+              gösterilir — kaynakta olmayan sonuç uydurulmaz.{% endcomment %}
+              {% if puan_takip.mac %}{% with mac=puan_takip.mac %}
+              <div class="skor">
+                <span class="hafta">{{ puan_takip.lig_adi }}{% if puan_takip.hafta %} &middot; {{ puan_takip.hafta }}. hafta{% endif %}</span>
+                <div class="takimlar">
+                  <b{% if mac.ev_kulup_id == puan_takip.kulup_id %} class="bizim"{% endif %}>{{ mac.ev|baslikla }}</b>
+                  {% if mac.skor_var %}<span class="sonuc">{{ mac.ev_gol }} - {{ mac.deplasman_gol }}</span>
+                  {% else %}<span class="sonuc bekliyor">{{ mac.saat|default:"&ndash;" }}</span>{% endif %}
+                  <b{% if mac.deplasman_kulup_id == puan_takip.kulup_id %} class="bizim"{% endif %}>{{ mac.deplasman|baslikla }}</b>
+                </div>
+                <span class="durum">{% if mac.skor_var %}Tamamlandı &middot; {% endif %}{% if mac.tarih_g %}<time datetime="{{ mac.tarih_g|date:"Y-m-d" }}">{{ mac.tarih_g|date:"j F Y, l" }}</time>{% else %}{{ mac.tarih }}{% endif %}</span>
+                <span class="konum">{{ puan_takip.ad|baslikla }} &middot; {{ puan_takip.sira }}. sıra &middot; {{ puan_takip.puan }} puan &middot; O{{ puan_takip.oynadi }} G{{ puan_takip.galibiyet }} B{{ puan_takip.beraberlik }} M{{ puan_takip.maglubiyet }} &middot; Av {{ puan_takip.averaj }}</span>
+              </div>
+              {% endwith %}{% endif %}
+
+              {% comment %}Sekme grubunun kendi sarmalayıcısı var: site.js
+              sekmeleri `.sek` öğesinin ANA öğesinde arıyor; sarmalayıcı
+              olmasa lig sekmeleri panellerin içindeki grup sekmelerini de
+              toplar ve iki sekme kümesi birbirine karışırdı.{% endcomment %}
+              <div class="lig-sek">
+                <div class="sek" role="tablist" aria-label="Lig seçimi">
+                  {% for lig in puan_ligler %}<button type="button" role="tab" id="sek-{{ lig.anahtar }}" aria-selected="{{ lig.acik|yesno:"true,false" }}" aria-controls="puan-{{ lig.anahtar }}" tabindex="{{ lig.acik|yesno:"0,-1" }}">{{ lig.ad|kisa_lig }}</button>{% endfor %}
+                </div>
               </div>
 
-              {% comment %}Dört lig tek döngüden. 2. ve 3. Lig grup usulü oynanıyor;
-              hangi grubun gösterileceği karara bağlanmadığı için şimdilik
-              **ilk grup** gösteriliyor ve grup adı başlıkta yazıyor —
-              okur hangi gruba baktığını bilsin.{% endcomment %}
-              {% for lig in puan.ligler %}
-                <div class="panel" id="puan-{{ lig.anahtar }}" role="tabpanel" aria-labelledby="sek-{{ lig.anahtar }}"{% if forloop.first %} data-acik="true"{% endif %} tabindex="0">
-                  <table class="puan">
-                    <caption>{{ lig.ad }}{% with grup=lig.gruplar.0 %}{% if grup.ad %} &middot; {{ grup.ad }}{% endif %}{% endwith %}{% if lig.hafta %} &middot; {{ lig.hafta }}. hafta{% endif %}</caption>
-                    <thead><tr><th scope="col">#</th><th scope="col">Takım</th><th scope="col">O</th><th scope="col">P</th></tr></thead>
-                    <tbody>
-                      {% for t in lig.gruplar.0.takimlar|slice:":5" %}
-                        <tr><td class="sira-no">{{ t.sira }}</td><td>{{ t.ad|baslikla }}</td><td>{{ t.oynadi }}</td><td>{{ t.puan }}</td></tr>
-                      {% empty %}
-                        <tr><td colspan="4">Tablo alınamadı.</td></tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
+              {% comment %}Açık sekme Bursaspor'un ligi (veri `takip.lig`
+              alanından); 2. ve 3. Lig grup usulü oynandığı için Bursaspor'un
+              — yoksa en çok Bursa kulübünün — bulunduğu grup öne alınır ve
+              okur grubu değiştirebilir. Tablo kırpılmaz.{% endcomment %}
+              {% for lig in puan_ligler %}
+                <div class="panel" id="puan-{{ lig.anahtar }}" role="tabpanel" aria-labelledby="sek-{{ lig.anahtar }}" data-acik="{{ lig.acik|yesno:"true,false" }}" tabindex="0">
+                  {% if lig.coklu_grup %}
+                    <div class="grup-sek">
+                      <div class="sek" role="tablist" aria-label="{{ lig.ad }} grup seçimi">
+                        {% for grup in lig.gruplar %}<button type="button" role="tab" id="sek-{{ lig.anahtar }}-{{ grup.grup_id|default:"tek" }}" aria-selected="{{ grup.acik|yesno:"true,false" }}" aria-controls="puan-{{ lig.anahtar }}-{{ grup.grup_id|default:"tek" }}" tabindex="{{ grup.acik|yesno:"0,-1" }}">{{ grup.ad }}</button>{% endfor %}
+                      </div>
+                    </div>
+                  {% endif %}
+                  {% for grup in lig.gruplar %}
+                    <div class="grup-panel" id="puan-{{ lig.anahtar }}-{{ grup.grup_id|default:"tek" }}" data-acik="{{ grup.acik|yesno:"true,false" }}"{% if lig.coklu_grup %} role="tabpanel" aria-labelledby="sek-{{ lig.anahtar }}-{{ grup.grup_id|default:"tek" }}" tabindex="0"{% endif %}>
+                      <div class="puan-sar" role="region" tabindex="0" aria-label="{{ lig.ad }}{% if grup.ad %} {{ grup.ad }}{% endif %} puan durumu">
+                      <table class="puan">
+                        <caption>{{ lig.ad }}{% if grup.ad %} &middot; {{ grup.ad }}{% endif %}{% if lig.hafta %} &middot; {{ lig.hafta }}. hafta{% endif %} &middot; {{ grup.takimlar|length }} takım</caption>
+                        <thead><tr><th scope="col">#</th><th scope="col">Takım</th><th scope="col"><abbr title="Oynadığı maç">O</abbr></th><th scope="col"><abbr title="Galibiyet">G</abbr></th><th scope="col"><abbr title="Beraberlik">B</abbr></th><th scope="col"><abbr title="Mağlubiyet">M</abbr></th><th scope="col"><abbr title="Attığı gol">A</abbr></th><th scope="col"><abbr title="Yediği gol">Y</abbr></th><th scope="col"><abbr title="Averaj">Av</abbr></th><th scope="col"><abbr title="Puan">P</abbr></th></tr></thead>
+                        <tbody>
+                          {% for t in grup.takimlar %}
+                            <tr{% if t.bizim %} class="bizim"{% elif t.bursa %} class="bursali"{% endif %}><td class="sira-no">{{ t.sira }}</td><td class="ad">{{ t.ad|baslikla }}</td><td>{{ t.oynadi }}</td><td>{{ t.galibiyet }}</td><td>{{ t.beraberlik }}</td><td>{{ t.maglubiyet }}</td><td>{{ t.attigi }}</td><td>{{ t.yedigi }}</td><td>{{ t.averaj }}</td><td class="p">{{ t.puan }}</td></tr>
+                          {% empty %}
+                            <tr><td colspan="10">Tablo alınamadı.</td></tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                      </div>
+                    </div>
+                  {% endfor %}
                 </div>
+              {% empty %}
+                <p class="bos">Puan durumu alınamadı.</p>
               {% endfor %}
 
-              <p class="yer-not">Puan durumu TFF'nin açık sayfalarından çekilir. 2. ve 3. Lig grup usulü oynanıyor; hangi grubun gösterileceği kararlaşmadığı için ilk grup gösteriliyor, grup adı tablo başlığında yazıyor.</p>
+              <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>Puan durumu ve haftanın maçı TFF'nin açık sayfalarından çekilir; tablolar tam kadrodur. Bursa kulübü bulunan grup öne gelir, diğer gruplara sekmeden geçilir.{% if puan.guncelleme %} Son güncelleme {{ puan.guncelleme|slice:":10" }} {{ puan.guncelleme|slice:"11:16" }}.{% endif %}{% if puan.bayat %} Kaynak tazelenmedi, tablo eski olabilir.{% endif %}</p></details>
             </div>
 
             <div>
@@ -257,7 +483,25 @@
 {% for h in bursaspor_haberleri %}                {% include "parca/kart.html" with h=h goster_foto=1 %}
 {% empty %}                <p class="bos">Bu kategoride henüz haber yok.</p>
 {% endfor %}              </div>
-              <p class="yer-not">Bursaspor kategorisinden en yeni haberler. Puan durumu ve haftanın maçı <code>canli-veri/puan_durumu.py</code> çıktısına bağlanacak.</p>
+
+              {% comment %}Kartların altındaki başlık listesi bölümün
+              yerleşiminden doğdu: tablo tam kadro olunca sol sütun 958 px'e
+              çıkıyor, altı kart 546 px'te bitiyordu ve 1280-1600 px'te sağ
+              altta 412 px boşluk kalıyordu (ölçüldü). Kart sayısını
+              artırmak yerine liste konuldu — on iki eşit ağırlıklı kart
+              bölümü kart duvarına çevirirdi; kulüp sayfalarının klasik
+              çözümü üstte görselli seçki, altında tarihli başlık dizisidir.
+              Geri dönen okur fotoğrafa değil başlığa bakar.{% endcomment %}
+              {% if bursaspor_liste %}
+              <div class="bursaspor-liste">
+                <h3>SON GELİŞMELER</h3>
+                <ul>
+{% for h in bursaspor_liste %}                  <li><time datetime="{{ h.yayin_zamani|date:"c" }}" title="{{ h.yayin_zamani|date:"j F Y, H:i" }}">{{ h.yayin_zamani|kisa_zaman }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
+{% endfor %}                </ul>
+              </div>
+              {% endif %}
+
+              <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>Bursaspor kategorisinden en yeni haberler. Tarihler kaydın kendi yayım tarihidir; arşiv taraması henüz bugüne yetişmedi.</p></details>
             </div>
 
           </div>
@@ -265,8 +509,8 @@
       </section>
 
       <section class="kutu">
-        <div class="kutu-bas"><h2>GALERİLER</h2><span class="tumu"><a href="/galeriler">Tüm galeriler &rarr;</a></span></div>
-        <p class="yer-not">{% if galeri_adedi is not None %}Arşivden gelen {{ galeri_adedi }} galeri. {% endif %}Kare sayısı kaynağın statik sayfasında yok; bilinmeyince yazılmıyor.</p>
+        <div class="kutu-bas hafif"><h2>GALERİLER</h2><span class="tumu"><a href="/galeriler">Tüm galeriler &rarr;</a></span></div>
+        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>{% if galeri_adedi is not None %}Arşivden gelen {{ galeri_adedi }} galeri. {% endif %}Kare sayısı kaynağın statik sayfasında yok; bilinmeyince yazılmıyor.</p></details>
         <div class="kutu-ic">
           <div class="galeri-izgara">
             {% for g in galeriler %}{% include "medya/parca/galeri_kart.html" with g=g %}
@@ -277,7 +521,7 @@
       </section>
 
       <section class="kutu">
-        <div class="kutu-bas"><h2>VİDEOLAR</h2><span class="tumu"><a href="/videolar">Tüm videolar &rarr;</a></span></div>
+        <div class="kutu-bas hafif"><h2>VİDEOLAR</h2><span class="tumu"><a href="/videolar">Tüm videolar &rarr;</a></span></div>
         <div class="kutu-ic">
           <div class="video-izgara">
             {% for v in videolar %}{% include "medya/parca/video_kart.html" with v=v %}
@@ -285,7 +529,7 @@
             {% endfor %}
           </div>
         </div>
-        <p class="yer-not">{% if video_adedi is not None %}Arşivden gelen {{ video_adedi }} video; tarama sürdükçe artıyor. {% endif %}Oynatıcı henüz bağlı değil.</p>
+        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>{% if video_adedi is not None %}Arşivden gelen {{ video_adedi }} video; tarama sürdükçe artıyor. {% endif %}Oynatıcı henüz bağlı değil.</p></details>
       </section>
 
       <section class="kutu" id="vizyon">
@@ -315,7 +559,7 @@
           <p class="bos">Vizyon takvimi şu an alınamıyor.</p>
           {% endif %}
         </div>
-        <p class="yer-not">Vizyon takvimi için doğrulanmış bir kaynak henüz yok; kart yapısı hazır, içerik API bağlanınca gelecek.{% if vizyon.kaynak.ad %} Şu anki liste {{ vizyon.kaynak.ad }} kaynaklıdır ve eksiktir.{% endif %} Afişler telifli olduğu için basılmaz.</p>
+        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>{% if vizyon.kaynak.kunye %}{{ vizyon.kaynak.kunye }}{% else %}Vizyon takvimi kaynağa bağlı değil.{% endif %}{% if vizyon.kaynak.kapsam_uyarisi %} {{ vizyon.kaynak.kapsam_uyarisi }}{% endif %} Afişler telifli olduğu için basılmaz.</p></details>
       </section>
 
 {% endblock %}

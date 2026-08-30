@@ -9,6 +9,8 @@ silinmiş (296.207 haber, arşivin %53,2'si). Kazımayla da Wayback'ten de
 kurtarılamıyor. `gorsel_url` yalnız **iz** olarak saklanır; dosya yoktur.
 """
 
+from collections import Counter
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
@@ -616,6 +618,55 @@ class ResmiIlan(models.Model):
 
     def __str__(self) -> str:
         return f"[{self.get_tur_display()}] {self.baslik[:50]}"
+
+    # -- anasayfa bölümünü besleyen sorgular ------------------------------
+    #
+    # SÜZGEÇ NEDEN "AKTİF" DEĞİL, "PASİF DEĞİL"? Ölçüldü (29 Ağustos 2026):
+    # 24 kaydın **hiçbiri AKTİF değil** — 23'ü Arşiv, 1'i Pasif. Durum kodu
+    # dökümün kendi JS'inden geliyor ve tooltip DURUMU söylüyor, eylemi
+    # değil (`row[8]==1` → "Aktif", `==2` → "Pasif", başka → "Arşivden
+    # çıkar"). Yani `durum=AKTIF` süzgeci anasayfayı BOŞ bırakırdı.
+    #
+    # Arşiv ile Pasif aynı şey değil: arşiv "yayımlandı, güncelliğini
+    # yitirdi", pasif ise editörün yayından **çektiği** kayıt. Bölüm
+    # gazetenin yayımladığı ilanların dizini olduğu için arşiv kalır,
+    # pasif çıkar. Kayıtlar aktifleşmeye başlayınca bu süzgeç yeniden
+    # değerlendirilmeli (URUN-PLANI.md §24.3).
+    @classmethod
+    def yayimlananlar(cls):
+        return cls.objects.exclude(durum=cls.DURUM_PASIF)
+
+    @classmethod
+    def tur_dagilimi(cls, kayitlar):
+        """Dört türü de sırayla döndürür — **sayısı sıfır olanlar dahil.**
+
+        İCRA ve PERSONEL ALIMI türünde kayıt yok ama dört türün yasal
+        karşılığı var (§16); süzgeç şeridi bunları 0 ile gösterir, çünkü
+        "bu gazete bu türde ilan yayımlamıyor" da bir bilgidir.
+
+        **İki yol, tek sonuç.** Anasayfa bölümü sayfadaki SEKİZ kaydı
+        sayıyor ve elinde zaten bir liste var; dizin sayfası ise arşivin
+        TAMAMINI sayıyor ve oradaki liste sayfalanmış. Liste geldiğinde
+        Python'da sayılır, QuerySet geldiğinde sayım veritabanına
+        bırakılır — yoksa dizin, yalnız sayı basmak için bütün arşivi
+        belleğe alırdı (23 kayıtta görünmez, ilan modülü canlıya çıkınca
+        görünür). İki yolun aynı çıktıyı verdiği testle kilitli.
+        """
+        if isinstance(kayitlar, models.QuerySet):
+            # `order_by()` boşaltılmazsa Meta sıralaması GROUP BY'a
+            # sızıyor ve sayım tür başına değil satır başına dönüyor.
+            sayac = dict(kayitlar.order_by().values_list("tur")
+                         .annotate(adet=models.Count("tur"))
+                         .values_list("tur", "adet"))
+        else:
+            sayac = Counter(k.tur for k in kayitlar)
+        dagilim = [{"anahtar": anahtar, "ad": ad, "adet": sayac.get(anahtar, 0)}
+                   for anahtar, ad in cls.TURLER]
+        # Kaydı olan türler önce ve çoktan aza. Yasal sıra (İCRA ilk)
+        # süzgeci boş bir düğmeyle açıyordu; okur önce gerçekten ilan
+        # olan türü görmeli. Sıfırlar yasal sırasını koruyarak sona iner.
+        dagilim.sort(key=lambda t: (t["adet"] == 0, -t["adet"]))
+        return dagilim
 
 
 class Bildirim(models.Model):

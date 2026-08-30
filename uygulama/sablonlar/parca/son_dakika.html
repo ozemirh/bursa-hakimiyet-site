@@ -1,17 +1,46 @@
-{% comment %}Şerit kesintisiz kayar: liste iki kez basılır, ikinci kopya ekran
-   okuyucudan gizlenir (aria-hidden). Tasarımdaki davranış budur.{% endcomment %}
-<div class="sondakika" id="son-dakika">
-  <div class="sondakika-ic">
-    <span class="rozet">SON DAKİKA</span>
-    <div class="akis">
-      <ul>
-        {% for h in son_dakika %}
-          <li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|date:'H:i' }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
-        {% endfor %}
-        {% for h in son_dakika %}
-          <li aria-hidden="true"><time>{{ h.yayin_zamani|date:'H:i' }}</time>{{ h.baslik }}</li>
-        {% endfor %}
-      </ul>
-    </div>
+{% comment %}SON DAKİKA — kayan şerit DEĞİL, rayda sabit liste (30 Ağustos
+2026, §36 · kullanıcı D seçeneğini seçti).
+
+Neden değişti: şerit `marquee` mantığıyla kayıyordu ve kayan yazı okunması
+en zor kalıptır — `prefers-reduced-motion` açık olan okur zaten yalnız ilk
+kalemleri görüyordu, yani içerik herkese aynı gelmiyordu. Liste sabit: dört
+değil ALTI başlık, hepsi aynı anda okunur, hepsi arama motoruna metin olarak
+görünür.
+
+İkinci kopya (`aria-hidden`) kalktı: kesintisiz kayma için vardı, sabit
+listede karşılığı yok. Bu sayede aynı başlık DOM'da iki kez geçmiyor.
+
+`id="son-dakika"` KORUNUYOR: mega menüdeki "Son dakika" bağlantısının
+hedefi bu. Kutu rayda olduğu için ray taşıyan sayfalarda (anasayfa, haber
+detay, köşe yazısı) çizilir.{% endcomment %}
+{% load site_etiket %}{% comment %}`genis`: anasayfada manşetin altında, reklam
+ panosunun yanında iki sütunlu; raylarda (haber detay, köşe yazısı) bayraksız
+ ve tek sütun.{% endcomment %}
+<div class="kutu sondakika{% if genis %} genis{% endif %}" id="son-dakika">
+  {% comment %}Başlık şeridi: CANLI pili · bölüm adı · "Tümü". Pil beyaz
+  zeminde koyu kırmızı — parlak kırmızı şerit üstünde beyaz 11 px yazı
+  4,6 ile sınırda kalıyordu (`.ihbar-bag` ile aynı ölçüm).{% endcomment %}
+  <div class="kutu-bas sondakika-bas">
+    <span class="sondakika-canli"><span class="nokta" aria-hidden="true"></span>CANLI</span>
+    <h2>SON DAKİKA</h2>
+    <span class="tumu"><a href="/gundem">Tümü &rarr;</a></span>
+  </div>
+  <div class="kutu-ic">
+    <ul class="sondakika-liste">
+      {% for h in son_dakika %}
+      {% comment %}İLK kalem manşet ağırlığında (`bas`): altı başlık eşit
+      puntoda basılınca liste düzleşiyor ve "en yenisi hangisi" sorusu
+      gözle cevaplanamıyordu. Geniş yerleşimde ilk kalem iki sütunu da
+      kaplar.{% endcomment %}
+      <li{% if forloop.first %} class="bas"{% endif %}>
+        {% comment %}`kisa_zaman`: bugünse SAAT, değilse TARİH. Ham `H:i`
+        yanlıştı — arşivde farklı günlere ait kayıtlar var ve hepsi saat
+        olarak basılınca liste sırasız görünüyordu (13:52 · 15:27 · 11:29
+        alt alta; 30 Ağustos ekran denetimi).{% endcomment %}
+        <time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|kisa_zaman }}</time>
+        <a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>
+      </li>
+      {% endfor %}
+    </ul>
   </div>
 </div>

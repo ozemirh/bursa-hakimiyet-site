@@ -1,8 +1,24 @@
-{% load site_etiket %}
+{% load site_etiket static %}
     <nav class="kategori" aria-label="Ana kategoriler ve site menüsü">
       <div class="kategori-ic">
+        {% comment %}Logo BANDIN İÇİNDE (29 Ağustos 2026 kararı). Eskiden
+        üstte kendi 93 px'lik beyaz şeridi vardı ve o şeridin %82'si boştu
+        (ölçüldü: bant 1100 px, logo 196 px). Şerit kalktı; logo yapışkan
+        bandın soluna girdi, böylece marka sayfa kaydırılırken de görünür
+        kalıyor — eskiden ilk ekranda kayboluyordu.
+
+        Logo `.kategori-liste`nin DIŞINDA: bant sözleşmesi o listedeki
+        kalem sayısını (10) sayıyor, logo kategori değil.{% endcomment %}
+        <a class="bant-logo" href="/"{% if anasayfa_mi %} aria-current="page"{% endif %}>
+          <img class="logo-gorsel" width="406" height="120" src="{% static 'logo-seffaf.png' %}" alt="Bursa Hakimiyet">
+        </a>
+
+        {% comment %}`mobil` sınıfı taşıyan dört kalem dar ekranda da
+        duruyor; kalan altısını CSS gizler. Hepsi DOM'da — arama motoru ve
+        ekran okuyucu bağlantıları görmeli (menüdeki 17 ilçeyle aynı
+        gerekçe).{% endcomment %}
         <div class="kategori-liste" id="kategori-liste">
-          {% for b in band_kategorileri %}<a href="{{ b.yol }}"{% if b.etkin %} aria-current="page"{% endif %}>{{ b.ad }}</a>
+          {% for b in band_kategorileri %}<a{% if b.mobil %} class="mobil{% if b.mobil_son %} mobil-son{% endif %}"{% endif %} href="{{ b.yol }}"{% if b.etkin %} aria-current="page"{% endif %}>{{ b.ad }}</a>
           {% endfor %}</div>
 
         <button class="ara-ac" type="button" aria-expanded="false" aria-controls="bant-ara">
@@ -53,7 +69,7 @@
               <li><a href="/yazarlar">Yazarlar</a></li>
               <li><a href="/galeriler">Foto galeri</a></li>
               <li><a href="/videolar">Video</a></li>
-              <li><a href="#son-dakika">Son dakika</a></li>
+              <li><a href="/#son-dakika">Son dakika</a></li>
               <li><a href="/resmi-ilan">Resmî ilanlar</a></li>
               <li><a href="#vizyon">Vizyonda neler var</a></li>
             </ul>
@@ -77,7 +93,7 @@
               <li><a href="#panel-vakit">Namaz vakitleri</a></li>
               <li><a href="#panel-eczane">Nöbetçi eczane</a></li>
               <li><a href="#doviz">Döviz ve altın</a></li>
-              <li><a href="#puan-super">Puan durumu</a></li>
+              <li><a href="#bursaspor">Puan durumu</a></li>
               <li><a href="#">E-gazete</a></li>
             </ul>
           </details>

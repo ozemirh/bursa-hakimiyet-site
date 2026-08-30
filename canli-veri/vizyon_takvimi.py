@@ -9,11 +9,20 @@ indirmez. Yalnizca afisin kaynaktaki adresi kunye olarak saklanir
 yerel yer tutucu gosterir. Afisi yayina koymak icin hak sahibinden
 (dagitimci) yazili izin gerekir; bu betigin isi degildir.
 
-Dort kaynak var, hicbiri otekinin yerine gecmez:
+Bes kaynak var, hicbiri otekinin yerine gecmez:
 
-  tmdb      The Movie Database. Ucretsiz API anahtari ister (ticari
-            kullanim icin TMDB'ye danisilmali), kapsam genis, TR vizyon
-            tarihi dogrudan gelir. VARSAYILAN.
+  dagitimci Filmi vizyona sokan DAGITIMCININ kendi duyuru/basin sayfasi:
+            Baska Sinema (/basin/) ve Bir Film (/sinemalarda). VARSAYILAN.
+            Anahtarsiz. Ikisinde de icerigi kisitlayan kullanim kosullari
+            sayfasi YOK ve robots.txt bu yollari acik birakiyor (29 Agustos
+            2026 olcumu). Kapsam DAR ve bilerek dar: ulusal takvimin tamami
+            degil, yalnizca bu iki dagitimcinin getirdigi filmler.
+            Olcum (29 Agustos 2026): 9 film, 6 vizyon gunu.
+  tmdb      The Movie Database. Ucretsiz API anahtari ister. ELENDI
+            (29 Agustos 2026): TMDB'nin sartlari reklam geliri olan
+            siteleri "commercial use" sayiyor ve ayri yazili anlasma
+            istiyor; Bursa Hakimiyet reklamli ticari bir gazete. Kod
+            duruyor ama varsayilan degil, --kaynak tmdb ile cagrilir.
   vikiveri  Wikidata SPARQL. Anahtarsiz, veri CC0 - hukuken en temiz yol,
             ama VIZYON TAKVIMI ICIN YETERSIZ oldugu olculdu (27 Agustos
             2026). Sorgu dogru calisiyor: P577'ye P291=Q43 niteleyicisi
@@ -33,13 +42,19 @@ Dort kaynak var, hicbiri otekinin yerine gecmez:
   elle      Panelden elle girilen liste (vizyon-elle.json). Kaynak
             bulunamadiginda ya da dustugunde calisan yol budur.
 
+Elenen kaynaklar ve gerekcesi (29 Agustos 2026 olcumu, URUN-PLANI.md
+bolum 31): sinemalar.com, beyazperde.com, biletinial.com, Paribu
+Cineverse ve UIP Turkiye'nin HEPSINDE "yazili izin olmadan cogaltilamaz /
+yayinlanamaz" maddesi var - Box Office TR madde 14 ile ayni kalip.
+TME Films'in robots.txt'si ClaudeBot'a dogrudan "Disallow: /" diyor.
+
 Kullanim:
-    set TMDB_ANAHTAR=...            # tek seferlik deneme icin
-    (kalici: canli-veri/gizli.json -> {"TMDB_ANAHTAR": "..."};
-     ornegi gizli-ornek.json, dosya .gitignore'da)
-    python vizyon_takvimi.py                      # tmdb, onumuzdeki 3 ay
+    python vizyon_takvimi.py                      # dagitimci, 3 ay
     python vizyon_takvimi.py --ay 6
     python vizyon_takvimi.py --kaynak vikiveri    # anahtarsiz
+    set TMDB_ANAHTAR=...            # tmdb yolu icin (elendi, bkz. yukari)
+    (kalici: canli-veri/gizli.json -> {"TMDB_ANAHTAR": "..."};
+     ornegi gizli-ornek.json, dosya .gitignore'da)
     python vizyon_takvimi.py --kaynak elle
     python vizyon_takvimi.py --kaynak boxoffice --yazili-izin-var
 
@@ -340,6 +355,213 @@ def _coz(s: str) -> str:
     return re.sub(r"\s+", " ", unescape(s)).strip()
 
 
+# -- kaynak: dagitimci duyuru/basin sayfalari -----------------------------
+#
+# Turkiye vizyon takvimini yayimlayan portallarin HEPSINDE ayni kalipta
+# "yazili izin olmadan cogaltilamaz / yayinlanamaz" maddesi cikti: Box
+# Office TR (madde 14), sinemalar.com, beyazperde.com (madde 3.12),
+# biletinial.com, Paribu Cineverse (madde 2), UIP Turkiye. Olcum
+# URUN-PLANI.md bolum 31'de. Bu yuzden hicbiri kullanilmiyor.
+#
+# Buradaki iki kaynak hukuken farkli bir seydir: filmi vizyona sokan
+# DAGITIMCININ kendi duyuru/basin sayfasi. "Filmimiz su tarihte vizyonda"
+# duyurusu zaten basinin yayinlamasi icin yapilir. Ikisinde de icerigin
+# kullanimini kisitlayan bir kullanim kosullari sayfasi YOK (site
+# haritalarinin tamami tarandi) ve robots.txt bu yollari acik birakiyor.
+# Olcum tarihi 29 Agustos 2026.
+#
+# TME Films'e (tmefilm.com) BILEREK gidilmiyor: robots.txt'sinde
+# "User-agent: ClaudeBot -> Disallow: /" var.
+#
+# Kapsam bilerek dar: yalnizca bu iki dagitimcinin getirdigi filmler.
+# Listede olmayan film UYDURULMAZ.
+
+BASKA_KOK = "http://www.baskasinema.com"
+BIR_KOK = "https://www.birfilm.net"
+
+# Bir Film'de her film ayri sayfada; bir kosuda acilacak azami sayfa.
+BIR_AZAMI_SAYFA = 25
+
+# Baska Sinema: WordPress, film bloklari tek kalipta basiliyor.
+_BS_BLOK = re.compile(r'<div class="movie_box.*?(?=<div class="movie_box|\Z)', re.S)
+_BS_AD = re.compile(r'class="movie_title"[^>]*><span>(.*?)</span>', re.S)
+_BS_SLUG = re.compile(r'href="[^"]*/filmler/([^"/]+)/"')
+_BS_TARIH = re.compile(r'<strong>\s*(\d{1,2})\s+([^\s<]+)\s+(\d{4})\s*</strong>')
+_BS_TUR = re.compile(r'Tür:\s*([^<]*)')
+
+# Bir Film: Wix galerisi. Baglanti film sayfasina, aciklama vizyon gunune.
+_BF_OGE = re.compile(
+    r'href="(https://www\.birfilm\.net/sinemalarda-[^"]+)"(?:.{0,4000}?)'
+    r'gallery-item-description"[^>]*>([^<]*)<', re.S)
+_BF_GUN = re.compile("(\\d{1,2})\\s+([^\\s<\u2019']+)")
+_BF_TARIH = re.compile(r"Vizyon Tarihi:\s*(\d{1,2})\s+(\S+)\s+(\d{4})")
+
+
+def _satirlar(html_metni: str) -> list[str]:
+    """Sayfayi duz metin satirlarina indirger.
+
+    Bir Film'in sayfasinda "Tur:" etiketi ile degeri ayri ogelerde duruyor;
+    etiket/deger ikilisini yakalamanin en dayanikli yolu metin sirasi.
+    """
+    g = re.sub(r"(?s)<(script|style|noscript)[^>]*>.*?</\1>", " ", html_metni)
+    g = re.sub(r"(?s)<[^>]+>", "\n", g)
+    from html import unescape
+    return [s.strip() for s in unescape(g).split("\n") if s.strip()]
+
+
+def _bs_ayikla(html_metni: str) -> list[dict]:
+    """Baska Sinema sayfasindaki film bloklarini okur."""
+    cikti = []
+    for blok in _BS_BLOK.findall(html_metni):
+        ad_e = _BS_AD.search(blok)
+        tar = _BS_TARIH.search(blok)
+        if not (ad_e and tar):
+            continue
+        ay = _ay_no(tar.group(2).lower())
+        if not ay:
+            continue
+        # Baslik "Orijinal Ad / Turkce Ad" kalibinda gelir; tek adli da olur.
+        tam = _coz(ad_e.group(1))
+        ozgun, ad = "", tam
+        if " / " in tam:
+            ozgun, ad = [p.strip() for p in tam.split(" / ", 1)]
+        tur_e = _BS_TUR.search(blok)
+        slug = _BS_SLUG.search(blok)
+        cikti.append(film_kaydi(
+            ad,
+            "%04d-%02d-%02d" % (int(tar.group(3)), ay, int(tar.group(1))),
+            ozgun_ad=ozgun,
+            tur=[p.strip() for p in _coz(tur_e.group(1)).split(" - ")
+                 if p.strip()] if tur_e else [],
+            # Sayfa "Dagitimci:" diye bir alan basmiyor; alan sayfanin kendi
+            # kimliginden geliyor - burasi Baska Sinema'nin kendi duyurusu.
+            dagitimci="Başka Sinema",
+            kaynak_kimlik="baskasinema:" + (slug.group(1) if slug else ""),
+        ))
+    return cikti
+
+
+def _baska_cek(bas: str, son: str) -> list[dict]:
+    tekil: dict[tuple, dict] = {}
+    for yol in ("/gelecek-filmler/", "/basin/"):
+        adres = BASKA_KOK + yol
+        ortak.log(f"  {adres}")
+        for f in _bs_ayikla(ortak.getir(adres)):
+            if bas <= f["tarih"] <= son:
+                tekil[(f["ad"].lower(), f["tarih"])] = f
+        ortak.bekle()
+    return list(tekil.values())
+
+
+def _birfilm_cek(bas: str, son: str) -> list[dict]:
+    """Once liste sayfasi, sonra yalnizca ARALIKTAKI filmlerin sayfasi.
+
+    Liste sayfasi gunu ve ayi verir ama yili vermez ("13 Kasim'da
+    Sinemalarda!"); yil yalnizca film sayfasinda yazili. Bu yuzden liste
+    kaba bir SUZGEC olarak kullanilir, tarih film sayfasindan okunur.
+    """
+    adres = BIR_KOK + "/sinemalarda"
+    ortak.log(f"  {adres}")
+    html_metni = ortak.getir(adres)
+    bugun = date.today()
+    adaylar = []
+    for baglanti, aciklama in _BF_OGE.findall(html_metni):
+        m = _BF_GUN.search(_coz(aciklama))
+        if not m:
+            continue
+        ay = _ay_no(m.group(2).lower())
+        if not ay:
+            continue
+        try:
+            kaba = date(bugun.year, ay, int(m.group(1)))
+        except ValueError:
+            continue
+        # Yil yazmadigi icin gecmis gorunen gun bir sonraki yila ait olabilir.
+        if kaba < bugun:
+            try:
+                kaba = kaba.replace(year=bugun.year + 1)
+            except ValueError:
+                continue
+        if kaba.isoformat() > son:
+            continue
+        adaylar.append(baglanti)
+
+    filmler = []
+    for baglanti in adaylar[:BIR_AZAMI_SAYFA]:
+        ortak.bekle()
+        try:
+            sayfa = ortak.getir(baglanti)
+        except ortak.CekmeHatasi as e:
+            ortak.log(f"    UYARI: {baglanti} alinamadi ({e})")
+            continue
+        satir = _satirlar(sayfa)
+        tarih = ""
+        tur: list[str] = []
+        for i, s in enumerate(satir):
+            m = _BF_TARIH.match(s)
+            if m:
+                ay = _ay_no(m.group(2).lower())
+                if ay:
+                    tarih = "%04d-%02d-%02d" % (
+                        int(m.group(3)), ay, int(m.group(1)))
+            if s.rstrip(":") == "Tür" and i + 1 < len(satir):
+                tur = [p.strip() for p in re.split(r"[-,]", satir[i + 1])
+                       if p.strip()]
+        # Ad sayfa basligindan: "Bir Film | Sinemalarda | Buruk Noel"
+        ad = ""
+        b = re.search(r"<title>(.*?)</title>", sayfa, re.S)
+        if b:
+            parca = [p.strip() for p in _coz(b.group(1)).split("|")]
+            ad = parca[-1] if parca else ""
+        if not (ad and tarih) or not (bas <= tarih <= son):
+            continue
+        filmler.append(film_kaydi(
+            ad, tarih, tur=tur, dagitimci="Bir Film",
+            kaynak_kimlik="birfilm:" + baglanti.rsplit("/", 1)[-1],
+        ))
+    return filmler
+
+
+def dagitimci_cek(ay_sayisi: int) -> tuple[list[dict], dict]:
+    bas, son = aralik(ay_sayisi)
+    ortak.log(f"  Dagitimci duyurulari: {bas} .. {son}")
+    filmler: list[dict] = []
+    dusen = []
+    # Biri dusunce oteki yayina devam etsin; ikisi birden dusunce hata.
+    for ad, islev in (("Başka Sinema", _baska_cek), ("Bir Film", _birfilm_cek)):
+        try:
+            bulunan = islev(bas, son)
+            ortak.log(f"    {ad}: {len(bulunan)} film")
+            filmler.extend(bulunan)
+        except Exception as e:
+            dusen.append(f"{ad} ({e!r})")
+            ortak.log(f"    UYARI: {ad} alinamadi ({e!r})")
+    if not filmler and dusen:
+        raise ortak.CekmeHatasi(
+            "dagitimci kaynaklarinin hepsi dustu: " + " | ".join(dusen))
+
+    kaynak = {
+        "ad": "Dağıtımcı vizyon duyuruları",
+        "kisa": "Başka Sinema · Bir Film",
+        "adres": f"{BASKA_KOK}/basin/ · {BIR_KOK}/sinemalarda",
+        "kosullar": ("Her iki sitede de içeriğin kullanımını kısıtlayan bir "
+                     "kullanım koşulları sayfası yok (29 Ağustos 2026'da site "
+                     "haritalarının tamamı tarandı); robots.txt bu yolları "
+                     "açık bırakıyor."),
+        "kunye": "Vizyon tarihleri: Başka Sinema ve Bir Film duyuruları.",
+        "kaynaklar": [
+            {"ad": "Başka Sinema", "adres": BASKA_KOK + "/basin/",
+             "kosullar": "", "kunye": "Kaynak: Başka Sinema"},
+            {"ad": "Bir Film", "adres": BIR_KOK + "/sinemalarda",
+             "kosullar": "", "kunye": "Kaynak: Bir Film"},
+        ],
+        "kapsam_uyarisi": ("Bu liste ulusal vizyon takviminin tamamı değildir; "
+                           "yalnızca bu iki dağıtımcının getirdiği filmleri "
+                           "kapsar."),
+    }
+    return filmler, kaynak
+
+
 # -- kaynak: elle girilen -------------------------------------------------
 
 def elle_cek(kok: Path) -> tuple[list[dict], dict]:
@@ -380,6 +602,8 @@ def calistir(kok: Path, kaynak_adi: str, ay_sayisi: int, izin_var: bool) -> int:
             filmler, kaynak = vikiveri_cek(ay_sayisi)
         elif kaynak_adi == "boxoffice":
             filmler, kaynak = boxoffice_cek(ay_sayisi, izin_var)
+        elif kaynak_adi == "dagitimci":
+            filmler, kaynak = dagitimci_cek(ay_sayisi)
         else:
             filmler, kaynak = elle_cek(kok)
     except ortak.CekmeHatasi as e:
@@ -421,9 +645,10 @@ def calistir(kok: Path, kaynak_adi: str, ay_sayisi: int, izin_var: bool) -> int:
 def main() -> int:
     ayristi = argparse.ArgumentParser(
         description="Turkiye vizyon takvimini ceker.")
-    ayristi.add_argument("--kaynak", default="tmdb",
-                         choices=["tmdb", "vikiveri", "boxoffice", "elle"],
-                         help="veri kaynagi (varsayilan: tmdb)")
+    ayristi.add_argument("--kaynak", default="dagitimci",
+                         choices=["dagitimci", "tmdb", "vikiveri",
+                                  "boxoffice", "elle"],
+                         help="veri kaynagi (varsayilan: dagitimci)")
     ayristi.add_argument("--ay", type=int, default=3,
                          help="kac ay ileriye bakilacak (varsayilan: 3)")
     ayristi.add_argument("--yazili-izin-var", action="store_true",

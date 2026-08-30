@@ -26,6 +26,9 @@
               <span>Haber Merkezi</span>
               {% if haber.yayin_zamani %}<span><time datetime="{{ haber.yayin_zamani|date:'c' }}">{{ haber.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
               {% if haber.guncelleme_zamani %}<span>Güncelleme: {{ haber.guncelleme_zamani|date:'H:i' }}</span>{% endif %}
+              {% comment %}Okuma süresi (29 Ağustos): kelime_sayisi 485.388/486.667
+              kayıtta dolu; boşsa hiç basılmaz — uydurma süre yazılmaz.{% endcomment %}
+              {% if haber.kelime_sayisi %}<span>{{ haber.kelime_sayisi|okuma_dakikasi }} dk okuma</span>{% endif %}
               <div class="arac">
                 <button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button>
                 <button type="button" class="yazi-kucult" aria-label="Yazı boyutunu küçült">A&minus;</button>
@@ -72,6 +75,38 @@
             </div>
           </div>
         </div>
+
+        <aside class="ray" aria-label="Öne çıkan listeler">
+          {% comment %}29 Ağustos 2026 görsel denetimi (Ö1): `.izgara` iki
+          sütun ayırıyor ama şablon tekini dolduruyordu — her makale
+          sayfasında 342 px ölü sütun (ölçüldü). Ray anasayfanın hazır
+          bileşenlerini yeniden kullanır; reklam yuvası adı envanterden.{% endcomment %}
+          {% include "parca/son_dakika.html" %}
+
+          <div class="reklam kare-300"><span><b>REKLAM ALANI</b><span class="olcu">-Haber arası1- 300x250</span></span></div>
+
+          {% if en_cok %}
+          <div class="kutu">
+            <div class="kutu-bas vurgu"><h2>EN ÇOK OKUNANLAR</h2></div>
+            <div class="kutu-ic">
+              <ol class="sira">
+{% for h in en_cok %}                <li><span class="no">{{ forloop.counter }}</span><h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3></li>
+{% endfor %}              </ol>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if ilcedekiler %}
+          <div class="kutu">
+            <div class="kutu-bas"><h2>{{ haber.ilce.ad|buyult }} HABERLERİ</h2><span class="tumu"><a href="/ilce/{{ haber.ilce.slug }}">Tümü &rarr;</a></span></div>
+            <div class="kutu-ic">
+              <ul class="liste">
+{% for h in ilcedekiler %}                <li><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>{% if h.yayin_zamani %}<span class="zaman">{{ h.yayin_zamani|kisa_zaman }}</span>{% endif %}</li>
+{% endfor %}              </ul>
+            </div>
+          </div>
+          {% endif %}
+        </aside>
       </div>
 {% endblock %}
 
