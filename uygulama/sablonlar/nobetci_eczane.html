@@ -1,0 +1,82 @@
+{% extends "taban.html" %}
+{% load site_etiket %}
+
+{% comment %}NÖBETÇİ ECZANE SAYFASI — 31 Ağustos 2026, kullanıcı isteği
+(URUN-PLANI.md §41).
+
+Tek şablon iki adresi çiziyor: `/nobetci-eczane` (Bursa geneli, ilçe ilçe
+bölümlenmiş) ve `/nobetci-eczane/<ilçe>` (tek ilçe, düz liste). Ayrı iki
+şablon olsaydı satır biçimi iki yerde yaşardı.
+
+Adres KALICI, içerik günlük. Bu yüzden `<h1>` tarihi taşır ve sayfanın
+sonunda kaynak adı durur — okur neye baktığını ve kimin söylediğini
+bilmeli.{% endcomment %}
+
+{% block baslik %}{{ baslik }} | Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ aciklama }}{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ yol }}">{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span>
+        {% if ilce_ad %}<a href="{{ kok_yol }}">Nöbetçi eczane</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">{{ ilce_ad }}</span>
+        {% else %}<span aria-current="page">Nöbetçi eczane</span>{% endif %}
+      </nav>
+
+      <section class="kutu eczane-sayfa">
+        <div class="kutu-bas vurgu">
+          <h1>{% if ilce_ad %}{{ ilce_ad|buyult }} NÖBETÇİ ECZANELER{% else %}BURSA NÖBETÇİ ECZANELER{% endif %}</h1>
+          {% if panel %}<span class="tumu">{{ adet }} eczane</span>{% endif %}
+        </div>
+        <div class="kutu-ic">
+
+          {% if panel %}
+            <p class="eczane-ozet{% if panel.bayat %} bayat{% endif %}">
+              <b><time datetime="{{ panel.gun|date:'Y-m-d' }}">{{ panel.gun|date:"j F Y" }}</time> nöbeti</b>
+              {% if panel.pencere %}&middot; çoğu eczanede {{ panel.pencere }} ({{ panel.pencere_adet }} eczane){% endif %}
+              {% if panel.bayat %}&middot; <b>liste tazelenemedi, saatleri eczaneden doğrulayın</b>{% endif %}
+            </p>
+          {% else %}
+            {% comment %}Veri yokken sayfa 404 DEĞİL 200 döner (görünümde
+            gerekçesi yazılı); okur boş bir kutuyla değil, gidebileceği
+            yerle karşılaşır.{% endcomment %}
+            <p class="bos">Nöbetçi eczane listesi şu an alınamıyor. Güncel çizelge {{ kaynak_adi }}'nın kendi sayfasında yayımlanıyor.</p>
+          {% endif %}
+
+          {% comment %}Şerit 17 ilçenin TAMAMINI taşır; bugün nöbetçisi
+          olmayan ilçe "0" ile görünür. Eksik liste okura sayfanın eksik
+          olduğunu düşündürürdü.{% endcomment %}
+          <nav class="eczane-ilceler" aria-label="İlçeye göre nöbetçi eczane">
+            <a href="{{ kok_yol }}"{% if not ilce_slug %} aria-current="page"{% endif %}>Bursa geneli{% if panel %} <span class="adet">{{ panel.sayi }}</span>{% endif %}</a>
+{% for i in serit %}            <a href="{{ i.yol }}"{% if i.secili %} aria-current="page"{% endif %}>{{ i.ad }} <span class="adet">{{ i.adet }}</span></a>
+{% endfor %}          </nav>
+
+          {% if ilce_slug and panel and not eczaneler %}
+            {% comment %}"Bu ilçede bugün nöbetçi yok" da bir veridir ve
+            uydurulmaz: kaynak o ilçe için kayıt döndürmediyse öyle yazılır.
+            Küçük ilçelerde nöbet komşu ilçeye devredilebiliyor.{% endcomment %}
+            <p class="bos">{{ panel.gun|date:"j F Y" }} tarihinde {{ ilce_ad }} ilçesinde nöbetçi eczane görünmüyor. Bursa genelindeki {{ panel.sayi }} nöbetçi eczaneyi <a href="{{ kok_yol }}">bu sayfada</a> görebilirsiniz.</p>
+          {% endif %}
+
+          {% if gruplar %}
+            {% for g in gruplar %}
+            <section class="eczane-bolum" id="ilce-{{ g.anahtar }}">
+              <h2><a href="{{ g.yol }}">{{ g.ad }} nöbetçi eczaneler</a> <span class="adet">{{ g.eczaneler|length }}</span></h2>
+              {% include "parca/eczane_liste.html" with kayitlar=g.eczaneler %}
+            </section>
+            {% endfor %}
+          {% elif eczaneler %}
+            <h2 class="gorsel-gizli">{{ ilce_ad }} nöbetçi eczane listesi</h2>
+            {% include "parca/eczane_liste.html" with kayitlar=eczaneler %}
+          {% endif %}
+
+          <p class="eczane-kaynak">Liste <b>{{ kaynak_adi }}</b>&rsquo;nın yayımladığı nöbet çizelgesinden alınmıştır ({{ kaynak_nitelik }}). Nöbet devri gün içinde yapıldığı için saatler ilçeye göre değişir; yola çıkmadan önce eczaneyi telefonla aramak yararlı olur.</p>
+        </div>
+      </section>
+{% endblock %}
+
+{% comment %}JSON-LD gövdenin sonunda: `<head>` daha temiz olurdu ama
+`taban.html`de o blok kanonik bağlantı için ayrılmış. Yalnız dosyada OLAN
+alanlar yazılır — telefonu olmayan eczanede `telephone` anahtarı hiç
+açılmaz.{% endcomment %}
+{% block betik %}{% if eczaneler %}<script type="application/ld+json">{{ yapisal_veri|safe }}</script>{% endif %}{% endblock %}

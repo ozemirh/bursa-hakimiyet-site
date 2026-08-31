@@ -45,7 +45,7 @@ bkz. parca/kategori_bandi.html.{% endcomment %}
 <div class="sayfa">
 
   <aside class="yan-reklam" aria-label="Sol reklam alanı">
-    <div class="reklam"><span><b>REKLAM ALANI</b><span class="olcu">-Sol pageskin1- 160x600</span></span></div>
+    <div class="reklam" data-gpt="160x600"><span><b>REKLAM ALANI</b><span class="olcu">-Sol pageskin1- 160x600</span></span></div>
   </aside>
 
   <div class="orta">
@@ -61,7 +61,57 @@ bkz. parca/kategori_bandi.html.{% endcomment %}
        raylarında sabit liste kutusu geldi — bkz. parca/son_dakika.html.
        Şablonun tepesine yeni bir şerit eklemeden önce o kararı oku.{% endcomment %}
 
-    <div class="reklam tam"><span><b>REKLAM ALANI</b><span class="olcu">1100x150</span></span></div>
+    {% comment %}UST SERIT — 1100x150 + 970x250 (31 Agustos 2026).
+
+    Serit gun icinde uc kez donduruldu; son hali IKISINI BIRDEN tasiyor
+    ve gerekceleri ayri:
+
+    - **1100x150** gazetenin KENDI sattigi yuvanin olcusu; envanterdeki
+      yuva adi da bu. Hicbir reklam agi bu olcude yaratici tasimiyor
+      (olculdu) ama ozel olculer Ad Manager'da dogrudan satista serbest —
+      yerel reklamveren gorseli verir, yuva dolar.
+    - **970x250** ("billboard") IAB standardi; programatik talebin teklif
+      verdigi olcu bu. Kutu boyu 150 -> 250'ye ONUN icin cikti.
+    - **728x90** yedek: ikisi de dolmadiginda serit bos kalmasin diye.
+      Google demo agi YALNIZ bunu dolduruyor (olculdu: 970x250, 970x90,
+      728x250, 336x280, 300x600, 320x100 hepsi bos doner).
+
+    1100x150 dolarsa 250 px'lik kutuda alt ve ustte 50'ser px bosluk
+    kalir. Iki olcunun birlikte tasinmasinin bedeli bu; tek olcuye
+    inilirse kutu boyu da ona gore ayarlanmali.
+
+    **`data-gpt-demo="kapali"` — bu serit DEMO REKLAMI ALMIYOR** (31 Agustos
+    2026, kullanici karari: "970e 250'nin icine test reklami koyma
+    simdilik"). Gerekce yerinde: demo agi uc olcuden yalniz 728x90'i
+    dolduruyor ve o yaratici 250 px'lik billboard kutusunun ortasinda
+    kucucuk duruyordu — seridin gercek halini gostermek yerine yaniltiyor.
+    Serit simdilik gri yer tutucu olarak duruyor.
+
+    Olcu sozlesmesi YERINDE KALDI: `data-gpt` ve `data-gpt-harita`
+    silinmedi. Gercek sunum (F7) geldiginde bu serit icin yeniden olcu
+    yazilmasi gerekmesin; kalkan tek sey demo dolgusu. Isaret yalnizca
+    `reklam.js`i ilgilendiriyor, o da yalniz demo bayragiyla yukleniyor.
+
+    `data-gpt-harita` UC olculmus kisit tasiyor — hicbiri tahmin degil:
+      - ≤600 px: kutu 44 px (§34 K8'in bilincli karari). Hicbir olcu
+        verilmiyor; 728x90 oraya konunca sayfa 360'ta 393 px yatay
+        TASIYORDU (olculdu).
+      - 601-1000: kutu 120 px, yalniz 728x90 sigar.
+      - 1001-1139: kutu 250 px ve sutun ~981-1119 px — 970 sigar, 1100
+        sigmaz. Esik 1140, mevcut kirilma noktasi.{% endcomment %}
+    <div class="reklam tam" data-gpt="1100x150,970x250,728x90"
+         data-gpt-harita="1140>1100x150,970x250,728x90; 1001>970x250,728x90; 601>728x90; 0>"
+         data-gpt-demo="kapali"><span><b>REKLAM ALANI</b><span class="olcu">1100x150 &middot; 970x250</span></span>{% if reklam_demo %}{% comment %}ORNEK YARATICI — reklam DEGIL, olcu maketi.
+
+      Kullanici 970x250'yi gormek istedi; demo aginda o olcude yaratici yok
+      (olculdu: ag yalniz 300x250, 160x600 ve 728x90 dolduruyor). Aginin
+      olmadigi bir seyi aginin verdigi gibi gostermek yerine kutunun kendisi
+      cizildi: tam 970x250, seridin ortasinda, uzerinde ne oldugu yaziyor.
+
+      Sahte reklam DEGIL: reklamveren adi, marka, gorsel yok — yalniz
+      formatin ayak izi. Yalniz demo bayragi acikken basilir; yayinda bu
+      blok HIC uretilmez.{% endcomment %}
+      <span class="ornek-yaratici"><b>ÖRNEK YARATICI</b><span class="olcu">970 &times; 250 &mdash; billboard ayak izi</span></span>{% endif %}</div>
 
     <main id="ana-icerik" tabindex="-1">
 {% block icerik %}{% endblock %}
@@ -69,7 +119,7 @@ bkz. parca/kategori_bandi.html.{% endcomment %}
   </div>
 
   <aside class="yan-reklam" aria-label="Sağ reklam alanı">
-    <div class="reklam"><span><b>REKLAM ALANI</b><span class="olcu">-Sağ pageskin1- 160x600</span></span></div>
+    <div class="reklam" data-gpt="160x600"><span><b>REKLAM ALANI</b><span class="olcu">-Sağ pageskin1- 160x600</span></span></div>
   </aside>
 
 </div>
@@ -77,6 +127,15 @@ bkz. parca/kategori_bandi.html.{% endcomment %}
 {% include "parca/kunye.html" %}
 
 <script src="{% static 'betik/site.js' %}"></script>
+{% if reklam_demo %}{% comment %}Reklam demo agi — YALNIZ bayrak acikken
+(`BH_REKLAM_DEMO=1`). Kapaliyken bu blok hic basilmaz: site disaridan
+yalniz Google Fonts ceker ve internetsiz de acilir. GPT ucuncu taraf
+cerezi birakir; canliya boyle cikarsa cerez aydinlatmasi ayri bir istir.
+Ayrintili gerekce `cekirdek/settings.py` REKLAM_DEMO yaninda.{% endcomment %}
+<script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+<script>window.BH_REKLAM_YOLU = "{{ reklam_yolu|escapejs }}";</script>
+<script src="{% static 'betik/reklam.js' %}"></script>
+{% endif %}
 {% block betik %}{% endblock %}
 </body>
 </html>

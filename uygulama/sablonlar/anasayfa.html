@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load site_etiket %}
+{% load site_etiket static %}
 {% comment %}`l10n`: sıcaklık çubuğunun yüzdesi satır içi CSS'e giriyor ve
 Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersiz CSS,
 çubuk hiç çizilmiyordu (30 Ağustos ölçümü).{% endcomment %}
@@ -61,8 +61,6 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
                 <a class="dinle-bag" href="{{ h.get_absolute_url }}#seslendirme"><span aria-hidden="true">&#9654;</span> SESLİ DİNLE</a>
               </div>
             </article>{% endfor %}
-            <button type="button" class="slayt-ok geri" aria-label="Önceki manşet"><span aria-hidden="true">&#8249;</span></button>
-            <button type="button" class="slayt-ok ileri" aria-label="Sonraki manşet"><span aria-hidden="true">&#8250;</span></button>
           </div>
           <div class="slayt-denetim">
             <span class="slayt-sayac" aria-hidden="true">1 / {{ manset|length }}</span>
@@ -74,7 +72,7 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
         </section>
 
         <div class="manset-yan">
-          <div class="reklam kare-300"><span><b>REKLAM ALANI</b><span class="olcu">-Manşet yanı- 300x250</span></span></div>
+          <div class="reklam kare-300" data-gpt="300x250"><span><b>REKLAM ALANI</b><span class="olcu">-Manşet yanı- 300x250</span></span></div>
           <section class="slayt-kap mini-slayt" aria-roledescription="haber galerisi" aria-label="Günün diğer haberleri">
             <h2 class="gorsel-gizli">Günün diğer haberleri</h2>
             <div class="slayt-pencere">
@@ -113,7 +111,7 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
       manşetin altındaki 300x250 yuvanın adı.{% endcomment %}
       <div class="sondakika-satir">
         {% include "parca/son_dakika.html" with genis=1 %}
-        <div class="reklam kare-300"><span><b>REKLAM ALANI</b><span class="olcu">-Manşet altı1- 300x250</span></span></div>
+        <div class="reklam kare-300" data-gpt="300x250"><span><b>REKLAM ALANI</b><span class="olcu">-Manşet altı1- 300x250</span></span></div>
       </div>
 
       </div>{# /.ust-blok #}
@@ -123,7 +121,7 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
       arşivinden; `medya/management/commands/yazar_portre_indir.py` indirir,
       portresi olmayan yazar baş harf vesikasıyla eksiksiz görünür.
       Kaydırma JS'siz: CSS scroll-snap.{% endcomment %}
-      <section class="kutu yazar-serit" aria-labelledby="yazar-serit-bas">
+      <section class="kutu yazar-serit" id="yazar-serit" aria-labelledby="yazar-serit-bas">
         <div class="kutu-bas hafif">
           <h2 id="yazar-serit-bas">YAZARLAR</h2>
           <span class="tumu"><a href="/yazarlar">Tüm yazarlar &rarr;</a></span>
@@ -146,7 +144,6 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
 {% empty %}            <li class="bos">Yazar dizini henüz göç etmedi.</li>
 {% endfor %}          </ul>
         </div>
-        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>{% if yazar_adedi is not None %}Arşivden gelen {{ yazar_adedi }} yazar ve {{ kose_adedi }} köşe yazısı. {% endif %}Son yazı başlığı yazarın en yeni yazısından okunur; portreler gazetenin kendi yayınından alınmıştır.</p></details>
       </section>
 
       <div class="ana-izgara">
@@ -156,9 +153,15 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
             <div class="kutu-ic">
               {% comment %}İlk kart iki sütuna yayılır (§35): 11 kayıt =
               1 geniş + 10 kart, beş tam satır. Kart bileşeni aynı; `genis`
-              bayrağı kategori sayfasındakiyle ortak.{% endcomment %}
-              <div class="kutu-izgara">
-{% for h in kutular %}                {% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 genis=forloop.first %}
+              bayrağı kategori sayfasındakiyle ortak.
+
+              31 Ağustos 2026 (kullanıcı isteği): bu panelde spot
+              basılmıyor — `goster_spot` bilerek yollanmıyor, kartta
+              kategori/ilçe + zaman + başlık kalıyor. `son-haberler`
+              sınıfı yalnız fotoğraf çerçevesini yükseltir (site.css
+              sonundaki bölüm); kategori ve arama ızgaraları etkilenmez.{% endcomment %}
+              <div class="kutu-izgara son-haberler">
+{% for h in kutular %}                {% include "parca/kart.html" with h=h goster_foto=1 zaman_gizle=1 genis=forloop.first %}
 {% endfor %}
               </div>
             </div>
@@ -166,14 +169,13 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
         </div>
 
         <aside class="ray" aria-label="Öne çıkan listeler">
-          <div class="kutu">
+          <div class="kutu" id="en-cok-okunan">
             <div class="kutu-bas vurgu"><h2>EN ÇOK OKUNANLAR</h2></div>
             <div class="kutu-ic">
               <ol class="sira">
 {% for h in en_cok %}                <li><span class="no">{{ forloop.counter }}</span><h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3></li>
 {% endfor %}              </ol>
             </div>
-            <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>Şimdilik editör seçkisi: okunma sayacı yeni sistemde sıfırdan başlıyor, eski okunma verisi göçte kurtarılamadı.</p></details>
           </div>
 
           {% comment %}BURSA İLÇELERİ (§35): yerel gazetenin okuru önce
@@ -190,23 +192,24 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
             </div>
           </div>
 
-          <div class="reklam kare-300"><span><b>REKLAM ALANI</b><span class="olcu">-Haber arası1- 300x250</span></span></div>
+          <div class="reklam kare-300" data-gpt="300x250"><span><b>REKLAM ALANI</b><span class="olcu">-Haber arası1- 300x250</span></span></div>
+
+          {% comment %}GÜNÜN MANŞETLERİ — slayta girmeyen 10 kayıt (§35).
+          Slayt 30 Ağustos 2026'da yeniden 15 sayfaya çıktı; liste havuzun
+          slayttan SONRAKİ dilimini gösterdiği için hâlâ tekrarsız. Aynı gün
+          (§37) manşetin altından SON HABERLER ızgarasının altına indi;
+          31 Ağustos 2026'da kullanıcı isteğiyle BURAYA, rayda "Haber arası1"
+          reklam yuvasının altına alındı ve `dikey` biçime geçti: 320 px'lik
+          rayda iki sütun sığmıyor, satırlar tek sütunda alt alta dizilir.
+          Ray sırası: en çok okunanlar → ilçeler → reklam → manşetler.{% endcomment %}
+          <section class="manset-liste dikey" aria-labelledby="manset-liste-bas">
+            <h2 id="manset-liste-bas">GÜNÜN MANŞETLERİ</h2>
+            <ul>
+{% for h in manset_liste %}              <li><time datetime="{{ h.yayin_zamani|date:'c' }}" title="{{ h.yayin_zamani|date:'j F Y, H:i' }}">{{ h.yayin_zamani|kisa_zaman }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
+{% endfor %}            </ul>
+          </section>
         </aside>
       </div>
-
-      {% comment %}GÜNÜN MANŞETLERİ — slayta girmeyen 10 kayıt (§35).
-      Slayt 30 Ağustos 2026'da yeniden 15 sayfaya çıktı; liste havuzun
-      slayttan SONRAKİ dilimini gösterdiği için hâlâ tekrarsız. Aynı gün
-      (§37) kullanıcı isteğiyle manşetin hemen altından BURAYA, SON HABERLER
-      ızgarasının altına indi; boşalan yeri SON DAKİKA aldı. Liste dikeyde
-      ucuz ve taranabilir olduğu için iki büyük bloğun arasında ayraç işi de
-      görüyor.{% endcomment %}
-      <section class="manset-liste" aria-labelledby="manset-liste-bas">
-        <h2 id="manset-liste-bas">GÜNÜN MANŞETLERİ</h2>
-        <ul>
-{% for h in manset_liste %}          <li><time datetime="{{ h.yayin_zamani|date:'c' }}" title="{{ h.yayin_zamani|date:'j F Y, H:i' }}">{{ h.yayin_zamani|kisa_zaman }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
-{% endfor %}        </ul>
-      </section>
 
       <section class="ilan" id="resmi-ilan" aria-labelledby="resmi-ilan-bas">
         <div class="ilan-bas">
@@ -249,7 +252,6 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
 {% empty %}          <li class="bos">Yayımlanabilir resmî ilan kaydı yok.</li>
 {% endfor %}        </ul>
 
-        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>Bu bölüm gazetenin <b>yayımladığı</b> resmî ilanların dizinidir, açık ilanların listesi değil: {{ ilan_toplami }} kayıt{% for t in ilan_tur_toplami %}{% if t.adet %}, {{ t.adet }} {{ t.ad|kucult }}{% endif %}{% endfor %}. Başlıklar, türler, tarihler ve ilan numaraları gerçektir. <b>Son başvuru tarihi gösterilmez</b> &mdash; kayıtlarda bitiş tarihi alanı boştur ve uydurulmaz; bir ihalenin ya da tebligatın hâlâ geçerli olup olmadığı ilanı veren kurumdan doğrulanmalıdır. İlan metinleri henüz göç etmediği için başlıklar bağlantı değildir; TÜM İLANLAR sayfası da metinler gelince dolacak.</p></details>
       </section>
 
       {% comment %}ŞEHİR SERVİSLERİ — 30 Ağustos 2026 (§35), kullanıcı isteği:
@@ -289,18 +291,42 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
               {% if hava_panel %}
               <div class="hava-panel">
 
-                {% comment %}Arka plandaki Uludağ çizimi BEZEME DEĞİL: gökyüzünün
-                rengi havayı ve günün saatini söylüyor (beş palet — güneş, bulut,
-                yağış, kar, gece). Palet `hava_panel.manzara`dan gelir; gece kararı
-                Diyanet'in doğuş/batış saatinden hesaplanır, kaba bir saat
-                aralığından değil. Çizim yereldir, dış adres yoktur; sayfa
-                internetsiz de aynı açılır.
+                {% comment %}Arka planda 31 Ağustos 2026'dan beri ÇİZİM DEĞİL
+                FOTOĞRAF var. Gerekçe, panelin Bursa'ya ait olduğunu ilk bakışta
+                söylemesi — çizim her kentte olabilecek bir siluetti.
 
-                `aria-hidden`: aynı bilgi hemen yanında yazıyla duruyor, ekran
-                okuyucuya iki kez söylenmemeli.{% endcomment %}
+                Fotoğraf aynı gün İKİNCİ kez değişti (kullanıcı isteği: panel
+                "daha dikkat çekici ve iç açıcı" olsun). Eskisi Ulu Cami'ydi
+                (`kent.jpg`): kadrajın büyük kısmı puslu gökyüzü ve sıkışık
+                kent dokusuydu, gri-yeşile çalıyordu ve iki adım ötede duran
+                namaz vakitleri panelinin fotoğrafı da bir camiydi — iki panel
+                yan yana aynı şeyi söylüyordu. Yenisi Uludağ (`uludag.jpg`):
+                kentin havasını belirleyen dağ, karlı zirve ve açık gökyüzü.
+                Hem panelin konusuyla doğrudan ilgili, hem daha açık renkli,
+                hem de namaz panelinin camisiyle çakışmıyor.
+
+                Görsel CC BY-SA 4.0; künyesi namaz panelindeki gibi fotoğrafın
+                ÜSTÜNDE duruyor (`.foto-hak`) — sayfa mobilyasında altına künye
+                satırı açılacak yer yok. Bu, `kent.jpg` döneminden kalan
+                "künye yalnız KAYNAKLAR.md'de duruyor, bu yetmez" açığını da
+                kapatıyor.
+
+                Havanın rengi BİLGİ TAŞIMAYA DEVAM EDİYOR: beş palet (güneş,
+                bulut, yağış, kar, gece) artık gökyüzünü değil fotoğrafın
+                üstündeki ton perdesini boyuyor, `.hava-simdi.m-*` içinde.
+                Palet `hava_panel.manzara`dan gelir; gece kararı Diyanet'in
+                doğuş/batış saatinden hesaplanır, kaba bir saat aralığından
+                değil. Fotoğraf yereldir (`gorseller/`), dış adres yoktur;
+                sayfa internetsiz de aynı açılır.
+
+                Boş `alt` + `aria-hidden`: fotoğraf bezemedir, taşıdığı bilgi
+                hemen yanında yazıyla duruyor; ekran okuyucuya iki kez
+                söylenmemeli. `width`/`height` yer ayırmak için, kutu zaten
+                sabit yükseklikte ama sıçrama olmasın diye.{% endcomment %}
                 <div class="hava-simdi m-{{ hava_panel.manzara }}">
-                  <svg class="hava-manzara dikey" aria-hidden="true" focusable="false"><use href="#hv-manzara"></use></svg>
-                  <svg class="hava-manzara yatay" aria-hidden="true" focusable="false"><use href="#hv-manzara-yatay"></use></svg>
+                  <img class="hava-foto" src="{% static 'gorseller/genis/uludag.jpg' %}"
+                       alt="" aria-hidden="true" width="1280" height="720"
+                       decoding="async" fetchpriority="low">
                   <div class="hava-simdi-ic">
                     <svg class="hava-ikon buyuk" aria-hidden="true"><use href="#{{ hava_panel.simdi.simge }}"></use></svg>
                     <div class="hava-simdi-alt">
@@ -312,6 +338,7 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
                       {% endif %}{% endwith %}
                     </div>
                   </div>
+                  <span class="foto-hak">Uludağ · Julian Nyča, CC BY-SA 4.0</span>
                 </div>
 
                 {% if hava_panel.saatlik %}
@@ -371,9 +398,52 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
               {% else %}<p class="bos">Hava durumu şu an alınamıyor.</p>{% endif %}
             </div>
 
+            {% comment %}NAMAZ VAKİTLERİ — 31 Ağustos 2026, kullanıcı isteği.
+            Panel eczane sütunu kadar uzuyor (ızgara kardeşini geriyor) ama
+            içeriği yarısında bitiyordu: ölçüldü, 530x601 kutunun 358 px'i
+            boştu. Üç şey birden değişti — üste FOTOĞRAF, satırlara BÜYÜK
+            punto, listeye ESNEK yükseklik.
+
+            Fotoğraf Yeşil Cami'nin minaresi (`gorseller/genis/yesil.jpg`),
+            gazetenin kendi şehrinden ve zaten depodaki demo setinden;
+            dışarıdan adres çekilmiyor. CC BY-SA 3.0 olduğu için künye
+            fotoğrafın ÜSTÜNDE görünür duruyor. Aynı çözüm 31 Ağustos'ta
+            hava paneline de taşındı; `.foto-hak` artık iki panelin ortak
+            künyesi ve KAYNAKLAR.md'nin kent.jpg için açtığı sorun kapandı.
+
+            Perdenin altındaki şerit "şimdi hangi vakitteyiz'i büyük punto
+            ile söyler; aynı bilgi listede de vurgulu satır olarak durur,
+            ikisi tek kaynaktan (`namaz_simdiki`) gelir.
+
+            Liste `flex:1` ve satırlar eşit pay alır: kutu ne kadar uzarsa
+            satır aralığı o kadar açılır, alt boşluk kalmaz. Dar ekranda
+            ızgara tek sütuna inince gerilme biter, satırlar kendi
+            yüksekliğine döner.{% endcomment %}
             <div class="servis-dilim" id="panel-vakit">
-              <h3>NAMAZ VAKİTLERİ</h3>
+              <h3>NAMAZ VAKİTLERİ{% if namaz.yer.ad %}<span class="yer">{{ namaz.yer.ad }}</span>{% endif %}</h3>
               {% if namaz %}
+                <figure class="vakit-foto">
+                  {% comment %}Fotoğraf 31 Ağustos 2026'da kullanıcı isteğiyle
+                  değişti. Eskisi (`yesil.jpg`) minarenin ŞEREFESİNE yakın bir
+                  kadrajdı: kaynağın kendisinde külah da kaide de yoktu, karenin
+                  yaklaşık üçte ikisi boş gökyüzüydü ve 530x186'lık yassı şeride
+                  girince tanınmaz bir sütuna dönüyordu — hiçbir `object-position`
+                  değeri bunu kurtaramaz, sorun kaynaktaydı. Yenisi caminin
+                  tamamını uzaktan gösteriyor: iki minare, kubbeler, arkada kent
+                  ve tepeler. Alt üçte biri ağaçlarla koyu, yani karartma
+                  perdesinin ve "ŞİMDİ" satırının oturduğu yer zaten
+                  karanlık.{% endcomment %}
+                  <img src="{% static 'gorseller/genis/yesil-cami.jpg' %}" alt="" aria-hidden="true"
+                       width="1280" height="852" loading="lazy" decoding="async">
+                  <span class="foto-hak">Yeşil Cami · Dosseman, CC BY-SA 4.0</span>
+                  {% if namaz_simdiki %}
+                  <figcaption class="vakit-simdi">
+                    <span class="etiket">ŞİMDİ</span>
+                    <b>{{ namaz.vakit_adlari|sozluk:namaz_simdiki }}</b>
+                    <span class="saat">{{ namaz.gunler.0.vakitler|sozluk:namaz_simdiki }}</span>
+                  </figcaption>
+                  {% endif %}
+                </figure>
                 <ul class="vakit">
                   {% for anahtar, ad in namaz.vakit_adlari.items %}
                     <li{% if anahtar == namaz_simdiki %} class="simdi"{% endif %}><span>{{ ad }}</span><span>{{ namaz.gunler.0.vakitler|sozluk:anahtar }}</span></li>
@@ -382,26 +452,70 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
               {% else %}<p class="bos">Namaz vakitleri şu an alınamıyor.</p>{% endif %}
             </div>
 
+            {% comment %}NÖBETÇİ ECZANE — 31 Ağustos 2026, kullanıcı isteği:
+            panel İŞLEVSEL hâle getirildi. Eskiden dosyadaki 34 eczanenin
+            ilk üçünü basıyor, kalan otuz bire ulaşmanın yolu yoktu; ne
+            telefon aranabiliyor, ne adres okunuyordu. Şimdi liste tam,
+            ilçeye ve ada göre süzülüyor, her satırdan telefon ve konum
+            açılıyor.
+
+            Nöbet saati ECZANE ECZANE değişiyor (ölçüldü: 34 eczane, sekiz
+            ayrı pencere — biri 20:00'de kapanıyor). Bu yüzden her satır
+            kendi saatini taşır; başlıktaki aralık yalnızca en yaygın
+            olanıdır ve kaç eczanenin ona uyduğu yazılır.
+
+            Süzgeç kutuları `hidden` gelir, `site.js` açar: betik
+            yüklenmezse okur ölü bir denetim görmez, listenin tamamı zaten
+            basılı durur.{% endcomment %}
             <div class="servis-dilim" id="panel-eczane">
-              <h3>NÖBETÇİ ECZANE</h3>
-              {% if eczane %}
+              <h3>NÖBETÇİ ECZANE{% if eczane_panel %}<span class="yer">{{ eczane_panel.sayi }} eczane &middot; {{ eczane_panel.ilceler|length }} ilçe</span>{% endif %}</h3>
+              {% if eczane_panel %}
                 <div class="eczane">
-                  <b>{{ eczane.eczane_sayisi }} nöbetçi eczane</b>
                   {% comment %}`gun` kaynakta ISO metin ("2026-08-29");
-                  sayfanın geri kalanı "29 Ağustos 2026" biçimini
-                  kullanıyor.{% endcomment %}
-                  <span>{{ eczane.gun|iso_tarih|date:"j F Y" }} &middot; {{ eczane.ilceler|length }} ilçe</span>
-                  <hr class="ayirac">
-                  {% for e in eczane.eczaneler|slice:":3" %}
-                    <b>{{ e.ad|baslikla }}</b><span>{{ e.ilce|baslikla }} &middot; {{ e.telefon }}</span>
-                  {% endfor %}
+                  panel onu `date` nesnesine çevirip veriyor.{% endcomment %}
+                  <p class="eczane-damga{% if eczane_panel.bayat %} bayat{% endif %}">
+                    <time datetime="{{ eczane_panel.gun|date:'Y-m-d' }}">{{ eczane_panel.gun|date:"j F Y" }}</time> nöbeti{% if eczane_panel.pencere %} &middot; çoğu eczanede {{ eczane_panel.pencere }} ({{ eczane_panel.pencere_adet }} eczane){% endif %}{% if eczane_panel.bayat %} &middot; <b>liste tazelenemedi, saatleri eczaneden doğrulayın</b>{% endif %}
+                  </p>
+
+                  <div class="eczane-suzgec" hidden>
+                    <label for="eczane-ilce">İlçe</label>
+                    <select id="eczane-ilce">
+                      <option value="">Tümü ({{ eczane_panel.sayi }})</option>
+{% for i in eczane_panel.ilceler %}                      <option value="{{ i.anahtar }}">{{ i.ad|baslikla }} ({{ i.adet }})</option>
+{% endfor %}                    </select>
+                    <label for="eczane-ara">Ara</label>
+                    <input type="search" id="eczane-ara" placeholder="Eczane adı, mahalle, sokak" autocomplete="off">
+                  </div>
+                  <p class="eczane-sonuc" role="status" aria-live="polite" data-gorunur="false"></p>
+
+                  <ol class="eczane-liste">
+{% for e in eczane_panel.eczaneler %}                    <li data-ilce="{{ e.ilce_anahtar }}"{% if e.nobette %} class="acik"{% endif %}>
+                      <b>{{ e.ad|baslikla }}</b>
+                      <span class="nerede">{{ e.ilce|baslikla }}{% if e.saat %} &middot; <span class="saat">{{ e.saat }}</span>{% endif %}</span>
+                      {% comment %}Adres kaynaktaki hâliyle basılır: başlık
+                      biçimine sokmak "NO:1A/A"yı "No:1a/a" yapıyordu
+                      (ölçüldü).{% endcomment %}
+                      {% if e.adres %}<span class="adres">{{ e.adres }}</span>{% endif %}
+                      <span class="baglantilar">
+                        {% if e.telefon %}<a class="telefon" href="tel:{{ e.telefon_baglanti }}">{{ e.telefon }}</a>{% endif %}
+                        {% comment %}Konum bağlantısı dış bir adrestir ama bir
+                        KAYNAK değil: sayfa internetsiz de eksiksiz açılır,
+                        okur isterse tıklar. Koordinat kaynağın kendi
+                        sayfasından gelir.{% endcomment %}
+                        {% if e.harita %}<a class="yol" href="{{ e.harita }}" target="_blank" rel="noopener noreferrer">Yol tarifi<span class="gorsel-gizli"> ({{ e.ad|baslikla }}, yeni sekmede haritada açılır)</span></a>{% endif %}
+                      </span>
+                    </li>
+{% endfor %}                  </ol>
+                  {% comment %}Paneldeki liste kaydırma kutusunda; ilçe
+                  sayfaları ve tarihli kayıt kendi adreslerinde
+                  (§41).{% endcomment %}
+                  <p class="eczane-tumu"><a href="/nobetci-eczane">İlçe ilçe tüm nöbetçi eczaneler &rarr;</a></p>
                 </div>
-              {% else %}<p class="bos">Nöbetçi eczane listesi şu an alınamıyor.</p>{% endif %}
+              {% else %}<p class="bos">Nöbetçi eczane listesi şu an alınamıyor. <a href="/nobetci-eczane">Nöbetçi eczane sayfası &rarr;</a></p>{% endif %}
             </div>
 
           </div>
         </div>
-        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>Hava durumu Meteoroloji Genel Müdürlüğü'nün açık uçlarından saat başı çekilir: anlık ölçüm Osmangazi istasyonundan, saatlik ve beş günlük tahmin MGM tahmin servisinden. Ölçülemeyen alan boş bırakılır, sıfır gibi gösterilmez. Nöbetçi eczane Bursa Eczacı Odası'ndan; namaz vakitleri Diyanet ölçütleriyle hesaplanır (yayımlanan tabloya karşı azami sapma 1 dakika).</p></details>
       </section>
 
       <section class="kutu" id="bursaspor">
@@ -475,7 +589,6 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
                 <p class="bos">Puan durumu alınamadı.</p>
               {% endfor %}
 
-              <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>Puan durumu ve haftanın maçı TFF'nin açık sayfalarından çekilir; tablolar tam kadrodur. Bursa kulübü bulunan grup öne gelir, diğer gruplara sekmeden geçilir.{% if puan.guncelleme %} Son güncelleme {{ puan.guncelleme|slice:":10" }} {{ puan.guncelleme|slice:"11:16" }}.{% endif %}{% if puan.bayat %} Kaynak tazelenmedi, tablo eski olabilir.{% endif %}</p></details>
             </div>
 
             <div>
@@ -501,16 +614,14 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
               </div>
               {% endif %}
 
-              <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>Bursaspor kategorisinden en yeni haberler. Tarihler kaydın kendi yayım tarihidir; arşiv taraması henüz bugüne yetişmedi.</p></details>
             </div>
 
           </div>
         </div>
       </section>
 
-      <section class="kutu">
+      <section class="kutu" id="galeriler">
         <div class="kutu-bas hafif"><h2>GALERİLER</h2><span class="tumu"><a href="/galeriler">Tüm galeriler &rarr;</a></span></div>
-        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>{% if galeri_adedi is not None %}Arşivden gelen {{ galeri_adedi }} galeri. {% endif %}Kare sayısı kaynağın statik sayfasında yok; bilinmeyince yazılmıyor.</p></details>
         <div class="kutu-ic">
           <div class="galeri-izgara">
             {% for g in galeriler %}{% include "medya/parca/galeri_kart.html" with g=g %}
@@ -520,7 +631,7 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
         </div>
       </section>
 
-      <section class="kutu">
+      <section class="kutu" id="videolar">
         <div class="kutu-bas hafif"><h2>VİDEOLAR</h2><span class="tumu"><a href="/videolar">Tüm videolar &rarr;</a></span></div>
         <div class="kutu-ic">
           <div class="video-izgara">
@@ -529,7 +640,6 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
             {% endfor %}
           </div>
         </div>
-        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>{% if video_adedi is not None %}Arşivden gelen {{ video_adedi }} video; tarama sürdükçe artıyor. {% endif %}Oynatıcı henüz bağlı değil.</p></details>
       </section>
 
       <section class="kutu" id="vizyon">
@@ -559,7 +669,6 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
           <p class="bos">Vizyon takvimi şu an alınamıyor.</p>
           {% endif %}
         </div>
-        <details class="yer-not"><summary>Veri kaynağı ve kapsam</summary><p>{% if vizyon.kaynak.kunye %}{{ vizyon.kaynak.kunye }}{% else %}Vizyon takvimi kaynağa bağlı değil.{% endif %}{% if vizyon.kaynak.kapsam_uyarisi %} {{ vizyon.kaynak.kapsam_uyarisi }}{% endif %} Afişler telifli olduğu için basılmaz.</p></details>
       </section>
 
 {% endblock %}

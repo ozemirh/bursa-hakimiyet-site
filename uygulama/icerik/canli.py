@@ -483,6 +483,157 @@ def hava_paneli(hava: dict | None, namaz: dict | None = None,
     }
 
 
+# -- nöbetçi eczane paneli ------------------------------------------------
+
+# 31 Ağustos 2026, kullanıcı isteği: panel dosyadaki 34 eczaneden yalnızca
+# ÜÇÜNÜ basıyordu ve okurun kalan otuz birine ulaşmasının bir yolu yoktu.
+# Nöbetçi eczane bilgisi gece yarısı aranan bir bilgidir: okur "en yakını
+# hangisi, telefonu ne, nasıl giderim, kaça kadar açık" sorularının
+# dördünü de sorar. Dördünün yanıtı da `nobetci-eczane.json` içinde ZATEN
+# duruyordu — eksik olan tek şey sunumdu.
+#
+# Nöbet saati eczane eczane DEĞİŞİYOR (31 Ağustos ölçümü: 34 eczane, sekiz
+# ayrı pencere; biri 20:00'de kapanıyor). Bu yüzden tek bir "18:30-08:30"
+# cümlesi basmak yanlış olurdu; her satır kendi saatini taşır, panelin
+# başlığındaki pencere yalnızca EN YAYGIN olanı söyler.
+#
+# Kaynakta olmayan alan uydurulmaz: telefonu ya da harita konumu boş gelen
+# eczane o bağlantı olmadan basılır (`ayiklayici` boş alanla geçiriyor).
+
+# Konum bağlantısı DIŞ bir adrestir; sayfanın internetsiz açılması kuralını
+# bozmaz — bağlantı bir kaynak değil, okurun kendi tıkladığı bir çıkıştır.
+# Koordinat BEO'nun kendi sayfasından geliyor, tahmin edilmiyor.
+HARITA_ADRESI = "https://www.google.com/maps/search/?api=1&query={},{}"
+
+# Türkçe sıralama: `sorted` varsayılanı "İ"yi "Z"den sonraya atıyor,
+# İnegöl ilçe listesinin en altında kalıyordu. Küçük bir alfabe yeter;
+# `locale` kurmak sunucunun diline bağımlılık olurdu.
+_TR_ALFABE = "aâbcçdefgğhıiîjklmnoöprsştuüvyz"
+_TR_KUCULT = str.maketrans("IİÎÂ", "ıiîâ")
+_ASCIYE = str.maketrans("çğıöşüâî", "cgiosuai")
+
+
+def _tr_sirala(metin: str) -> tuple:
+    kucuk = (metin or "").translate(_TR_KUCULT).lower()
+    return tuple(_TR_ALFABE.find(h) if h in _TR_ALFABE else len(_TR_ALFABE)
+                 for h in kucuk)
+
+
+def _ilce_anahtar(ilce: str) -> str:
+    """"OSMANGAZİ - DEMİRTAŞ" -> "osmangazi".
+
+    Süzgeç ANA ilçeye göre çalışır: Demirtaş, Ovaakça ve Çalı ayrı birer
+    nöbet bölgesi ama okur için Osmangazi ve Nilüfer'dir. Satırda tam ad
+    durmaya devam eder.
+    """
+    ana = (ilce or "").split(" - ")[0].strip()
+    ana = ana.translate(_TR_KUCULT).lower().translate(_ASCIYE)
+    ana = re.sub(r"[^a-z0-9]+", "-", ana).strip("-")
+    return ana or "belirtilmemis"
+
+
+def _telefon_baglanti(ham: str) -> str:
+    """Kaynaktaki telefonu `tel:` bağlantısına çevirir.
+
+    Kaynak iki biçim veriyor ("0224 451 42 00" ve "0224-4437956"); ikisi de
+    aynı numara. Çözülemeyen biçim olduğu gibi bırakılır, kırpılmaz.
+    """
+    rakam = re.sub(r"\D", "", ham or "")
+    if len(rakam) == 11 and rakam.startswith("0"):
+        return "+90" + rakam[1:]
+    if len(rakam) == 10:
+        return "+90" + rakam
+    return rakam
+
+
+def _nobet_metni(baslangic, bitis) -> str:
+    if not baslangic or not bitis:
+        return ""
+    metin = f"{baslangic:%H:%M} – {bitis:%H:%M}"
+    return metin + (" ertesi gün" if bitis.date() > baslangic.date() else "")
+
+
+def eczane_paneli(eczane: dict | None, simdi: datetime | None = None):
+    """Nöbet listesini süzülebilir bir panele çevirir.
+
+    Dönen sözlük: `eczaneler` (ilçe, sonra ad sırasında), `ilceler`
+    (süzgeç için ana ilçe + adet), `pencere` (en yaygın nöbet aralığı) ve
+    `nobette` (şu an nöbeti sürenlerin sayısı).
+
+    Dosya yoksa ya da hiç eczane taşımıyorsa None döner; şablon o zaman
+    "şu an alınamıyor" der, sahte satır basmaz.
+    """
+    if not eczane:
+        return None
+    simdi = simdi or datetime.now()
+
+    kayitlar = []
+    for e in eczane.get("eczaneler") or []:
+        ad = (e.get("ad") or "").strip()
+        if not ad:
+            continue
+        ilce = (e.get("ilce") or "").strip()
+        enlem, boylam = e.get("enlem"), e.get("boylam")
+        baslangic = _zamana_cevir(e.get("nobet_baslangic"))
+        bitis = _zamana_cevir(e.get("nobet_bitis"))
+        kayitlar.append({
+            "ad": ad,
+            "ilce": ilce,
+            "ilce_anahtar": _ilce_anahtar(ilce),
+            "adres": (e.get("adres") or "").strip(),
+            "telefon": (e.get("telefon") or "").strip(),
+            "telefon_baglanti": _telefon_baglanti(e.get("telefon")),
+            "harita": (HARITA_ADRESI.format(enlem, boylam)
+                       if enlem is not None and boylam is not None else ""),
+            # Ham koordinat da duruyor: sayfanın JSON-LD'si `geo` alanını
+            # buradan yazıyor (`icerik/eczane.py`), hazır bağlantıyı
+            # geri ayrıştırmıyor.
+            "enlem": enlem,
+            "boylam": boylam,
+            "baslangic": baslangic,
+            "bitis": bitis,
+            "saat": _nobet_metni(baslangic, bitis),
+            "nobette": bool(baslangic and bitis
+                            and baslangic <= simdi < bitis),
+        })
+    if not kayitlar:
+        return None
+    kayitlar.sort(key=lambda k: (_tr_sirala(k["ilce"]), _tr_sirala(k["ad"])))
+
+    ilceler: list[dict] = []
+    sepet: dict[str, dict] = {}
+    for k in kayitlar:
+        kutu = sepet.get(k["ilce_anahtar"])
+        if kutu is None:
+            kutu = {"anahtar": k["ilce_anahtar"],
+                    "ad": k["ilce"].split(" - ")[0].strip() or "Belirtilmemiş",
+                    "adet": 0}
+            sepet[k["ilce_anahtar"]] = kutu
+            ilceler.append(kutu)
+        kutu["adet"] += 1
+    ilceler.sort(key=lambda i: _tr_sirala(i["ad"]))
+
+    # Başlıktaki pencere EN YAYGIN aralıktır, tek doğru aralık değil:
+    # sekiz ayrı pencere olduğu için "hepsi şu saatte" demek yalan olurdu.
+    pencereler: dict[str, int] = {}
+    for k in kayitlar:
+        if k["saat"]:
+            pencereler[k["saat"]] = pencereler.get(k["saat"], 0) + 1
+    pencere = max(pencereler, key=pencereler.get) if pencereler else ""
+
+    return {
+        "gun": _tarihe_cevir(eczane.get("gun")),
+        "sayi": len(kayitlar),
+        "eczaneler": kayitlar,
+        "ilceler": ilceler,
+        "pencere": pencere,
+        "pencere_adet": pencereler.get(pencere, 0),
+        "nobette": sum(1 for k in kayitlar if k["nobette"]),
+        "kaynak": eczane.get("kaynak") or {},
+        "bayat": eczane.get("bayat"),
+    }
+
+
 def anasayfa_verisi() -> dict:
     """Anasayfanın canlı veri bileşenleri.
 
@@ -493,6 +644,7 @@ def anasayfa_verisi() -> dict:
     puan = oku("puan-durumu")
     hava = oku("hava-durumu")
     namaz = oku("namaz-vakitleri")
+    eczane = oku("nobetci-eczane")
     return {
         # Doviz bandi CANLI kur gosteriyor (27 Agustos karari): serbest
         # piyasa kuru surekli hareket eder, TCMB bulteni gunde bir cikar.
@@ -501,7 +653,8 @@ def anasayfa_verisi() -> dict:
         "hava": hava,
         "hava_panel": hava_paneli(hava, namaz),
         "namaz": namaz,
-        "eczane": oku("nobetci-eczane"),
+        "eczane": eczane,
+        "eczane_panel": eczane_paneli(eczane),
         "puan": puan,
         "puan_ligler": puan_ligleri(puan),
         "puan_takip": puan_takibi(puan),

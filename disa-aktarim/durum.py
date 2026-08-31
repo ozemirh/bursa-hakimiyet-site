@@ -13,7 +13,11 @@ from datetime import datetime
 KOK = os.environ.get("BH_ARSIV_KOK", "D:/bursa-hakimiyet-arsiv")
 AILELER = [("yazar", "ilerleme-yazar.json"), ("galeri", "ilerleme-galeri.json"),
            ("kose", "ilerleme-kose.json"), ("video", "ilerleme-video.json"),
-           ("haber", "ilerleme.json")]
+           ("haber", "ilerleme.json"),
+           # Sitemap disi eski haberler (2012 - 2021 Mart), kimlik sayarak
+           # taraniyor. Hedef = kimlik araliginin buyuklugu; araliktaki olu
+           # kimlikler yuzunden oran %100'e ulasmaz, %96 civari beklenir.
+           ("eski", "ilerleme-eski.json")]
 
 print(f"Arsiv koku: {KOK}\n")
 print(f"  {'aile':8} {'ilerleme':>19}  {'oran':>6}  {'basarisiz':>9}  son guncelleme")

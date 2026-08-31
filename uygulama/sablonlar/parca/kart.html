@@ -9,21 +9,45 @@ görsel denetiminden geldi (URUN-PLANI.md §34):
 
 `kategori_gizle` doluysa (kategori sayfası kendini yollar) kategori adı
 basılmaz — sayfa başlığının kartlarda yirmi kez tekrarı ölü satırdı; ilçe
-adı bilgi taşıdığı için basılmaya devam eder.
+adı bilgi taşıdığı için basılmaya devam eder. `zaman_gizle` de aynı
+mantıkta: çağıran şablon kapatır, hiçbir bayrak yollanmazsa kart eskisi
+gibi davranır.
+
+`.ust` satırının KONUMU CSS'in işi: anasayfanın SON HABERLER panelinde
+aynı satır fotoğrafın sol üstüne rozet olarak biniyor (site.css sonu).
+Rozeti fotoğrafın <a>'sının içine TAŞIMA — o bağlantı `aria-hidden`,
+etiket ekran okuyucudan düşer; DOM'da başlıktan önce, metin akışında
+kalması bilinçli.
 
 Görsel: arşivin büyük bölümünde yerel dosya YOK (URUN-PLANI.md F3 notu).
 `gorsel_var` yanlışsa uzak adrese bağlanmak yerine kategori temsilî SVG'si
 çizilir — sayfa internetsiz de açılmalı ve kırık görsel görünmemeli.
+
+Fotoğraf da BAĞLANTI (31 Ağustos 2026, kullanıcı isteği): okur kartın
+görseline tıklayınca habere gider. Eskiden yalnız başlık bağlıydı, görsele
+tıklamak hiçbir şey yapmıyordu.
+
+Üç nitelik birlikte çalışır, üçü de zorunlu:
+  href       — başlıktaki bağlantıyla AYNI adres
+  tabindex="-1"     — klavye bu bağlantıya UĞRAMAZ. Yoksa her kart için iki
+                      sekme durağı olur ve klavyeyle gezen okur listede iki
+                      kat yol yürür.
+  aria-hidden="true" — ekran okuyucu bu bağlantıyı görmez. Yoksa aynı haber
+                      bağlantı listesinde iki kez okunur; görselin `alt`
+                      metni de zaten çoğu kayıtta başlığın kendisi.
+Erişilebilirlikte kayıp yok: haberin klavyeyle ve ekran okuyucuyla
+erişilen bağlantısı başlıktaki `<h3><a>` olarak duruyor. Bu ikisini
+silersen kart erişilebilirlik açısından bozulur — silme.
 {% endcomment %}
 <article class="kart{% if genis %} genis{% endif %}">
   {% if goster_foto %}
-    <div class="foto {{ h|kart_rengi }}">
+    <a class="foto {{ h|kart_rengi }}" href="{{ h.get_absolute_url }}" tabindex="-1" aria-hidden="true">
       {% if h.gorsel_yolu %}
         <img src="{{ h.gorsel_yolu }}" alt="{{ h.gorsel_alt|default:h.baslik }}" loading="lazy">
       {% else %}
         <svg role="img" aria-label="{{ h.kategori.ad|baslikla }} haberini temsil eden çizim"><use href="#{{ h.kategori|simge_adi }}"/></svg>
       {% endif %}
-    </div>
+    </a>
   {% endif %}
   <div class="ic">
     <div class="ust">
@@ -32,7 +56,11 @@ Görsel: arşivin büyük bölümünde yerel dosya YOK (URUN-PLANI.md F3 notu).
       kırmızıda kalır. Renk KATEGORİDEN gelir — ilçe adı basılan kartta da
       kategorinin işareti korunur.{% endcomment %}
       {% if h.ilce %}<span{% if h.kategori %} class="etiket-{{ h.kategori.slug_al }}"{% endif %}>{{ h.ilce.ad|baslikla }}</span>{% elif not kategori_gizle %}<span{% if h.kategori %} class="etiket-{{ h.kategori.slug_al }}"{% endif %}>{{ h.kategori.ad|baslikla }}</span>{% endif %}
-      {% if h.yayin_zamani %}<time datetime="{{ h.yayin_zamani|date:'c' }}" title="{{ h.yayin_zamani|date:'j F Y, H:i' }}">{{ h.yayin_zamani|kisa_zaman }}</time>{% endif %}
+      {% comment %}`zaman_gizle`: anasayfanın SON HABERLER paneli tarihi
+      basmıyor (31 Ağustos 2026, kullanıcı isteği) — orada kategori işareti
+      fotoğrafın üstüne rozet olarak biniyor ve kartta yalnız başlık kalıyor.
+      Bayrağı yollamayan ızgaralarda zaman aynen basılır.{% endcomment %}
+      {% if h.yayin_zamani and not zaman_gizle %}<time datetime="{{ h.yayin_zamani|date:'c' }}" title="{{ h.yayin_zamani|date:'j F Y, H:i' }}">{{ h.yayin_zamani|kisa_zaman }}</time>{% endif %}
     </div>
     <h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3>
     {% if goster_spot and h.spot %}<p>{{ h.spot|truncatechars:120 }}</p>{% endif %}

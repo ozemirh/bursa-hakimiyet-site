@@ -1,0 +1,80 @@
+{% extends "taban.html" %}
+{% load site_etiket %}
+
+{% comment %}Sitenin beyan sayfası. 31 Ağustos 2026'da anasayfa
+panellerinin altındaki dokuz katlanır "Veri kaynağı ve kapsam" notu buraya
+taşındı (§34 K7'nin kullanıcıya bırakılmış maddesi).
+
+İki kural:
+
+1. **Metinler yeniden yazılmadı.** Panellerdeki cümleler ne diyorsa burada
+   da aynısını diyor; taşınırken yalnız başlık ve bölüm bağlantısı eklendi.
+   Beyan metni "temizlenirse" okura verilen söz değişir.
+2. **Sayılar veriden okunur, şablona çakılmaz.** Arşiv adetleri, ilan
+   dağılımı ve canlı veri künyeleri görünümden gelir; kaynak dosyası
+   değişince bu sayfa da değişir. Çakılı bir olgu, veri değişince yalan
+   söyler (§32.5).{% endcomment %}
+
+{% block baslik %}Veri kaynakları ve kapsam — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}Bursa Hakimiyet sitesindeki her bölümün verisi nereden gelir, neyi kapsar, neyi kapsamaz.{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">{{ baslik }}</span>
+      </nav>
+
+      <section class="kutu">
+        <div class="kutu-bas vurgu"><h1>VERİ KAYNAKLARI VE KAPSAM</h1></div>
+        <div class="kutu-ic beyan">
+          <p class="beyan-giris">Sitedeki her bölümün verisi nereden geliyor, neyi kapsıyor ve neyi kapsamıyor &mdash; hepsi burada. Bilinmeyen bir değer boş bırakılır, tahmin edilmez; bir kaynak düşerse ilgili bölüm sessizce gizlenir, eski veri yeniymiş gibi gösterilmez.</p>
+
+          <h2 id="canli">Canlı veri kalemleri</h2>
+          <p>Aşağıdaki kalemler dışarıdaki açık kaynaklardan düzenli aralıklarla çekilir ve site onları dosyadan okur. Güncelleme damgası kaynağın en son ne zaman tazelendiğini gösterir.</p>
+          <div class="beyan-tablo">
+            <table>
+              <thead><tr><th scope="col">Kalem</th><th scope="col">Kaynak</th><th scope="col">Son güncelleme</th></tr></thead>
+              <tbody>
+                {% for k in canli_kalemler %}
+                <tr>
+                  <th scope="row">{{ k.ad }}</th>
+                  <td>
+                    {% for kay in k.kaynaklar %}{% if not forloop.first %} <span aria-hidden="true">&middot;</span> {% endif %}{% if kay.tek_bag %}<a href="{{ kay.tek_bag }}" rel="nofollow noopener" target="_blank">{{ kay.ad }}</a>{% else %}{{ kay.ad }}{% for b in kay.baglar %} <a class="kosul" href="{{ b.adres }}" rel="nofollow noopener" target="_blank">{{ b.alan }}</a>{% endfor %}{% endif %}{% if kay.kosullar %} <a class="kosul" href="{{ kay.kosullar }}" rel="nofollow noopener" target="_blank">kullanım koşulları</a>{% endif %}{% empty %}<span class="bos">Kaynağa bağlı değil.</span>{% endfor %}
+                  </td>
+                  <td>{% if k.guncelleme %}{{ k.guncelleme|slice:":10" }} {{ k.guncelleme|slice:"11:16" }}{% if k.bayat %} <b class="bayat">tazelenmedi</b>{% endif %}{% else %}&mdash;{% endif %}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="yazarlar">Yazarlar ve köşe yazıları <a class="bolume" href="/#yazar-serit">bölüme git &rarr;</a></h2>
+          <p>{% if yazar_adedi is not None %}Arşivden gelen {{ yazar_adedi }} yazar ve {{ kose_adedi }} köşe yazısı. {% endif %}Son yazı başlığı yazarın en yeni yazısından okunur; portreler gazetenin kendi yayınından alınmıştır.</p>
+
+          <h2 id="en-cok">En çok okunanlar <a class="bolume" href="/#en-cok-okunan">bölüme git &rarr;</a></h2>
+          <p>Şimdilik editör seçkisi: okunma sayacı yeni sistemde sıfırdan başlıyor, eski okunma verisi göçte kurtarılamadı.</p>
+
+          <h2 id="ilan">Resmî ilanlar <a class="bolume" href="/#resmi-ilan">bölüme git &rarr;</a></h2>
+          <p>Bu bölüm gazetenin <b>yayımladığı</b> resmî ilanların dizinidir, açık ilanların listesi değil: {{ ilan_toplami }} kayıt{% for t in ilan_tur_toplami %}{% if t.adet %}, {{ t.adet }} {{ t.ad|kucult }}{% endif %}{% endfor %}. Başlıklar, türler, tarihler ve ilan numaraları gerçektir. <b>Son başvuru tarihi gösterilmez</b> &mdash; kayıtlarda bitiş tarihi alanı boştur ve uydurulmaz; bir ihalenin ya da tebligatın hâlâ geçerli olup olmadığı ilanı veren kurumdan doğrulanmalıdır. İlan metinleri henüz göç etmediği için başlıklar bağlantı değildir; TÜM İLANLAR sayfası da metinler gelince dolacak.</p>
+
+          <h2 id="servisler">Şehir servisleri <a class="bolume" href="/#sehir-servisleri">bölüme git &rarr;</a></h2>
+          <p>Hava durumu Meteoroloji Genel Müdürlüğü'nün açık uçlarından saat başı çekilir: anlık ölçüm Osmangazi istasyonundan, saatlik ve beş günlük tahmin MGM tahmin servisinden. Ölçülemeyen alan boş bırakılır, sıfır gibi gösterilmez. Nöbetçi eczane Bursa Eczacı Odası'ndan; namaz vakitleri Diyanet ölçütleriyle hesaplanır (yayımlanan tabloya karşı azami sapma 1 dakika).</p>
+
+          <h2 id="puan">Puan durumu <a class="bolume" href="/#bursaspor">bölüme git &rarr;</a></h2>
+          <p>Puan durumu ve haftanın maçı TFF'nin açık sayfalarından çekilir; tablolar tam kadrodur. Bursa kulübü bulunan grup öne gelir, diğer gruplara sekmeden geçilir.{% if puan.guncelleme %} Son güncelleme {{ puan.guncelleme|slice:":10" }} {{ puan.guncelleme|slice:"11:16" }}.{% endif %}{% if puan.bayat %} Kaynak tazelenmedi, tablo eski olabilir.{% endif %}</p>
+
+          <h2 id="bursaspor">Bursaspor haberleri <a class="bolume" href="/#bursaspor">bölüme git &rarr;</a></h2>
+          <p>Bursaspor kategorisinden en yeni haberler. Tarihler kaydın kendi yayım tarihidir; arşiv taraması henüz bugüne yetişmedi.</p>
+
+          <h2 id="galeri">Galeriler <a class="bolume" href="/#galeriler">bölüme git &rarr;</a></h2>
+          <p>{% if galeri_adedi is not None %}Arşivden gelen {{ galeri_adedi }} galeri. {% endif %}Kare sayısı kaynağın statik sayfasında yok; bilinmeyince yazılmıyor.</p>
+
+          <h2 id="video">Videolar <a class="bolume" href="/#videolar">bölüme git &rarr;</a></h2>
+          <p>{% if video_adedi is not None %}Arşivden gelen {{ video_adedi }} video; tarama sürdükçe artıyor. {% endif %}Oynatıcı henüz bağlı değil.</p>
+
+          <h2 id="vizyon">Vizyonda neler var <a class="bolume" href="/#vizyon">bölüme git &rarr;</a></h2>
+          <p>{% if vizyon.kaynak.kunye %}{{ vizyon.kaynak.kunye }}{% else %}Vizyon takvimi kaynağa bağlı değil.{% endif %}{% if vizyon.kaynak.kapsam_uyarisi %} {{ vizyon.kaynak.kapsam_uyarisi }}{% endif %} Afişler telifli olduğu için basılmaz.</p>
+
+          <p class="yer-not">Bu sayfada bir eksik ya da yanlış gördüyseniz haber merkezine bildirin; beyan yanlışsa düzeltilir.</p>
+        </div>
+      </section>
+{% endblock %}

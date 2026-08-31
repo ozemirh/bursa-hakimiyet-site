@@ -13,7 +13,7 @@
 import re
 from pathlib import Path
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from taksonomi.models import Ilce, Kategori, KategoriTur
@@ -389,14 +389,24 @@ class BolumDurustlugu(TestCase):
         """Kayıtların tamamı arşiv ve `bitis_tarihi` boş.
 
         Okur "bunlar bugünün açık ihaleleri mi?" sorusunu satır satır
-        tarihlere bakarak yanıtlıyordu. Başlıktaki dönem etiketi ve nottaki
-        açık cümle bunu söylüyor; ikisi de kaybolmamalı.
+        tarihlere bakarak yanıtlıyordu. Bölüm başlığındaki dönem etiketi
+        bunu ilk bakışta söylüyor.
+
+        31 Ağustos 2026: notun uzun cümlesi bölümün altından kalktı,
+        `/veri-kaynaklari` sayfasına taşındı. Beyan KAYBOLMADI — testin
+        aradığı yer değişti, aranan cümle değil. İlanın kendi sayfası
+        (`/resmi-ilan`) uyarıyı zaten kendi metniyle taşıyor ve bölümün
+        TÜM İLANLAR bağlantısı oraya gidiyor.
         """
         bolum = self._bolum("resmi-ilan")
-        self.assertIn("açık ilanların listesi değil", bolum)
         self.assertIn('class="donem"', bolum)
         self.assertIn("16 Ağustos", bolum)
         self.assertIn("24 Ağustos 2026", bolum)
+        self.assertIn("/resmi-ilan", bolum)
+
+        for adres in ("/veri-kaynaklari", "/resmi-ilan"):
+            self.assertContains(self.client.get(adres),
+                                "açık ilanların listesi değil")
 
     def test_tek_tarihli_ilanda_donem_araligi_yazilmaz(self):
         self.ResmiIlan.objects.filter(baslik="ARŞİV TEBLİGAT").delete()
@@ -629,3 +639,113 @@ class ResmiIlanDizini(TestCase):
         self.assertEqual(yanit.status_code, 200)
         self.assertIn("Yayımlanabilir resmî ilan kaydı yok.",
                       yanit.content.decode())
+
+
+class ReklamDemoAgi(TestCase):
+    """Reklam demo ağı (31 Ağustos 2026, §42).
+
+    Üç şey kilitleniyor: bayrak kapalıyken dış betik YOK, açıkken var, ve
+    üst şerit dar ekranda hiçbir yaratıcı istemiyor (sayfa 360 px'te 393 px
+    yatay taşıyordu — ölçüldü, `data-gpt-harita` bunun için var).
+    """
+
+    KOK = Path(__file__).resolve().parent.parent
+
+    @classmethod
+    def setUpTestData(cls):
+        from django.core.management import call_command
+        call_command("taksonomi_kur", verbosity=0)
+
+    def test_bayrak_kapaliyken_dis_betik_yok(self):
+        """Varsayılan kapalı: site dışarıdan yalnız Google Fonts çeker."""
+        with override_settings(REKLAM_DEMO=False):
+            yanit = self.client.get("/")
+        self.assertNotContains(yanit, "securepubads")
+        self.assertNotContains(yanit, "betik/reklam.js")
+
+    def test_bayrak_acikken_gpt_basiliyor(self):
+        with override_settings(REKLAM_DEMO=True):
+            yanit = self.client.get("/")
+        self.assertContains(yanit, "securepubads.g.doubleclick.net/tag/js/gpt.js")
+        self.assertContains(yanit, "betik/reklam.js")
+        self.assertContains(yanit, "/6355419/")
+
+    def test_yuvalar_olculeriyle_isaretli(self):
+        """Yuva ölçüsü İŞARETTE durur; betik ölçü listesi taşımaz."""
+        with override_settings(REKLAM_DEMO=True):
+            metin = self.client.get("/").content.decode()
+        # iki pageskin + üst şerit + üç kare
+        self.assertEqual(metin.count('data-gpt="160x600"'), 2)
+        self.assertEqual(metin.count('data-gpt="300x250"'), 3)
+        # Üst şerit üç ölçü taşır: 1100x150 gazetenin kendi sattığı yuva,
+        # 970x250 programatik billboard, 728x90 yedek.
+        self.assertIn('data-gpt="1100x150,970x250,728x90"', metin)
+
+    def test_ust_serit_haritasi_dar_ekrani_koruyor(self):
+        """Üç ölçülmüş kısıt: kutu boyu 44 · 120 · 250 px, sütun 1100 px.
+
+        ≤600 px'te kutu 44 px (§34 K8) — 728x90 oraya konunca sayfa 360'ta
+        393 px yatay taşıyordu. 601-1000'de kutu 120 px, 250'lik yaratıcı
+        sığmaz. 1001-1139'da kutu 250 ama içerik sütunu henüz 1100 değil,
+        o yüzden 1100 genişliğindeki yaratıcı orada da verilmez.
+        """
+        with override_settings(REKLAM_DEMO=True):
+            metin = self.client.get("/").content.decode()
+        harita = re.search(r'data-gpt-harita="([^"]*)"', metin)
+        self.assertIsNotNone(harita, "üst şeridin görünüm haritası yok")
+        girisler = dict(
+            (int(p.split(">")[0].strip()), p.split(">")[1].strip())
+            for p in harita.group(1).split(";") if ">" in p)
+        self.assertEqual(girisler[0], "", "dar ekranda ölçü verilmiş")
+        # 601-1000: kutu 120 px, yalnız 728x90 sığar.
+        self.assertEqual(girisler[601], "728x90")
+        # 1001-1139: kutu 250 px ama sütun henüz 1100 değil.
+        self.assertIn("970x250", girisler[1001])
+        self.assertNotIn("1100x150", girisler[1001],
+                         "1100 px yaratıcı 1100 px'lik sütuna sığmadan veriliyor")
+        self.assertIn("1100x150", girisler[1140])
+
+    def test_ust_serit_demo_reklami_almiyor(self):
+        """Ölçü sözleşmesi işarette kalır, demo yaratıcısı basılmaz.
+
+        Demo ağı üç ölçüden yalnız 728x90'ı dolduruyor ve o yaratıcı
+        250 px'lik billboard kutusunda şeridin gerçek hâlini göstermiyordu
+        (31 Ağustos 2026 kullanıcı kararı). Kalkan tek şey demo dolgusu —
+        `data-gpt` ve harita yerinde, F7 geldiğinde yeniden yazılmasın.
+        """
+        with override_settings(REKLAM_DEMO=True):
+            metin = self.client.get("/").content.decode()
+        serit = metin[metin.index('class="reklam tam"'):]
+        serit = serit[:serit.index("</div>")]
+        self.assertIn('data-gpt-demo="kapali"', serit)
+        self.assertIn("1100x150", serit)
+        # İşaret YALNIZ üst şeritte; kareler ve pageskin'ler demo alır.
+        self.assertEqual(metin.count('data-gpt-demo="kapali"'), 1)
+
+        betik = (self.KOK / "statik" / "betik" / "reklam.js").read_text(
+            encoding="utf-8")
+        self.assertIn("data-gpt-demo", betik)
+
+    def test_ornek_yaratici_yalniz_demoda_basiliyor(self):
+        """970x250 maketi bir SUNUM aracıdır; yayında hiç üretilmez.
+
+        Demo ağında 970x250 yaratıcı yok (ölçüldü), o yüzden formatın ayak
+        izi yerel bir maketle gösteriliyor. Bayrak kapalıyken bu blok
+        şablondan hiç çıkmamalı — yoksa okur onu reklam sanır.
+        """
+        with override_settings(REKLAM_DEMO=False):
+            self.assertNotContains(self.client.get("/"), "ornek-yaratici")
+        with override_settings(REKLAM_DEMO=True):
+            metin = self.client.get("/").content.decode()
+        self.assertIn("ornek-yaratici", metin)
+        self.assertIn("ÖRNEK YARATICI", metin)
+        # Maket reklam gibi görünmemeli: marka ya da reklamveren adı yok.
+        self.assertIn("billboard ayak izi", metin)
+
+    def test_betik_reklam_anahtarina_uyuyor(self):
+        """Panolar gizliyken reklam ÇEKİLMEZ; yoksa düğme yalan söyler."""
+        betik = (self.KOK / "statik" / "betik" / "reklam.js").read_text(
+            encoding="utf-8")
+        self.assertIn("data-reklam", betik)
+        self.assertIn("offsetParent === null", betik)
+

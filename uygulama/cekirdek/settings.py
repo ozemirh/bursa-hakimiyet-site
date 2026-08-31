@@ -158,6 +158,26 @@ APPEND_SLASH = False
 # Besleme (sitemap/RSS) mutlak adres uretir.
 SITE_KOKU = os.environ.get("BH_SITE_KOKU", "https://www.bursahakimiyet.com.tr")
 
+# --- reklam demo agi (31 Agustos 2026, kullanici karari) -----------------
+#
+# Google Ad Manager'in ACIK demo agi; hesap ve anahtar gerektirmez. Amaci
+# yuvalarin gercek bir reklamla nasil durdugunu gormek — gelir sunumu DEGIL.
+# Gercek sunum F7(b)'nin isi ve kendi kararlarini (yuva modelinden render,
+# kampanya eslesmesi, ads.txt) ayrica ister.
+#
+# VARSAYILAN KAPALI ve bu bilincli. GPT dis bir betiktir
+# (securepubads.g.doubleclick.net), ucuncu taraf cerezi birakir ve canlida
+# KVKK tarafinda cerez aydinlatmasi gerektirir. Site su an disaridan yalniz
+# Google Fonts cekiyor; bayrak kapaliyken bu duzen bozulmaz ve sayfa
+# internetsiz de aynen acilir.
+REKLAM_DEMO = os.environ.get("BH_REKLAM_DEMO", "0") == "1"
+
+# Olculdu (31 Agustos 2026, bassiz Chrome, canli demo agina karsi): bu yol
+# 300x250, 160x600 ve 728x90 doldurur; 970x250, 300x600 ve 320x100 BOS
+# doner. Ust seridin cok olculu tanimi (970x250 + 728x90) bu yuzden var.
+REKLAM_DEMO_YOLU = os.environ.get(
+    "BH_REKLAM_YOLU", "/6355419/Travel/Europe/France/Paris")
+
 LOGIN_URL = "/panel/giris"
 LOGIN_REDIRECT_URL = "/panel/"
 LOGOUT_REDIRECT_URL = "/panel/giris"

@@ -485,6 +485,24 @@ python canli-veri\nobetci_eczane.py --ilce İNEGÖL
 python canli-veri\nobetci_eczane.py --tarih 2026-08-28
 ```
 
+Bu dosyayı **üç** tüketici okuyor (31 Ağustos 2026, §41): anasayfadaki
+`#panel-eczane` kutusu, `/nobetci-eczane` ile 17 ilçe adresi, ve her sabah
+açılan günlük haber kaydı. Üçü de `icerik/canli.py` → `eczane_paneli()`
+üzerinden aynı yapıyı okur; metinler `icerik/eczane.py` içinde.
+
+```powershell
+# Listeyi tazele ve günün haberini yayımla (zamanlayıcı bunu çağırıyor)
+.\tazele.ps1 -Grup haber
+
+# Yalnız haber tarafı
+python uygulama\manage.py eczane_haberi --kuru      # yazmaz, ne olacağını söyler
+python uygulama\manage.py eczane_haberi
+```
+
+Komut aynı gün ikinci kez koşarsa **ikinci kayıt açmaz**, var olanı
+tazeler. Bayat listeyi yayımlamaz: nöbet günde bir devrediliyor ve bir gün
+eski liste okuru kapalı eczaneye gönderir.
+
 Planın öngörüsü *"nöbetçi eczane için API çoğu ilde yok, elle giriş
 gerekebilir"* idi (`URUN-PLANI.md` §4 madde 4). **Bursa için ölçüm sonucu
 farklı:** Bursa Eczacı Odası nöbet listesini kendi sayfasında sunucu
@@ -738,6 +756,7 @@ bozmaz (atomik yazım) ama kaynağa gereksiz yük biner.
 | `hava_durumu.py` | saat başı |
 | `namaz_vakitleri.py` | günde bir, gece yarısından sonra (`--gun 30`) |
 | `nobetci_eczane.py` | günde iki kez — 08:00 ve 18:00 (nöbet 18:30'da devrediliyor) |
+| `tazele.ps1 -Grup haber` | günde bir — 08:20. Listeyi tazeler, sonra `manage.py eczane_haberi` ile o günün nöbetçi eczane haberini yayımlar (URUN-PLANI.md §41). Sıra bağlayıcı: tersi dünün listesini yayımlar. Görev Zamanlayıcı kaydı: `BH eczane haberi` |
 | `puan_durumu.py` | maç günü saatte bir, diğer gün günde bir |
 | `vizyon_takvimi.py` | haftada bir, perşembe akşamı |
 

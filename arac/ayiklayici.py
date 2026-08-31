@@ -329,14 +329,26 @@ def ayikla(html: str, url: str) -> dict:
     if spot:
         yontemler.append("jsonld:description" if ld.get("description") else "og:description")
 
-    # govde
-    govde = _etiketsiz(_duz(ld.get("articleBody")))
-    if govde and len(govde) > 400:
+    # govde -- iki aday: JSON-LD articleBody ve paragraf sezgisi.
+    #
+    # ESKIDEN 400 karakterin altindaki articleBody tumden atiliyordu; eski
+    # sayfalarda (2014-2016 duzeni) paragraf sezgisi de tutmadigi icin haber
+    # GOVDESIZ kaliyordu -- 31 Agustos 2026'da 1.000 haberlik ornekte 2015
+    # icin %21, 2016 icin %12 olculdu. Artik sezgi bos donerse kisa
+    # adayi son care olarak kullaniliyor. 400 esigi ve articleBody tercihi
+    # aynen duruyor -- modern sayfalarda davranis degismiyor.
+    ld_govde = _etiketsiz(_duz(ld.get("articleBody")))
+    if ld_govde and len(ld_govde) > 400:
+        govde = ld_govde
         yontemler.append("jsonld:articleBody")
     else:
         govde = _govde_sezgisi(ayristirici.paragraflar)
         if govde:
             yontemler.append("paragraf-sezgisi")
+        elif ld_govde:
+            # Son care: sezgi bos dondu, elimizde kisa da olsa articleBody var.
+            govde = ld_govde
+            yontemler.append("jsonld:articleBody")
 
     # gorsel — JSON-LD'de image alani sik sik yalnizca @id tasir ve bu @id
     # sayfanin kendi adresi olur ("...html#primaryimage"). Gercek bir gorsele

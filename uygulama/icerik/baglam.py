@@ -12,6 +12,7 @@ ise BİK yükümlülüğü olan editoryal bölüme gider.
 
 import time
 
+from django.conf import settings
 from django.db import DatabaseError
 from django.db.models import Count
 
@@ -81,6 +82,10 @@ def site(request):
         "son_dakika": Haber.yayindakiler().select_related("kategori")[:SON_DAKIKA_ADET],
         "ilceler": Ilce.objects.all(),
         "reklam_dugmesi": _reklam_dugmesi(request),
+        # Reklam demo agi. Bayrak kapaliyken taban.html hicbir dis betik
+        # basmaz; yuvalar gri yer tutucu olarak kalir.
+        "reklam_demo": settings.REKLAM_DEMO,
+        "reklam_yolu": settings.REKLAM_DEMO_YOLU,
     }
 
 

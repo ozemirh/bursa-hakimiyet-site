@@ -2,7 +2,28 @@
 Manşet ve mini slayt görseli. `.karart` sınıfı yazının okunması için
 fotoğrafın üstüne koyu geçiş bindirir; görsel yokken de aynı sınıf durur,
 yoksa yazı SVG'nin üstünde okunmaz olur.
-{% endcomment %}<div class="foto karart{% if not h.gorsel_yolu %} {{ h|kart_rengi }}{% endif %}">
+
+Fotoğraf da BAĞLANTI (31 Ağustos 2026, kullanıcı isteği): okur kartın
+görseline tıklayınca habere gider. Eskiden yalnız başlık bağlıydı, görsele
+tıklamak hiçbir şey yapmıyordu.
+
+Üç nitelik birlikte çalışır, üçü de zorunlu:
+  href       — başlıktaki bağlantıyla AYNI adres
+  tabindex="-1"     — klavye bu bağlantıya UĞRAMAZ. Yoksa her kart için iki
+                      sekme durağı olur ve klavyeyle gezen okur listede iki
+                      kat yol yürür.
+  aria-hidden="true" — ekran okuyucu bu bağlantıyı görmez. Yoksa aynı haber
+                      bağlantı listesinde iki kez okunur; görselin `alt`
+                      metni de zaten çoğu kayıtta başlığın kendisi.
+Erişilebilirlikte kayıp yok: haberin klavyeyle ve ekran okuyucuyla
+erişilen bağlantısı başlıktaki `<h3><a>` olarak duruyor. Bu ikisini
+silersen kart erişilebilirlik açısından bozulur — silme.
+
+Slaytta yazı bloğu (`.slayt .yazi`, z-index 2) fotoğrafın ÜSTÜNDE duruyor
+ve kendi bağlantılarını taşıyor (başlık, "SESLİ DİNLE"). Buradaki bağlantı
+onun kardeşi ve altında kalıyor, yani yazının bağlantılarını KAPATMIYOR.
+Bu yüzden `.foto`ya z-index verme.
+{% endcomment %}<a class="foto karart{% if not h.gorsel_yolu %} {{ h|kart_rengi }}{% endif %}" href="{{ h.get_absolute_url }}" tabindex="-1" aria-hidden="true">
   {% if h.gorsel_yolu %}<img src="{{ h.gorsel_yolu }}" alt="{{ h.gorsel_alt|default:h.baslik }}" width="1280" height="720" loading="lazy" decoding="async">
   {% else %}<svg role="img" aria-label="{{ h.kategori.ad|baslikla }} haberini temsil eden çizim"><use href="#{{ h.kategori|simge_adi }}"/></svg>{% endif %}
-</div>
+</a>

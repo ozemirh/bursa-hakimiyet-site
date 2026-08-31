@@ -3219,6 +3219,10 @@ yatay taşma 0, sayfa içi dikiş). 8 bulgu KALDI ve aynı gün düzeltildi:
   olur; not metinleri anasayfa görünümünün bağlam değişkenlerine bağlı ve
   beyanın bölümüyle yan yana durması tercih edildi. Yeniden açılacaksa
   kullanıcı kararı.
+  **KAPANDI — 31 Ağustos 2026 (§39):** kullanıcı kararı geldi, notlar
+  panellerden kalktı ve `/veri-kaynaklari` sayfasına taşındı. "Bağlam
+  değişkenlerine bağlı" gerekçesi çözüldü: sayfa statik metin değil, aynı
+  sayıları kendi görünümünden okuyor.
 - **K8** 360'ta ilk editoryal piksel 354 (hedef ≤320): boş reklam yuvası
   48 px, main dolgusu 8, piyasa altı 10 → hesaplanan ≈320. Kalan iki kalem
   (kategori bandı 82, servis 56) dolu bileşenler, kırpılmadı.
@@ -3556,6 +3560,9 @@ tüm ekrana genişlet" → sonra "tam ekranı kaplamıyor, belki reklam panosuyl
    kenarına oturuyor. Artan genişlik `.kategori-liste a{flex:1 1 auto}` ile
    **10 kaleme eşit dağıtılıyor**; sabit bıraksaydık 2560 px'te sağda büyük
    bir boşluk kalırdı. Mega levha da aynı biçimde kenardan kenara.
+   **GERİ ALINDI — 31 Ağustos 2026 (§41):** kullanıcı bu kez içeriğin
+   daraltılmasını istedi; kapak 1480 px olarak geri kondu, zemin tam
+   ekran kalmaya devam ediyor.
 3. **Büyütme.** Kalem yazısı 13,5 → **15 px**, dikey dolgu 11 → **14 px**,
    logo 30 → **36 px**, MENÜ ve arama aynı oranda. Bant **40 → 50 px**.
 
@@ -3814,3 +3821,582 @@ Kaplayan hâlden kalan iki artık temizlendi, ikisi de ölçümle görüldü:
 **Doğrulama:** 1582 px'te iki sütun da 352 px, üç satırın kalemleri aynı
 hizada (üst=1180 · 1238 · 1295), son satırda ayraç 0. Panel ve pano yine
 250 px. 605 test geçiyor.
+
+
+## §39 — beyan notları panellerden çıkıp kendi sayfasına taşındı (31 Ağustos 2026)
+
+Kullanıcı isteği: "veri kaynağı ve kapsam yazılarını kaldır panellerden,
+onun yerine onu bir sayfa yap ve künyeye yerleştir."
+
+§34 K7'de "yeniden açılacaksa kullanıcı kararı" diye bırakılan madde budur.
+
+### Ne yapıldı
+
+- Anasayfadaki **dokuz** `details.yer-not` bloğu (yazarlar · en çok okunan ·
+  resmî ilan · şehir servisleri · puan durumu · Bursaspor · galeriler ·
+  videolar · vizyon) kaldırıldı.
+- `/veri-kaynaklari` açıldı: `icerik.views.veri_kaynaklari` +
+  `sablonlar/veri_kaynaklari.html`. Adres **tek dilimli**, o yüzden kök
+  adres tablosunda kategori kalıbından önce duruyor.
+- Künyeye iki bağlantı: KURUMSAL listesinde "Veri kaynakları ve kapsam",
+  telif satırının sonunda "Bölüm bölüm veri kaynağı ve kapsam →".
+- Notların işaret ettiği dört bölüme çapa kimliği verildi (`#yazar-serit`,
+  `#en-cok-okunan`, `#galeriler`, `#videolar`); diğer beşinde zaten vardı.
+  Sayfadaki her başlık ilgili panele bağlanıyor.
+
+### İki kural
+
+1. **Metinler yeniden yazılmadı.** Paneldeki cümle ne diyorsa sayfada da
+   aynısını diyor. Beyan "temizlenirse" okura verilen söz değişir.
+2. **Sayılar veriden okunur.** `arsiv_sayilari()`, ilan dağılımı, puan ve
+   vizyon künyeleri görünümden geliyor — §34'ün "bağlam değişkenlerine
+   bağlı, o yüzden taşınamaz" gerekçesi böyle çözüldü.
+
+### Sayfaya eklenen tek yeni şey: canlı veri künye tablosu
+
+Yedi canlı kalem (döviz · piyasa · hava · namaz · eczane · puan · vizyon)
+için kaynak adı, adresi, kullanım koşulları bağlantısı ve son güncelleme
+damgası. **Tablo veriden üretilir**: künye bilgisi `canli-veri/veri/
+<bileşen>.json` içindeki `kaynak` bloğundan okunur, koda ikinci bir kopya
+yazılmadı.
+
+Ölçümde bir kusur çıktı ve düzeltildi: `adres` alanı her zaman tek URL
+değil — vizyon takvimi iki dağıtımcıdan besleniyor ve alan iki adresi
+ayraçla taşıyor; `kosullar` alanı kimi kalemde adres değil düz cümle.
+Alanı olduğu gibi `href`e koymak `href="http://a · https://b"` gibi kırık
+bir bağlantı üretiyordu. `_baglar()` artık alanı boşluklara bölüp yalnız
+`http` ile başlayan parçaları alıyor; tek adres varsa kaynağın adı
+bağlantı olur, birden çoksa adresler alan adıyla ayrı ayrı basılır.
+
+### Resmî ilan uyarısı nereye gitti
+
+Bölümün altındaki uzun uyarı ("açık ilanların listesi değil", "son başvuru
+tarihi gösterilmez") panelden kalktı ama **iki yerde duruyor**: beyan
+sayfasında ve ilanın kendi sayfasında (`/resmi-ilan`, kendi metniyle).
+Bölüm başlığındaki dönem etiketi ve TÜM İLANLAR bağlantısı yerinde.
+`test_bolum_acik_ilan_listesi_gibi_gorunmuyor` bu üçünü birden kilitliyor.
+
+### Doğrulama
+
+- **618 test geçiyor.** `ArsivSayilariSablonaGomulmuyor` yeni adrese
+  bakıyor; `test_notlar_anasayfadan_kalkti` anasayfada tek bir kopya
+  kalmadığını ve künyenin sayfaya bağladığını kilitliyor; sabit sayı
+  taraması artık iki şablonu birden geziyor.
+- **Başsız Chrome, beş genişlik (360 · 768 · 1024 · 1280 · 1600):** yatay
+  taşma **0**, `h1` sayısı 1, CSS yüklendi (zemin ve 58 yüz doğrulandı).
+- İlk ölçümde tablo bağlantıları 14-17 px yüksekliğindeydi (§34 K6'nın
+  24 px dokunma hedefinin altında); negatif kenar boşluğu tekniğiyle
+  görünüm değişmeden büyütüldü, **ikinci ölçümde 24 px altı hedef yok**.
+## §40 — nöbetçi eczane paneli işlevsel hâle getirildi (31 Ağustos 2026)
+
+Kullanıcı isteği: "nöbetçi eczane panelini işlevsel hale getir."
+
+Panel bir **özet** idi: `nobetci-eczane.json` içindeki 34 eczanenin ilk
+üçünü basıyor, kalan otuz bire ulaşmanın hiçbir yolunu vermiyordu. Okur
+o listeye gece yarısı bakıyor ve dört şey soruyor — hangisi benim
+ilçemde, telefonu ne, nasıl giderim, kaça kadar açık. Dördünün de yanıtı
+dosyada **zaten** duruyordu (ad, ilçe, açık adres, telefon, enlem/boylam,
+nöbet başlangıç/bitiş); eksik olan tek şey sunumdu. Yeni bir kaynağa,
+ücretli servise ya da dış pakete gidilmedi.
+
+### Ne yapıldı
+
+- `icerik/canli.py` → **`eczane_paneli()`**. Dosyayı şablonun basabileceği
+  düz yapıya çevirir: satırlar ilçe sonra ad sırasında (Türkçe alfabeyle),
+  ilçe süzgeci için ana ilçe + adet, en yaygın nöbet penceresi, şu an
+  nöbeti sürenlerin sayısı. Bağlam anahtarı `eczane_panel`; ham `eczane`
+  paketi de duruyor (hava panelindeki düzenin aynısı).
+- Anasayfada panel yeniden yazıldı: **listenin tamamı** basılıyor, her
+  satırda ad, ilçe, kendi nöbet saati, açık adres, `tel:` bağlantısı ve
+  konum bağlantısı var. Liste kendi içinde kayıyor (430 px), namaz
+  paneliyle aynı satırı paylaşmaya devam ediyor.
+- `site.js` → ilçe seçimi ve serbest arama (ad, mahalle, sokak, telefon)
+  birlikte süzüyor; eşleşme yoksa liste sessizce boşalmıyor, "eşleşen
+  nöbetçi eczane yok" yazıyor.
+
+### Üç karar
+
+1. **Nöbet saati satırın kendisinde.** Ölçüldü (31 Ağustos, 34 eczane):
+   **sekiz ayrı pencere** var, biri 20:00'de kapanıyor. Tek bir
+   "18:30-08:30" cümlesi basmak okuru kapalı kapıya gönderirdi. Başlıktaki
+   aralık en yaygın olanıdır ve kaç eczanenin ona uyduğu yazılır.
+2. **Süzgeç ana ilçede birleşir.** Kaynak "OSMANGAZİ - DEMİRTAŞ",
+   "NİLÜFER - ÇALI", "MUDANYA - GÜZELYALI" diye ayrı nöbet bölgeleri
+   veriyor (20 etiket); okur için bunlar Osmangazi, Nilüfer, Mudanya —
+   süzgeçte 17 ilçe var, satırda tam ad duruyor.
+3. **Kaynakta olmayan alan bağlantıya dönmez.** Telefonu ya da koordinatı
+   boş gelen eczane o düğme olmadan basılır. Konum bağlantısı dış bir
+   adrestir ama bir *kaynak* değil: sayfa internetsiz de eksiksiz açılır,
+   koordinat BEO'nun kendi sayfasından gelir, tahmin edilmez.
+
+Süzgeç kutuları şablonda `hidden` geliyor, `site.js` açıyor: betik
+yüklenmezse okur çalışmayan bir denetim görmez, liste zaten tam basılı.
+Resmî ilan süzgecindeki ilkenin aynısı — süzgeç bir ilerleme, bir
+bağımlılık değil.
+
+### Ölçüm bir kusur buldu
+
+`.ara` **bandın arama formunun sınıfı** ve 1000 px altında `display:none`
+alıyor. Telefon bağlantısına aynı adı verdiğim için bağlantı dar ekranda
+tamamen kayboluyordu — yani tam da telefonla aranacak ekranda. Başsız
+Chrome ölçümünde görüldü (`telefon_gorunur: 0`), sınıf `.telefon` oldu.
+
+### Doğrulama
+
+- **Başsız Chrome, altı genişlik (360 · 700 · 768 · 1024 · 1280 · 1600):**
+  34 satır, 34 telefon ve 34 konum bağlantısı her genişlikte görünür.
+  Süzgeç ölçüldü: Nilüfer 6, "osmangazi" araması 7, eşleşmeyen arama boş
+  durum yazısı, kutu temizlenince 34.
+- **Gerçek Tab tuşuyla** gezildi: telefon ve konum bağlantıları odak
+  sırasında, odak halkası `solid 3px` kırmızı (§32.5'in dersi).
+- `icerik.tests_canli` içinde `EczanePaneli` (11 test) ve
+  `EczanePaneliSayfada` (2 test): liste kırpılmıyor, ilçe ana ilçede
+  birleşiyor, Türkçe sıralama, iki telefon biçimi de `tel:` oluyor, boş
+  alan bağlantıya dönmüyor, her satır kendi saatini taşıyor, "şu an
+  nöbette" işareti saate bağlı.
+
+### Bu turda dokunulmayan bir bulgu
+
+Anasayfada **360 px'te 9 px yatay taşma** ölçüldü. Kaynağı eczane paneli
+değil: taşan kutu `.hava-foto` (§39 turunda giren Ulu Cami fotoğrafı,
+360 px'lik ekranda 420 px çiziliyor). Panel işiyle ilgisi olmadığı için
+düzeltilmedi, kayda geçirildi. 420 px ve üstünde taşma 0.
+
+618 test geçiyor.
+## §41 — nöbetçi eczane: kalıcı servis sayfaları + günlük haber (31 Ağustos 2026)
+
+Kullanıcı isteği: "her gün için bursada nöbetçi eczaneler, bursa osmangazi
+nöbetçi eczane gibi google seo'da aratılma değeri yüksek aramalar için
+sitede otomatik haber oluştur ve o günün nöbetçi eczanelerini yaz."
+
+**§sonraki-iş notundaki "servis modüllerine ayrı SEO sayfası üretmeyi
+önerme" maddesi bu kararla kapandı.** O madde bir *öneri yasağıydı*
+(22 Ağustos araştırması: hizmet içeriğinin organik trafiği düşüyor);
+kullanıcı doğrudan istediğinde geçerliliği biter.
+
+### Yapı: iki katman, biri ötekinin yerine geçmiyor
+
+Kullanıcıya şu teknik gözlem sunuldu ve iki seçenek soruldu: "bursa
+nöbetçi eczane" **her gün aynı sorgudur**, arama motoru böyle sorgularda
+tek bir güncel adresi sıralar; her gün yeni haber açmak birbirinin
+neredeyse aynısı yüzlerce sayfa üretir (yılda ~365, ilçe başına açılırsa
+~6.200) ve bunlar birbiriyle yarışır. Kullanıcı **"sabit sayfa + günlük
+haber"** ve **"17 ilçe sayfası + 1 günlük haber"** seçeneklerini seçti.
+
+**Katman 1 — kalıcı sayfalar (asıl SEO hedefi).** `/nobetci-eczane` ve
+17 ilçe adresi (`/nobetci-eczane/osmangazi` …). Adres değişmez, içerik her
+gün kendini tazeler. `views.nobetci_eczane` → `sablonlar/nobetci_eczane.html`.
+
+**Katman 2 — günlük haber.** `manage.py eczane_haberi` her sabah bir
+`Haber` kaydı açar: tarihli sorgular ("31 ağustos nöbetçi eczane"),
+gazetenin kendi akışı, RSS ve sitemap'in `news_YYYY-MM.xml` dosyası.
+Gövdesi okuru **güncel** liste için kalıcı sayfalara yollar.
+
+Metin tek yerden çıkıyor: `icerik/eczane.py`. Sayfanın başlığı, haberin
+başlığı, ilçe adı çözümü ve kaynak cümlesi orada. İki ayrı yerde yazsalardı
+biri güncellenip öteki unuturdu.
+
+### Kararlar
+
+1. **Adres kalıcıysa 404 verilmez.** Çekme betiği bir tur kaçırdığında
+   sayfa yine 200 döner ve "liste şu an alınamıyor" der. 404, arama
+   motoruna kayıtlı sayfayı dizinden düşürür. Bilinmeyen ilçe slug'ı ise
+   gerçekten yoktur — o 404.
+2. **"Bu ilçede bugün nöbetçi yok" da veridir.** Küçük ilçelerde nöbet
+   komşuya devredilebiliyor; kaynak kayıt döndürmediyse sayfa bunu yazar
+   ve il geneline yönlendirir. Boş kutu bırakmak okura sayfanın bozuk
+   olduğunu düşündürürdü.
+3. **Şerit 17 ilçenin tamamını taşır**, yalnız bugün nöbetçisi olanları
+   değil; nöbetçisi olmayan ilçe "0" ile görünür.
+4. **Günde tek kayıt.** Komutun ölçütü haberin slug'ı ve slug **günden**
+   türer, başlıktan değil (`31-agustos-2026-bursa-nobetci-eczaneler`):
+   başlık kalıbını değiştirdiğimiz gün slug da değişseydi komut aynı günün
+   haberini bulamayıp ikinci kayıt açardı. Tazelemede yayın zamanı korunur.
+5. **Bayat liste yayımlanmaz.** Nöbet günde bir devrediliyor; bir gün eski
+   liste okuru kapalı eczaneye gönderir. `--bayat-da-yayimla` kapıyı elle
+   açar.
+6. **Haberin ilçe alanı boş.** Liste il geneli; ilçe alanı doldurulsaydı
+   ilçe haber sayfaları her gün bir eczane kaydıyla dolardı.
+7. **Kaynak türü "Dış yayın"**, meta yazar ondan türüyor (§7). Metin
+   gazetenin muhabirinden değil, odanın çizelgesinden geliyor.
+
+### Yapısal veri
+
+Sayfa `ItemList` + `Pharmacy` JSON-LD basıyor (sitede ilk JSON-LD). Kural
+aynı: **yalnız dosyada olan alan yazılır**. Telefonu olmayan eczanede
+`telephone`, koordinatı olmayanda `geo` anahtarı hiç açılmaz. Nöbet
+aralığı `openingHoursSpecification` ile veriliyor — haftalık düzen değil,
+o güne ait tek aralık.
+
+### Zamanlama
+
+`tazele.ps1`e dördüncü grup eklendi: `-Grup haber` önce
+`nobetci_eczane.py` ile listeyi tazeler, **sonra** `manage.py
+eczane_haberi` çalıştırır. Sıra bağlayıcı; tersi dünün listesini yayımlar.
+Görev Zamanlayıcı'ya `BH eczane haberi` kaydı açıldı (günde bir, 08:20).
+
+### Ölçüm bir kusur buldu
+
+İlçe şeridi `sorted(adlar.items(), key=…ad)` ile diziliyordu ve **İnegöl
+ile İznik şeridin en sonuna** düşüyordu — §40'ta `canli._tr_sirala` ile
+çözülen Türkçe sıralama tuzağının aynısı, ekran görüntüsünde görüldü.
+İkinci kusur yapısal verideydi: `"ECZANESİ".title()` → "Eczanesi̇"
+(harfin üstünde birleşen nokta). İkisi de düzeltildi; ad artık `baslikla`
+süzgecinden geçiyor.
+
+### Doğrulama
+
+- **641 test geçiyor** (23 yeni: `icerik/tests_eczane.py`). Kilitlenen
+  davranışlar: veri yokken 200, bilinmeyen ilçe 404, nöbetçisiz ilçe
+  cümlesi, şeridin Türkçe sırası, olmayan alanın yapısal veriye
+  yazılmaması, günde tek kayıt, bayat listenin yayımlanmaması.
+- **Başsız Chrome:** `/nobetci-eczane` 1280 px'te yatay taşma 0, 34 kart,
+  34 telefon bağlantısı, JSON-LD var; 360 px'te de taşma 0.
+- **Uçtan uca koşuldu:** `tazele.ps1 -Grup haber` listeyi çekti ve haberi
+  yayımladı → `/saglik/31-agustos-2026-bursa-nobetci-eczaneler-1529286`.
+  İkinci koşu ikinci kayıt açmadı, var olanı tazeledi.
+
+### Karar bekleyen iki kalem
+
+- **SON DAKİKA rayı** en yeni altı haberi listeliyor (`baglam.py`), yani
+  günlük eczane kaydı her sabah o rayın tepesine oturuyor. "Son dakika"
+  bir servis listesi için doğru sözcük değil; dışlamak tek satırlık iş
+  ama **editoryal karar**, kullanıcıya soruldu.
+- **Kalıcı sayfalar sitemap'te değil.** Sitemap üreticisi canlı sitenin
+  beş ailesini birebir taklit ediyor ve `site_haritasi_karsilastir` bu
+  eşitliği denetliyor (F8); yeni bir aile eklemek o karşılaştırmayı bozar.
+  Sayfalar şimdilik iç bağlantılarla keşfediliyor: mega menü, künye,
+  anasayfa paneli ve günlük haberin gövdesi. Günlük haber zaten
+  `news_YYYY-MM.xml` içinde.
+## §42 — namaz paneli fotoğrafı değişti (31 Ağustos 2026)
+
+Kullanıcı isteği: "görsel çok kötü yerleştirilmiş… sadece görseli değiştir."
+(Aynı mesajdaki ikinci istek — namaz ve nöbetçi eczane panellerinin aynı
+noktada bitmesi — ölçüldüğünde **zaten sağlanıyordu**: 768 px ve üstünde
+iki kutunun alt kenarı arasındaki fark 0. Kullanıcı görünümü onaylayıp
+yalnız fotoğrafı istedi, yerleşime dokunulmadı.)
+
+### Sorun kırpmada değil, kaynaktaydı
+
+Şeritteki `yesil.jpg` minarenin **şerefesine** öyle yakın bir kareydi ki
+külah da kaide de kaynağın kendisinde yoktu; karenin yaklaşık üçte ikisi
+boş gökyüzüydü. 530×186'lık yassı şeride girince geriye tanınmaz bir
+sütun kalıyordu. `object-position` ile kurtarılamazdı — hiçbir kırpma
+kadrajda olmayan külahı geri getiremez.
+
+### Ne yapıldı
+
+`gorseller/genis/yesil-cami.jpg` indirildi (Commons, **Dosseman, CC BY-SA
+4.0**, 1280×852): Yeşil Cami uzaktan — iki minare, kubbeler, arkada kent
+ve tepeler. Alt üçte biri ağaçlarla koyu, yani karartma perdesinin ve
+"ŞİMDİ" satırının oturduğu bant zaten karanlık.
+
+`yesil.jpg` **silinmedi**: "yeşil alan, park" kategorisinin temsilî
+görseli olarak kullanılmaya devam ediyor. Yeni dosya 16:9 değil (Commons
+küçültme servisi kırpmıyor, ortamda görüntü kütüphanesi yok); şerit
+`object-fit:cover` kullandığı için sorun değil, `KAYNAKLAR.md`ye yazıldı.
+
+Kadraj yeniden ölçüldü: `object-position` **%70 → %38**. Eski değer yeni
+fotoğrafta kadrajı ağaçlara indiriyor, camiyi şeridin dışına atıyordu.
+
+### Ölçüm (site.css'in kendi kuralı: fotoğraf değişirse kontrast yeniden ölçülür)
+
+Yedi genişlikte (360 · 560 · 700 · 880 · 1024 · 1280 · 1600), yazı katmanı
+gizlenip şerit çekilerek her satırın kutusundaki **en açık** piksel alındı.
+PNG saf Python'la çözüldü — ortamda Pillow yok, kurulmadı.
+
+| Satır | En kötü ölçüm | Eşik |
+|---|---|---|
+| `ŞİMDİ` etiketi | 8,78:1 | 4,5 |
+| Vakit adı | 6,61:1 | 4,5 |
+| Saat | 6,39:1 | 4,5 |
+
+Künye kutucuğunun **en açık piksel** ölçümü yanıltıcı çıkıyor (1,0-1,75):
+kutucuğun `border-radius`'u yüzünden köşe pikselleri arkadaki gökyüzünü
+gösteriyor. Ortalama ışık 0,077-0,121, yani beyaz yazıyla 6,1-8,3:1 —
+aynı turda paralel oturumun `--vk-hak-zemin`i %42'den %72'ye çekerken
+ölçtüğü 7,93:1 ile örtüşüyor. Künye CC BY-SA'nın şartı; okunmuyorsa atıf
+verilmemiş sayılır.
+
+**641 test geçiyor**, 360 ve 420 px'te yatay taşma 0.
+
+
+## §40 — Bursaspor "SON GELİŞMELER" listesi dörde indi (31 Ağustos 2026)
+
+Kullanıcı isteği: "bursaspor panelindeki son gelişmeleri 4 satırla sınırla."
+
+`BURSASPOR_LISTE` 7 → **4**. Bölümün toplam kaydı 6 + 7 = 13'ten 6 + 4 = 10'a
+iniyor; kart sayısı (`BURSASPOR = 6`) ve puan tablosu değişmedi.
+
+**Sayı artık sütun dengesinden değil karardan geliyor.** §32'de liste iki
+sütunun boyunu eşitlemek için ölçülerek 9'dan 7'ye çekilmişti; o gerekçe
+bu kararla yerini kullanıcı tercihine bıraktı. Denge yine de ölçüldü ve
+işareti değişti (başsız Chrome, 1280 ve 1600 px — ikisinde de aynı):
+
+| | sol sütun (puan) | sağ sütun (kart + liste) | fark |
+|---|---|---|---|
+| 7 satır (önce) | 794 px | 850 px (534 + 302 + boşluk) | sağ **+56** |
+| 4 satır (sonra) | 794 px | 728 px (534 + 180 + boşluk) | sağ **−67** |
+
+Fark aynı büyüklük sınıfında kaldığı için yerleşim düzeltmesi yapılmadı;
+bölümün toplam boyu 921 → 865 px. Sayı bir daha oynatılırsa bu ölçüm
+yenilenmeli. 641 test geçiyor.
+
+
+## §41 — kategori bandının içeriği siteyle aynı raya oturdu (31 Ağustos 2026)
+
+Kullanıcı isteği: "kategorilerin olduğu bantın kendisi ekranı kaplamaya
+devam etsin ama içerikleri biraz daha daralt."
+
+§36'da iç kutuya **bilerek** genişlik kapağı konmamıştı (bkz. yukarıdaki
+madde 2). İstek onun tersini söylüyor ve zemin `.kategori` üzerinde
+durduğu için **tam ekran kalmaya devam ediyor** — daralan yalnız içerik.
+
+### Ölçü neden 1480
+
+Sitenin kendi rayı: servis şeridi (`.servis-ic`), sayfa ızgarası
+(`.sayfa`) ve künye (`.kunye-ic`) zaten bu ölçüde. Bant tek başına
+kenardan kenara gidiyordu, yani geniş ekranda **hemen üstündeki servis
+şeridiyle hizasızdı** — §36'nın kendi sorun tanımı ("1920 px'lik ekranda
+iki şerit üst üste ama farklı genişlikte") eski düzen için yazılmıştı,
+kapak kalkınca aynı kusur ters yönden geri gelmişti.
+
+Daha dar yapılmadı ve bu **ölçüye dayanıyor**: bandın tek satırda kalma
+bütçesi ~1350 px (logo 155 + 10 kalem 863 + arama 220 + MENÜ 88), ve arama
+kutusunu simgeye indiren `@media` **görüntü** genişliğine bakıyor, iç
+kutuya değil. Kapak 1360'ın altına inerse 1600 px'lik ekranda medya kuralı
+devreye girmez ve bant ikinci satıra düşer.
+
+### Mega levha da aynı raya
+
+MENÜ düğmesi artık 1480'in iç kenarında; levha kenardan kenara kalsaydı
+sütunlar bandın kalemleriyle hizasını kaybederdi. `.tam-menu-ic` de
+kapatıldı — levhanın **zemini** yine tam ekran, içindeki beş sütun bantla
+hizalı. `grid-template-columns` bloğun **son** bildirimi olarak bırakıldı:
+`tests_menu` beş sütun sözleşmesini o bildirimden `}`ye kadar okuyup
+sayıyor, arkasına bildirim eklenirse sayım bozuluyor (bir kez bozuldu).
+
+### Doğrulama (başsız Chrome, 1024 · 1280 · 1400 · 1520 · 1600 · 1900 · 2560)
+
+- Zemin her genişlikte **0 → ekran sonu**; bant boyu 50 px, yani hiçbir
+  genişlikte ikinci satıra düşmüyor. Yatay taşma 0.
+- İç kutu ile servis şeridi **birebir aynı** (sol ve sağ kenar, fark 0):
+  1520'de 13→1493, 1900'de 203→1683, 2560'ta 533→2013.
+- Menü açıkken levhanın zemini 0→1885, sütunları 203→1683 — bantla hizalı.
+- 1480'in altında hiçbir şey değişmiyor (kapak devreye girmiyor).
+- 641 test geçiyor.
+
+
+## §42 — reklam yuvalarına Google demo ağı bağlandı (31 Ağustos 2026)
+
+Kullanıcı isteği: "demo ağını bağla, 1100x150'yi de 970x250'ye çek."
+
+**Bu F7(b) DEĞİL.** Gelir sunumu değil, yuvaların gerçek bir reklamla nasıl
+durduğunu görmek için bir önizleme. Gerçek sunum yuva modelinden render,
+kampanya eşleşmesi ve ads.txt ister; F7 hâlâ açılmadı.
+
+### Neye bağlandı
+
+Google Ad Manager'ın **açık demo ağı**: `/6355419/Travel/Europe/France/Paris`,
+Google Publisher Tag ile. Hesap, anahtar, `ca-pub-` kimliği gerekmiyor.
+
+**Varsayılan KAPALI** (`settings.REKLAM_DEMO`, `BH_REKLAM_DEMO=1` ile açılır).
+Gerekçe: GPT dış bir betiktir ve üçüncü taraf çerezi bırakır; site şu an
+dışarıdan yalnız Google Fonts çekiyor ve internetsiz açılabiliyor. Bayrak
+kapalıyken `taban.html` tek satır dış betik basmaz. Canlıda açılacaksa KVKK
+tarafında çerez aydınlatması **ayrı bir iştir**.
+
+### Hangi ölçü doluyor — ölçüldü, varsayılmadı
+
+Başsız Chrome ile canlı demo ağına karşı:
+
+| Ölçü | Demo ağı |
+|---|---|
+| 300×250 · 160×600 · 728×90 | **doluyor** |
+| 970×250 · 300×600 · 320×100 | boş döner |
+
+970×250 dört ayrı örnek yuvada da (`/Travel`, `/Travel/Europe`, `…/France`,
+`…/Paris`) boş döndü. Çözüm **çok ölçülü tanım**: üst şerit `970x250` +
+`728x90` ister, demo ağı 728×90 ile doldurur, gerçek reklamverende ikisi de
+geçerli ölçüdür.
+
+### 1100×150 → 970×250 → **1100×150** (aynı gün geri alındı)
+
+1100×150 IAB standardı değil ve hiçbir ağ o ölçüde yaratıcı taşımıyor;
+970×250 ("billboard") standart. Kutu tam genişlikte kalıyor (1100 px),
+yaratıcı ortalanıyor; kutu boyu 150 → **250 px**.
+
+**Envanter etkisi:** `1100x150` bir yuva ADIYDI (F1 ölçütü 3, "5/5 yuva adı
+envanterden"). Bu değişiklik o yuvayı yeniden adlandırıyor — F7 açıldığında
+reklam sisteminde de karşılığı düzeltilmeli, yoksa şablon ile envanter
+ayrışır.
+
+### Ölçerek bulunan kusur: mobilde 393 px yatay taşma
+
+İlk uygulamada 360 px'te sayfa **393 px yatay taşıyordu**. Sebep: üst şerit
+kutusu ≤600 px'te **44 px**'lik bir şerit (§34 K8'in bilinçli kararı — mobilde
+ilk editoryal piksel aşağı inmesin diye) ve 728×90'lık yaratıcı oraya
+sığmıyor.
+
+Çözüm **görünüm haritası** (`data-gpt-harita`, GPT `defineSizeMapping`):
+
+    1024>970x250,728x90 ;  601>728x90 ;  0>
+
+Dar ekranda ölçü listesi **boş** — yuvaya hiçbir şey basılmaz, gri yer
+tutucu kalır. Ayrıca son emniyet ağı olarak `.reklam{overflow:hidden}`
+kondu: haritadaki bir hata sayfanın tamamını yatay kaydırılır hâle
+getirmesin.
+
+### Uygulama kararları
+
+- **Ölçü işarettedir, betikte değil.** Şablonda `.reklam[data-gpt="300x250"]`
+  duruyor; `reklam.js` sayfada ne bulursa onu tanımlar. Yuva nerede duruyorsa
+  ölçüsü de orada yazar.
+- **"Reklamları gizle" anahtarına uyar.** Anahtar açıkken hiçbir slot
+  tanımlanmaz; yoksa panolar gizliyken reklam yine de çekilirdi.
+- **Görünmeyen yuva çekilmez.** Yan pageskin'ler yalnız ≥1480 px'te çiziliyor;
+  `offsetParent === null` olan atlanır — görünmeyen reklam için istek atmak
+  gerçek sunumda geçersiz gösterim sayılır.
+- **Boş yuva daraltılmaz** (`collapseEmptyDivs(false)`): kutu yüksekliği
+  yerleşimin parçası, daraltmak sayfayı reklam gelince zıplatırdı. Yer tutucu
+  ile reklam aynı ızgara hücresinde duruyor, yükleme sırasında kutu
+  yerinden oynamıyor.
+
+### Doğrulama
+
+- **646 test geçiyor** (5 yeni: bayrak kapalı/açık, yuva işaretleri,
+  dar ekran haritası, anahtar uyumu).
+- Başsız Chrome, anasayfa ve haber detay, 1600 · 1280 · 360 px: **yatay
+  taşma 0**. 1600'de altı yuvanın beşi doluyor.
+- Bilinen demo ağı davranışı: aynı sayfada iki 160×600 istendiğinde
+  **biri boş dönüyor** (sağ pageskin). Kod tarafında kusur değil —
+  `slotRenderEnded` `isEmpty:true` ile geliyor, yani istek gitti ve ağ
+  yaratıcı vermedi. Gerçek reklamverende ikisi de dolar.
+
+
+### §42 eki — üst şerit 1100×150'ye döndü (aynı gün)
+
+Kullanıcı: "1100'e 150 bulamaz mıyız."
+
+**Hiçbir reklam ağında yok** ve bu ölçüldü: Google demo ağı 970×250, 970×90,
+728×250, 336×280, 300×600 ve 320×100'ün hepsini boş dönüyor; dolduğu üç ölçü
+300×250, 160×600 ve 728×90. Dört ayrı örnek yuvada aynı sonuç.
+
+**Ama bu ölçü programatik talep için değil.** 1100×150 gazetenin **kendi
+sattığı** yuvanın ölçüsü — envanterdeki adı da zaten "1100x150" — ve özel
+ölçüler Ad Manager'da doğrudan satışta serbesttir. Yerel reklamveren
+1100×150 görseli verir, yuva dolar. Dolayısıyla doğru cevap "bulunamaz"
+değil, **"programatik ağdan gelmez, kendi kampanyandan gelir"**.
+
+Şerit `1100x150` + `728x90` ister: yuva satılmadığında programatik talep
+(ve demo ağı) 728×90 ile doldurur, 150 px'lik kutuda ortalanır. Kutu boyu
+250 → **150 px**'e döndü.
+
+**970×250 düştü** — 250 px'lik yaratıcı 150 px'lik kutuya sığmaz. Billboard
+formatının programatik gelirini isteyen olursa kutu 250'ye çıkarılmalı; bu
+bir **gelir kararı**, yerleşim kararı değil.
+
+Bunun yan etkisi olarak §42'de yazılan **envanter uyarısı düştü**: yuva adı
+`1100x150` yerinde kaldı, F1 ölçütü 3 ("5/5 yuva adı envanterden") bozulmadı.
+
+**Görünüm haritası** ikinci bir ölçülmüş kısıt kazandı:
+
+    1140>1100x150,728x90 ;  601>728x90 ;  0>
+
+601-1139 bandında 1100×150 **verilmez**: içerik sütunu 1100 px'e ancak
+~1120 px görüntüde ulaşıyor, daha darında 1100 genişliğindeki yaratıcı
+taşardı. Eşik mevcut 1140 kırılma noktasına oturtuldu.
+
+**Doğrulama (1600 · 1280 · 1100 · 800 · 360 px):** yatay taşma **0**; kutu
+1100×150, demo yaratıcısı 728×90 ortada; 800'de kutu 120 px ve 728×90 hâlâ
+sığıyor; 360'ta yaratıcı istenmiyor, gri yer tutucu kalıyor. 646 test
+geçiyor.
+
+
+### §42 eki 2 — üst şerit iki ölçüyü birden taşıyor (aynı gün)
+
+Kullanıcı: "970e 250'yi getir." Bir önceki ekte "billboard'un programatik
+gelirini isteyen olursa kutu 250'ye çıkarılmalı, bu bir gelir kararı" diye
+açık bırakılan madde budur; karar geldi.
+
+Şerit artık **üç ölçü** ister ve üçünün gerekçesi ayrı:
+
+| Ölçü | Ne için | Nereden dolar |
+|---|---|---|
+| **1100×150** | gazetenin kendi sattığı yuva (envanterdeki ad) | doğrudan satış |
+| **970×250** | IAB billboard | programatik talep |
+| **728×90** | yedek, şerit boş kalmasın | programatik + demo ağı |
+
+Kutu boyu 150 → **250 px** (billboard için). Bedeli: 1100×150 dolduğunda alt
+ve üstte 50'şer px boşluk kalıyor. Tek ölçüye inilirse kutu boyu da ona göre
+ayarlanmalı.
+
+Görünüm haritası **dört kademe** oldu; her eşik ölçülmüş bir kısıt:
+
+    1140>1100x150,970x250,728x90 ;  1001>970x250,728x90 ;  601>728x90 ;  0>
+
+- **≤600** kutu 44 px (§34 K8) — hiçbir ölçü; 728×90 oraya konunca sayfa
+  360'ta 393 px yatay taşıyordu.
+- **601-1000** kutu 120 px — 250'lik yaratıcı sığmaz.
+- **1001-1139** kutu 250 px ama içerik sütunu ~981-1119 px — 970 sığar,
+  1100 sığmaz.
+
+**Doğrulama (1600 · 1280 · 1100 · 800 · 360 px):** yatay taşma **0**. Kutu
+1100×250 / 1065×250 / 765×120 / 325×44; demo ağı üçünden yalnız 728×90'ı
+doldurduğu için görünen yaratıcı her genişlikte o. 646 test geçiyor —
+haritanın dört kademesi de teste bağlandı.
+
+
+### §42 eki 3 — üst şerit demo reklamı almıyor (aynı gün)
+
+Kullanıcı: "970'e 250'nin içine test reklamı koyma şimdilik."
+
+Gerekçe yerinde: demo ağı üç ölçüden yalnız **728×90**'ı dolduruyor ve o
+yaratıcı 250 px'lik billboard kutusunun ortasında küçücük duruyordu —
+şeridin gerçek hâlini göstermek yerine yanıltıyordu. Şerit şimdilik gri yer
+tutucu olarak duruyor.
+
+**Kalkan tek şey demo dolgusu.** `data-gpt` ve `data-gpt-harita`
+SİLİNMEDİ; yeni `data-gpt-demo="kapali"` işaretini yalnız `reklam.js`
+okuyor, o da yalnız demo bayrağıyla yükleniyor. Gerçek sunum (F7)
+geldiğinde bu şerit için yeniden ölçü yazılması gerekmeyecek.
+
+**Doğrulama:** 1600 px'te üst şerit boş (1100×250 gri kutu), diğer beş
+yuvanın dördü demo reklamıyla dolu — iki 160×600'ün biri demo ağının kendi
+davranışı gereği boş. Yatay taşma 0. 647 test geçiyor; işaretin **yalnız**
+üst şeritte olduğu da kilitlendi (kareler ve pageskin'ler demo almaya
+devam ediyor).
+
+
+### §42 eki 4 — 970×250'nin ayak izi maketle gösteriliyor (aynı gün)
+
+Kullanıcı: "970'e 250'yi görmek istiyorum."
+
+Demo ağında o ölçüde yaratıcı **yok** (ölçüldü, üç kez: ağ yalnız 300×250,
+160×600 ve 728×90 dolduruyor). Ağın vermediği bir şeyi ağın vermiş gibi
+göstermek yerine **kutunun kendisi çizildi**: şeridin ortasında tam
+970×250, üzerinde "ÖRNEK YARATICI · 970 × 250 — billboard ayak izi" yazıyor.
+
+**Sahte reklam değil:** reklamveren adı, marka, görsel yok — yalnız formatın
+ayak izi. Yalnız `BH_REKLAM_DEMO=1` iken basılır; yayında blok şablondan
+hiç çıkmaz ve bu teste bağlandı (okur onu reklam sanmasın).
+
+Maket üst şeridin demo dolgusunun yerine geçmiyor — şerit hâlâ ağdan
+reklam almıyor (`data-gpt-demo="kapali"`, eki 3). Ölçü sözleşmesi de
+yerinde: `data-gpt` üç ölçüyü taşımaya devam ediyor.
+
+### Ölçerken çıkan iki kusur
+
+1. **Maket dar ekranda küçülmüyordu.** `.reklam` ızgarasının sütunu `auto`
+   idi; 970 px'lik blok max-content sayılıyor, `max-width:100%` de %100'ü
+   970 kabul ediyordu. Sonuç: blok küçülmüyor, `overflow:hidden` onu
+   kırpıyordu. Sütun `minmax(0,1fr)` yapıldı.
+2. **44 px'lik şeritte billboard ayak izi bilgi vermiyor.** Maket artık
+   yalnız kutunun 250 px olduğu genişlikte (>1000 px) çiziliyor; altında
+   normal gri yer tutucu geri geliyor.
+
+**Doğrulama (1600 · 1280 · 1100 · 800 · 360 px):** maket 970×250 olarak
+1600/1280/1100'de görünüyor (1100'de kutu 1065, maket yine tam ölçüsünde
+sığıyor), 800 ve 360'ta gizli ve yer tutucu geri geliyor. Yatay taşma
+**0**, diğer beş yuva demo reklamı almaya devam ediyor. 648 test geçiyor.
+

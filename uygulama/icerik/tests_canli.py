@@ -19,10 +19,10 @@ from pathlib import Path
 
 from django.test import TestCase, override_settings
 
-from .canli import (KISA_BELLEK_SANIYE, _bellek, _bursa_kulubu, gece_mi,
-                    hava_ailesi, hava_paneli, hava_simgesi, oku,
-                    puan_ligleri, puan_takibi, simdiki_vakit,
-                    vizyon_filmleri)
+from .canli import (KISA_BELLEK_SANIYE, _bellek, _bursa_kulubu,
+                    eczane_paneli, gece_mi, hava_ailesi, hava_paneli,
+                    hava_simgesi, oku, puan_ligleri, puan_takibi,
+                    simdiki_vakit, vizyon_filmleri)
 from .templatetags.site_etiket import baslikla, kisa_gun, kisa_lig, sozluk
 
 TR = timezone(timedelta(hours=3))
@@ -244,11 +244,17 @@ class VizyonBolumuSayfada(TestCase):
 
 
 class ArsivSayilariSablonaGomulmuyor(TestCase):
-    """Anasayfadaki arşiv büyüklükleri veritabanından gelir.
+    """Beyan sayfasındaki arşiv büyüklükleri veritabanından gelir.
 
     Şablona elle yazıldıklarında göç sürerken yanlışlaşıyorlardı (ölçüm,
     27 Ağustos: şablonda "1484 video", veritabanında 31.084).
+
+    31 Ağustos 2026: notlar anasayfa panellerinden `/veri-kaynaklari`
+    sayfasına taşındı; sayılar aynı görünüm mantığından geliyor, o yüzden
+    testler yalnız adres değiştirdi.
     """
+
+    ADRES = "/veri-kaynaklari"
 
     @classmethod
     def setUpTestData(cls):
@@ -269,16 +275,32 @@ class ArsivSayilariSablonaGomulmuyor(TestCase):
         Yazar.objects.create(id=2, slug="ikinci-yazar", ad="İkinci Yazar")
         _bellek.clear()
         with override_settings(CANLI_VERI_KOK=Path(tempfile.mkdtemp())):
-            yanit = self.client.get("/")
+            yanit = self.client.get(self.ADRES)
         _bellek.clear()
         self.assertContains(yanit, "Arşivden gelen 2 yazar")
         self.assertContains(yanit, "Arşivden gelen 0 galeri")
 
     def test_sablonda_sabit_arsiv_sayisi_kalmadi(self):
         kok = Path(__file__).resolve().parent.parent / "sablonlar"
-        metin = (kok / "anasayfa.html").read_text(encoding="utf-8")
-        for sabit in ("1484 video", "4040 galeri", "6713 köşe", "37 yazar", "32.006"):
-            self.assertNotIn(sabit, metin)
+        for ad in ("anasayfa.html", "veri_kaynaklari.html"):
+            metin = (kok / ad).read_text(encoding="utf-8")
+            for sabit in ("1484 video", "4040 galeri", "6713 köşe",
+                          "37 yazar", "32.006"):
+                self.assertNotIn(sabit, metin, f"{ad} içinde {sabit}")
+
+    def test_notlar_anasayfadan_kalkti(self):
+        """Panellerin altındaki beyan artık anasayfada DEĞİL, sayfasında.
+
+        Anasayfada kalmış tek bir kopya bile iki yerde yaşayan (ve biri
+        eskiyen) beyan demektir.
+        """
+        kok = Path(__file__).resolve().parent.parent / "sablonlar"
+        anasayfa = (kok / "anasayfa.html").read_text(encoding="utf-8")
+        self.assertNotIn("Veri kaynağı ve kapsam", anasayfa)
+        yanit = self.client.get("/")
+        self.assertNotContains(yanit, "Veri kaynağı ve kapsam")
+        # Künye sayfaya bağlıyor: beyan kaybolmadı, adres değiştirdi.
+        self.assertContains(yanit, 'href="/veri-kaynaklari"')
 
     def test_sifir_ile_sayilamadi_ayni_sey_degil(self):
         """0 gerçek bir değerdir, basılır; None "sayılamadı"dır, basılmaz."""
@@ -289,7 +311,7 @@ class ArsivSayilariSablonaGomulmuyor(TestCase):
         _bellek.clear()
         with override_settings(CANLI_VERI_KOK=Path(tempfile.mkdtemp())):
             # gerçek sıfır: cümle basılmalı
-            yanit = self.client.get("/")
+            yanit = self.client.get(self.ADRES)
             self.assertContains(yanit, "Arşivden gelen 0 galeri")
 
             # sayım kilide takılırsa cümle hiç basılmamalı, sayfa ayakta kalmalı
@@ -299,7 +321,7 @@ class ArsivSayilariSablonaGomulmuyor(TestCase):
             # galeri sorgusunu da düşürürdü (ilk denemede öyle oldu).
             with mock.patch.object(views.KoseYazisi, "yayindakiler",
                                    side_effect=DatabaseError("database is locked")):
-                kilitli = self.client.get("/")
+                kilitli = self.client.get(self.ADRES)
         _bellek.clear()
         self.assertEqual(kilitli.status_code, 200)
         self.assertNotContains(kilitli, "Arşivden gelen")
@@ -588,3 +610,172 @@ class HavaRengi(TestCase):
         self.assertEqual(gece["manzara"], "gece")
         self.assertTrue(gece["gece"])
         self.assertEqual(gece["simdi"]["simge"], "hv-acik-gece")
+
+
+class EczanePaneli(TestCase):
+    """Nöbetçi eczane panelinin veri hazırlığı.
+
+    Panelin dört iddiası burada korunuyor: liste KIRPILMAZ (eskiden ilk üç
+    eczane basılıyordu), süzgeç ana ilçede birleşir, her satır KENDİ nöbet
+    saatini taşır ve kaynakta olmayan alan bağlantıya dönüşmez.
+    """
+
+    def _paket(self, eczaneler=None, **degis):
+        paket = {
+            "gun": "2026-08-31",
+            "kaynak": {"ad": "Bursa Eczacı Odası", "kisa": "BEO"},
+            "eczaneler": eczaneler if eczaneler is not None else [
+                {"ad": "METROPOL ECZANESİ", "ilce": "NİLÜFER",
+                 "adres": "KONAK MAH. GÜLBİTEN SOK. NO:1A/A",
+                 "telefon": "0224 451 42 00",
+                 "enlem": 40.2095007, "boylam": 28.9912676,
+                 "nobet_baslangic": "2026-08-31T18:30",
+                 "nobet_bitis": "2026-09-01T08:30"},
+                {"ad": "DEMİRTAŞ ECZANESİ", "ilce": "OSMANGAZİ - DEMİRTAŞ",
+                 "adres": "PANAYIR MAH.", "telefon": "0224-4437956",
+                 "enlem": 40.19, "boylam": 29.12,
+                 "nobet_baslangic": "2026-08-31T18:00",
+                 "nobet_bitis": "2026-08-31T20:00"},
+                {"ad": "ADA ECZANESİ", "ilce": "OSMANGAZİ",
+                 "adres": "ALTIPARMAK CAD.", "telefon": "0224 220 10 10",
+                 "enlem": 40.18, "boylam": 29.06,
+                 "nobet_baslangic": "2026-08-31T18:30",
+                 "nobet_bitis": "2026-09-01T08:30"},
+            ],
+        }
+        paket.update(degis)
+        return paket
+
+    def _panel(self, saat="2026-08-31 19:00", **degis):
+        return eczane_paneli(self._paket(**degis),
+                             datetime.strptime(saat, "%Y-%m-%d %H:%M"))
+
+    def test_veri_yoksa_none(self):
+        self.assertIsNone(eczane_paneli(None))
+
+    def test_eczanesiz_dosya_panel_acmiyor(self):
+        """Boş liste "0 eczane" diye basılmaz, bölüm hiç çizilmez."""
+        self.assertIsNone(eczane_paneli({"gun": "2026-08-31",
+                                         "eczaneler": []}))
+
+    def test_liste_kirpilmiyor(self):
+        """Panelin varlık nedeni bu: eskiden ilk ÜÇ eczane basılıyordu."""
+        panel = self._panel()
+        self.assertEqual(panel["sayi"], 3)
+        self.assertEqual(len(panel["eczaneler"]), 3)
+
+    def test_ilce_suzgeci_ana_ilcede_birlesiyor(self):
+        """Demirtaş ayrı nöbet bölgesi ama okur için Osmangazi'dir."""
+        panel = self._panel()
+        sepet = {i["anahtar"]: i["adet"] for i in panel["ilceler"]}
+        self.assertEqual(sepet, {"nilufer": 1, "osmangazi": 2})
+        # Satırda tam ad durmaya devam eder.
+        self.assertIn("OSMANGAZİ - DEMİRTAŞ",
+                      [e["ilce"] for e in panel["eczaneler"]])
+
+    def test_turkce_siralama(self):
+        """`sorted` varsayılanı İ'yi Z'den sonraya atıyordu."""
+        panel = self._panel(eczaneler=[
+            {"ad": "A ECZANESİ", "ilce": "KARACABEY"},
+            {"ad": "B ECZANESİ", "ilce": "İNEGÖL"},
+            {"ad": "C ECZANESİ", "ilce": "HARMANCIK"},
+        ])
+        self.assertEqual([i["ad"] for i in panel["ilceler"]],
+                         ["HARMANCIK", "İNEGÖL", "KARACABEY"])
+
+    def test_telefon_baglantiya_ceviriliyor(self):
+        """Kaynak iki biçim veriyor; ikisi de aranabilir olmalı."""
+        baglanti = {e["ad"]: e["telefon_baglanti"]
+                    for e in self._panel()["eczaneler"]}
+        self.assertEqual(baglanti["METROPOL ECZANESİ"], "+902244514200")
+        self.assertEqual(baglanti["DEMİRTAŞ ECZANESİ"], "+902244437956")
+
+    def test_kaynakta_olmayan_alan_baglantiya_donmuyor(self):
+        """Telefonu ya da konumu boş gelen eczane uydurma bağlantı almaz."""
+        panel = self._panel(eczaneler=[
+            {"ad": "EKSİK ECZANESİ", "ilce": "KELES", "adres": "MERKEZ",
+             "telefon": "", "enlem": None, "boylam": None},
+        ])
+        kayit = panel["eczaneler"][0]
+        self.assertEqual(kayit["telefon_baglanti"], "")
+        self.assertEqual(kayit["harita"], "")
+        self.assertEqual(kayit["saat"], "")
+
+    def test_her_satir_kendi_saatini_tasiyor(self):
+        """34 eczane, sekiz ayrı pencere (31 Ağustos ölçümü)."""
+        saatler = {e["ad"]: e["saat"] for e in self._panel()["eczaneler"]}
+        self.assertEqual(saatler["METROPOL ECZANESİ"],
+                         "18:30 – 08:30 ertesi gün")
+        self.assertEqual(saatler["DEMİRTAŞ ECZANESİ"], "18:00 – 20:00")
+
+    def test_pencere_en_yaygin_araligi_soyluyor(self):
+        panel = self._panel()
+        self.assertEqual(panel["pencere"], "18:30 – 08:30 ertesi gün")
+        self.assertEqual(panel["pencere_adet"], 2)
+
+    def test_nobette_isareti_saate_bagli(self):
+        """Liste öğleden sonra da basılıyor; o saatte hiçbiri açık değil."""
+        self.assertEqual(self._panel(saat="2026-08-31 12:00")["nobette"], 0)
+        self.assertEqual(self._panel(saat="2026-08-31 19:00")["nobette"], 3)
+        # 20:00'de kapanan eczane 21:00'de artık nöbetçi değil.
+        gece = self._panel(saat="2026-08-31 21:00")
+        self.assertEqual(gece["nobette"], 2)
+        kapali = [e for e in gece["eczaneler"]
+                  if e["ad"] == "DEMİRTAŞ ECZANESİ"][0]
+        self.assertFalse(kapali["nobette"])
+
+
+class EczanePaneliSayfada(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        from django.core.management import call_command
+        call_command("taksonomi_kur", verbosity=0)
+
+    def _yanit(self, kok):
+        _bellek.clear()
+        with override_settings(CANLI_VERI_KOK=kok):
+            yanit = self.client.get("/")
+        _bellek.clear()
+        return yanit
+
+    def test_veri_yokken_anasayfa_ayakta(self):
+        yanit = self._yanit(Path(tempfile.mkdtemp()))
+        self.assertEqual(yanit.status_code, 200)
+        self.assertContains(yanit, "Nöbetçi eczane listesi şu an alınamıyor.")
+
+    def test_liste_ve_suzgec_basiliyor(self):
+        kok = Path(tempfile.mkdtemp())
+        (kok / "nobetci-eczane.json").write_text(json.dumps({
+            "guncelleme": datetime.now(TR).isoformat(),
+            "bayat_esik_dakika": 1440,
+            "gun": "2026-08-31",
+            "kaynak": {"ad": "Bursa Eczacı Odası", "kisa": "BEO"},
+            "eczaneler": [
+                {"ad": "METROPOL ECZANESİ", "ilce": "NİLÜFER",
+                 "adres": "KONAK MAH. GÜLBİTEN SOK.",
+                 "telefon": "0224 451 42 00",
+                 "enlem": 40.2095007, "boylam": 28.9912676,
+                 "nobet_baslangic": "2026-08-31T18:30",
+                 "nobet_bitis": "2026-09-01T08:30"},
+                {"ad": "PANAYIR ECZANESİ", "ilce": "OSMANGAZİ - DEMİRTAŞ",
+                 "adres": "PANAYIR MAH.", "telefon": "0224 220 10 10",
+                 "enlem": 40.19, "boylam": 29.12,
+                 "nobet_baslangic": "2026-08-31T18:30",
+                 "nobet_bitis": "2026-09-01T08:30"},
+            ],
+        }, ensure_ascii=False), encoding="utf-8")
+        yanit = self._yanit(kok)
+        self.assertEqual(yanit.status_code, 200)
+        # İki eczanenin de satırı var; liste kırpılmıyor.
+        self.assertContains(yanit, "Metropol Eczanesi")
+        self.assertContains(yanit, "Panayır Eczanesi")
+        # Telefon aranabilir, konum açılabilir.
+        self.assertContains(yanit, "href=\"tel:+902244514200\"")
+        self.assertContains(yanit, "query=40.2095007,28.9912676")
+        # Adres kaynaktaki hâliyle basılır, başlık biçimine sokulmaz.
+        self.assertContains(yanit, "KONAK MAH. GÜLBİTEN SOK.")
+        # Süzgeç ana ilçede birleşiyor ve sayıyı gösteriyor.
+        self.assertContains(yanit, "<option value=\"osmangazi\">Osmangazi (1)")
+        # Betik yüklenmezse ölü denetim görünmesin diye kutular gizli gelir.
+        self.assertContains(yanit, "<div class=\"eczane-suzgec\" hidden>")

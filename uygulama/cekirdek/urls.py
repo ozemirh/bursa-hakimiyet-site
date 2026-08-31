@@ -131,6 +131,17 @@ urlpatterns = [
     re_path(r"^ilce/(?P<slug>[-\w]+)/?$", icerik_gorunum.ilce, name="ilce"),
     path("resmi-ilan", icerik_gorunum.resmi_ilan, name="resmi-ilan"),
 
+    # Nobetci eczane: kalici servis sayfalari (31 Agustos 2026).
+    # "nobetci-eczane" tek dilimli, kategori kalibindan ONCE gelmeli.
+    # Ilce kalibi `/ilce/<slug>` ile ayni slug kumesini kullanir.
+    path("nobetci-eczane", icerik_gorunum.nobetci_eczane,
+         name="nobetci-eczane"),
+    re_path(r"^nobetci-eczane/(?P<slug>[-\w]+)/?$",
+            icerik_gorunum.nobetci_eczane, name="nobetci-eczane-ilce"),
+    # Kunyedeki beyan sayfasi. Tek dilimli; kategori kalibindan ONCE.
+    path("veri-kaynaklari", icerik_gorunum.veri_kaynaklari,
+         name="veri-kaynaklari"),
+
     # Besleme: /rss tek dilimli oldugu icin en sondaki kategori kalibi onu
     # yakalardi; kategori kalibindan ONCE gelmek zorunda.
     path("", include("besleme.adresler")),

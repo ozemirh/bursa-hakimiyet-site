@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import http.client
 import json
 import os
@@ -630,10 +631,35 @@ def gorsel_denenmeli_mi(url: str) -> bool:
     return bool(_TARIHLI_GORSEL.search(url))
 
 
+# Windows'ta tam yol 260, dosya adi 255 karakterle sinirli. Sitenin kimi
+# gorsel adlari spot cumlesinin tamamini tasiyor (300+ karakter) ve yazma
+# "[Errno 22] Invalid argument" ile dusuyordu; hata gorsel_indir'in disina
+# tasip haberin JSON'unu da goturuyordu (31 Agustos 2026'da uc kayitta olculdu).
+EN_UZUN_DOSYA_ADI = 120
+
+
+# Windows dosya adinda gecmeyen karakterler. Dis kaynak CDN'leri (ornegin
+# anlatilaninotesi) kirpma kutusunu ada gomuyor: "..._0:384:3200:1664_...jpg"
+# -- iki nokta yuzunden yazma "[Errno 22]" veriyordu (31 Agustos 2026).
+_YASAK_KARAKTER = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+
+
+def _gorsel_dosya_adi(url: str) -> str:
+    """Cok uzun adlari kisaltir; benzersizligi kisa bir ozetle korur."""
+    ad = _YASAK_KARAKTER.sub("-", url.split("/")[-1].split("?")[0]).strip(" .")
+    if len(ad) <= EN_UZUN_DOSYA_ADI:
+        return ad
+    govde, nokta, uzanti = ad.partition(".")
+    uzanti = (nokta + uzanti)[:24]
+    ozet = hashlib.sha1(ad.encode("utf-8")).hexdigest()[:10]
+    kalan = EN_UZUN_DOSYA_ADI - len(uzanti) - len(ozet) - 1
+    return f"{govde[:kalan]}-{ozet}{uzanti}"
+
+
 def gorsel_indir(url: str, hedef_klasor: Path) -> str:
     if not disk_yeterli_mi():
         return ""
-    dosya_adi = url.split("/")[-1].split("?")[0]
+    dosya_adi = _gorsel_dosya_adi(url)
     if not dosya_adi:
         return ""
     hedef = hedef_klasor / dosya_adi
@@ -644,10 +670,16 @@ def gorsel_indir(url: str, hedef_klasor: Path) -> str:
     except Exception as e:
         basarisiz_kaydet(url, f"gorsel indirilemedi: {e}")
         return ""
-    hedef_klasor.mkdir(parents=True, exist_ok=True)
-    gecici = hedef.with_suffix(hedef.suffix + ".tmp")
-    gecici.write_bytes(ham)
-    gecici.replace(hedef)
+    # Yazma hatasi (uzun ad, kilitli dosya, dolu disk) haberi dusurmemeli:
+    # gorsel atlanir, metin kaydedilir.
+    try:
+        hedef_klasor.mkdir(parents=True, exist_ok=True)
+        gecici = hedef.with_suffix(hedef.suffix + ".tmp")
+        gecici.write_bytes(ham)
+        gecici.replace(hedef)
+    except OSError as e:
+        basarisiz_kaydet(url, f"gorsel yazilamadi: {e}")
+        return ""
     return hedef.relative_to(KOK).as_posix()
 
 

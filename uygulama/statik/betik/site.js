@@ -76,7 +76,13 @@
 
     if(geri){ geri.addEventListener('click', function(){ goster(aktif - 1); }); }
     if(ileri){ ileri.addEventListener('click', function(){ goster(aktif + 1); }); }
-    noktalar.forEach(function(b, j){ b.addEventListener('click', function(){ goster(j); }); });
+    noktalar.forEach(function(b, j){
+      b.addEventListener('click', function(){ goster(j); });
+      // 31 Agustos: ileri/geri oklari kaldirildi; gezinme numaralardan olur.
+      // Fare numaranin uzerine gelince o slayta gecer, tiklama sart degil -
+      // kapsama girildiginde otomatik gecis zaten duruyor.
+      b.addEventListener('mouseenter', function(){ goster(j); });
+    });
 
     if(otoIstendi()){ sayacBaslat(); }
     // Kullanici hareket azaltmayi sonradan acarsa da dursun.
@@ -290,6 +296,81 @@
       var ad = (dugme.getAttribute('data-ad') || '').toLocaleLowerCase('tr');
       turNot.textContent = 'Sayfadaki ' + sayi + ' ' + ad + ' ilanı gösteriliyor.';
     });
+  }
+
+  /* ---- nöbetçi eczane süzgeci ----
+     31 Ağustos 2026: panel dosyadaki 34 eczanenin tamamını basıyor; okur
+     gece yarısı "benim ilçemde hangisi açık" diye bakıyor. İki süzgeç
+     birlikte çalışır: ilçe (satırdaki `data-ilce`) ve serbest arama
+     (satırın metni — eczane adı, mahalle, sokak, telefon).
+
+     Denetimler şablonda `hidden` geliyor, açan bu betik: yüklenmezse okur
+     çalışmayan bir kutu görmez, listenin tamamı yine basılı durur. Aynı
+     ilke resmî ilan süzgecinde de var — süzgeç bir ilerleme, bir
+     bağımlılık değil. */
+  var eczanePanel = document.getElementById('panel-eczane');
+  var eczaneSatirlari = dizi('.eczane-liste li', eczanePanel);
+  if(eczanePanel && eczaneSatirlari.length){
+    var eczaneSuzgec = eczanePanel.querySelector('.eczane-suzgec');
+    var eczaneIlce = document.getElementById('eczane-ilce');
+    var eczaneArama = document.getElementById('eczane-ara');
+    var eczaneSonuc = eczanePanel.querySelector('.eczane-sonuc');
+    var eczaneListe = eczanePanel.querySelector('.eczane-liste');
+    var eczaneBos = null;
+
+    /* Metin bir kez okunur: her tuş vuruşunda 34 satırın `textContent`i
+       yeniden istenirse tarayıcı her seferinde yerleşimi hesaplıyor. */
+    var eczaneMetin = eczaneSatirlari.map(function(satir){
+      return satir.textContent.toLocaleLowerCase('tr');
+    });
+
+    function eczaneSuz(){
+      var ilce = eczaneIlce ? eczaneIlce.value : '';
+      var q = eczaneArama ? eczaneArama.value.trim().toLocaleLowerCase('tr') : '';
+      var sayi = 0;
+      eczaneSatirlari.forEach(function(satir, i){
+        var uyar = (!ilce || satir.getAttribute('data-ilce') === ilce) &&
+                   (q.length < 2 || eczaneMetin[i].indexOf(q) > -1);
+        satir.classList.toggle('gizli', !uyar);
+        if(uyar){ sayi++; }
+      });
+
+      /* Hiçbiri eşleşmediğinde liste sessizce boşalmamalı: okur süzgecin
+         mi çalıştığını yoksa verinin mi bittiğini anlayamıyor. */
+      if(!sayi && !eczaneBos && eczaneListe){
+        eczaneBos = document.createElement('p');
+        eczaneBos.className = 'eczane-bos';
+        eczaneListe.parentNode.insertBefore(eczaneBos, eczaneListe.nextSibling);
+      }
+      if(eczaneBos){
+        eczaneBos.textContent = sayi ? '' : 'Bu aramayla eşleşen nöbetçi eczane yok.';
+        eczaneBos.hidden = !!sayi;
+      }
+
+      if(!eczaneSonuc){ return; }
+      if(!ilce && q.length < 2){
+        eczaneSonuc.setAttribute('data-gorunur', 'false');
+        eczaneSonuc.textContent = '';
+        return;
+      }
+      var ad = ilce && eczaneIlce ?
+        eczaneIlce.options[eczaneIlce.selectedIndex].text.replace(/\s*\(\d+\)$/, '') : '';
+      eczaneSonuc.setAttribute('data-gorunur', 'true');
+      eczaneSonuc.textContent = sayi + ' eczane gösteriliyor' +
+        (ad ? ' · ' + ad : '') + (q.length > 1 ? ' · “' + q + '”' : '') + '.';
+    }
+
+    if(eczaneSuzgec){ eczaneSuzgec.hidden = false; }
+    if(eczaneIlce){ eczaneIlce.addEventListener('change', eczaneSuz); }
+    if(eczaneArama){
+      eczaneArama.addEventListener('input', eczaneSuz);
+      eczaneArama.addEventListener('keydown', function(e){
+        if(e.key !== 'Escape' || eczaneArama.value === ''){ return; }
+        e.stopPropagation();   /* Escape önce kutuyu boşaltsın, menüyü değil */
+        eczaneArama.value = '';
+        eczaneSuz();
+      });
+    }
   }
 
   /* ---- yukarı çık ---- */

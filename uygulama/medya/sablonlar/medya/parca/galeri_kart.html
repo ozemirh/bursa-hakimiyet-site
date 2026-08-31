@@ -9,14 +9,24 @@ Kapak yerelde yoksa uzak adrese bağlanmak yerine kategori temsilî SVG'si
 Kare sayısı **bilinmiyorsa hiç yazılmaz**: "0 fotoğraf" okura yanlış bilgi
 verirdi. `kareler_eksik` önce sınanıyor ki liste sayfasında kart başına bir
 `COUNT` sorgusu açılmasın — kareler zaten hiçbir göç kaydında yok.
+
+Fotoğraf da BAĞLANTI (31 Ağustos 2026, kullanıcı isteği). Haber kartının
+aksine burada `.foto` KENDİSİ bağlantı olamıyor, çünkü içinde görselden
+başka şey de var (GALERİ rozeti). Bağlantı bu yüzden yalnız görseli sarmalayan bir
+`.foto-bag` — rozet onun dışında kalıyor ve ekran okuyucuda görünmeye
+devam ediyor. `tabindex="-1"` + `aria-hidden="true"` gerekçesi
+`parca/kart.html`de yazılı: klavyede iki durak, ekran okuyucuda iki kez
+okunan bağlantı olmasın diye. Erişilen bağlantı başlıktaki `<h3><a>`.
 {% endcomment %}
 <article class="galeri-kart">
   <div class="foto {{ g|kart_rengi }}">
-    {% if g.gorsel_yolu %}
-      <img src="{{ g.gorsel_yolu }}" alt="{{ g.gorsel_alt|default:g.baslik }}" loading="lazy">
-    {% else %}
-      <svg role="img" aria-label="{{ g.baslik }} galerisini temsil eden çizim"><use href="#{{ g.kategori|simge_adi }}"/></svg>
-    {% endif %}
+    <a class="foto-bag" href="{{ g.get_absolute_url }}" tabindex="-1" aria-hidden="true">
+      {% if g.gorsel_yolu %}
+        <img src="{{ g.gorsel_yolu }}" alt="{{ g.gorsel_alt|default:g.baslik }}" loading="lazy">
+      {% else %}
+        <svg role="img" aria-label="{{ g.baslik }} galerisini temsil eden çizim"><use href="#{{ g.kategori|simge_adi }}"/></svg>
+      {% endif %}
+    </a>
     <span class="rozet-o">GALERİ</span>
   </div>
   <h3><a href="{{ g.get_absolute_url }}">{{ g.baslik }}</a></h3>

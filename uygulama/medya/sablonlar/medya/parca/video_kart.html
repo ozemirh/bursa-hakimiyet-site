@@ -2,17 +2,31 @@
 {% comment %}
 Video kartı — tasarımdaki `.video-kart` + `.oynat` yapısı birebir.
 
-Oynat düğmesi bir **işaret**, bağlantı değil (`pointer-events:none`); kartın
-tamamı başlıktan bağlanıyor. Süre bilinmiyorsa (`sure_saniye = 0`) hiç
-yazılmaz — "0:00" uydurma değer olurdu.
+Oynat düğmesi bir **işaret**, bağlantı değil (`pointer-events:none`).
+Süre bilinmiyorsa (`sure_saniye = 0`) hiç yazılmaz — "0:00" uydurma değer
+olurdu.
+
+Fotoğraf da BAĞLANTI (31 Ağustos 2026, kullanıcı isteği). Haber kartının
+aksine burada `.foto` KENDİSİ bağlantı olamıyor, çünkü içinde görselden
+başka şey de var (oynat işareti). Bağlantı bu yüzden yalnız görseli sarmalayan bir
+`.foto-bag` — rozet onun dışında kalıyor ve ekran okuyucuda görünmeye
+devam ediyor. `tabindex="-1"` + `aria-hidden="true"` gerekçesi
+`parca/kart.html`de yazılı: klavyede iki durak, ekran okuyucuda iki kez
+okunan bağlantı olmasın diye. Erişilen bağlantı başlıktaki `<h3><a>`.
+
+Oynat işaretinin `pointer-events:none` olması burada işe yarıyor: kapağın
+tam ortasındaki 46 px'lik daire tıklamayı yutmuyor, altındaki bağlantıya
+geçiriyor. O kuralı kaldırırsan videonun en çok tıklanacak yeri ölür.
 {% endcomment %}
 <article class="video-kart">
   <div class="foto {{ v|kart_rengi }}">
-    {% if v.gorsel_yolu %}
-      <img src="{{ v.gorsel_yolu }}" alt="{{ v.gorsel_alt|default:v.baslik }}" loading="lazy">
-    {% else %}
-      <svg role="img" aria-label="{{ v.baslik }} videosunu temsil eden çizim"><use href="#{{ v.kategori|simge_adi }}"/></svg>
-    {% endif %}
+    <a class="foto-bag" href="{{ v.get_absolute_url }}" tabindex="-1" aria-hidden="true">
+      {% if v.gorsel_yolu %}
+        <img src="{{ v.gorsel_yolu }}" alt="{{ v.gorsel_alt|default:v.baslik }}" loading="lazy">
+      {% else %}
+        <svg role="img" aria-label="{{ v.baslik }} videosunu temsil eden çizim"><use href="#{{ v.kategori|simge_adi }}"/></svg>
+      {% endif %}
+    </a>
     <span class="oynat" aria-hidden="true"><span>&#9654;</span></span>
   </div>
   <h3><a href="{{ v.get_absolute_url }}">{{ v.baslik }}</a></h3>

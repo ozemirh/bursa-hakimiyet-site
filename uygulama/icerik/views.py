@@ -14,12 +14,15 @@ altında tarihli başlık listesi olarak duruyor — Bursaspor bölümünde
 işe yaradığı ölçülen çözümün anasayfa uyarlaması.
 """
 
+import json
 import time
+from urllib.parse import urlsplit
 
 from django.core.paginator import Paginator
 from django.utils.functional import cached_property
 from django.db import DatabaseError
 from django.db.models import F, Max, Min, Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 
 from taksonomi.models import Ilce, Kategori
@@ -29,7 +32,8 @@ from .templatetags.site_etiket import baslikla
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 
 from .arama_metni import sorgu_coz
-from .canli import anasayfa_verisi
+from .canli import anasayfa_verisi, oku
+from . import eczane as eczane_sayfa
 from .models import Haber, ResmiIlan
 
 # Manşet slaydındaki sayfa sayısı. §35'te 15'ten 5'e inmişti; 30 Ağustos
@@ -64,7 +68,13 @@ BURSASPOR = 6
 # (takım adları artık sarmıyor) tablo 865 px'e KISALDI ve bu kez sağ sütun
 # 100 px uzun kaldı. Denge satır sayısıyla kuruluyor; satır 41 px, iki satır
 # eksilince fark -18 px'e iniyor (ölçüldü).
-BURSASPOR_LISTE = 7
+#
+# 31 Ağustos 2026, kullanıcı isteği: liste DÖRT satıra indi. Sayı artık
+# sütun dengesinden değil karardan geliyor; denge yine de ölçüldü ve
+# işareti değişti — 7 satırda sağ sütun 56 px UZUNDU (794 / 850), 4 satırda
+# ~67 px KISA kalıyor. Büyüklük aynı sınıfta, o yüzden yerleşim düzeltmesi
+# yapılmadı; sayı bir daha oynatılırsa fark yeniden ölçülmeli.
+BURSASPOR_LISTE = 4
 SAYFA_BOYU = 20
 # Resmî ilan DİZİNİNİN sayfa boyu — haber listelerinden ayrı.
 #
@@ -260,8 +270,124 @@ def ilce(request, slug):
     })
 
 
+def nobetci_eczane(request, slug=""):
+    """Kalıcı nöbetçi eczane sayfası — Bursa geneli ve 17 ilçe.
+
+    31 Ağustos 2026, kullanıcı isteği. Nöbet listesi anasayfa panelinde
+    zaten duruyordu ama **kendi adresi yoktu**; "bursa nöbetçi eczane" ya
+    da "osmangazi nöbetçi eczane" arayan okurun ineceği bir sayfa
+    bulunmuyordu.
+
+    Adres kalıcıdır ve her gün kendini tazeler. Günlük haber kaydı ayrı
+    iştir (`eczane_haberi` komutu) ve tarihli sorguları karşılar; gerekçe
+    ayrımı `icerik/eczane.py` başında yazılı.
+
+    **Veri yoksa da 200 döner.** Adres arama motoruna kayıtlı; çekme
+    betiği bir tur kaçırdı diye 404 vermek sayfayı dizinden düşürür.
+    Bilinmeyen ilçe slug'ı ise gerçekten yoktur, 404'tür.
+    """
+    if slug and not Ilce.objects.filter(slug=slug).exists():
+        raise Http404("İlçe yok")
+    baglam = eczane_sayfa.sayfa_baglami(slug)
+    baglam["yapisal_veri"] = json.dumps(
+        eczane_sayfa.yapisal_veri(baglam), ensure_ascii=False)
+    return render(request, "nobetci_eczane.html", baglam)
+
+
 def ilceler(request):
     return render(request, "ilceler.html", {"baslik": "İlçeler"})
+
+
+# Anasayfa panellerinin altındaki dokuz "Veri kaynağı ve kapsam" notu
+# 31 Ağustos 2026'da bu sayfaya taşındı — §34 K7'de "yeniden açılacaksa
+# kullanıcı kararı" diye bırakılan maddenin kararı geldi. Notlar bağlam
+# değişkenlerine bağlıydı (arşiv adetleri, ilan dağılımı, puan tazeliği);
+# o yüzden sayfa statik bir metin değil, aynı sayıları kendi görünümünden
+# okuyan bir görünümdür. Beyan yerinden kalktı ama veriden kopmadı.
+
+# Canlı veri kalemleri ve `canli-veri/veri/` altındaki dosya adları.
+# Sıra sayfadaki sıradır; künye bilgisi dosyanın kendi `kaynak` bloğundan
+# gelir, buraya İKİNCİ bir kopya yazılmaz — kaynak değişince sayfa da
+# değişsin diye.
+CANLI_KALEMLER = [
+    ("Döviz kurları", "doviz"),
+    ("Gram altın ve BIST 100", "piyasa"),
+    ("Hava durumu", "hava-durumu"),
+    ("Namaz vakitleri", "namaz-vakitleri"),
+    ("Nöbetçi eczane", "nobetci-eczane"),
+    ("Puan durumu", "puan-durumu"),
+    ("Vizyon takvimi", "vizyon-takvimi"),
+]
+
+
+def _baglar(metin):
+    """Kaynak alanındaki GEÇERLİ adresleri ayıklar.
+
+    Alan çoğu kalemde tek adres taşıyor ama hepsinde değil: vizyon takvimi
+    iki dağıtımcıdan besleniyor ve `adres` iki adresi ayraçla tutuyor,
+    `kosullar` ise kimi kalemde adres değil düz cümle. Alanı olduğu gibi
+    `href`e koymak ikisinde de kırık bağlantı üretir — bu yüzden alan
+    boşluklara bölünüp yalnız `http` ile başlayan parçalar alınıyor.
+    """
+    return [p for p in (metin or "").split() if p.startswith("http")]
+
+
+def _alan_adi(adres):
+    """Bağlantı metni: "https://www.tff.org/" -> "tff.org"."""
+    return urlsplit(adres).netloc.removeprefix("www.") or adres
+
+
+def _canli_kunyeler():
+    """Canlı veri kalemlerinin kaynak künyesi, tazelik damgasıyla.
+
+    `piyasa` kaynağını **liste** olarak taşır (sırayla denenen uçlar);
+    diğerleri tek sözlük. İkisi de aynı biçime indiriliyor ki şablon tek
+    döngüyle bassın. Dosya okunamazsa kalem listeden düşmez, "bağlı değil"
+    olarak durur — sessizce kaybolması beyanı eksiltirdi.
+    """
+    kalemler = []
+    for ad, bilesen in CANLI_KALEMLER:
+        veri = oku(bilesen) or {}
+        kaynak = veri.get("kaynak")
+        if isinstance(kaynak, dict):
+            ham = [kaynak]
+        elif isinstance(kaynak, list):
+            ham = [k for k in kaynak if isinstance(k, dict)]
+        else:
+            ham = []
+        kaynaklar = []
+        for k in ham:
+            adresler = _baglar(k.get("adres"))
+            kaynaklar.append({
+                "ad": k.get("ad") or k.get("kisa") or "",
+                # Tek adres varsa ad'ın kendisi bağlantı olur; birden çok
+                # adres varsa ad düz metin kalır ve adresler alan adlarıyla
+                # ayrı ayrı basılır.
+                "tek_bag": adresler[0] if len(adresler) == 1 else "",
+                "baglar": [{"adres": a, "alan": _alan_adi(a)}
+                           for a in adresler] if len(adresler) > 1 else [],
+                "kosullar": next(iter(_baglar(k.get("kosullar"))), ""),
+            })
+        kalemler.append({
+            "ad": ad,
+            "kaynaklar": kaynaklar,
+            "guncelleme": veri.get("guncelleme"),
+            "bayat": veri.get("bayat"),
+        })
+    return kalemler
+
+
+def veri_kaynaklari(request):
+    ilanlar = ResmiIlan.yayimlananlar()
+    return render(request, "veri_kaynaklari.html", {
+        "baslik": "Veri kaynakları ve kapsam",
+        "canli_kalemler": _canli_kunyeler(),
+        "ilan_toplami": ilanlar.count(),
+        "ilan_tur_toplami": ResmiIlan.tur_dagilimi(ilanlar),
+        "puan": oku("puan-durumu"),
+        "vizyon": oku("vizyon-takvimi"),
+        **arsiv_sayilari(),
+    })
 
 
 # Arşiv taraması yalnız "haber" ailesini aldı; köşe yazısı, foto galeri,

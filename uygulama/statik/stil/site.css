@@ -73,15 +73,80 @@
      tartışma konusu olmamalı; renk yalnız "hangi saat nasıl" ipucu. */
   --hv-ak-gunes:#FFF7E8; --hv-ak-bulut:#F1F4F8; --hv-ak-yagis:#E9F2FA;
   --hv-ak-kar:#F1F8FC; --hv-ak-gece:#ECF0F8;
-  /* Manzaranın üstündeki büyük simge açık gökyüzünde eriyordu. */
-  --hv-ikon-golge:0 2px 7px rgba(6,14,28,.42);
-  /* Hava bloğunun karartması. --gradyan FOTOĞRAF için ayarlıydı ve %20'den
-     itibaren bastırıyordu; gökyüzünün rengi bu panelde bilgi taşıdığı için
-     üst yarı neredeyse açık bırakıldı, karartma yazının oturduğu alt yarıda
-     toplandı. Ölçüm: en aydınlık palette (m-gunes) yazı hizasında beyaz
-     7,26:1, ikincil satır (--ak-yazi) 5,66:1 — ikisi de AA üstü. */
-  --hv-perde:linear-gradient(180deg,rgba(6,14,28,0) 0%,rgba(6,14,28,.10) 32%,
-             rgba(6,14,28,.52) 58%,rgba(6,14,28,.86) 100%);
+  /* Panelin KENDİ zemin ailesi (31 Ağustos 2026, kullanıcı isteği: "daha
+     dikkat çekici ve iç açıcı"). Panel o güne kadar beyaz kâğıt üstünde
+     duran çizgili bir tabloydu; şehir servisleri satırında namaz ve eczane
+     panelleriyle aynı zemini paylaşınca üçü de aynı ağırlıkta okunuyordu.
+     Hava paneli artık kendi GÖKYÜZÜ zeminini taşıyor: üstte açık mavi,
+     aşağı inerken kâğıda dönen dikey geçiş. Aile mevcut --hv-* mavileriyle
+     akraba (#2C79B8 · #4F9BD1 · #8FBBD9); sayfaya yeni bir renk ailesi
+     sokulmadı, yalnız bu panel kendi tonuna çekildi.
+
+     Bunlar ZEMİN renkleridir; üstlerindeki yazı --lacivert ve --gri kalır.
+     ÖLÇÜLDÜ (31 Ağustos, başsız Chrome; panelin açık bölmelerindeki on üç
+     yazı öğesi sekiz genişlikte, her satırın kutusundaki EN KOYU piksele
+     karşı — 99 ölçüm, hiçbiri AA'nın altında değil). En dar hâl, gradyanın
+     dibindeki damga şeridi:
+       --gri      #606A75 / #E3EEF8   4,68:1  (AA metin eşiği 4,5)
+       --lacivert #1B2A6B / #E3EEF8  11,23:1
+     --hv-zemin-alt'ı koyulaştırırsan --gri'yi YENİDEN ölç: eşiğe yalnız
+     0,18 uzakta duruyor. */
+  --hv-zemin-ust:#F4FAFF; --hv-zemin-alt:#E3EEF8;
+  --hv-panel-zemin:linear-gradient(180deg,var(--hv-zemin-ust) 0%,
+                   var(--hv-zemin-alt) 100%);
+  /* Panelin iç çizgileri --cizgi'nin (#DFE3E8) nötr grisi değil, zeminle
+     aynı aileden mavi bir gri. Nötr gri mavi zeminin üstünde kirli
+     duruyordu. */
+  --hv-panel-cizgi:#C6DCEE; --hv-olcum-zemin:#EDF6FD;
+  /* Manzaranın üstündeki büyük simge açık gökyüzünde eriyordu; fotoğraf
+     sütunu 31 Ağustos 2026'da genişleyince simgenin arkasındaki gökyüzü de
+     büyüdü ve tek katlı yumuşak gölge yetmez oldu. En kötü hâl "çok
+     bulutlu": bulut baştan aşağı --hv-bulut (#8CA0B6) ve açık gökyüzüne
+     çok yakın, gölgesiz neredeyse görünmüyor.
+
+     Değişken artık gölge DEĞİL, tam bir `filter` zinciri tutuyor — adı da
+     bu yüzden --hv-ikon-suzgec. Sebebi CSS: `drop-shadow()` box-shadow
+     gibi virgüllü liste ALMAZ, `drop-shadow(a, b)` yazınca kural
+     tamamen geçersiz oluyor ve simge hiç gölge almıyor (bir tur bu hatayla
+     geçti). Çok katlı gölge ancak zincirlenmiş drop-shadow ile olur.
+
+     Üç kat: sıfır bulanıklıklı dar kat simgenin kenarına kontur etkisi
+     verir (çizgi eklemeden), orta kat onu yumuşatır, geniş kat simgeyi
+     gökyüzünden ayırır. */
+  --hv-ikon-suzgec:drop-shadow(0 0 1px rgba(6,14,28,.85))
+                   drop-shadow(0 0 4px rgba(6,14,28,.55))
+                   drop-shadow(0 3px 10px rgba(6,14,28,.45));
+  /* Hava bloğunun karartması. Üst yarı açık bırakılıp karartma yazının
+     oturduğu alt bantta toplanıyor: arkadaki manzara (31 Ağustos 2026'dan
+     beri Uludağ fotoğrafı) görünsün, ama derece ve hâl satırı hep koyu
+     zemine bassın.
+
+     Duraklar aynı gün fotoğraf sütunu genişleyince YENİDEN kondu.
+     Sütun 214 px'ten 330 px'e çıkınca kutu boyu da 230'dan ~410 px'e
+     yükseldi ve eski duraklar (%30'da .16, %56'da .60) bu boyda kutunun
+     alt YARISINI komple karartıyordu: panel "iç açıcı" değil, sol
+     kenarında siyah bir blok taşıyan bir tabloya dönmüştü. Karartma artık
+     %38'e kadar neredeyse yok, %57'de üçte bir, asıl ağırlığı %78'den
+     sonra alıyor — yani yazının GERÇEKTEN durduğu bantta (ölçüldü: derece
+     satırı kutunun %70'inde başlıyor, "En düşük" satırı %95'inde bitiyor).
+     Yukarısında dağ açık kalıyor.
+
+     Ölçüm için `.hava-simdi` bloğunun başındaki nota bak. */
+  --hv-perde:linear-gradient(180deg,rgba(6,14,28,0) 0%,rgba(6,14,28,.05) 38%,
+             rgba(6,14,28,.32) 57%,rgba(6,14,28,.78) 78%,rgba(6,14,28,.94) 100%);
+  /* Namaz panelinin fotoğraf şeridi (31 Ağustos 2026). Perde ALTTAN
+     yukarı koyulaşır — hava panelinin tersi: orada yazı bloğu bütün
+     kutuyu kaplar, burada tek satırlık "şimdi" şeridi dipte duruyor,
+     minarenin şerefesi ve gökyüzü açıkta kalmalı.
+
+     Kontrast fotoğrafın EN AÇIK yerine göre hesaplandı (beyaz minare
+     gövdesi, en kötü hâl): "şimdi" şeridindeki beyaz yazı %88'lik dipte
+     14,24:1. Künye kutusu ilk denemede %42 saydamdı ve aynı beyaz gövde
+     üstünde 2,83:1'e düşüyordu — AA'nın altı; %72'ye koyulaştırıldı,
+     ölçüm 7,93:1. Gökyüzünde ikisi de daha yüksek (17,29 ve 14,06). */
+  --vk-perde:linear-gradient(0deg,rgba(6,14,28,.88) 0%,rgba(6,14,28,.45) 42%,
+             rgba(6,14,28,0) 74%);
+  --foto-hak-zemin:rgba(6,14,28,.72);
   /* SON DAKİKA sahası (30 Ağustos 2026, §38). Panel beyaz kutudan çıkıp
      kendi kırmızı zeminine alındı; ölçülen kontrastlar:
        beyaz yazı --sd-zemin (#B8161E) üstünde  6,62:1
@@ -94,7 +159,21 @@
   --sd-cizgi:rgba(255,255,255,.22); --sd-bas-cizgi:rgba(255,255,255,.34);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--zemin);color:var(--murekkep);font-family:var(--govde);font-size:15px;line-height:1.45}
+/* Künye SAYFANIN dibine değil EKRANIN dibine oturur (31 Ağustos 2026).
+   Kısa sayfalarda — İlçeler, sonuçsuz arama, 404 — lacivert künye
+   bitiyor, altında sayfa zemininin grisi ekranın dibine kadar uzuyordu
+   (1512x1600 ölçümünde /ilceler'de 289 px, 404'te 159 px boş şerit).
+   Uzun sayfada bu kural HİÇBİR ŞEY değiştirmez: `.sayfa` zaten büyüyor.
+
+   Sarmalayıcı EKLENMEDİ, `<body>`nin kendisi sütun oldu: taban.html'de
+   kategori bandı doğrudan `<body>` altında duruyor ve `position:sticky`
+   ebeveyni değişirse ölüyor (şablondaki nota bak). Esnek kutuda sticky
+   çalışmaya devam ediyor — ölçüldü, bant kaydırmada 44 px'te duruyor. */
+body{background:var(--zemin);color:var(--murekkep);font-family:var(--govde);font-size:15px;line-height:1.45;
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+/* Boşluğu YUTAN öğe orta sütun: künye ve üstündeki bantlar kendi
+   boylarında kalır, artan yer sayfa gövdesine gider. */
+.sayfa{flex:1 0 auto}
 a{color:inherit;text-decoration:none}
 /* `summary` de listede: menü bölümleri <details> ile katlanıyor ve
    katlanır başlıklar klavyeyle geziliyor. Listede olmasaydı tarayıcının
@@ -113,6 +192,20 @@ img{max-width:100%}
 main{scroll-margin-top:62px}
 main:focus-visible{outline:3px solid var(--kirmizi);outline-offset:-3px}
 .foto{position:relative;overflow:hidden;background:var(--foto-bekleme)}
+/* Kart görselleri 31 Ağustos 2026'da tıklanabilir oldu (kullanıcı isteği).
+   İki biçim var, ikisi de aynı işi görüyor:
+     `a.foto`    — haber kartı ve slaytta `.foto`nun İÇİNDE görselden başka
+                   şey yok, kutunun kendisi bağlantı.
+     `.foto-bag` — galeri ve video kartında `.foto` bir de rozet/oynat
+                   işareti taşıyor; bağlantı yalnız görseli sarmalıyor,
+                   rozet dışarıda kalıp ekran okuyucuda görünmeye devam
+                   ediyor.
+   İkisinde de `display:block` ŞART: bağlantı satır içi kalırsa `.foto`ya
+   verilen yükseklikler (150 px, .slayt'ta %100 …) hiç uygulanmaz.
+   Bu bağlantılar klavyeye kapalıdır (`tabindex="-1"`), o yüzden ayrı bir
+   odak biçimi yok — odak başlıktaki bağlantıya gider. */
+a.foto,.foto-bag{display:block}
+.foto-bag{width:100%;height:100%}
 .foto img{width:100%;height:100%;object-fit:cover;display:block}
 /* görselsiz haberde boş foto kutusu koyu blok bırakmasın */
 .foto:empty{display:none}
@@ -152,11 +245,37 @@ main:focus-visible{outline:3px solid var(--kirmizi);outline-offset:-3px}
 .yan-reklam .reklam{height:600px;margin-bottom:14px}
 
 /* --- reklam yuvaları --- */
-.reklam{background:var(--reklam-zemin);border:1px dashed var(--reklam-cizgi);color:var(--reklam-yazi);text-align:center;font-size:12px;letter-spacing:1px;padding:22px 8px;font-family:var(--display);display:grid;place-items:center;margin-bottom:14px}
+.reklam{grid-template-columns:minmax(0,1fr);background:var(--reklam-zemin);border:1px dashed var(--reklam-cizgi);color:var(--reklam-yazi);text-align:center;font-size:12px;letter-spacing:1px;padding:22px 8px;font-family:var(--display);display:grid;place-items:center;margin-bottom:14px}
 .reklam b{display:block;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:2.2px}
 .reklam .olcu{display:block;font-size:11px;letter-spacing:.6px;margin-top:5px}
-.reklam.tam{height:150px;padding:0}
+.reklam.tam{height:250px;padding:0}
 .reklam.kare-300{height:250px;padding:0}
+/* Yer tutucu ile reklam AYNI izgara hucresinde: reklam gelene kadar gri
+   pano gorunur, geldiginde pano gizlenir ve kutu yerinden OYNAMAZ. Ust
+   ust binmeleri `place-items:center` ortaliyor. */
+.reklam>span,.reklam>.gpt-yuva{grid-area:1/1}
+/* Son emniyet agi: yuvasina sigmayan bir yaratici SAYFAYI tasirmasin.
+   Asil cozum `data-gpt-harita` (dogru olcuyu dogru ekrana verir);
+   bu kural yalnizca oradaki bir hata sayfanin tamamini yatay
+   kaydirilir hale getirmesin diye var. */
+.reklam{overflow:hidden}
+.reklam[data-gpt-durum="dolu"]{background:none;border:0}
+.reklam[data-gpt-durum="dolu"]>span{display:none}
+
+/* Örnek yaratıcı — YALNIZ demo bayrağı açıkken basılır (taban.html).
+   970x250 billboard formatının ayak izini gerçek ölçüsünde gösterir;
+   reklam değil, maket. Aynı ızgara hücresinde durduğu için gri yer
+   tutucuyu örter ve kutu yerinden oynamaz. Dar ekranda küçülür:
+   `max-width` olmadan 970 px'lik blok sayfayı taşırırdı. */
+.reklam .ornek-yaratici{display:none}
+@media(min-width:1001px){
+  .reklam .ornek-yaratici{width:970px;max-width:100%;height:250px;
+    max-height:100%;background:var(--zemin);border:2px solid var(--lacivert);
+    color:var(--lacivert);display:grid;place-items:center;align-content:center}
+  .reklam .ornek-yaratici b{font-size:15px;letter-spacing:2.6px}
+  .reklam .ornek-yaratici .olcu{color:var(--gri)}
+  .reklam:has(>.ornek-yaratici)>span:first-child{display:none}
+}
 
 /* --- bant logosu --- */
 /* Logo artik bandin icinde; kendi 93 px'lik serit kalkti (29 Agustos 2026).
@@ -187,7 +306,24 @@ main:focus-visible{outline:3px solid var(--kirmizi);outline-offset:-3px}
    2) BUYUME. Yazi 13,5 -> 15 px, dikey dolgu 11 -> 14 px. Bant yuksekligi
       40 px'ten ~50 px'e cikiyor ve logo 36 px'e sigiyor. */
 .kategori{background:var(--lacivert);position:sticky;top:0;z-index:40;box-shadow:0 2px 6px var(--bant-golge)}
-.kategori-ic{display:flex;align-items:stretch;flex-wrap:wrap}
+/* 31 Agustos 2026, kullanici istegi: "bandin kendisi ekrani kaplamaya
+   devam etsin ama icerikleri biraz daha daralt". §36'da ic kutuya
+   BILEREK genislik kapagi konmamisti (bant "tam ekrani kaplamiyor"
+   goruntusu vermesin diye); istek onun tersini soyluyor ve zemin zaten
+   `.kategori` uzerinde, yani tam ekran KALIYOR.
+
+   Olcu 1480: sitenin kendi rayi. Ustteki servis seridi (`.servis-ic`),
+   asagidaki sayfa izgarasi (`.sayfa`) ve kunye (`.kunye-ic`) hep bu
+   olcude. Bant tek basina kenardan kenara gidiyordu, yani genis ekranda
+   servis seridiyle HIZASIZDI (§36 notunun kendisi bu hizasizligi eski
+   duzenin kusuru olarak yaziyor) — kapak ikisini ayni raya oturtuyor.
+
+   Daha dar yapilmamasinin sebebi olculu: bandin tek satirda kalma
+   butcesi ~1350 px (logo 155 + 10 kalem 863 + arama 220 + MENU 88) ve
+   arama kutusunu simgeye indiren `@media` GORUNTU genisligine bakiyor,
+   ic kutuya degil. Kapak 1360'in altina inerse 1600 px'lik ekranda
+   medya kurali devreye girmez ve bant ikinci satira duser. */
+.kategori-ic{display:flex;align-items:stretch;flex-wrap:wrap;max-width:1480px;margin:0 auto;width:100%}
 .kategori-liste{display:flex;flex:1 1 auto;min-width:0;align-items:stretch}
 .kategori-liste a{flex:1 1 auto;justify-content:center;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.3px;color:var(--kagit);padding:14px 13px;white-space:nowrap;border-right:1px solid var(--menu-cizgi);display:flex;align-items:center}
 .kategori-liste a:hover,.kategori-liste a[aria-current="page"]{background:var(--kirmizi)}
@@ -270,6 +406,7 @@ main:focus-visible{outline:3px solid var(--kirmizi);outline-offset:-3px}
    `.tam-menu-ic{` arasında yalnız boşluk bekliyor. */
 @media(min-width:1001px){
   .tam-menu-ic{display:grid;padding:18px 20px 8px;gap:0 24px;
+    max-width:1480px;margin:0 auto;
     grid-template-columns:1.3fr .9fr 1.5fr .9fr .9fr}
   .menu-bolum{border-bottom:0;border-left:1px solid var(--cizgi);padding-left:16px}
   .menu-bolum:first-child{border-left:0;padding-left:0}
@@ -370,6 +507,19 @@ main{display:block;padding-top:14px}
 .mini-slayt .slayt-pencere{height:214px}
 .mini-slayt .slayt h3{font-size:26px;line-height:1.12}
 .mini-slayt .slayt .yazi{padding:12px 14px}
+/* Yazı bloğu tıklamayı GEÇİRİYOR, bağlantıları geçirmiyor (31 Ağustos 2026).
+   Görsel bağlantısı geldiğinde ölçüldü: mini slaytta fotoğraf 150 px, yazı
+   bloğu 11. pikselden sonra başlıyor — yani kapağın %93'ü yazının altında
+   kalıyor ve tıklama oraya hiç varmıyordu. Büyük manşette bu sorun YOK
+   (392 px'lik fotoğrafın yalnız alt bandını kaplıyor), o yüzden kural
+   yalnız `.mini-slayt` için.
+
+   Bedeli: mini slayttaki başlık fareyle SEÇİLEMEZ olur. Burada kabul
+   edilebilir — blokta yalnız kategori rozeti ve başlık var, spot yok;
+   büyük manşetin seçilebilir spot paragrafı ise etkilenmiyor. Kuralı
+   `.manset-slayt`a genişletirsen orada metin seçimini kaybedersin. */
+.mini-slayt .slayt .yazi{pointer-events:none}
+.mini-slayt .slayt .yazi a{pointer-events:auto}
 .mini-slayt .rozet-k{font-size:11px;margin-bottom:6px;padding:2px 7px}
 /* Mini slaytta ok yok (29 Ağustos 2026): 320 px'lik sütunun %20'sini iki ok
    yiyordu. Gezinme numaralı düğmelerle ve ok tuşlarıyla sürüyor. */
@@ -458,22 +608,88 @@ main{display:block;padding-top:14px}
    şerit, beş günlük çubuk listesi, ölçüm kutucukları.
 
    Bölmeler arası boşluk yerine ÇİZGİ var: gazete sayfasının tablo
-   mantığı bu, kutucuklar arası hava panelin bütünlüğünü dağıtıyordu. */
-.hava-panel{display:grid;grid-template-columns:minmax(178px,214px) minmax(0,1fr);
+   mantığı bu, kutucuklar arası hava panelin bütünlüğünü dağıtıyordu.
+
+   31 Ağustos 2026, kullanıcı isteği — İKİ değişiklik:
+     1. Fotoğraf sütunu 178-214 px'ten 262-330 px'e çıktı. Eski ölçü
+        panelin altıda birinden azdı; manzara "kenardaki dikey şerit"
+        gibi duruyordu, fotoğrafın ne olduğu ancak yakından anlaşılıyordu.
+        Yeni ölçüde 1120 px'lik kapta sütun ~330 px, yani panelin yaklaşık
+        üçte biri. Sağdaki saatlik şerit hâlâ altı hücreyi 66 px'lik asgari
+        genişlikte alıyor (330 + 6x66 + boşluk < 1120), yani genişleme
+        saatlik şeridi sıkıştırmıyor.
+     2. Panelin zemini beyaz kâğıttan kendi gökyüzü geçişine döndü
+        (--hv-panel-zemin), iç çizgiler nötr griden mavi griye
+        (--hv-panel-cizgi). Gerekçe --hv-zemin-ust'ün başındaki notta. */
+.hava-panel{display:grid;grid-template-columns:minmax(262px,330px) minmax(0,1fr);
   grid-template-areas:"simdi saatlik" "simdi gunler" "olcum olcum" "damga damga";
-  border:1px solid var(--cizgi);background:var(--kagit)}
+  border:1px solid var(--hv-panel-cizgi);background:var(--hv-panel-zemin)}
 
-/* Anlık blok: arkasında Uludağ çizimi, önünde karartma perdesi. Yazı
-   bloğu ALTTA duruyor çünkü perde orada koyulaşıyor; üstteki aydınlık
-   gökyüzünde yalnız simge var.
+/* Anlık blok — ÜÇ KATLI (31 Ağustos 2026'da çizim fotoğrafla değişti):
+     0. `.hava-foto`  — Uludağ, karlı zirve ve açık gökyüzü
+                        (gorseller/genis/uludag.jpg)
+     1. `::before`    — havanın rengini taşıyan TON perdesi (--hv-ton)
+     1. `::after`     — yazıyı taşıyan karartma perdesi (--hv-perde)
+     2. `.hava-simdi-ic` — yazı
+   Yazı bloğu ALTTA duruyor çünkü karartma orada koyulaşıyor; üstteki
+   aydınlık gökyüzünde yalnız simge var.
 
-   Ölçüldü (30 Ağustos, başsız Chrome + piksel örneklemesi): yazının
-   arkasındaki EN AÇIK zemin geniş ekranda #48657A — beyaz 6,14:1,
-   --ak-yazi 4,79:1; dar ekranda en kötü 8,88:1. Hepsi AA üstü. */
+   Ölçüldü (31 Ağustos, Uludağ fotoğrafıyla yeniden; başsız Chrome + piksel
+   örneklemesi; yazı katmanı gizlenip zemin çekildi, her satırın kutusundaki
+   EN AÇIK piksel alındı; 5 palet x 8 genişlik x 5 satır = 200 ölçüm).
+   En dar iki yer:
+     .derece (58 px, beyaz)   1100 px, m-gunes #5C6771 →  5,78:1 (eşik 3)
+     .foto-hak (9,5 px, beyaz) 900 px, m-gunes #34475B →  9,55:1 (eşik 4,5)
+   İki yüz ölçümün hiçbiri AA'nın altında değil; `.hal`, `.hissedilen` ve
+   `.uc-nokta` satırlarının hepsi 10,8'in üstünde.
+
+   ÜÇ TUZAK — üçü de bu ölçümde yaşandı ve ÜÇÜ DE sessizce yanlış sayı
+   üretti, yani ölçüm "geçti" derken aslında hiçbir şey ölçülmüyordu:
+     1. Panel sayfanın aşağısında ve fotoğraf `fetchpriority="low"`.
+        Ölçmeden önce `scrollIntoView` + `img.complete` beklemezsen
+        fotoğraf HENÜZ boyanmamış olur; ölçüm fotoğrafı değil
+        `.hava-simdi`nin --gece yedek zeminini ölçer.
+     2. `Page.captureScreenshot`ta `captureBeyondViewport` AÇIK olmamalı.
+        Açıkken Chrome sayfayı yeniden düzenliyor ve fotoğraf katmanı
+        BEYAZ çıkıyor; bütün satırlar 1,1:1 ölçülüyor. `clip` yine de
+        SAYFA koordinatı ister (scrollX/scrollY eklenmiş hâli) ve kutu o
+        an görüntünün İÇİNDE olmalı — dışarıdaysa sayfa zemini (#EEF1F4)
+        çıkıyor. Doğrusu: her öğeyi tek tek `scrollIntoView` ile ortala,
+        görüntüde olduğunu doğrula, `captureBeyondViewport` verme.
+     3. `.foto-hak` kutucuğunun köşeleri yuvarlak (border-radius:2px);
+        köşe pikselleri kutunun DIŞINDAKİ gökyüzünü gösteriyor ve künye
+        2,50:1 ölçülüyordu. Kutu 3 px içeri çekilip ölçülmeli.
+
+   Paleti, --hv-perde'yi ya da fotoğrafı değiştirirsen bu ölçümü YENİDEN
+   yap: fotoğraf çizimden çok daha alacalı, göz kararı tutmuyor. Ölçüm
+   betiği oturumluktu; yeniden yazılması gerekirse Chrome'u
+   --remote-debugging-port ile aç (websocket el sıkışması için
+   suppress_origin gerekir) ve yukarıdaki üç maddeyi uygula. */
 .hava-simdi{grid-area:simdi;position:relative;isolation:isolate;
-  background:var(--gece);color:var(--kagit);overflow:hidden;min-height:230px}
-.hava-manzara{position:absolute;inset:0;width:100%;height:100%;z-index:0}
-.hava-manzara.yatay{display:none}
+  background:var(--gece);color:var(--kagit);overflow:hidden;min-height:230px;
+  --hv-ton:transparent; --hv-foto-suzgec:none}
+/* Fotoğraf dikey kutuda yüksekliğe oturur, yanlardan kırpılır; kırpma
+   ortadan alınınca minare ve kubbeler kadrajda kalıyor. */
+/* Kadraj 31 Ağustos 2026'da Uludağ fotoğrafıyla yeniden kondu ve
+   TARAYICIDA ÖLÇÜLDÜ. Kaynak 1280x720; masaüstünde kutu ~310x410 oluyor,
+   yani `cover` ölçeği 0,569 ve fotoğrafın 729 px'lik genişliğinin 419'u
+   yanlardan kesiliyor — kesilen pay kadrajın yarısından fazla, o yüzden
+   `object-position` burada süs değil.
+
+   Yatayda %50 DENENDİ ve bırakıldı: zirve kaynağın x≈800'ünde duruyor,
+   %50 kadrajı x 208-518 arasına kilitliyor ve zirve tamamen dışarıda
+   kalıyordu — kutuda yalnız solda kalan kar yamacı görünüyordu. %66'da
+   kadraj x 487-1032 arasına kayıyor, zirve kutunun %57'sine düşüyor.
+   Dikeyde kırpma yok (410 px kutu, 410 px fotoğraf); %50 orada
+   etkisizdir, dar ekran değerleri aşağıdaki sorgularda. */
+.hava-foto{position:absolute;inset:0;width:100%;height:100%;z-index:0;
+  object-fit:cover;object-position:66% 50%;filter:var(--hv-foto-suzgec)}
+/* Ton perdesi: havanın rengi çizimdeyken gökyüzünde duruyordu, fotoğrafa
+   geçince o bilgi kaybolmasın diye fotoğrafın üstüne renk olarak biniyor.
+   Güneşte neredeyse şeffaf, yağışta soğuk, karda beyaza çalan, gecede
+   lacivert — palet sınıfları aşağıda. */
+.hava-simdi::before{content:"";position:absolute;inset:0;z-index:1;
+  background:var(--hv-ton)}
 .hava-simdi::after{content:"";position:absolute;inset:0;z-index:1;
   background:var(--hv-perde)}
 .hava-simdi-ic{position:relative;z-index:2;height:100%;padding:14px 14px 16px;
@@ -481,18 +697,32 @@ main{display:block;padding-top:14px}
   text-align:center;gap:10px;text-shadow:var(--yazi-golge-ince)}
 .hava-simdi-alt{display:flex;flex-direction:column;align-items:center;gap:2px}
 
-/* Manzara paletleri: aynı çizim, beş hava. --s1..--s5 sahne
-   kütüphanesinin sözleşmesi (`.t-mavi` ve kardeşleriyle aynı adlar);
-   --hv-yildiz, --hv-hilal, --hv-cizgi ve --hv-cisim çizimdeki dört
-   anahtarı açıp kapatır. */
-.hava-simdi.m-gunes{--s1:#5893C2;--s2:#9ED6F5;--s3:#35709B;--s4:#1E4A6E;--s5:#F9C63C}
-.hava-simdi.m-bulut{--s1:#75899E;--s2:#C3D2E0;--s3:#4A6076;--s4:#2F4152;--s5:#EAF0F6}
-.hava-simdi.m-yagis{--s1:#48607A;--s2:#7B95AC;--s3:#2C405A;--s4:#1B2A3C;--s5:#B2C3D2;
-  --hv-cizgi:.5}
-.hava-simdi.m-kar{--s1:#9DB4C6;--s2:#E1EDF6;--s3:#5D7284;--s4:#3D5060;--s5:#FFFFFF;
-  --hv-damla:#AFCADF;--hv-cizgi:.6}
-.hava-simdi.m-gece{--s1:#24406B;--s2:#16294A;--s3:#101F38;--s4:#0A1526;--s5:#E2EAF5;
-  --hv-yildiz:.85;--hv-hilal:1;--hv-cisim:.9}
+/* Manzara paletleri: aynı fotoğraf, beş hava. Çizim döneminde palet
+   gökyüzünü boyuyordu (--s1..--s5); fotoğrafta iki kolla çalışıyor:
+     --hv-ton         fotoğrafın üstüne binen renk perdesi
+     --hv-foto-suzgec fotoğrafın kendi doygunluğu/parlaklığı
+   Güneşte fotoğraf neredeyse olduğu gibi duruyor, bulutta rengi
+   çekiliyor, yağışta soğuyup kararıyor, karda beyaza kaçıyor, gecede
+   lacivert ve yarı karanlık. Aynı kadraj beş hava. */
+   Değerler 31 Ağustos 2026'da Uludağ fotoğrafıyla birlikte yeniden
+   kuruldu. En önemli fark `m-kar`: eski fotoğrafta (Ulu Cami) kar
+   perdesi kadrajı BEYAZA çekiyordu, çünkü kadrajda hiç kar yoktu.
+   Uludağ zaten karlı ve gökyüzü açık; aynı `brightness(1.06)` burada
+   zirveyi yakıyor, üstündeki beyaz yazıyı da götürüyordu. Kar paleti
+   artık AYDINLATMIYOR, soğutup bir tık karartıyor. */
+.hava-simdi.m-gunes{--hv-ton:linear-gradient(180deg,rgba(255,196,92,.20) 0%,
+  rgba(28,86,140,.12) 100%);--hv-foto-suzgec:saturate(1.14) contrast(1.05)}
+/* Bulut ve yağış filtreleri 31 Ağustos'ta bir tık AÇILDI: perde zaten
+   alt bandı karartıyor, filtre de üstteki dağı söndürünce kutu bütünüyle
+   gri bir blok oluyordu. */
+.hava-simdi.m-bulut{--hv-ton:rgba(96,116,138,.30);
+  --hv-foto-suzgec:saturate(.76) brightness(.99)}
+.hava-simdi.m-yagis{--hv-ton:rgba(38,62,92,.44);
+  --hv-foto-suzgec:saturate(.62) brightness(.86)}
+.hava-simdi.m-kar{--hv-ton:linear-gradient(180deg,rgba(214,233,248,.40) 0%,
+  rgba(126,163,195,.40) 100%);--hv-foto-suzgec:saturate(.50) brightness(.94)}
+.hava-simdi.m-gece{--hv-ton:linear-gradient(180deg,rgba(16,34,64,.62) 0%,
+  rgba(8,18,34,.72) 100%);--hv-foto-suzgec:saturate(.55) brightness(.48)}
 
 .hava-simdi .derece{font-family:var(--display);font-weight:900;font-size:58px;
   line-height:.94;letter-spacing:-2px;font-variant-numeric:tabular-nums}
@@ -506,16 +736,29 @@ main{display:block;padding-top:14px}
   font-variant-numeric:tabular-nums}
 
 .hava-ikon{width:26px;height:26px;flex:0 0 auto}
-.hava-ikon.buyuk{width:54px;height:54px;filter:drop-shadow(var(--hv-ikon-golge))}
+/* Geniş yerleşimde simge 54'ten 64 px'e çıktı: sütun 214'ten 330 px'e
+   genişleyince eski ölçü kutunun üst yarısında küçük kalıyordu. Dar
+   ekranda 50 px'e iniyor, o kural aşağıdaki sorguda. */
+.hava-ikon.buyuk{width:64px;height:64px;filter:var(--hv-ikon-suzgec)}
 
 .hava-panel h4{font-family:var(--display);font-size:10.5px;letter-spacing:1.3px;
   color:var(--gri);font-weight:700;margin-bottom:7px}
 .hava-panel ol{list-style:none}
 
 /* Saatlik şerit: dar ekranda yatay kayar, sayfa gövdesi kaymaz. */
-.hava-saatlik{grid-area:saatlik;padding:12px 14px 13px;border-bottom:1px solid var(--cizgi)}
-.hava-saatlik ol{display:flex;gap:1px;background:var(--cizgi);overflow-x:auto;
-  border:1px solid var(--cizgi)}
+.hava-saatlik{grid-area:saatlik;padding:12px 14px 13px;
+  border-bottom:1px solid var(--hv-panel-cizgi)}
+/* `position:relative` SÜS DEĞİL, taşmayı kesen şey (31 Ağustos 2026).
+   Her satırda ekran okuyucu için bir `.gorsel-gizli` var ve o sınıf
+   `position:absolute`. Kaydırma kutusu yalnız KENDİ kapsayıcı bloğu
+   olduğu öğeleri kırpar; `ol` konumlandırılmamışken o gizli kutucukların
+   kapsayıcı bloğu ağacın çok yukarısı oluyor, `overflow-x:auto` onları
+   kırpmıyordu. Beşinci satırın gizli kutucuğu 354 px'e düşüyor, sayfa da
+   320 px ekranda 354 px genişliyordu: sağda 34 px'lik, içinde hiçbir şey
+   olmayan bir şerit — künyenin lacivertinin bittiği yerde görünüyordu.
+   Ölçüldü: 320 px'te belge genişliği 354 → 320. Bunu kaldırma. */
+.hava-saatlik ol{display:flex;gap:1px;background:var(--hv-panel-cizgi);overflow-x:auto;
+  position:relative;border:1px solid var(--hv-panel-cizgi)}
 .hava-saatlik li{flex:1 0 66px;background:var(--kagit);display:flex;
   flex-direction:column;align-items:center;gap:3px;padding:6px 4px 7px;
   border-top:3px solid var(--hv-bulut)}
@@ -538,7 +781,7 @@ main{display:block;padding-top:14px}
 .hava-gunler{grid-area:gunler;padding:12px 14px 13px}
 .hava-gunler li{display:grid;
   grid-template-columns:60px 22px minmax(0,1fr) 30px minmax(64px,1.15fr) 30px;
-  align-items:center;gap:9px;padding:6px 0;border-top:1px solid var(--cizgi)}
+  align-items:center;gap:9px;padding:6px 0;border-top:1px solid var(--hv-panel-cizgi)}
 .hava-gunler li:first-child{border-top:0}
 .hava-gunler .gun{display:flex;flex-direction:column;line-height:1.2}
 .hava-gunler .gun time{font-family:var(--display);font-weight:700;font-size:12.5px;
@@ -557,8 +800,10 @@ main{display:block;padding-top:14px}
   font-size:13px;font-variant-numeric:tabular-nums}
 .hava-gunler .dusuk{color:var(--gri);text-align:right}
 .hava-gunler .yuksek{color:var(--lacivert)}
-.hava-gunler .cubuk{position:relative;height:6px;background:var(--yumusak);
-  border:1px solid var(--cizgi);border-radius:4px}
+/* Çubuğun yatağı BEYAZ: panelin zemini artık maviye çaldığı için eski
+   --yumusak yatak zeminden ayrışmıyor, çubuk "yarısı dolu" görünmüyordu. */
+.hava-gunler .cubuk{position:relative;height:6px;background:var(--kagit);
+  border:1px solid var(--hv-panel-cizgi);border-radius:4px}
 .hava-gunler .dolgu{position:absolute;top:-1px;bottom:-1px;border-radius:4px;
   background:linear-gradient(90deg,var(--hv-serin),var(--hv-ilik))}
 
@@ -566,8 +811,8 @@ main{display:block;padding-top:14px}
    sözlüğe girmediği için burada "veri yok" durumu çizilmez. */
 .hava-olcum{grid-area:olcum;display:grid;
   grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:1px;
-  background:var(--cizgi);border-top:1px solid var(--cizgi)}
-.hava-olcum>div{background:var(--yumusak);padding:8px 10px}
+  background:var(--hv-panel-cizgi);border-top:1px solid var(--hv-panel-cizgi)}
+.hava-olcum>div{background:var(--hv-olcum-zemin);padding:8px 10px}
 .hava-olcum dt{font-family:var(--display);font-size:10.5px;letter-spacing:1px;
   color:var(--gri);font-weight:700}
 /* Dar ekranda "kuzeydoğu" kutucuğun dışında kalıyordu (390 px ölçümü);
@@ -579,20 +824,33 @@ main{display:block;padding-top:14px}
   letter-spacing:.2px}
 
 .hava-damga{grid-area:damga;padding:7px 14px 8px;font-size:11.5px;color:var(--gri);
-  border-top:1px solid var(--cizgi)}
+  border-top:1px solid var(--hv-panel-cizgi)}
 .hava-damga.bayat{color:var(--kirmizi-koyu)}
 
 @media(max-width:880px){
   .hava-panel{grid-template-columns:minmax(0,1fr);
     grid-template-areas:"simdi" "saatlik" "gunler" "olcum" "damga"}
-  /* Dar ekranda blok yassılaşıyor: çizimin yatay eşi devreye girer ve
-     karartma da yön değiştirir — yazı SOLDA duruyor, gökyüzü sağda açık
-     kalsın diye perde soldan sağa açılıyor. */
+  /* Dar ekranda blok yassılaşıyor: karartma yön değiştirir — yazı SOLDA
+     duruyor, manzara sağda açık kalsın diye perde soldan sağa açılıyor.
+
+     Perde burada İKİ KATLI. Yatay kat panelin genel görüntüsünü
+     kurar; ALT kat, en alttaki "En düşük / En yüksek" satırı için
+     zorunlu: o satır sağa doğru uzuyor ve fotoğrafın aydınlık yamacına
+     denk gelince --ak-yazi 3,45:1'e düşüyordu (31 Ağustos ölçümü, kar
+     paleti). Tek katlı perdeyi koyulaştırmak fotoğrafı büsbütün
+     söndürüyordu; karartma bu yüzden yalnız yazının olduğu alt banda
+     eklendi. */
   .hava-simdi{min-height:150px;
-    --hv-perde:linear-gradient(90deg,rgba(6,14,28,.86) 0%,rgba(6,14,28,.72) 46%,
+    --hv-perde:linear-gradient(0deg,rgba(6,14,28,.62) 0%,rgba(6,14,28,.34) 38%,
+               rgba(6,14,28,0) 66%),
+               linear-gradient(90deg,rgba(6,14,28,.88) 0%,rgba(6,14,28,.72) 46%,
                rgba(6,14,28,.34) 76%,rgba(6,14,28,.10) 100%)}
-  .hava-manzara.dikey{display:none}
-  .hava-manzara.yatay{display:block}
+  /* Yassı kutuda `cover` yalnız yukarıdan/aşağıdan kırpıyor. Kadraj
+     %28'den alınıyor: gökyüzünün alt şeridi, zirve ve karlı sırt şeride
+     giriyor, altta kalan kayalık yamaç kesiliyor. (%24, Ulu Cami
+     döneminin minare değeriydi; dağda gökyüzünü gereğinden çok
+     büyütüyordu.) */
+  .hava-foto{object-position:50% 28%}
   .hava-simdi-ic{flex-direction:row;flex-wrap:wrap;align-items:center;gap:14px;
     justify-content:flex-start;text-align:left;padding:13px 14px}
   .hava-simdi-alt{align-items:flex-start}
@@ -601,14 +859,179 @@ main{display:block;padding-top:14px}
   .hava-gunler .hal{display:none}
 }
 
-.vakit{list-style:none;font-size:13.5px}
-.vakit li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dotted var(--cizgi)}
+/* Telefon: Ulu Cami döneminde burada bir YAKINLAŞTIRMA vardı
+   (`scale(1.55)`), çünkü 320 px'lik yassı kutuda caminin minaresi
+   perdenin en koyu ucuna düşüyor, sağda yalnız yamaç kalıyordu. Uludağ'da
+   böyle bir sorun yok: konu tek ve kadrajın tamamına yayılmış bir dağ
+   siluetiyken 320 px'te `cover` ölçeği 0,25'e iniyor ve fotoğraf dikeyde
+   neredeyse hiç kırpılmıyor (720'nin 600'ü kutuda). Yakınlaştırma bu
+   yüzden 31 Ağustos 2026'da KALDIRILDI — dağı büyütmek zirveyi kutunun
+   dışına atıyordu.
+
+   Perdenin alt katı ise duruyor: kutu bu genişlikte kısalıyor, yazı alt
+   bandın yukarısına çıkıyor ve 880 px'lik perde oraya yetişmiyordu
+   (320 px'te "En düşük / En yüksek" satırı 4,84:1'e inmişti). */
+@media(max-width:560px){
+  .hava-simdi{
+    --hv-perde:linear-gradient(0deg,rgba(6,14,28,.74) 0%,rgba(6,14,28,.46) 44%,
+               rgba(6,14,28,0) 74%),
+               linear-gradient(90deg,rgba(6,14,28,.88) 0%,rgba(6,14,28,.72) 46%,
+               rgba(6,14,28,.34) 76%,rgba(6,14,28,.10) 100%)}
+}
+
+/* --- namaz paneli: fotoğraf + büyük punto + esneyen liste -----------
+   31 Ağustos 2026, kullanıcı isteği. Panel eczane sütunu kadar geriliyor
+   (ölçüm: 530x601 kutunun 358 px'i boştu). Üstte fotoğraf şeridi, altta
+   ESNEK liste: satırlar artan yüksekliği paylaşır, boşluk kalmaz.
+   `min-height` dar ekran içindir — orada ızgara tek sütuna iner, gerilme
+   biter ve satırlar kendi ölçüsüne döner. */
+#panel-vakit{display:flex;flex-direction:column}
+.vakit-foto{position:relative;margin:0 0 10px;height:186px;overflow:hidden;
+  background:var(--lacivert);isolation:isolate}
+/* Kadraj fotoğrafla birlikte yeniden ölçüldü (31 Ağustos 2026). Kaynak
+   1280x852; yassı şeride girerken üstten ve alttan kırpılıyor. %38'de iki
+   minarenin külahı ve kubbeler şeridin içinde, ağaç bandı da alt perdenin
+   arkasında kalıyor. %70 (eski fotoğrafın değeri) burada kadrajı ağaçlara
+   indiriyor, cami çıkıyordu. */
+.vakit-foto img{position:absolute;inset:0;width:100%;height:100%;z-index:0;
+  object-fit:cover;object-position:50% 38%}
+/* Alttan yukarı koyulaşan perde: yazı okunur olsun, minarenin gövdesi ve
+   gökyüzü açıkta kalsın. */
+.vakit-foto::after{content:"";position:absolute;inset:0;z-index:1;
+  background:var(--vk-perde)}
+/* Künye fotoğrafın ÜSTÜNDE: görsel CC BY-SA 4.0 ve arayüz mobilyası
+   olduğu için altına künye satırı açılacak yer yok (KAYNAKLAR.md).
+   Lisans 31 Ağustos 2026'da fotoğrafla birlikte değişti (3.0 → 4.0,
+   Bernard Gagnon → Dosseman).
+
+   Sınıf aynı gün İKİ panelin ortak künyesi oldu: namaz şeridi ve hava
+   panelinin Uludağ fotoğrafı. Değişken adı da bu yüzden --vk- önekinden
+   --foto-hak-zemin'e çevrildi. Kutucuk %72 saydam; ölçüm namaz panelinin
+   en açık yerine (beyaz minare gövdesi) göre 7,93:1'di, Uludağ'ın karlı
+   zirvesi için 31 Ağustos ölçümü .hava-simdi notunda. */
+.foto-hak{position:absolute;right:8px;top:7px;z-index:2;font-size:9.5px;
+  letter-spacing:.2px;color:var(--kagit);
+  background:var(--foto-hak-zemin);padding:3px 6px;border-radius:2px}
+.vakit-simdi{position:absolute;left:12px;right:12px;bottom:11px;z-index:2;
+  display:flex;align-items:baseline;gap:9px;color:var(--kagit)}
+.vakit-simdi .etiket{font-family:var(--display);font-weight:900;font-size:10px;
+  letter-spacing:1.2px;background:var(--kirmizi);color:var(--kagit);padding:3px 7px;
+  align-self:center}
+.vakit-simdi b{font-family:var(--display);font-weight:900;font-size:22px;letter-spacing:.4px}
+.vakit-simdi .saat{font-family:var(--display);font-weight:700;font-size:22px;
+  font-variant-numeric:tabular-nums;margin-left:auto}
+.vakit{list-style:none;flex:1;display:flex;flex-direction:column}
+.vakit li{flex:1;min-height:42px;display:flex;justify-content:space-between;
+  align-items:center;padding:6px 2px;border-bottom:1px dotted var(--cizgi)}
+.vakit li span{font-family:var(--display);font-size:16.5px;letter-spacing:.3px;
+  color:var(--lacivert)}
+.vakit li span+span{font-weight:700;font-size:19px;font-variant-numeric:tabular-nums}
 .vakit li:last-child{border:0}
-.vakit .simdi{color:var(--kirmizi-koyu);font-weight:700}
-.eczane{font-size:13.5px;line-height:1.55}
-.eczane b{font-family:var(--display);font-size:16px;color:var(--lacivert);display:block}
-.eczane span{color:var(--gri)}
-.eczane .ayirac{border:0;border-top:1px dotted var(--cizgi);margin:9px 0}
+.vakit .simdi{color:var(--kirmizi-koyu);font-weight:700;background:var(--yumusak);
+  box-shadow:inset 3px 0 0 var(--kirmizi);padding-left:9px}
+.vakit .simdi span{color:var(--kirmizi-koyu);font-weight:900}
+/* --- nöbetçi eczane: süzülebilir tam liste --------------------------
+   31 Ağustos 2026: panel üç satırlık bir özetten 34 satırlık bir araca
+   döndü. Liste kendi içinde kaydırılır — namaz paneliyle aynı satırı
+   paylaşıyor ve 34 satır sayfayı iki ekran uzatırdı. Kaydırma kutusu
+   klavyeyle de gezilebilir (`tabindex="0"` şablonda değil, satırlar zaten
+   bağlantı taşıyor; odak listeyi kendiliğinden kaydırıyor). */
+.eczane{font-size:13.5px;line-height:1.5}
+.eczane-damga{font-size:12px;color:var(--gri);margin-bottom:9px}
+.eczane-damga.bayat{color:var(--kirmizi-koyu)}
+.eczane-suzgec{display:flex;flex-wrap:wrap;align-items:center;gap:6px;
+  background:var(--yumusak);border:1px solid var(--cizgi);padding:7px 8px;margin-bottom:8px}
+/* `display:flex` tarayıcının kendi `[hidden]` kuralını yeniyor; kutular
+   `site.js` açana kadar gizli KALMALI (`.tam-menu[hidden]` ile aynı düzen). */
+.eczane-suzgec[hidden]{display:none}
+.eczane-suzgec label{font-family:var(--display);font-size:11px;letter-spacing:.9px;
+  color:var(--gri);text-transform:uppercase}
+.eczane-suzgec select,.eczane-suzgec input{flex:1 1 120px;min-width:0;
+  font:inherit;font-size:12.5px;background:var(--kagit);
+  border:1px solid var(--cizgi);padding:4px 6px}
+.eczane-sonuc{display:none;font-size:12px;color:var(--gri);margin-bottom:7px}
+.eczane-sonuc[data-gorunur="true"]{display:block}
+.eczane-liste{list-style:none;max-height:430px;overflow-y:scroll;
+  scrollbar-width:thin;border-bottom:1px solid var(--cizgi);
+  /* `position:relative` biçim için değil, KIRPMA için (31 Ağustos 2026
+     ölçümü): satırların içindeki `.gorsel-gizli` etiketleri
+     `position:absolute` ve konumlu bir ata bulamayınca kapsayıcı bloğu
+     sayfa oluyordu — kaydırma kutusu onları kırpmıyor, belge yüksekliği
+     34 eczanenin tamamı kadar uzuyordu. Sonuç künyenin altında ~900 px
+     boş kaydırma alanıydı. */
+  position:relative}
+.eczane-liste li{border-bottom:1px dotted var(--cizgi);padding:8px 2px 9px}
+.eczane-liste li:last-child{border-bottom:0}
+.eczane-liste b{font-family:var(--display);font-size:15px;color:var(--lacivert);display:block}
+/* Nöbeti ŞU AN süren eczane işaretlenir: liste akşam 18:00'den önce de
+   basılıyor ve o saatte satırların hiçbiri henüz açık değil. */
+.eczane-liste li.acik b::before{content:"";display:inline-block;width:7px;height:7px;
+  border-radius:50%;background:var(--kirmizi);margin-right:6px;vertical-align:middle}
+.eczane-liste .nerede{display:block;font-size:12px;color:var(--gri)}
+.eczane-liste .saat{font-variant-numeric:tabular-nums}
+.eczane-liste .adres{display:block;font-size:12px;color:var(--gri);margin-top:2px}
+.eczane-liste .baglantilar{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.eczane-liste .baglantilar a{font-family:var(--display);font-weight:700;font-size:12px;
+  letter-spacing:.2px;background:var(--yumusak);border:1px solid var(--cizgi);
+  padding:3px 8px;color:var(--lacivert);white-space:nowrap;
+  transition:background .15s ease,color .15s ease}
+.eczane-liste .baglantilar a:hover{background:var(--lacivert);color:var(--kagit);border-color:var(--lacivert)}
+/* Sınıf adı `.ara` DEĞİL: bandın arama formu o adı kullanıyor ve
+   dar ekranda `display:none` alıyor — telefon bağlantısı 1000 px
+   altında tamamen kayboluyordu (31 Ağustos ölçümü). */
+.eczane-liste .telefon{font-variant-numeric:tabular-nums}
+.eczane-bos{font-size:12.5px;color:var(--gri);padding:10px 2px}
+.eczane-tumu{margin-top:9px;text-align:right}
+.eczane-tumu a{font-family:var(--display);font-weight:700;font-size:12.5px;
+  letter-spacing:.2px;color:var(--kirmizi-koyu)}
+.eczane-tumu a:hover{text-decoration:underline}
+
+/* --- nöbetçi eczane sayfası (/nobetci-eczane) -----------------------
+   31 Ağustos 2026 (§41). Anasayfa paneliyle AYNI bilgi ama başka bir kap:
+   burada sütun iki kat geniş ve liste kaydırma kutusunda değil, o yüzden
+   satırlar kart olarak dizilebiliyor. Panelin `.eczane-liste` kuralları
+   olduğu gibi duruyor. */
+.eczane-ozet{font-size:14px;color:var(--gri);margin-bottom:12px}
+.eczane-ozet b{color:var(--murekkep)}
+.eczane-ozet.bayat{color:var(--kirmizi-koyu)}
+.eczane-ilceler{display:flex;flex-wrap:wrap;gap:6px;background:var(--yumusak);
+  border:1px solid var(--cizgi);padding:9px 10px;margin-bottom:16px}
+.eczane-ilceler a{font-family:var(--display);font-weight:700;font-size:12.5px;
+  letter-spacing:.2px;color:var(--lacivert);background:var(--kagit);
+  border:1px solid var(--cizgi);padding:4px 9px;
+  transition:background .15s ease,color .15s ease}
+.eczane-ilceler a:hover{background:var(--lacivert);color:var(--kagit);border-color:var(--lacivert)}
+.eczane-ilceler a[aria-current]{background:var(--kirmizi);color:var(--kagit);border-color:var(--kirmizi)}
+.eczane-ilceler .adet{font-variant-numeric:tabular-nums;font-size:11px;opacity:.72;margin-left:2px}
+.eczane-bolum{margin-bottom:20px}
+.eczane-bolum h2{font-family:var(--display);font-size:17px;letter-spacing:.3px;
+  color:var(--lacivert);border-bottom:2px solid var(--kirmizi);
+  padding-bottom:5px;margin-bottom:10px}
+.eczane-bolum h2 a{color:inherit}
+.eczane-bolum h2 a:hover{color:var(--kirmizi-koyu)}
+.eczane-bolum h2 .adet{font-family:var(--govde);font-weight:400;font-size:12.5px;
+  color:var(--gri);font-variant-numeric:tabular-nums}
+/* Kartlar ızgarada: 34 eczane tek sütunda üç ekran sürüyordu. */
+.eczane-kartlar{list-style:none;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:10px}
+.eczane-kartlar li{background:var(--kagit);border:1px solid var(--cizgi);
+  border-top:3px solid var(--lacivert);padding:11px 12px 12px}
+.eczane-kartlar li.acik{border-top-color:var(--kirmizi)}
+.eczane-kartlar h3{font-family:var(--display);font-size:16px;color:var(--lacivert);
+  line-height:1.25;margin-bottom:3px}
+.eczane-kartlar .nerede{font-size:12.5px;color:var(--gri);line-height:1.45}
+.eczane-kartlar .saat{font-variant-numeric:tabular-nums}
+.eczane-kartlar .simdi{color:var(--kirmizi-koyu);font-weight:700}
+.eczane-kartlar .adres{font-size:12.5px;color:var(--gri);line-height:1.45;margin-top:4px}
+.eczane-kartlar .baglantilar{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.eczane-kartlar .baglantilar a{font-family:var(--display);font-weight:700;font-size:12.5px;
+  background:var(--yumusak);border:1px solid var(--cizgi);padding:4px 9px;
+  color:var(--lacivert);white-space:nowrap;
+  transition:background .15s ease,color .15s ease}
+.eczane-kartlar .baglantilar a:hover{background:var(--lacivert);color:var(--kagit);border-color:var(--lacivert)}
+.eczane-kartlar .telefon{font-variant-numeric:tabular-nums}
+.eczane-kaynak{font-size:12.5px;color:var(--gri);line-height:1.6;
+  border-top:1px solid var(--cizgi);padding-top:10px;margin-top:6px}
 
 /* --- 13 · yazar kuşağı (tam genişlik, portreli) ---------------------
    30 Ağustos 2026 (§35), kullanıcı isteği: yazarların sunuluşu tamamen
@@ -769,7 +1192,10 @@ main{display:block;padding-top:14px}
 .galeri-izgara{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .galeri-kart{position:relative;background:var(--kagit);border:1px solid var(--cizgi)}
 .galeri-kart .foto{height:150px}
-.rozet-o{position:absolute;left:8px;bottom:8px;z-index:3;background:var(--kirmizi);color:var(--kagit);font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.9px;padding:2px 8px}
+/* `pointer-events:none` 31 Ağustos 2026'da eklendi: rozet artık tıklanabilir
+   kapağın ÜSTÜNDE duruyor ve onsuz sol alt köşede tıklamayı yutan ölü bir
+   kutucuk kalıyordu. Rozet zaten hiçbir zaman tıklanacak bir şey değildi. */
+.rozet-o{position:absolute;left:8px;bottom:8px;z-index:3;pointer-events:none;background:var(--kirmizi);color:var(--kagit);font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.9px;padding:2px 8px}
 .galeri-kart h3{font-family:var(--display);font-size:16px;line-height:1.18;font-weight:700;padding:9px 10px 4px}
 .galeri-kart .adet{display:block;font-size:11.5px;color:var(--gri);padding:0 10px 11px}
 
@@ -805,6 +1231,7 @@ footer strong{color:var(--kagit)}
 .kunye-alt{border-top:1px solid var(--kunye-cizgi);margin-top:16px;padding-top:14px;font-size:12.5px;line-height:1.7}
 .kunye-alt b{color:var(--kagit);font-family:var(--display);letter-spacing:.5px}
 .kunye-alt{border-top:1px solid var(--kunye-cizgi);margin-top:18px;padding-top:14px;font-size:12px}
+.kunye-alt a{color:var(--kagit);text-decoration:underline;text-underline-offset:2px}
 
 .yukari{position:fixed;right:16px;bottom:16px;z-index:60;background:var(--lacivert);color:var(--kagit);border:2px solid var(--kagit);font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.8px;padding:10px 13px;cursor:pointer;opacity:0;visibility:hidden;transition:opacity .18s ease}
 .yukari[data-gorunur="true"]{opacity:1;visibility:visible}
@@ -815,7 +1242,9 @@ footer strong{color:var(--kagit)}
    Tercih `<html data-reklam>` üzerinde durur ve `<head>` içindeki minik
    betikle sayfa çizilmeden önce okunur; sonradan okunsaydı panolar bir an
    görünüp kaybolurdu. Beş yuvanın hepsi tek kuralla kapanıyor: yan
-   pageskin'ler, 1100x150 yatay ve gövdedeki 300x250'ler. */
+   pageskin'ler, 1100x150/970x250 yatay ve gövdedeki 300x250'ler.
+   Demo ağı açıkken de geçerli: `reklam.js` anahtar açıkken
+   hiçbir slot tanımlamaz (bkz. o dosyanın 2. kuralı). */
 .reklam-anahtar{font:inherit;font-size:12px;color:var(--ust-yazi);background:none;border:1px solid var(--ust-cizgi);padding:1px 8px;cursor:pointer;line-height:1.6}
 .reklam-anahtar:hover{color:var(--kagit);border-color:var(--kirmizi)}
 .reklam-anahtar[aria-pressed="true"]{background:var(--kirmizi);border-color:var(--kirmizi);color:var(--kagit)}
@@ -1236,7 +1665,9 @@ footer .kapsa{grid-template-columns:repeat(2,minmax(0,1fr))}
 
 @media(prefers-reduced-motion:reduce){
   .kart,.kart .foto img,.galeri-kart .foto img,.video-kart .foto img,
-  .kart h3 a,.ilan-turler button.tur{transition:none}
+  .kart h3 a,.ilan-turler button.tur,
+  .eczane-liste .baglantilar a,.eczane-ilceler a,
+  .eczane-kartlar .baglantilar a{transition:none}
   .kart:hover .foto img,.galeri-kart:hover .foto img,
   .video-kart:hover .foto img{transform:none}
 }
@@ -1356,7 +1787,12 @@ footer .kapsa{grid-template-columns:repeat(2,minmax(0,1fr))}
    Kart bileşeni aynı; ilk çocuk iki sütuna yayılır, fotoğraf sola geçer.
    Yalnız 1. sayfada kullanılır (kategori.html karar veriyor). */
 .kutu-izgara .kart.genis{grid-column:1/-1;flex-direction:row}
-.kart.genis .foto{flex:0 0 min(420px,46%);height:auto;min-height:236px}
+/* Fotoğrafın SAĞ kenarı, bir alttaki kartın fotoğrafının sağ kenarıyla
+   aynı dikey çizgide biter (31 Ağustos 2026, kullanıcı isteği). Eski
+   `min(420px,46%)` 1600 px'te 338 px veriyordu; sütun fotoğrafı 359 px'te
+   bitiyordu, 21 px'lik basamak görünüyordu. Formül ızgaranın kendisinden
+   türetildi: sütun dışı = (içerik+2−14)/2, eksi 2 kenarlık = %50 − 8px. */
+.kart.genis .foto{flex:0 0 calc(50% - 8px);height:auto;min-height:236px}
 .kart.genis .ic{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:16px 18px 18px}
 .kart.genis h3{font-size:26px;line-height:1.12}
 .kart.genis p{font-size:14px;margin-top:8px}
@@ -1597,6 +2033,18 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
   line-height:1.25;letter-spacing:.2px;display:inline-block;padding:3px 0;margin:-3px 0}
 .manset-liste a:hover{color:var(--kirmizi-koyu)}
 
+/* Rayda dikey biçim (31 Ağustos 2026): liste "Haber arası1" reklamının
+   altına, 320 px'lik sütuna girdi. İki sütun bu genişlikte başlıkları
+   üç kelimelik şeritlere düşürüyordu; tek sütunda saat solda dar bir
+   künye, başlık kalan genişliği alır. Son satırın noktalı çizgisi
+   kalkar — kutunun kendi kenarı zaten var. */
+.manset-liste.dikey{margin-bottom:0}
+.manset-liste.dikey ul{columns:1}
+.manset-liste.dikey li{gap:9px;padding:7px 0}
+.manset-liste.dikey li:last-child{border-bottom:0}
+.manset-liste.dikey time{width:62px;font-size:11px}
+.manset-liste.dikey a{font-size:13.5px;line-height:1.3}
+
 /* --- bölüm başlığı: ikinci ağırlık ---------------------------------
    Editoryal bölümler beyaz zeminde lacivert başlık + kırmızı fitil;
    servis ve yükümlülük bölümleri (piyasa, resmî ilan, şehir servisleri,
@@ -1624,6 +2072,11 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
    altına düşmesin. */
 .servis-dilim{background:var(--kagit);border:1px solid var(--cizgi);padding:12px;
   scroll-margin-top:74px}
+/* Hava paneli üçünün içinde en görsel olanı ve satırın tamamını kaplıyor;
+   31 Ağustos 2026'da kartın kendisi de panelin gökyüzü tonuna çekildi ki
+   altındaki namaz/eczane kartlarından ayrışsın (kullanıcı isteği). Yazı
+   renkleri değişmedi, yalnız zemin. */
+#panel-hava{background:var(--hv-zemin-ust);border-color:var(--hv-panel-cizgi)}
 .servis-dilim h3{font-family:var(--display);font-size:12px;letter-spacing:1.1px;
   color:var(--lacivert);border-bottom:2px solid var(--kirmizi);
   padding-bottom:6px;margin-bottom:10px}
@@ -1673,6 +2126,14 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 }
 @media(max-width:700px){
   .servis-uclu{grid-template-columns:minmax(0,1fr)}
+  /* Tek sütuna inince liste satırın tamamını alıyor; kaydırma
+     kutusunu kısaltmak gereksiz, sayfa zaten dikey. */
+  /* Tek sütunda panel gerilmiyor; fotoğraf şeridi de kısalır, vakit
+     satırları kendi yüksekliğine döner. */
+  .vakit-foto{height:150px}
+  .vakit-simdi b,.vakit-simdi .saat{font-size:20px}
+  .eczane-liste{max-height:none;overflow:visible;border-bottom:0}
+  .eczane-suzgec label{flex:0 0 auto}
 }
 @media(max-width:600px){
   .yazar-kusak{grid-auto-columns:150px}
@@ -1681,8 +2142,92 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
   /* Listede ilk 6 satır görünür; onunun da DOM'da durması arama motoru
      ve ekran okuyucu için gerekli. */
   .manset-liste li:nth-child(n+7){display:none}
+  .manset-liste.dikey li:nth-child(6){border-bottom:0}
 }
 /* 420 altı: YouTube ve RSS şeritten düşer (künyede ikisi de var). */
 @media(max-width:420px){
   .sosyal-ust .dar-gizle{display:none}
+}
+
+
+/* --- Beyan sayfası (/veri-kaynaklari) --------------------------------
+   31 Ağustos 2026: anasayfa panellerindeki dokuz katlanır not tek sayfaya
+   toplandı. Sayfa bir DÖKÜMAN, kart ızgarası değil — o yüzden ölçü gövde
+   metninin ölçüsü (16 px) ve satır uzunluğu makale rayıyla aynı sınırda
+   (54ch ≈ 68 gerçek karakter, §34 K5). Yeni renk tanımlanmadı. */
+.beyan{max-width:none}
+.beyan p{font-size:16px;line-height:1.7;max-width:54ch;margin-bottom:14px}
+.beyan .beyan-giris{font-size:17px;color:var(--murekkep)}
+.beyan h2{font-family:var(--display);font-size:19px;font-weight:900;
+  letter-spacing:.4px;color:var(--lacivert);margin:26px 0 8px;
+  padding-top:14px;border-top:2px solid var(--cizgi);
+  display:flex;align-items:baseline;flex-wrap:wrap;gap:10px}
+.beyan h2:first-of-type{margin-top:4px;padding-top:0;border-top:0}
+/* Bölüm bağlantısı başlıkla aynı satırda ama başlık ağırlığında değil:
+   beyanı okuyan kişi ilgili paneli açabilsin, başlık taranırken de
+   gözden düşsün. 24 px dokunma hedefi negatif kenar boşluğuyla (§34 K6). */
+.beyan h2 .bolume{margin-left:auto;font-family:var(--govde);font-size:12.5px;
+  font-weight:500;letter-spacing:0;color:var(--gri);white-space:nowrap;
+  padding:5px 0;margin-top:-5px;margin-bottom:-5px}
+.beyan h2 .bolume:hover{color:var(--kirmizi);text-decoration:underline}
+/* Tablo dar ekranda SAYFAYI değil kendini kaydırır. */
+.beyan-tablo{overflow-x:auto;margin-bottom:18px;border:1px solid var(--cizgi)}
+.beyan-tablo table{border-collapse:collapse;width:100%;min-width:520px;
+  font-size:14px}
+.beyan-tablo th,.beyan-tablo td{text-align:left;padding:8px 12px;
+  border-bottom:1px solid var(--cizgi);vertical-align:top}
+.beyan-tablo thead th{background:var(--yumusak);font-family:var(--display);
+  font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--gri)}
+.beyan-tablo tbody th{font-weight:700;white-space:nowrap}
+.beyan-tablo tr:last-child th,.beyan-tablo tr:last-child td{border-bottom:0}
+.beyan-tablo a{text-decoration:underline;display:inline-block;padding:5px 0;margin:-5px 0}
+.beyan-tablo a:hover{color:var(--kirmizi)}
+.beyan-tablo .kosul{font-size:12px;color:var(--gri);white-space:nowrap}
+.beyan-tablo .bayat{color:var(--kirmizi-koyu);font-size:12px}
+.beyan-tablo .bos{color:var(--gri)}
+.beyan .yer-not{margin-top:22px;border-top:1px dotted var(--cizgi)}
+
+/* =================================================================
+   31 AĞUSTOS 2026 — ANASAYFA "SON HABERLER" IZGARASI
+   Kullanıcı isteği: panelde haber özeti (spot) basılmıyor — kartta
+   yalnız kategori/ilçe, zaman ve başlık kalıyor (`goster_spot`
+   anasayfa.html'de kaldırıldı). Metin çıkınca boşalan yer fotoğrafa
+   verildi: çerçeve 150 → 185 px. Sınıf yalnız anasayfadaki ızgaraya
+   konuluyor; kategori, arama ve haber detay ızgaraları 150 px'te kalır.
+   ================================================================= */
+.son-haberler .kart .foto{height:185px}
+
+/* Kategori/ilçe işareti fotoğrafın SOL ÜSTÜNE rozet olarak biner
+   (31 Ağustos 2026, kullanıcı isteği; tarih aynı istekle kalktı —
+   `zaman_gizle` anasayfa.html'de).
+
+   DOM'da hiçbir şey taşınmadı: rozet hâlâ `.ust` satırı, yani başlıktan
+   önce, metin akışında. Fotoğrafın <a>'sı `aria-hidden="true"` olduğu
+   için işareti oraya taşımak onu ekran okuyucudan silerdi. Konumlandırma
+   kartın kendisine göre; `.foto` kartın en üstünde olduğundan rozet
+   fotoğrafın sol üst köşesine oturur — geniş kartta da (fotoğraf solda).
+
+   Rozet köşeye YAPIŞMIYOR: 10 px içeriden başlıyor (`.rozet-o` galeri
+   kartında 8 px ile aynı ev âdeti) ve yazısı kart etiketinin 11 px'inden
+   12,5 px'e çıktı — fotoğrafın üstünde okunması gereken tek işaret o.
+
+   Zemin --kirmizi DEĞİL --kirmizi-koyu: bu dosyanın kendi ölçümü (SON
+   DAKİKA notu) düz kırmızı üstünde beyazı 4,61 buluyor ve 11 px yazı
+   için sınırda; koyu tonda 6,62. BURSA ve EKONOMİ işaret renkleri (§35)
+   burada YAZI değil ZEMİN oluyor, beyazla 5,79 ve 6,93. */
+.son-haberler .kart{position:relative}
+/* `pointer-events:none`: rozet fotoğrafın bağlantısının ÜSTÜNDE duruyor;
+   olmasa sol üst köşeye tıklayan okur hiçbir yere gitmezdi. Rozet
+   bağlantı değil, kartın kendi işareti. */
+.son-haberler .kart .ust{position:absolute;left:10px;top:10px;z-index:3;margin:0;pointer-events:none}
+.son-haberler .kart .ust span{display:block;background:var(--kirmizi-koyu);
+  color:var(--kagit);font-family:var(--display);font-weight:700;font-size:12.5px;
+  letter-spacing:.9px;padding:4px 10px}
+.son-haberler .kart .ust .etiket-bursa{background:var(--isaret-bursa);color:var(--kagit)}
+.son-haberler .kart .ust .etiket-ekonomi{background:var(--isaret-ekonomi);color:var(--kagit)}
+/* Dar ekranda geniş kart sütuna dönüyor (768 px kuralı) ve fotoğrafı
+   yukarıdaki satırdan 185 px alıyor; manşet kartı olduğu için 35 px
+   önde tutuluyor — kategori ızgarasındaki 200 px'lik değer yerinde. */
+@media(max-width:768px){
+  .son-haberler .kart.genis .foto{height:220px}
 }
