@@ -143,10 +143,33 @@ class Haber(models.Model):
     goc_guveni = models.CharField(max_length=12, blank=True)
 
     class Meta:
-        ordering = ["-yayin_zamani"]
+        # En yeni önde. İkinci anahtar KESİNLİK için: yayın zamanı
+        # beraberliği %6,5 (486.656 kayıtta 31.845 kayıt bir başkasıyla aynı
+        # damgayı taşıyor, en kalabalık küme 7) ve tek anahtarla sıra
+        # belirsiz kalıyordu — beraberlik sayfa sınırına denk gelince aynı
+        # haber iki sayfada görünebiliyor ya da hiç görünmüyordu.
+        #
+        # İkinci anahtarın BEDELİ VAR ve ölçüldü. 486.668 satırda ucuzdu
+        # (kategori listesi 0,07 → 0,09 ms); göç tabloyu 1.038.474'e
+        # çıkardıktan sonra `select_related("kategori")` taşıyan sorgularda
+        # planlayıcı indeksi bırakıp kategori tablosunu taramaya başladı:
+        #
+        #     birleşmeli LIMIT 1, tek anahtar        0,0 ms
+        #     birleşmeli LIMIT 1, iki anahtar    3.970,0 ms
+        #
+        # `ANALYZE` (istatistik göçten sonra bayattı) süzgeçsiz sorguları
+        # düzeltti ama birleşmeliyi düzeltmedi. Çözüm aşağıdaki
+        # `haber_siralama` indeksi: sıralamayı indeksin kendisi veriyor,
+        # ölçüm 3.970 → 0,1 ms. Sıralama değişirse O İNDEKS DE değişmeli.
+        ordering = ["-yayin_zamani", "-id"]
         verbose_name = "haber"
         verbose_name_plural = "haberler"
         indexes = [
+            # Sitenin varsayılan sıralamasını indeksin kendisi veriyor.
+            # DESC yönü Meta.ordering ile birebir aynı olmak ZORUNDA; ters
+            # yönlü bir indeks planlayıcıya yaramıyor (3 Eylül 2026 ölçümü,
+            # yukarıdaki nota bakın). Bedeli: 31,9 MB, kurulum 13,4 sn.
+            models.Index(fields=["-yayin_zamani", "-id"], name="haber_siralama"),
             models.Index(fields=["kategori", "-yayin_zamani"]),
             # Bugün ekranının kuyruğu bu iki alanla süzülüyor (§9).
             models.Index(fields=["durum", "hazirlik"]),
@@ -812,3 +835,51 @@ class SonDakika(models.Model):
         simdi = timezone.now()
         return cls.objects.filter(aktif=True, baslangic__lte=simdi).filter(
             models.Q(bitis__isnull=True) | models.Q(bitis__gte=simdi))
+
+
+class Okunma(models.Model):
+    """Günlük okunma kovası — "en çok okunanlar" listelerinin veri kaynağı.
+
+    **Neden ayrı tablo, neden `Haber`e sütun değil.** İki ölçülmüş sebep:
+
+    1. `icerik_haber` 486.668 satır ve 2,6 GB. Django'nun SQLite arka ucu
+       varsayılanı olan bir sütunu `ALTER TABLE ADD COLUMN` ile ekleyemez ve
+       tabloyu **yeniden kurar** (`_remake_table`); 2,6 GB'lık bir kopya tek
+       bir sayaç için ödenmeyecek bedeldir.
+    2. Sayfa görüntülemesi bir YAZMA işlemi doğuruyor. Sayaç ayrı ve küçük
+       bir tabloda durunca okuma yolunun yazması arşiv tablosunun
+       indekslerine hiç dokunmaz.
+
+    **Neden günlük kova, neden tek toplam değil.** "En çok okunan" bir
+    gazetede her zaman bir PENCERE ölçüsüdür; ömür boyu tek toplam, üç yıl
+    önceki bir haberi listeye kalıcı olarak çakardı. Kayıt (haber, gün)
+    çiftinde biriktiği için "son 7 gün" de "dün" de aynı tablodan çıkar ve
+    tablo arşiv kadar değil, **okunan haber × gün** kadar büyür.
+
+    **Yalnız haber ailesi.** Panelin köşe/galeri/video listelerindeki Okunma
+    sütunları bilerek boş bırakıldı; o aileler için sayaç açılırsa kendi
+    tablolarını alır. Yabancı anahtar burada bilinçli bir tercih: bölüm
+    şeridi "bu kategorinin en çok okunanları"nı sormak zorunda ve bu sorgu
+    ancak katılımla (`haber__kategori`) ucuz kurulabilir.
+    """
+
+    haber = models.ForeignKey("Haber", on_delete=models.CASCADE,
+                              related_name="okunmalari")
+    gun = models.DateField()
+    adet = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "okunma"
+        verbose_name_plural = "okunmalar"
+        constraints = [
+            models.UniqueConstraint(fields=["haber", "gun"],
+                                    name="okunma_tek_kova"),
+        ]
+        indexes = [
+            # Pencere sorgusu: gün aralığıyla süz, habere göre topla.
+            # `adet` indekse KATILI ki toplama tabloya gitmesin.
+            models.Index(fields=["gun", "haber", "adet"], name="okunma_pencere"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.haber_id} {self.gun}: {self.adet}"

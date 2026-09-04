@@ -20,6 +20,17 @@ from taksonomi.models import Ilce, Kategori
 
 from .models import Haber
 
+# "İLÇELER" bandı DİZİNE değil doğrudan bir ilçeye gider (2 Eylül 2026,
+# kullanıcı isteği: "ilçelere tıklanınca default olarak osmangaziye yolla").
+# Gerekçe: dizin sayfası okuru bir tıklama daha uzağa koyuyordu; ilçe sayfası
+# §46'dan beri 17 ilçenin hepsini taşıyan hızlı geçiş şeridini çiziyor, yani
+# dizinin işini de görüyor. Osmangazi Bursa'nın merkez ilçesi.
+#
+# Dizin sayfası KALDIRILMADI: tam menüdeki "Tüm ilçeler" ve anasayfadaki
+# "BURSA İLÇELERİ" kutusu oraya gitmeye devam ediyor, adres arama motorunda
+# kayıtlı.
+VARSAYILAN_ILCE = "osmangazi"
+
 # (görünen ad, kategori adı ya da None, sabit yol) — sıra plandaki sıradır.
 BANT = [
     ("YAZARLAR", None, "/yazarlar"),
@@ -30,7 +41,7 @@ BANT = [
     ("DÜNYA", "DÜNYA", None),
     ("SPOR", "SPOR", None),
     ("MAGAZİN", "MAGAZİN", None),
-    ("İLÇELER", None, "/ilceler"),
+    ("İLÇELER", None, f"/ilce/{VARSAYILAN_ILCE}"),
     ("RESMÎ İLAN", None, "/resmi-ilan"),
 ]
 
@@ -47,7 +58,12 @@ MOBIL_BANT = {"BURSA", "BURSASPOR", "GÜNDEM", "SPOR"}
 # 4 -> 6 (30 Ağustos 2026, §36): kayan şerit dört başlığı sırayla
 # gösteriyordu, rayda sabit liste altısını da AYNI ANDA gösteriyor —
 # yerine sığıyor ve okur birini kaçırmıyor.
-SON_DAKIKA_ADET = 6
+#
+# 6 -> 7 (2 Eylül 2026, §44): en yeni kalem listeden çıkıp panelin
+# ŞERİDİNE taşındı. Listede altı kalem kalsın diye bir artırıldı —
+# anasayfanın iki sütunlu yerleşiminde altı kalem üç TAM satır yapıyor,
+# beş kalem son satırı yarım bırakıyordu.
+SON_DAKIKA_ADET = 7
 
 
 def site(request):
@@ -65,7 +81,12 @@ def site(request):
             if kategori is None:
                 continue  # taksonomi kurulmadıysa bandı kırma
             hedef = "/" + kategori.slug_al()
-        bant.append({"ad": ad, "yol": hedef, "etkin": yol == hedef,
+        # Bandın "İLÇELER" kalemi Osmangazi'ye gidiyor ama HER ilçe
+        # sayfasında etkin görünmeli — okur Nilüfer'deyken bandın hangi
+        # kalemi altında olduğunu göremezdi.
+        etkin = yol == hedef or (hedef.startswith("/ilce/")
+                                 and yol.startswith("/ilce/"))
+        bant.append({"ad": ad, "yol": hedef, "etkin": etkin,
                      "mobil": ad in MOBIL_BANT, "mobil_son": False})
 
     # Dar ekrandaki DÖRTLÜNÜN sonuncusu işaretlenir: ayraç çizgisi onda
@@ -79,6 +100,7 @@ def site(request):
     return {
         "band_kategorileri": bant,
         "tum_kategoriler": _tum_kategoriler(),
+        "kunye_arsiv": _kunye_arsiv(),
         "son_dakika": Haber.yayindakiler().select_related("kategori")[:SON_DAKIKA_ADET],
         "ilceler": Ilce.objects.all(),
         "reklam_dugmesi": _reklam_dugmesi(request),
@@ -154,3 +176,52 @@ def _tum_kategoriler():
             cikti.append({"ad": k.ad, "slug": slug, "adet": k.adet})
     _menu_bellek = (simdi, cikti)
     return cikti
+
+
+# Künyedeki arşiv kapsamı cümlesi — "2012'den bugüne N haber".
+#
+# Şablona ÇAKILI YAZILMAZ. Aynı hata bir kez yapıldı: anasayfanın not
+# satırlarında "1484 video" yazarken veritabanında 31.084 vardı (27 Ağustos
+# ölçümü, `views.arsiv_sayilari`). Künye sitenin okura verdiği beyandır;
+# sayı veriden gelmeli.
+#
+# Bu bağlam işlemcisi HER sayfada çalışıyor, o yüzden sayım kısa süre
+# önbellekleniyor. `views.arsiv_sayilari`den bir farkı var: hata durumu da
+# önbelleğe yazılıyor. Orada yazılmıyor ve göç sürerken her istek kilide
+# yeniden girip beş saniye bekliyordu; künye satırı sayfayı bekletmeye
+# değmez, sayılamadığında cümle hiç basılmaz.
+KUNYE_BELLEK_SANIYE = 300
+_kunye_bellek: tuple[float, dict | None] | None = None
+
+
+def _kunye_arsiv() -> dict | None:
+    """Künyedeki arşiv kapsamı. Sayılamazsa `None` — şablon cümleyi basmaz."""
+    global _kunye_bellek
+    simdi = time.monotonic()
+    if _kunye_bellek and simdi - _kunye_bellek[0] < KUNYE_BELLEK_SANIYE:
+        return _kunye_bellek[1]
+    try:
+        # SÜZGEÇSİZ sayılıyor ve cümle de "arşivde" diyor — ölçüm gerekçesi
+        # (3 Eylül 2026, 1.038.474 satır):
+        #
+        #     durum=1 AND yayin_zamani IS NOT NULL   2.202 ms  (TAM TARAMA)
+        #     süzgeçsiz COUNT(*)                        11 ms  (kapsayan indeks)
+        #
+        # `IS NOT NULL` hiçbir B-ağacı indeksiyle karşılanamıyor, o yüzden
+        # `yayindakiler()` sayımı tabloyu baştan sona tarıyor. Bu bağlam
+        # işlemcisi HER sayfada çalışıyor; künyedeki bir cümle için soğuk
+        # isteğe 2,2 saniye eklemek `_tum_kategoriler`in düştüğü tuzağın
+        # aynısı olurdu. Sayı arşivin büyüklüğünü söylüyor, "hepsi
+        # listelenebilir" demiyor — cümle de öyle kuruldu.
+        adet = Haber.objects.count()
+        ilk = (Haber.yayindakiler().order_by("yayin_zamani")
+               .values_list("yayin_zamani", flat=True).first())
+    except DatabaseError:
+        _kunye_bellek = (simdi, _kunye_bellek[1] if _kunye_bellek else None)
+        return _kunye_bellek[1]
+    # Binlik ayraci burada kuruluyor: `intcomma` virgul koyar, Turkce
+    # ayrac noktadir ve panelde de ayni donusum yapiliyor.
+    deger = ({"adet": f"{adet:,}".replace(",", "."),
+              "ilk_yil": ilk.year if ilk else None} if adet else None)
+    _kunye_bellek = (simdi, deger)
+    return deger

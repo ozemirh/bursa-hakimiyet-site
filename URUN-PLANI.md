@@ -4400,3 +4400,574 @@ yerinde: `data-gpt` üç ölçüyü taşımaya devam ediyor.
 sığıyor), 800 ve 360'ta gizli ve yer tutucu geri geliyor. Yatay taşma
 **0**, diğer beş yuva demo reklamı almaya devam ediyor. 648 test geçiyor.
 
+
+---
+
+## §43 — SON DAKİKA: açık saha denemesi (2 Eylül 2026, BIRAKILDI)
+
+Kullanıcı isteği: "son dakika panelini tamamen kırmızı yapma, ama onu
+dikkat çekici yap".
+
+§38'in dolu kırmızı sahası açıldı (`#FFF6F6`), kırmızı çerçeveye, başlık
+şeridine, saat sütununa ve ilk kalemin yıkamasına çekildi. Kontrastlar
+ölçüldü, üç genişlikte doğrulandı — **ama kullanıcı beğenmedi** ve
+"global ve ulusal haber sitelerinde son dakika nasıl sunuluyor incele"
+dedi. Sonuç §44'te; bu deneme sürümde kalmadı.
+
+**Dersi duruyor:** kalıp değişmeden renk değiştirmek işe yaramıyor. Açık
+sahalı sürüm de "renkli kutu içinde 31 Ağu · 8 Tem · 6 Tem listesi" idi;
+sorun rengin tonu değil, kutunun bir SON DAKİKA akışı gibi değil sıradan
+bir arşiv listesi gibi okunmasıydı.
+
+---
+
+## §44 — SON DAKİKA yeniden kuruldu: şerit manşeti + zaman rayı (2 Eylül 2026)
+
+### Önce inceleme
+
+Sekiz haber sitesinin anasayfası tarayıcıda açılıp üst bölümü yakalandı:
+
+| Site | Son dakika nasıl duruyor |
+|---|---|
+| Sözcü | Koyu plaka + dolu kırmızı şeritte **tek** manşet |
+| Milliyet | Nav altında tam genişlikte tek satırlık şerit, kırmızı `#ETİKET` önekli başlıklar |
+| Hürriyet | "Bugün neler oldu?" ince şeridi + "SICAK GÜNDEM" plakalı üç kart |
+| CNN Türk | "CANLI ANLATIM" panosu: noktalı **dikey zaman rayı**, "2 saat önce" damgaları |
+| NTV | Anasayfada panel YOK; "Son Dakika" üst şeritte bağlantı |
+| Habertürk | Anasayfada panel YOK; "Son Dakika" alt sekme çubuğunda |
+| BBC | Panel yok: başlığın önünde kırmızı ● LIVE + "17 mins ago" |
+| Guardian | Aynısı; küçük kırmızı "… live" rozeti, göreli zaman, ince ayraç |
+| Spiegel | Üstte son üç başlık rayı, her birinde "Vor 6 Min" |
+
+**Ortak ders:** iyi çalışan hiçbir örnek *renkli kutu içinde tarih listesi*
+değil. İki yoldan biri seçiliyor — ya tek satıra indirip orada bağırmak, ya
+kutuyu sakinleştirip tazeliği **göreli zamanla** göstermek. §38 ve §43 ikisini
+de yapmıyordu.
+
+### Panel ikisini birden yapıyor
+
+1. **Şerit manşeti.** En yeni kalem listeden çıkıp şeride taşındı: koyu plakada
+   (`--sd-plaka` #111B47) nabız atan CANLI pili + "SON DAKİKA", yanında dolu
+   kırmızı alanda (`--sd-serit` #B8161E) tek manşet — büyük harf, 19 px/900,
+   en çok üç satır. Sayfadaki tek dolu-renk alan bu ve **bir satır**
+   yüksekliğinde; 200 px'lik kırmızı blok değil.
+2. **Zaman rayı.** Kalan altı kalem beyaz zeminde, solda ince kırmızı ray
+   (`--sd-ray`) ve her kalemde bir nokta; ilk nokta dolu, ötekiler halka.
+   Damga `goreli_zaman`: "14 dk önce" / "3 saat önce", 24 saati geçince
+   `kisa_zaman`a düşer (arşivde aylar öncesi kayıt var, "1.437 saat önce"
+   saçmalık olurdu).
+
+Şerit tek renk değil iki parça: tek renk olsaydı "SON DAKİKA" yazısı manşetin
+parçası gibi okunuyordu — Sözcü'nün çözümü de bu.
+
+`SON_DAKIKA_ADET` **6 → 7**: bir kalem şeride çıktığı için listede altı kalem
+kalsın diye. Anasayfanın iki sütunlu yerleşiminde altı kalem üç **tam** satır
+yapıyor; beş kalem son satırı yarım bırakıyordu.
+
+### Ölçülen kontrastlar (`:root` --sd-*)
+
+| Katman | Değer | Ölçüm |
+|---|---|---|
+| Plaka `--sd-plaka` | #111B47 | 16,44:1 (beyaz yazı) |
+| Şerit `--sd-serit` | #B8161E | **6,62:1** (beyaz yazı) |
+| CANLI pili | beyaz zemin, `--sd-serit` yazı | 6,62:1 |
+| Ray saati `--sd-saat` | #B8161E | 6,62:1 (beyaz üstünde) |
+| Liste yazısı `--murekkep` | #14181D | 16,68:1 |
+
+Şerit parlak `--kirmizi` değil koyu tonda: parlak kırmızı üstünde beyaz 4,61
+ölçülüyor ve şeritteki 11 px zaman damgası büyük metin sayılmıyor (`.ihbar-bag`
+ile aynı gerekçe). Parlak ton yalnız nabız noktasında — o metin değil.
+`--sd-ayrac` (beyazın %28'i) "TÜMÜ"nün ayracıdır, metin taşımaz.
+
+### Ölçerken çıkan üç kusur
+
+1. **Rayda şerit dağılıyordu.** Haber detay/köşe yazısı rayında kutu 320 px;
+   yan yana dizilen plaka manşete ~100 px bırakıyor, başlık kelime kelime
+   sarıp şeridi 300 px'e çıkarıyordu. `.sondakika:not(.genis)` şeridi iki
+   satıra alıyor (üstte plaka + TÜMÜ, altta manşet, 16,5 px) — aynı kalıp
+   768 px altında geniş kutuya da uygulanıyor.
+2. **"TÜMÜ" kutunun dibindeyken panel 55 px uzuyordu** (1400 px ölçümü);
+   şeridin sağ ucuna, kendi ayracının arkasına alındı.
+3. **Ham renk literali.** `rgba(255,255,255,.28)` doğrudan yazılmıştı;
+   `test_renk_propertysinde_ham_renk_yok` ve `test_renk_literali_yok` bunu
+   yakaladı, `--sd-ayrac` olarak `:root`a taşındı. Kural işledi.
+
+### Doğrulama
+
+Başsız Chrome: anasayfa 1400 px (şerit + iki sütunlu ray), haber detay rayı
+1400 px (iki satırlık şerit + tek sütun), anasayfa 390 px. Türkçe büyük harf
+`buyult` süzgecinden geçiyor — CSS `text-transform` "İlçe"yi "ILÇE" yapıyordu,
+sayfada "İLÇE İLÇE" basılıyor. **650 test geçiyor** (yeni iki test:
+`goreli_zaman`ın eşikleri ve şerit manşetinin listede tekrarlamaması).
+
+
+---
+
+## §45 — kategori/ilçe listelerinde fotoğraf büyüdü: 4:3 + 3:2 (2 Eylül 2026)
+
+Kullanıcı isteği: "kategori sayfalarındaki haber kutucuklarındaki
+görsellerin boyutunu arttır dikey biçimde".
+
+Kart bu sayfada iki sütunlu ızgarada **~530 px** genişliğinde; fotoğrafın
+yüksekliği 150 px'te sabitti, yani **3,5:1** oranında bir şerit. Arşivin
+kareleri üstünden ve altından kırpılıyordu — yüzler, skorbord, pankart
+kadraj dışında kalıyordu.
+
+**Üç adımda oturdu.** Önce 16:9 verildi: kalemler 313 px'e çıktı ama
+sayfanın ilk kartı — fotoğrafı yanda, boyu metin sütunundan geliyor —
+**354 px** ölçülüyordu. Kullanıcı farkı gördü ("ilk sıradaki fotoğrafın
+yüksekliğini arttırmışsın ama sonrakilerin değil"), oran 3:2'ye çekildi ve
+353 px'te eşitlendi. Ardından "görseli **kareye yakın** hale getir" isteği
+geldi; oran **5:4** oldu ve İLK KARTA DA verildi.
+
+İlk kartın fotoğrafına oran vermenin şartı `align-self:start`: esneyen bir
+hücrede çapraz ölçü kapsayıcıdan gelir ve `aspect-ratio` yok sayılır —
+fotoğraf metnin boyuna inerdi. Başlangıca yaslanınca oran işliyor ve kart
+fotoğrafın boyunu alıyor. 768 px altında kart sütuna döndüğü için kural
+geri alınıyor (orada çapraz eksen yatay, `start` fotoğrafı daraltırdı).
+
+Son iki adım kullanıcının ayarıdır: önce "ilk haber aynı boyutta kalsın ama
+sonrakilerin yüksekliğini biraz daha düşür" (ilk kart 5:4, kalemler 4:3),
+sonra "ilkini 4:3 yap diğerlerini daha da küçült". **Nihai oran: ilk kart
+4:3, kalemler 3:2** — 1400 px'te 398'e karşı 353 px. Sayfanın en uzun
+fotoğrafı ilk kartınki, fark 45 px.
+
+Ölçümler başsız Chrome'da piksel taramasıyla yapıldı, gözle değil.
+
+**Sabit px değil `aspect-ratio:16/9`:** kartın genişliği ekrana göre
+değişiyor (768 px altında ızgara tek sütuna inip 360 px'e düşüyor); sabit
+yükseklik oranı orada yeniden bozardı. Oran her genişlikte duruyor —
+390 px'te fotoğraf ~200 px.
+
+**Kapsam `liste-izgara` kancasıyla sınırlı.** Şablon (`kategori.html`)
+kategori ve ilçe sayfalarının ikisini de çiziyor, ikisi de büyüyor;
+anasayfanın `kutu-izgara`ları 150 px'te kalıyor — orada kutular rayın
+yanında ve kartlar dar.
+
+**`:not(.genis)`** — sayfanın ilk kartı zaten iki sütunu kaplıyor ve
+fotoğrafı yanda, kartın boyuna uzuyor. Ona oran verilseydi esneme sırasında
+boyu kısalırdı.
+
+**Doğrulama (başsız Chrome):** /bursaspor 1400 · 1280 · 1100 · 900 · 390 px,
+/ilce/osmangazi ve /dunya 1400 px. Sol sütunda ölçülen fotoğraf boyları
+1400 px'te 398 (ilk kart) · 353 · 353 · 353, 1100 px'te 391 · 346 · 346 · 346,
+390 px'te 343 · 305 · 305 · 305 — üç genişlikte de ilk kart en uzunu ve
+kalemler onun altında; oranlar her yerde 4:3 ve 3:2 olarak duruyor.
+Fotoğrafsız kayıtların temsilî SVG'si aynı orana oturuyor
+(`.foto svg{height:100%}`). **650 test geçiyor.**
+
+
+---
+
+## §46 — bölüm sayfası yeniden kuruldu: üç kademe + akış (2 Eylül 2026)
+
+Kullanıcı isteği: "kategori sayfalarının tasarımını geliştir, başka popüler
+haber sitelerinden ilham al ve daha farklı bir tasarımla gel".
+
+### İncelenen bölüm sayfaları
+
+Dördü de tarayıcıda açılıp bakıldı: **Guardian /world**, **BBC /news/world**,
+**Hürriyet /gundem**, **Milliyet /gundem**.
+
+| Site | Bölüm sayfasının kalıbı |
+|---|---|
+| Guardian | Solda bölüm adı, ortada manşet (metin solda + büyük fotoğraf sağda), altında **küçük görselli iki sütunlu yoğun liste** |
+| BBC | Manşet + sağda metin öncelikli üç haber rayı, sonra 3'lü orta kart satırı, sonra 5'li küçük kart satırı — **kademeli** |
+| Hürriyet | Başlığın yanında "Etiketlerle Hızlı Gündem" rafı; manşet altında tek sütunlu, fotoğraf solda satırlar |
+| Milliyet | Manşet + sağ ray, sonra gri bantta 4'lü küçük kart şeridi |
+
+**Ortak ders:** hiçbiri TEK TİP kart ızgarası değil. Bir manşet, birkaç orta
+boy, sonra küçük görselli yoğun akış. Bizim sayfa 20 EŞİT karttı; fotoğraflar
+§45'te büyütülünce 5.000 px'lik bir merdivene döndü ve 15. haber 2. haberle
+aynı ağırlıkta duruyordu.
+
+### Üç kademe
+
+1. **Manşet** — ilk haber, fotoğrafı yanda (4:3, §45'ten). Yalnız 1. sayfada;
+   sonraki sayfalar kronolojik devamdır.
+2. **İkincil ikili** — sıradaki iki haber kart olarak yan yana (3:2).
+3. **Akış** — kalanı `parca/akis_satiri.html` ile: solda 150 px görsel (3:2),
+   sağda başlık + spot + saat, iki sütun, beyaz blok. 2-6. sayfalarda listenin
+   tamamı bu kademede.
+
+**Tarih ayracı:** gün değiştikçe akışa `{% ifchanged %}` ile "31 EKİM 2025"
+satırı giriyor (`grid-column:1/-1`). Arşiv sayfalarında okur "bu haberler ne
+zamandan" diye soruyor; 31 Ekim ile 27 Haziran arka arkaya gelebiliyor.
+
+**Hızlı geçiş şeridi — yalnız İLÇE sayfasında.** Önce iki sayfaya da
+kondu; kullanıcı kategori sayfasındakini haklı olarak kaldırttı ("niye
+hızlı geçiş şeridi ekledin, zaten ekranın üst kısmında kategoriler bandı
+var"). Yapışkan kategori bandı ekranın üstünde durduğu için şerit onun
+kopyasıydı. İlçede durum başka: bantta 17 ilçe YOK, tek bir "İLÇELER"
+bağlantısı var ve dizine gidiyor — komşu ilçeye geçmek bantla iki tıklama,
+şeritle bir. Liste veriden geliyor (`ilceler`); dar ekranda yatay kayıyor,
+sarılınca dört satır oluyordu.
+
+**Ray EKLENMEDİ.** Guardian/Milliyet bölüm sayfasında sağ ray taşıyor ama
+320 px'lik ray içerik sütununu 1080'den 740'a indirirdi ve §45'te kullanıcının
+ölçüp onayladığı fotoğraf boyları küçülürdü. Kademeleme aynı işi genişlikten
+çalmadan yapıyor.
+
+### Doğrulama
+
+Başsız Chrome: /bursaspor 1. sayfa (manşet + ikili + akış), 2. sayfa (yalnız
+akış), /ilce/osmangazi (İLÇELER şeridi), 430 ve 390 px (tek sütun akış,
+480 px altında spot düşüyor ve görsel 110 px'e iniyor). Sayfa boyu 1400 px'te
+~5.000 px'den ~2.000 px'e indi, haber sayısı aynı. **650 test geçiyor.**
+
+
+---
+
+## §47 — İLÇELER bandı Osmangazi'ye, bölüme özel EN ÇOK OKUNANLAR (2 Eylül 2026)
+
+Kullanıcı isteği: "ilçelere tıklanınca default olarak osmangaziye yolla, bir
+de kategori sayfalarına en çok okunanlar paneli ekle o kategoriye özel".
+
+### 1. Bant kalemi doğrudan ilçeye gidiyor
+
+`BANT` içindeki "İLÇELER" hedefi `/ilceler` yerine `/ilce/osmangazi`
+(`VARSAYILAN_ILCE` sabiti). Gerekçe: dizin sayfası okuru bir tıklama daha
+uzağa koyuyordu; ilçe sayfası §46'dan beri 17 ilçenin hepsini taşıyan hızlı
+geçiş şeridini çiziyor, yani dizinin işini de görüyor.
+
+**Dizin kaldırılmadı.** Tam menüdeki "Tüm ilçeler" ve anasayfadaki "BURSA
+İLÇELERİ" kutusu oraya gitmeye devam ediyor, adres arama motorunda kayıtlı.
+Ayrıca bandın bu kalemi artık **her** ilçe sayfasında etkin görünüyor
+(`/ilce/` önekiyle eşleşme); eskiden yalnız hedefiyle birebir eşleşen sayfada
+yanıyordu ve okur Nilüfer'deyken bandın hangi kaleminin altında olduğunu
+göremezdi.
+
+### 2. Bölüme özel EN ÇOK OKUNANLAR şeridi
+
+Anasayfada bu kutu sağ raydadır; bölüm sayfasında ray yok (§46 kararı) ve
+kutu **tam genişlikte beşli şerit** oldu — manşet kademesiyle akış arasına,
+sayfanın doğal kesme noktasına giriyor. İri kırmızı sıra numaraları, dikey
+ayraçlar; 900 px altında iki, 480 px altında tek sütun.
+
+**Okunma verisi hâlâ yok** (§4, madde 8: sayaç göçte kurtarılamadı) ve
+anasayfadaki aynı adlı kutu da aynı durumda. Şerit `_bolum_en_cok` ile
+besleniyor: o bölümün, **sayfada geçmeyen** sonraki beş kaydı. Bu seçim iki
+şeyi garanti ediyor — kalemler o bölüme ait ve sayfada ikinci kez
+görünmüyorlar. Sayaç gerçek veriyle dolunca değişecek tek yer bu fonksiyondur;
+şablon ve biçim aynı kalır.
+
+### Doğrulama
+
+**652 test geçiyor** — ikisi yeni: bant kaleminin dizine değil ilçeye gitmesi
+(dizin adresi menüde duruyor ve 200 dönüyor) ve şeridin sayfadaki haberleri
+tekrarlamaması + yalnız o kategoriden beslenmesi. Ekran: /bursaspor 1400 px.
+
+---
+
+## §48 — okunma sayacı açıldı: üç modül gerçek veriye bağlandı (3 Eylül 2026)
+
+§4 madde 8'in borcu kapandı. Site üç yerde "EN ÇOK OKUNANLAR" başlığı
+taşıyordu (anasayfa rayı, haber detay rayı, bölüm şeridi) ve üçü de okunma
+verisi olmadığı için **listenin bir sonraki dilimini** basıyordu. Artık
+gerçek bir sayaç var; modüller ondan besleniyor.
+
+### 1. Veri: `Okunma` — günlük kova, ayrı tablo
+
+`icerik_okunma`: `(haber, gün) → adet`, tekillik kısıtı ve kapsayan indeks
+(`gun, haber, adet`).
+
+**`Haber`e sütun eklenmedi, iki ölçülmüş sebeple:**
+
+1. `icerik_haber` 486.668 satır ve **2,6 GB**. Django'nun SQLite arka ucu
+   varsayılanı olan bir sütunu `ALTER TABLE ADD COLUMN` ile ekleyemez,
+   tabloyu `_remake_table` ile yeniden kurar — 2,6 GB'lık bir kopya tek bir
+   sayaç için ödenmeyecek bedel. Ayrı tabloyla göç **20,9 saniye** sürdü ve
+   arşiv tablosuna hiç dokunmadı.
+2. Sayfa görüntülemesi bir YAZMA doğuruyor. Sayaç ayrı tablodayken okuma
+   yolunun yazması arşiv tablosunun indekslerine dokunmuyor.
+
+**Günlük kova, tek toplam değil.** "En çok okunan" gazetede her zaman bir
+PENCERE ölçüsüdür; ömür boyu toplam üç yıl önceki bir haberi listeye kalıcı
+çakardı. Kova düzeni "son 7 gün" ile "bugün"ü aynı tablodan çıkarıyor ve
+tablo arşiv kadar değil, **okunan haber × gün** kadar büyüyor.
+
+Yabancı anahtar bilinçli: bölüm şeridi "bu kategorinin en çok okunanları"nı
+sormak zorunda ve o sorgu ancak katılımla (`haber__kategori`) ucuz kurulur.
+
+**Yalnız haber ailesi.** Panelin köşe · yazar · galeri · video
+listelerindeki Okunma sütunları boş bırakıldı ve notları düzeltildi; o
+aileler için sayaç açılmadı, açılmış gibi de gösterilmiyor.
+
+### 2. Sayma: ne sayılır, ne sayılmaz
+
+`icerik/okunma.py`. Sayım haber detayında, **kanonik denetimden sonra** —
+yanlış slug 301 verdiği için önce sayılsaydı aynı okuma iki kez sayılırdı.
+
+Sayılmayanlar: bilinen robot ve tarayıcı dizileri (`BOT_IZLERI`), tarayıcının
+ön yükleme istekleri (`Sec-Purpose` · `Purpose` · `X-Moz` başlıkları),
+kullanıcı aracısı boş istekler, ve **aynı okurun aynı haberi yarım saat
+içinde yeniden açması** (yenileme, geri tuşu, açık sekme).
+
+Tekrar süzgeci okuru **tanımıyor**: adres + tarayıcı dizisi + haber kimliği
+üçlüsünün karması bellekte tutuluyor, `TEKRAR_SANIYE` sonunda düşüyor,
+diske hiç yazılmıyor. Adres için `X-Forwarded-For`un ilk adımı öncelikli —
+vekil arkasında `REMOTE_ADDR` bütün okurlarda aynı olurdu ve sayaç haber
+başına yarım saatte bir okunma sayardı.
+
+**Yazma tamponlu.** Her görüntülemeyi doğrudan yazmak, `journal_mode=delete`
+ile çalışan bir SQLite'ta her tıklamada dosya kilidi almak demekti. Sayımlar
+süreç içinde birikiyor, 30 saniyede bir (ya da 50 kova dolunca) tek turda
+yazılıyor — `canli.py`nin kısa bellek düzeniyle aynı mantık. Bedeli: süreç
+ölürse son turun sayımı kaybolur. Bir okunma sıralaması için kabul
+edilebilir; sayfanın 500 vermesi değildir, o yüzden **yazma hatası sayfaya
+hiç yansımıyor** ve hata durumunda sayım tampona geri konuyor.
+
+### 3. Geri düşüş: liste ya tamamen gerçek olur ya hiç
+
+§4 madde 8'in kararı ("başta editör seçkisi, sonra otomatik") şu kuralla
+uygulandı: bir modül gerçek veriye ancak istenen sayıda haberin **her biri**
+pencerede `ESIK_OKUNMA` (10) okunmaya ulaşmışsa geçiyor. Ulaşmadıysa modül
+eski davranışına dönüyor — listenin devamı.
+
+Yarısı gerçek yarısı dolgu bir sıralama okura sayı diye yalan söylerdi. Aynı
+sebeple sayacın ilk gününde üç okunmayla kurulacak bir liste de gürültü
+olurdu; eşik onu bekletiyor.
+
+Üç modül de tek kapıdan (`okunma.en_cok`) besleniyor, yani üçü aynı anda
+gerçek veriye geçiyor. **Sayfada geçen kayıtlar dışarıda bırakılıyor** ve bu
+kural gerçek veriyle daha da gerekli: en çok okunan haber çoğu zaman
+manşetin kendisidir, liste onu tekrarlasa 29 Ağustos'ta ölçülen kusur (aynı
+başlık sayfada üç kez) geri gelirdi.
+
+### 4. Beyan veriden okunuyor
+
+`/veri-kaynaklari` sayfasındaki cümle şablona çakılıydı ("Şimdilik editör
+seçkisi…") ve liste gerçek veriye geçtiği gün yalan söyleyecekti — §30'da
+resmî ilan notunda ölçülen kusurun aynısı. Cümle artık listenin O ANDAKİ
+hâlinden yazılıyor ve iki hâli de açıkça anlatıyor.
+
+### 5. Panel
+
+- `/panel/akis` **Okunma sütunu doldu.** Sayfadaki 25 satırın tamamı **tek**
+  toplama sorgusuyla geliyor (§28'in sayım maliyeti dersi); `_liste_ciz`e
+  bunun için `sayfa_oncesi` kancası eklendi. Sütunun notu penceresini
+  söylüyor, "toplam okunma" sanılmasın diye.
+- **Yeni ekran: `/panel/okunma`** — En çok okunan haberler, dönem seçmeli
+  (Bugün · Son 7 gün · Son 30 gün). Sorgu okunma tablosundan sürülüyor,
+  arşivden değil. Rapor **ham sayımı** gösteriyor: modüllerin eşiği ve
+  yayında olma koşulu burada yok, editör listede olmayan bir haberin kaç kez
+  açıldığını da görebilmeli. Salt okuma olduğu için yeni yetkilik
+  açılmadı, `login_required` yeterli.
+- "Tüm zamanlar" dönemi **bilerek yok**: sayaç 3 Eylül 2026'da sıfırdan
+  başladı ve ömür boyu toplam, yalnız sayacın açık olduğu süreyi ölçtüğü
+  hâlde "en çok okunan haberimiz" gibi okunurdu.
+
+### Doğrulama
+
+**686 test geçiyor** — 34'ü yeni (`icerik/tests_okunma.py`): ne sayılır ·
+tekrar ve robot süzgeci · vekil arkasında okurların ayrışması · kova
+toplama · pencere sınırı · eşik altında geri düşüş · üç modülün sayfayı
+tekrarlamaması · beyan cümlesinin veriyle değişmesi · panel sütunu ve
+raporu · okunma sütununun satır başına sorgu açmaması.
+
+Ayakta sunucuda ölçüldü (taze sunucu, 8734): aynı okurun iki isteği **1**,
+farklı okur **+1**, Googlebot **0** sayıldı; tampon 30 saniyede yazıldı ve
+son isteğin bir sonraki tura kalması beklenen davranış olarak görüldü.
+
+### Açık kalan
+
+- Sayaç yalnız **haber** ailesinde. Köşe · galeri · video için açılırsa
+  kendi kovalarını alır; panel sütunları o güne kadar boş ve notlu.
+- `journal_mode` hâlâ `delete`. Tamponlama yazma sıklığını düşürdüğü için
+  bu iş onu zorlamıyor, ama gerçek trafikte WAL'a geçmek ayrı bir karar
+  olarak duruyor.
+
+---
+
+## §49 — arşiv göçü tamamlandı, künye yeniden kuruldu (3 Eylül 2026)
+
+Üç iş bir arada yürüdü: diskteki arşiv veritabanına alındı, sıralama
+kesinleştirildi, künye yeniden tasarlandı. Göçün açtığı iki performans
+yarası aynı turda ölçülüp kapatıldı.
+
+### 1. Göç: 551.806 kayıt siteye girdi
+
+Tarama biteli iki gün olmuştu ama **diskten veritabanına aktarım hiç
+çalıştırılmamıştı**. Sitede 486.668 haber vardı, diskte 1.038.473; en eski
+kayıt `2021-03-31`, yani sitede duran şey yalnızca sitemap ailesiydi ve
+sitemap dışı 2012–2021 dönemi hiç görünmüyordu.
+
+`goc_al --yalniz-yeni` ile aktarıldı — veritabanında kimliği bulunan
+486.667 dosya hiç açılmadı. Sonuç:
+
+```
+Dosya         : 551.806
+  alindi        551.806      görselsiz     481.118
+  ilce turetildi 50.095      kaynak bagi    51.112
+  yeni kaynak       191
+```
+
+**Tanınmayan kategori, çözülemeyen adres, okunamayan dosya: sıfır.** Süre
+81 dakika (15:08 → 16:30). Veritabanı 2,42 → 3,16 GB. Toplam haber
+**1.038.474**, en eski kayıt `2012-01-12`.
+
+Kategori eşleşmesi göç öncesinde ayrıca denetlendi: 176 dönem klasörünün
+her birinden örnek alınarak (26.400 dosya) arşivdeki **13 ayrı kategori
+slug'ı** çıkarıldı; on üçü de tanımlıydı ve tek bilinen sapma
+(`bursada-spor` → `bursa-da-spor`) `Yonlendirme` tablosundan çözülüyor.
+
+`goc_al` yine de düzeltildi: tanınmayan slug'ları artık **sayısıyla ve
+örnek adresiyle** raporluyor. Eskiden yalnız sayıyordu ve hangi slug'ın
+düştüğü bilinmeden eşleştirme yapılamıyordu.
+
+### 2. Sıralama: en yeni önde, artık kesin — ve indeksi var
+
+Sıralama zaten `-yayin_zamani` idi. Bulunan gerçek kusur beraberlikti:
+yayındaki 486.656 kaydın **31.845'i (%6,5)** bir başkasıyla aynı zaman
+damgasını taşıyor, en kalabalık küme 7. Tek anahtarla sıra belirsiz
+kalıyor ve beraberlik sayfa sınırına denk gelince aynı haber iki sayfada
+görünebiliyor ya da hiç görünmüyordu. `ordering = ["-yayin_zamani", "-id"]`.
+
+**İkinci anahtarın bedeli ölçüldü ve ilk ölçüm yanılttı.** 486.668 satırda
+ucuzdu (kategori listesi 0,07 → 0,09 ms) ve o ölçüme dayanarak değişiklik
+yapıldı. Göç tabloyu 1.038.474'e çıkarınca `select_related("kategori")`
+taşıyan sorgularda planlayıcı indeksi bıraktı:
+
+```
+birleşmeli LIMIT 1, tek anahtar        0,0 ms
+birleşmeli LIMIT 1, iki anahtar    3.970,0 ms
+```
+
+`ANALYZE` — istatistik göçten sonra bayattı, `sqlite_stat1` hâlâ 486.667
+diyordu — süzgeçsiz sorguları düzeltti (2.826 → 0,1 ms) ama birleşmeliyi
+düzeltmedi. Çözüm `haber_siralama` indeksi (`-yayin_zamani, -id`):
+**3.970 → 0,1 ms**, bedeli 31,9 MB ve 13,4 sn kurulum. Sıralama bir daha
+değişirse o indeks de değişmeli; ikisi birbirine bağlı.
+
+**Ders:** büyük bir göçten sonra `ANALYZE` çalıştırılmalı, ve tablo boyu
+kat kat artacaksa sorgu planı ölçümü göç ÖNCESİNDE değil sonrasında
+geçerlidir.
+
+### 3. Okunma sıralaması: katılım tamamen kaldırıldı
+
+§48'in `okunma.en_cok` sorgusu kapsamı `haber__in=sorgu.values("pk")` alt
+sorgusuyla alıyordu. 486 binde görünmeyen bedel bir milyonda çıktı:
+
+```
+haber__in=sorgu.values("pk") alt sorgusu   2.593 ms
+icerik_okunma INNER JOIN icerik_haber      2.303 ms
+katılımsız (bugünkü hâli)                    < 1 ms
+```
+
+Birincisi `yayin_zamani IS NOT NULL` koşulunu alt sorguya taşıyordu ve o
+koşul hiçbir B-ağacı indeksiyle karşılanamıyor — tablo baştan sona
+taranıyordu. Katılıma çevrildi; bu kez planlayıcı, **boş `icerik_okunma`
+tablosunun istatistiği olmadığı için** birleşmeyi ters taraftan sürdü
+(`SCAN icerik_haber`). Sıralama artık yalnız küçük tablodan çıkıyor ve
+planlayıcının kararına bağlı değil: en çok `ADAY_TAVANI` (500) aday
+kimlik alınıp kapsam çağıranın kendi sorgusuyla uygulanıyor.
+
+Bir bölümün haberleri haftanın en çok okunan 500'ü arasında yoksa şerit
+geri düşüşe geçer — o bölümün gösterilmeye değer bir sıralaması gerçekten
+yoktur.
+
+**Anasayfa 6.894 → 69 ms.** Bölüm sayfaları 22–27 ms.
+
+### 4. Künye yeniden kuruldu
+
+Kullanıcı isteği: künyenin tasarımından memnun değildi ve **"bir yanda
+sütunlar varken diğer yanda tek bir satırda ilerleyen başka bir sıra"**
+kalkacaktı. Yön: zengin yapı korunacak, kusurlar onarılacak.
+
+**Kaldırılan iki ritim.** Üstte sütun ızgarası, altlarından enine akan iki
+sıra vardı: 17 ilçenin tek satırda dizildiği şerit ve orta noktalarla akan
+künye satırı. İlçeler artık **beşinci sütun** (hücre içinde iki alt sütuna
+bölünüyor, 17 kalem komşularıyla aynı yükseklikte kalıyor).
+
+Künye satırı önce etiket/değer çiftlerinden kurulu ikinci bir ızgaraya
+çevrildi; **ardından kullanıcı kararıyla tamamen kaldırıldı.** İmtiyaz
+sahibi · sorumlu yazı işleri müdürü · yayın türü · adres · telefon ·
+reklam e-postası künyede durmuyor artık (değerleri zaten yer tutucuydu).
+Aynı kararla alttaki uzun veri kaynağı beyanı ve yanındaki "Bölüm bölüm
+veri kaynağı ve kapsam →" bağlantısı da kalktı; **alt satırda yalnız
+telif var:** "© 2026 Bursa Hakimiyet, hakları saklıdır."
+
+Beyanın kendisi **silinmedi**: `/veri-kaynaklari` sayfası duruyor ve
+KURUMSAL sütunundan bağlanıyor. 27 Ağustos'ta künye şablonuna konan
+"beyan doğru mu" koruması da silinmedi — amacı aynı kalacak biçimde
+beyanın yeni yerine taşındı (`tests.py`,
+`test_canli_veri_beyani_dogru_ve_ulasilabilir`). Künye bloğu gidince
+KURUMSAL'daki "Künye ve iletişim" bağlantısı boş bir yere gideceği için
+o da kaldırıldı.
+
+**Onarılan kusurlar:**
+
+- **17 ölü bağlantı** (`href="#"`) vardı. Sayfası olmayan kalem künyeye
+  yazılmıyor artık; geriye yalnız dört sosyal hesap kaldı (adresleri
+  kullanıcıdan bekleniyor), RSS gerçek adrese bağlandı.
+- **4 anasayfa çapası** (`#panel-hava`, `#panel-vakit`, `#resmi-ilan`,
+  `#vizyon`) yalnız anasayfada çalışıyordu; kategori ve haber
+  sayfalarında hiçbir yere gitmiyordu. `/` önekiyle verildi.
+- **"TAKİP EDİN" sütunu** hemen üstündeki sosyal şeridi tekrarlıyordu
+  (YouTube · Instagram · RSS · WhatsApp iki kez). Kaldırıldı; yerine
+  gerçek sayfalar geldi.
+- **Ölü CSS.** `.kunye-alt` iki kez tanımlıydı (ikincisi birincinin
+  `font-size` ve `margin` değerlerini eziyordu). `footer .kapsa` ve
+  `footer .alt` şablonda karşılığı olmayan eski işaretlemeden kalmıştı.
+  Ayrıca bu turda yazılan `footer ul{line-height:1.9}` de ölü çıktı:
+  aşağıdaki K6 dokunma hedefi kuralı (`line-height:1.45`) kök seviyede ve
+  dosyada sonra geliyor.
+
+**Arşiv kapsamı satırı veriden geliyor** — "2012'den bugüne 1.038.474
+haber arşivde". Şablona çakılı sayı yazılmadı; 27 Ağustos'ta şablonda
+"1484 video" yazarken veritabanında 31.084 olması bu dersi vermişti.
+Sayılamazsa cümle hiç basılmaz.
+
+Sayım da ölçülerek seçildi: `yayindakiler().count()` **2.202 ms** (tam
+tarama, `IS NOT NULL` indekslenemiyor), süzgeçsiz `COUNT(*)` **11 ms**
+(kapsayan indeks). Cümle tam olarak ölçtüğü şeyi söylüyor: "arşivde".
+Hata durumu da önbelleğe yazılıyor — `views.arsiv_sayilari` bunu yapmıyor
+ve göç sürerken her istek kilide yeniden giriyordu.
+
+**Sosyal düğmeler simgeye indi.** Ölçüm: yazılı etiketlerle beş düğme
+440 px istiyor, marka sütunu 1600 px'te 374 px veriyor — satır 4+1 diye
+kırılıyordu. Adlar `aria-label` ve `title` ile duruyor, kare düğme 34×34
+(WCAG 2.5.8'in 24 px eşiğinin üstünde).
+
+### Doğrulama
+
+**698 test geçiyor** — 46'sı bu turda yeni (`tests_okunma.py` 34,
+`tests_kunye.py` 12). Künye testleri: ilçelerin şerit değil sütun olması,
+künye bilgilerinin kalıntı bırakmadan kalkması, alt satırda yalnız telifin
+kalması, beyanın hâlâ ulaşılabilir olması, liste sütunlarında ölü bağlantı
+kalmaması, çapaların her sayfada çalışan biçimde olması, künyedeki her
+yerel adresin gerçekten açılması, arşiv cümlesinin veriyle değişmesi ve
+sayılamayınca hiç basılmaması.
+
+Yerleşim başsız Chrome'la **ölçüldü** (tahmin edilmedi): 1600 · 1280 · 900
+· 620 · 500 px'te **yatay taşma sıfır**, ilçe sütunu her genişlikte iki
+alt sütun. Künye bilgileri kaldırıldıktan sonra yerleşim yeniden çizdirildi
+(1600 · 1000 · 390 px): beş sütun 1600'de aynı satırdan başlıyor, 1000'de
+ikiye, 390'da teke iniyor.
+
+**Ölçüm tuzağı — kaydedilmeli.** Başsız Chrome bu makinede pencereyi
+**500 CSS px'in altına indirmiyor**: `--window-size=390` verildiğinde
+`innerWidth` 500 dönüyor ve ekran görüntüsü 500 px'te render edilip 390'a
+KIRPILIYOR. Kırpılmış görüntüdeki kesik satırlar bir CSS taşması sanıldı;
+ölçüm öyle olmadığını gösterdi. `--force-device-scale-factor` de CSS
+görünüm genişliğini değiştirmiyor. **360–390 px bu yöntemle
+doğrulanamıyor**; o aralık için DevTools protokolü (Emulation) gerekiyor.
+
+### Açık kalan
+
+- Dört sosyal hesabın adresi (X · Instagram · YouTube · WhatsApp)
+  kullanıcıdan bekleniyor; şimdilik `href="#"`.
+- **Künye bilgileri sitede hiç görünmüyor.** İmtiyaz sahibi, sorumlu yazı
+  işleri müdürü, yayın türü, adres ve iletişim kullanıcı kararıyla
+  kaldırıldı; yerlerinde yer tutucu değerler vardı, yani yanlış bilgi
+  yayınlanmıyor. Ama site canlı bir süreli yayın ve 5187 sayılı Basın
+  Kanunu künyeyi zorunlu tutuyor: bilgiler netleşince künyenin bir
+  yerinde (kendi sayfası olabilir) yayımlanması gerekir. Marka
+  sütunundaki ihbar hattı numarası da yer tutucu.
+- Anasayfadaki "Haber ihbar hattı 0224 000 00 00 (yer tutucu)" satırı
+  duruyor — gerçek numara verilince "(yer tutucu)" işareti kalkmalı.
+- Sayfası olmadığı için künyeden çıkarılan kalemler: Reklam, Yayın
+  ilkeleri, Düzeltme ve cevap, Gizlilik, KVKK, E-bülten, WhatsApp kanalı,
+  Mobil uygulama, E-gazete. **KVKK ve Gizlilik'in yokluğu ayrı bir
+  eksiktir**, tasarım kararı değil.
+- 360–390 px ölçümü (yukarıdaki tuzak).

@@ -164,6 +164,39 @@ def kisa_zaman(zaman) -> str:
 
 
 @register.filter
+def goreli_zaman(zaman) -> str:
+    """SON DAKİKA rayının damgası: taze haberde "14 dk önce".
+
+    2 Eylül 2026, §44. Son dakika kutusunda okurun sorduğu soru "kaçta"
+    değil "ne kadar yeni". İncelenen sitelerin hepsi (BBC "17 mins ago",
+    Spiegel "Vor 6 Min", CNN Türk "2 saat önce") bu kutuda GÖRELİ zaman
+    yazıyor; "14:32" yazan bir liste akşam bakan okura tazelik söylemiyor.
+
+    Sınır 24 saat: ötesinde `kisa_zaman`a düşer. Arşivde aylar öncesine
+    ait kayıtlar var ve "1.437 saat önce" saçmalık olurdu; o kalemlerde
+    okur zaten "ne zaman" diye soruyor.
+
+    Gelecek tarihli kayıtta (sunucu saat farkı, ileri tarihli yayın)
+    "şimdi" yazılır — negatif dakika basılmaz.
+    """
+    from django.utils import timezone
+    if not zaman:
+        return ""
+    try:
+        fark = timezone.now() - zaman
+    except TypeError:
+        return ""
+    saniye = fark.total_seconds()
+    if saniye < 60:
+        return "şimdi"
+    if saniye < 3600:
+        return f"{int(saniye // 60)} dk önce"
+    if saniye < 86400:
+        return f"{int(saniye // 3600)} saat önce"
+    return kisa_zaman(zaman)
+
+
+@register.filter
 def iso_tarih(metin):
     """`2026-08-29` -> `date` nesnesi; `|date:"j F Y"` ile zincirlenir.
 

@@ -34,6 +34,7 @@ from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 from .arama_metni import sorgu_coz
 from .canli import anasayfa_verisi, oku
 from . import eczane as eczane_sayfa
+from . import okunma
 from .models import Haber, ResmiIlan
 
 # Manşet slaydındaki sayfa sayısı. §35'te 15'ten 5'e inmişti; 30 Ağustos
@@ -95,6 +96,9 @@ ILAN_SAYFA_BOYU = 40
 # ~67 ms), o yüzden `canli.py`deki kısa bellek düzeniyle aynı biçimde
 # önbelleğe alınıyor — anasayfa her istekte dört COUNT açmasın.
 SAYIM_BELLEK_SANIYE = 300
+# Sayım kilide takılırsa sonuç bu kadar süre beklet: her istek kilide
+# yeniden girmesin, ama kilit kalkınca sayfa dakikalarca eksik kalmasın.
+HATA_BELLEK_SANIYE = 20
 _sayim_bellek: tuple[float, dict] | None = None
 
 
@@ -124,10 +128,17 @@ def arsiv_sayilari() -> dict:
             "video_adedi": Video.yayindakiler().count(),
         }
     except DatabaseError:
-        if _sayim_bellek:
-            return _sayim_bellek[1]
-        return {"yazar_adedi": None, "kose_adedi": None,
-                "galeri_adedi": None, "video_adedi": None}
+        # Hata da ÖNBELLEĞE yazılır. Yazılmadığı sürece, göç gibi uzun bir
+        # yazma işi sürerken her istek kilide yeniden giriyor ve SQLite'ın
+        # bekleme süresi kadar duruyordu (3 Eylül 2026'da `baglam` tarafında
+        # ölçüldü ve orada baştan doğru kuruldu). Kısa bir pencere seçildi:
+        # kilit geçici, sayfa da uzun süre eksik kalmasın.
+        son_bilinen = _sayim_bellek[1] if _sayim_bellek else {
+            "yazar_adedi": None, "kose_adedi": None,
+            "galeri_adedi": None, "video_adedi": None}
+        _sayim_bellek = (simdi - SAYIM_BELLEK_SANIYE + HATA_BELLEK_SANIYE,
+                         son_bilinen)
+        return son_bilinen
     _sayim_bellek = (simdi, sayilar)
     return sayilar
 
@@ -173,12 +184,16 @@ def anasayfa(request):
     dortlu = al(DORTLU)
     kutular = al(KUTU)
 
-    # "En çok okunanlar" için okunma verisi yok — göçte kurtarılamadı
-    # (URUN-PLANI.md §4, madde 8). Başlangıçta editör seçkisi gibi davranıp
-    # en yenileri gösteriyoruz; sayaç gerçek veriyle dolunca burası değişir.
-    # 29 Ağustos: dilim havuzun SONUNDAN alınıyor — `havuz[:5]` manşetin ilk
-    # beşinin kopyasıydı ve aynı başlık sayfada üç kez görünüyordu.
-    en_cok = al(EN_COK)
+    # "En çok okunanlar" — artık gerçek sayaçtan (icerik/okunma.py).
+    # Sayaç yeterli veriyi toplayana kadar liste eski kuralına düşer:
+    # editör seçkisi gibi davranan en yeniler (URUN-PLANI.md §4, madde 8).
+    #
+    # Sayfada ZATEN geçen kayıtlar dışarıda bırakılıyor. Bu kural gerçek
+    # veriyle daha da gerekli: en çok okunan haber çoğu zaman manşetin
+    # kendisidir ve liste onu tekrarlarsa 29 Ağustos'ta ölçülen kusur
+    # (aynı başlık sayfada üç kez) geri gelirdi.
+    kullanilan = [h.pk for h in havuz[:kes]]
+    en_cok = okunma.en_cok(_liste(), EN_COK, haric=kullanilan) or al(EN_COK)
 
     # Yazar kuşağı (§35): sağ raydaki beş satırlık silik liste, tam
     # genişlikte portreli bir şeride dönüştü — 10 yazar sığıyor.
@@ -248,25 +263,59 @@ def anasayfa(request):
     })
 
 
+# Bölüm sayfasının "EN ÇOK OKUNANLAR" şeridi (2 Eylül 2026, §47, kullanıcı
+# isteği: "kategori sayfalarına en çok okunanlar paneli ekle, o kategoriye
+# özel").
+KATEGORI_EN_COK = 5
+
+
+def _bolum_en_cok(sorgu, sayfa):
+    """Şeridin kalemleri — bu bölümün pencerede en çok okunanları.
+
+    Kapsamı `sorgu` taşır: sıralama küçük okunma tablosundan çıkar, sonra
+    o bölümün listesiyle süzülür (gerekçe ve ölçüm: `icerik/okunma.py`,
+    `en_cok`).
+
+    Sıralama `icerik/okunma.py` üzerinden çıkar ve **yalnız bu bölümün**
+    kayıtlarını taşır: kapsamı `sorgu`nun kendisi veriyor. Sayfada görünen
+    haberler dışarıda bırakılır, yoksa aynı başlık ekranda iki kez durur.
+
+    Sayaç yeterli veriyi toplayana kadar (URUN-PLANI.md §4, madde 8) eski
+    kural sürüyor: sayfanın son kaydından SONRAKİ beş haber. İki durumda da
+    kalemler o bölüme ait ve sayfada ikinci kez görünmüyorlar; şablon ve
+    biçim değişmiyor.
+    """
+    sayfadakiler = [h.pk for h in sayfa]
+    okunanlar = okunma.en_cok(sorgu, KATEGORI_EN_COK, haric=sayfadakiler)
+    if okunanlar:
+        return okunanlar
+    bas = sayfa.end_index() or 0
+    return list(sorgu[bas:bas + KATEGORI_EN_COK])
+
+
 def kategori(request, slug):
     """Kategori listesi. Slug **tür satırından** gelir, kategori adından değil."""
     kategori = get_object_or_404(Kategori, turler__tur=Kategori.TUR_HABER,
                                  turler__slug=slug, aktif=True)
-    sayfa = _sayfala(request, _liste().filter(kategori=kategori), sinirli=True)
+    sorgu = _liste().filter(kategori=kategori)
+    sayfa = _sayfala(request, sorgu, sinirli=True)
     return render(request, "kategori.html", {
         "kategori": kategori,
         "baslik": baslikla(kategori.ad),
         "sayfa": sayfa,
+        "en_cok": _bolum_en_cok(sorgu, sayfa),
     })
 
 
 def ilce(request, slug):
     ilce = get_object_or_404(Ilce, slug=slug)
-    sayfa = _sayfala(request, _liste().filter(ilce=ilce), sinirli=True)
+    sorgu = _liste().filter(ilce=ilce)
+    sayfa = _sayfala(request, sorgu, sinirli=True)
     return render(request, "kategori.html", {
         "baslik": f"{ilce.ad} haberleri",
         "ilce": ilce,
         "sayfa": sayfa,
+        "en_cok": _bolum_en_cok(sorgu, sayfa),
     })
 
 
@@ -379,8 +428,14 @@ def _canli_kunyeler():
 
 def veri_kaynaklari(request):
     ilanlar = ResmiIlan.yayimlananlar()
+    # Beyan sayfası "en çok okunanlar"ın hangi veriye dayandığını söylüyor.
+    # Cümle ŞABLONA ÇAKILI olamaz: liste sayaç eşiği aşılınca kendiliğinden
+    # gerçek veriye geçiyor ve beyan o anda yanlışlaşırdı — resmî ilan
+    # notunda ölçülen kusurun (§30) aynısı.
     return render(request, "veri_kaynaklari.html", {
         "baslik": "Veri kaynakları ve kapsam",
+        "okunma_gercek": bool(okunma.en_cok(_liste(), EN_COK)),
+        "okunma_pencere": okunma.PENCERE_GUN,
         "canli_kalemler": _canli_kunyeler(),
         "ilan_toplami": ilanlar.count(),
         "ilan_tur_toplami": ResmiIlan.tur_dagilimi(ilanlar),

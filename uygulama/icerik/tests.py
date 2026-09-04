@@ -248,17 +248,37 @@ class ProjeKurallariSayiyla(TestCase):
                     if "{#" in satir:
                         self.assertIn("#}", satir, f"{yol.name}:{no} çok satırlı {{# #}}")
 
-    def test_kunyede_canli_veri_beyani_dogru(self):
-        """Künye okura beyan veriyor; yanlış beyan bırakılmaz.
+    def test_canli_veri_beyani_dogru_ve_ulasilabilir(self):
+        """Okura verilen kaynak beyanı doğru olmalı ve künyeden ulaşılmalı.
 
         27 Ağustos: altı kalemin beşi canlı kaynağa bağlandı, künye hâlâ
-        "hiçbiri bağlanmadı" diyordu.
+        "hiçbiri bağlanmadı" diyordu; koruma o zaman künye şablonuna
+        kondu.
+
+        3 Eylül 2026: beyan metni kullanıcı isteğiyle künyeden çıkarıldı ve
+        yalnız `/veri-kaynaklari` sayfasında kaldı. Korumanın AMACI aynı —
+        yanlış beyan bırakılmaz, beyan erişilebilir kalır — o yüzden test
+        silinmedi, beyanın yeni yerine taşındı.
+
+        TCMB burada aranmıyor: döviz kaynağı şablona yazılı değil, canlı
+        veri dosyasındaki künyeden geliyor (`_canli_kunyeler`), yani
+        şablon metninde hiç geçmez.
         """
-        metin = (self.KOK / "sablonlar" / "parca" / "kunye.html").read_text(encoding="utf-8")
-        self.assertNotIn("henüz canlı kaynağa bağlanmamıştır", metin)
-        self.assertNotIn("Wikimedia Commons", metin)
-        for kaynak in ("TCMB", "MGM", "TFF", "Diyanet"):
-            self.assertIn(kaynak, metin)
+        kunye = (self.KOK / "sablonlar" / "parca" / "kunye.html").read_text(encoding="utf-8")
+        beyan = (self.KOK / "sablonlar" / "veri_kaynaklari.html").read_text(encoding="utf-8")
+
+        # 1. Künye yanlış ya da bayat beyan taşımaz.
+        for yanlis in ("henüz canlı kaynağa bağlanmamıştır", "Wikimedia Commons"):
+            self.assertNotIn(yanlis, kunye)
+            self.assertNotIn(yanlis, beyan)
+
+        # 2. Beyan sayfası kaynakları adıyla söyler.
+        for kaynak in ("MGM", "TFF", "Diyanet"):
+            self.assertIn(kaynak, beyan)
+
+        # 3. Beyan künyeden bir tık uzakta ve sayfa ayakta.
+        self.assertIn('href="/veri-kaynaklari"', kunye)
+        self.assertEqual(self.client.get("/veri-kaynaklari").status_code, 200)
 
 
 class ResmiIlanBolumu(TestCase):
@@ -450,6 +470,98 @@ class BolumDurustlugu(TestCase):
         gecen_yil = simdi.replace(year=simdi.year - 1)
         self.assertIn(str(simdi.year - 1), kisa_zaman(gecen_yil))
         self.assertEqual(kisa_zaman(None), "")
+
+    def test_goreli_zaman_taze_haberde_ne_kadar_once_yaziyor(self):
+        """SON DAKİKA rayının damgası (2 Eylül 2026, §44).
+
+        Kutuda okurun sorduğu soru "kaçta" değil "ne kadar yeni" —
+        incelenen sitelerin hepsi (BBC, Spiegel, CNN Türk) burada göreli
+        zaman yazıyor. Sınır 24 saat: ötesinde `kisa_zaman`a düşer, yoksa
+        arşivdeki kayıt "1.437 saat önce" olurdu.
+        """
+        from datetime import timedelta
+        from .templatetags.site_etiket import goreli_zaman, kisa_zaman
+        simdi = timezone.now()
+        self.assertEqual(goreli_zaman(simdi - timedelta(seconds=20)), "şimdi")
+        self.assertEqual(goreli_zaman(simdi - timedelta(minutes=14)), "14 dk önce")
+        self.assertEqual(goreli_zaman(simdi - timedelta(hours=3)), "3 saat önce")
+        eski = simdi - timedelta(days=40)
+        self.assertEqual(goreli_zaman(eski), kisa_zaman(eski))
+        self.assertEqual(goreli_zaman(None), "")
+        # İleri tarihli kayıtta negatif dakika basılmaz.
+        self.assertEqual(goreli_zaman(simdi + timedelta(minutes=5)), "şimdi")
+
+    def test_son_dakika_serit_manseti_listede_tekrarlamiyor(self):
+        """En yeni kalem ŞERİTTE, liste ondan sonrakilerle başlar (§44).
+
+        Panelin en yeni haberi hem kırmızı şeride hem listeye basılsaydı
+        okur aynı başlığı iki kez okurdu; `SON_DAKIKA_ADET` de bu yüzden
+        yediye çıktı (listede altı kalem = iki sütunda üç tam satır).
+        """
+        from .baglam import SON_DAKIKA_ADET
+        tur = KategoriTur.objects.filter(
+            tur=Kategori.TUR_HABER, slug="bursaspor").first()
+        for n in range(SON_DAKIKA_ADET + 2):
+            Haber.objects.create(
+                id=830000 + n, slug=f"sd-{n}", baslik=f"Son dakika başlığı {n}",
+                spot="spot", govde="<p>gövde</p>", kategori=tur.kategori,
+                yayin_zamani=timezone.now() - timezone.timedelta(minutes=n))
+        yanit = self.client.get("/")
+        metin = yanit.content.decode()
+        panel = metin[metin.index('id="son-dakika"'):]
+        panel = panel[:panel.index("</ul>")]
+        ayrac = panel.index('<div class="kutu-ic"')
+        serit, liste = panel[:ayrac], panel[ayrac:]
+        en_yeni = yanit.context["son_dakika"][0]
+        self.assertIn(buyult(en_yeni.baslik), serit)
+        self.assertNotIn(en_yeni.baslik, liste)
+        self.assertEqual(liste.count("<li>"), SON_DAKIKA_ADET - 1)
+
+    def test_ilceler_bandi_dizine_degil_osmangaziye_gidiyor(self):
+        """2 Eylül 2026, §47 — kullanıcı isteği.
+
+        Bant kalemi dizine gidince okur ilçe haberine iki tıklamada
+        ulaşıyordu; ilçe sayfası artık 17 ilçelik hızlı geçiş şeridini
+        taşıyor (§46), yani dizinin işini de görüyor. Dizin KALDIRILMADI:
+        tam menüdeki "Tüm ilçeler" oraya gitmeye devam ediyor.
+        """
+        from .baglam import VARSAYILAN_ILCE
+        govde = self.client.get("/").content.decode()
+        bant = govde[govde.index('class="kategori-liste"'):]
+        # Bant listesinin kendisi: ilk `</div>`e kadar. `</nav>` çok
+        # sonra kapanıyor ve tam menüyü de içine alıyordu.
+        bant = bant[:bant.index("</div>")]
+        self.assertIn(f'href="/ilce/{VARSAYILAN_ILCE}"', bant)
+        self.assertNotIn('href="/ilceler"', bant)
+        # Dizin adresi menüde duruyor; sayfa da ayakta.
+        self.assertIn('href="/ilceler"', govde)
+        self.assertEqual(self.client.get("/ilceler").status_code, 200)
+
+    def test_bolum_en_cok_seridi_sayfadaki_haberleri_tekrarlamiyor(self):
+        """Bölüme özel "EN ÇOK OKUNANLAR" (2 Eylül 2026, §47).
+
+        Okunma sayacı yok (§4, madde 8); şerit listenin DEVAMINDAN
+        besleniyor. Kilitlenen şey seçimin sayfayla çakışmaması — aynı
+        başlığın sayfada iki kez görünmesi kutuyu anlamsız kılardı.
+        """
+        from .views import KATEGORI_EN_COK, SAYFA_BOYU
+        tur = KategoriTur.objects.filter(
+            tur=Kategori.TUR_HABER, slug="bursaspor").first()
+        for n in range(SAYFA_BOYU + KATEGORI_EN_COK + 2):
+            Haber.objects.create(
+                id=840000 + n, slug=f"ec-{n}", baslik=f"Bölüm başlığı {n}",
+                spot="spot", govde="<p>gövde</p>", kategori=tur.kategori,
+                yayin_zamani=timezone.now() - timezone.timedelta(minutes=n))
+        yanit = self.client.get("/bursaspor")
+        en_cok = yanit.context["en_cok"]
+        sayfadakiler = {h.id for h in yanit.context["sayfa"]}
+        self.assertEqual(len(en_cok), KATEGORI_EN_COK)
+        self.assertEqual({h.id for h in en_cok} & sayfadakiler, set())
+        # Şerit o BÖLÜME ait: başka kategoriden kayıt sızmaz.
+        for h in en_cok:
+            self.assertEqual(h.kategori_id, tur.kategori_id)
+        self.assertIn("BU BÖLÜMDE EN ÇOK OKUNANLAR",
+                      yanit.content.decode())
 
 
 class ResmiIlanDizini(TestCase):

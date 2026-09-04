@@ -4,12 +4,40 @@
 {% block baslik %}{{ baslik }} — Bursa Hakimiyet{% endblock %}
 {% block aciklama %}{{ baslik }} başlığındaki son haberler — Bursa Hakimiyet.{% endblock %}
 
+{% comment %}BÖLÜM SAYFASI — üç kademeli yerleşim (2 Eylül 2026, §46).
+
+Kullanıcı isteği: "kategori sayfalarının tasarımını geliştir, başka popüler
+haber sitelerinden ilham al ve daha farklı bir tasarımla gel".
+
+İncelenen bölüm sayfaları (tarayıcıda açılıp bakıldı): Guardian /world,
+BBC /news/world, Hürriyet /gundem, Milliyet /gundem. Dördünde de ortak olan
+şu: sayfa TEK TİP kart ızgarası DEĞİL, kademeli. Bir manşet, onun altında
+birkaç orta boy, sonra küçük görselli yoğun bir akış. Guardian ve BBC'de
+akış kalemleri metin öncelikli, görsel küçük bir kare; Hürriyet bölüm
+başlığının yanına hızlı etiket bağlantıları koyuyor.
+
+Bizde eskiden 20 EŞİT kart vardı; kullanıcı fotoğrafları büyüttükçe sayfa
+5.000 px'lik bir merdivene döndü ve 15. haberle 2. haber aynı ağırlıkta
+duruyordu. Yeni kademeler:
+
+  1) MANŞET — ilk haber, fotoğrafı yanda (4:3). Yalnız 1. sayfada; sonraki
+     sayfalar kronolojik devamdır, "bölümde bugün ne var" iddiası taşımaz.
+  2) İKİNCİL İKİLİ — sıradaki iki haber, kart olarak yan yana (3:2).
+  3) AKIŞ — kalanı `parca/akis_satiri.html` ile: solda 150 px görsel, sağda
+     başlık + spot. İki sütun. Gün değiştikçe araya TARİH AYRACI giriyor —
+     arşiv sayfalarında okur "bu haberler ne zamandan" diye soruyor.
+
+Hızlı geçiş şeridi yalnız İLÇE sayfasında: kategori sayfasında yapışkan
+kategori bandının kopyasıydı, kaldırıldı. İlçe listesi bantta yok — orada
+şerit gerçek bir kısayol. Veriden geliyor (`ilceler`), elle yazılmış liste
+yok.{% endcomment %}
+
 {% block icerik %}
       <nav class="kirinti" aria-label="Neredesiniz">
         <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">{{ baslik }}</span>
       </nav>
 
-      <section class="kutu">
+      <section class="kutu bolum">
         <div class="kutu-bas vurgu">
           <h1>{{ baslik|buyult }}</h1>
           {% comment %}Sayım üst sınırla kesiliyor (SinirliSayfalayici).
@@ -17,19 +45,65 @@
           tam tarama. Kesin sayı okurun kararını değiştirmiyor.{% endcomment %}
           <span class="tumu">{% if sayfa.paginator.kesildi_mi %}1.000+{% else %}{{ sayfa.paginator.count }}{% endif %} haber</span>
         </div>
+
+        {% comment %}Hızlı geçiş şeridi YALNIZ İLÇE SAYFASINDA (2 Eylül 2026,
+        kullanıcı: "niye hızlı geçiş şeridi ekledin, zaten ekranın üst kısmında
+        kategoriler bandı var"). Doğru: kategori sayfasında şerit yapışkan
+        kategori bandının kopyasıydı, okur zaten o bandı sayfanın her yerinde
+        görüyor — kaldırıldı.
+
+        İlçede durum başka: bantta 17 ilçe YOK, tek bir "İLÇELER" bağlantısı
+        var ve o da dizin sayfasına gidiyor. Komşu ilçeye geçmek bantla iki
+        tıklama; şeritle bir. Kategori bandı bu listeyi taşımadığı sürece
+        şerit kopya değil.{% endcomment %}
+        {% if ilce %}
+        <nav class="bolum-gecis" aria-label="Öbür ilçeler">
+          <b>İLÇELER</b>
+          {% for i in ilceler %}{% if i.slug != ilce.slug %}<a href="/ilce/{{ i.slug }}">{{ i.ad|baslikla }}</a>{% endif %}{% endfor %}
+        </nav>
+        {% endif %}
+
         <div class="kutu-ic">
           <h2 class="gorsel-gizli">Haberler</h2>
-          {% comment %}İlk kayıt yalnız 1. SAYFADA büyük yerleşim alır
-          (29 Ağustos, Ö15): sonraki sayfalar kronolojik devamdır, "bölümde
-          bugün ne var" iddiası taşımaz. `kategori_gizle` kategori sayfasında
-          doludur; ilçe sayfası aynı şablonu kullanır ama kategori adı orada
-          bilgi taşıdığı için basılmaya devam eder.{% endcomment %}
-          <div class="kutu-izgara">
-            {% for h in sayfa %}{% if forloop.first and sayfa.number == 1 %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 genis=1 kategori_gizle=kategori %}
+          {% if sayfa.number == 1 %}
+          <div class="kutu-izgara liste-izgara">
+            {% for h in sayfa|slice:":3" %}{% if forloop.first %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 genis=1 kategori_gizle=kategori %}
             {% else %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 kategori_gizle=kategori %}
-            {% endif %}{% empty %}<p class="bos">Bu listede henüz haber yok.</p>
-            {% endfor %}
+            {% endif %}{% endfor %}
           </div>
+          {% endif %}
+
+          {% comment %}BÖLÜMÜN EN ÇOK OKUNANLARI (2 Eylül 2026, §47, kullanıcı
+          isteği). Ray yerine tam genişlikte beşli şerit: bölüm sayfasında sağ
+          ray yok (§46 kararı, fotoğraf boyları daralırdı) ve şerit manşet
+          kademesiyle akış arasındaki doğal kesme noktasına oturuyor.
+
+          Kalemler `_bolum_en_cok` ile geliyor: bu bölümün son günlerde en
+          çok okunanları, sayfada geçen kayıtlar dışarıda. Sayaç eşiğe
+          ulaşmadıysa (icerik/okunma.py) liste eski kuralına düşer, yani
+          listenin devamına — anasayfadaki aynı adlı kutu da aynı kapıdan
+          beslenir. Şablon iki durumda da aynıdır.{% endcomment %}
+          {% if en_cok %}
+          <section class="en-cok" aria-labelledby="en-cok-bas">
+            <h2 id="en-cok-bas">BU BÖLÜMDE EN ÇOK OKUNANLAR</h2>
+            <ol>
+              {% for h in en_cok %}<li><span class="no" aria-hidden="true">{{ forloop.counter }}</span><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
+              {% endfor %}
+            </ol>
+          </section>
+          {% endif %}
+
+          {% comment %}Akış: 1. sayfada dördüncü haberden başlar, sonraki
+          sayfalarda listenin tamamıdır.{% endcomment %}
+          {% if sayfa %}
+          <ul class="akis">
+            {% for h in sayfa %}{% if sayfa.number > 1 or forloop.counter > 3 %}
+            {% ifchanged h.yayin_zamani|date:"Y-m-d" %}<li class="gun"><span>{{ h.yayin_zamani|date:"j F Y" }}</span></li>{% endifchanged %}
+            {% include "parca/akis_satiri.html" with h=h kategori_gizle=kategori %}
+            {% endif %}{% endfor %}
+          </ul>
+          {% else %}<p class="bos">Bu listede henüz haber yok.</p>
+          {% endif %}
         </div>
       </section>
 

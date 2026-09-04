@@ -40,6 +40,7 @@
         <ul class="alt">
           {% if haber_girebilir %}<li><a href="{% url 'panel-haber-ekle' %}">Haber Ekle</a></li>{% endif %}
           <li><a href="{% url 'panel-akis' %}"{% if bolum == 'akis' %} aria-current="page"{% endif %}>Tüm Haberler</a></li>
+          <li><a href="{% url 'panel-okunma' %}"{% if bolum == 'okunma' %} aria-current="page"{% endif %}>Okunma Raporu</a></li>
           {% if mansete_alabilir %}<li><a href="{% url 'panel-mansetler' %}"{% if bolum == 'mansetler' %} aria-current="page"{% endif %}>Manşetler</a></li>{% endif %}
           {% if mansete_alabilir %}<li><a href="{% url 'panel-son-dakika' %}"{% if bolum == 'son-dakika' %} aria-current="page"{% endif %}>Son Dakika</a></li>{% endif %}
           {% if kose_yonetir %}

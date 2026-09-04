@@ -147,16 +147,21 @@
   --vk-perde:linear-gradient(0deg,rgba(6,14,28,.88) 0%,rgba(6,14,28,.45) 42%,
              rgba(6,14,28,0) 74%);
   --foto-hak-zemin:rgba(6,14,28,.72);
-  /* SON DAKİKA sahası (30 Ağustos 2026, §38). Panel beyaz kutudan çıkıp
-     kendi kırmızı zeminine alındı; ölçülen kontrastlar:
-       beyaz yazı --sd-zemin (#B8161E) üstünde  6,62:1
-       --sd-saat  (#FFD9A8) aynı zemin üstünde  4,96:1
-       CANLI pili BEYAZ zeminli, --sd-zemin yazılı: 6,62:1
-     Düz --kirmizi üstünde beyaz 4,61 ölçülüyor ve 11-13 px yazı için
-     sınırda kalıyor (`.ihbar-bag` ile aynı gerekçe) — saha bu yüzden koyu
-     tonda, başlık şeridi parlak tonda. */
-  --sd-zemin:#B8161E; --sd-serit:#E4222B; --sd-saat:#FFD9A8;
-  --sd-cizgi:rgba(255,255,255,.22); --sd-bas-cizgi:rgba(255,255,255,.34);
+  /* SON DAKİKA katmanları (2 Eylül 2026, §44). Panelin dolu kırmızı sahası
+     KALKTI: kırmızı artık yalnız şeritte, zaman rayında ve saat damgasında.
+     Ölçülen kontrastlar:
+       beyaz yazı --sd-plaka (#111B47) üstünde        16,44:1
+       beyaz yazı --sd-serit (#B8161E) üstünde         6,62:1
+       CANLI pili BEYAZ zeminli, --sd-serit yazılı:    6,62:1 (koyu plakada)
+       --sd-saat (#B8161E) beyaz üstünde               6,62:1
+       --murekkep beyaz üstünde                       16,68:1
+     Şerit parlak --kirmizi DEĞİL koyu tonda: 19 px/900 manşet büyük metin
+     eşiğine yakın ama üstündeki 11 px zaman damgası değil, ikisi de aynı
+     zeminde duruyor (`.ihbar-bag` ile aynı gerekçe). Parlak ton yalnız
+     nabız noktasında — o metin değil.
+     `--sd-ray` ve `--sd-cizgi` DEKORATİF çizgilerdir, metin taşımaz. */
+  --sd-plaka:#111B47; --sd-serit:#B8161E; --sd-saat:#B8161E;
+  --sd-ray:#F2D4D6; --sd-cizgi:#E6EAEF; --sd-ayrac:rgba(255,255,255,.28);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 /* Künye SAYFANIN dibine değil EKRANIN dibine oturur (31 Ağustos 2026).
@@ -592,6 +597,150 @@ main{display:block;padding-top:14px}
 /* --- 11 · haber kutuları + sağ ray --- */
 .ana-izgara{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
 .kutu-izgara{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+/* KATEGORİ/İLÇE LİSTESİ: fotoğraf 150 px'lik şeritten 16:9'a çıkıyor
+   (2 Eylül 2026, kullanıcı isteği: "kategori sayfalarındaki haber
+   kutucuklarındaki görsellerin boyutunu arttır dikey biçimde").
+
+   Kart bu sayfada 556 px genişliğinde; 150 px'lik fotoğraf 3,7:1 oranında
+   bir şeritti ve arşivin kareleri üstünden altından kırpılıyordu — yüzler
+   ve skorbord kadraj dışında kalıyordu.
+
+   İKİ ORAN: ilk kart 4:3, kalemler 3:2 (2 Eylül 2026). Yol — 150 px şerit
+   (3,5:1) -> 16:9 -> 3:2 -> 5:4 (ikisi de) -> ilk kart 5:4 · kalemler 4:3
+   -> ilk kart 4:3 · kalemler 3:2. Kullanıcı önce "kareye yakın" istedi,
+   sonra iki adımda kalemleri alçalttı ve ilk kartı da bir tık indirdi.
+   Ölçü: 1400 px'te ilk kart 397 px, kalemler 353 px — fark 44 px, sayfanın
+   en uzun fotoğrafı ilk kartınki.
+
+   Yükseklik SABİT PX değil `aspect-ratio`: kart genişliği sütun sayısıyla
+   ve ekranla değişiyor, sabit yükseklik dar ekranda oranı yeniden bozardı
+   (768 px altında tek sütuna inip 360 px'e düşüyor).
+
+   Yalnız `liste-izgara` içinde: anasayfanın kutuları 150 px'te kalıyor,
+   orada kartlar rayın yanında ve daha dar. */
+.liste-izgara .kart:not(.genis) .foto{height:auto;aspect-ratio:3/2}
+/* İLK KART DA AYNI ORANDA. Fotoğrafı yanda duruyor ve boyu metin
+   sütunundan geliyordu; 16:9 denemesinde kalemler 313 px'e çıkınca ilk
+   kart 354 px'te kalmış, kullanıcı farkı görmüştü ("ilk sıradaki
+   fotoğrafın yüksekliğini arttırmışsın ama sonrakilerin değil"). Oran
+   ikisine de verilince fark kapanmıştı: ilk kartın fotoğrafı %50−8px,
+   kalemlerinki (%100−14px)/2 — genişlik farkı 1 px. Kullanıcı sonra
+   kalemleri iki adımda alçalttı; ikisi artık AYRI oranda (4:3 ve 3:2) ve
+   sayfanın en uzun fotoğrafı ilk kartınki — istenen de bu.
+
+   `align-self:start` ZORUNLU: esneyen (stretch) bir hücrede çapraz ölçü
+   kapsayıcıdan gelir ve `aspect-ratio` yok sayılır; fotoğraf metnin boyuna
+   iner. Başlangıca yaslanınca oran işliyor ve KART fotoğrafın boyunu
+   alıyor (metin sütunu zaten `justify-content:center` ile ortalı).
+   768 px altında kart sütuna döndüğü için bu kural geri alınıyor —
+   orada çapraz eksen YATAY, `start` fotoğrafı içeriği kadar daraltırdı. */
+.liste-izgara .kart.genis .foto{align-self:start;height:auto;min-height:0;
+  aspect-ratio:4/3}
+
+/* --- İLÇE SAYFASI: hızlı geçiş şeridi (2 Eylül 2026, §46) -----------
+   YALNIZ ilçe sayfasında çizilir. Kategori sayfasında da denendi ve
+   kullanıcı haklı olarak kaldırttı: yapışkan kategori bandı zaten
+   ekranın üstünde duruyor, şerit onun kopyasıydı. İlçede bantta 17 ilçe
+   YOK — tek bir "İLÇELER" bağlantısı var ve dizine gidiyor; komşu ilçeye
+   geçmek bantla iki tıklama, şeritle bir.
+
+   Şerit kutunun İÇİNDE, kırmızı başlık bandının hemen altında: kutunun
+   dışına konsaydı sayfada üçüncü bir yatay bant daha olurdu. Dar ekranda
+   yatay kayar — sarmak 17 ilçede dört satır yapıyordu. */
+.bolum-gecis{display:flex;align-items:center;gap:8px;overflow-x:auto;
+  background:var(--yumusak);border-bottom:1px solid var(--cizgi);
+  padding:8px 12px;scrollbar-width:thin}
+.bolum-gecis b{flex:none;font-family:var(--display);font-weight:900;font-size:11px;
+  letter-spacing:1.2px;color:var(--gri)}
+.bolum-gecis a{flex:none;font-size:12.5px;font-weight:500;color:var(--lacivert);
+  background:var(--kagit);border:1px solid var(--cizgi);border-radius:2px;
+  padding:5px 10px;white-space:nowrap}
+.bolum-gecis a:hover{border-color:var(--kirmizi);color:var(--kirmizi-koyu)}
+
+/* --- BÖLÜM SAYFASI: EN ÇOK OKUNANLAR şeridi (2 Eylül 2026, §47) -----
+   Anasayfada bu kutu sağ RAYDA duruyor; bölüm sayfasında ray yok (§46:
+   320 px'lik ray içerik sütununu 1080'den 740'a indirir ve §45'te ölçülüp
+   onaylanan fotoğraf boyları küçülürdü). Bu yüzden kutu değil ŞERİT:
+   tam genişlikte, beş sütun, sayılar iri.
+
+   Şerit manşet kademesiyle akış arasına giriyor — sayfanın doğal kesme
+   noktası orası; okur "bölümün en'leri" ile "bölümün akışı" arasında
+   geçişi orada yapıyor. */
+.en-cok{background:var(--kagit);border:1px solid var(--cizgi);
+  border-top:3px solid var(--kirmizi);padding:12px 16px 14px;margin-top:14px}
+.en-cok h2{font-family:var(--display);font-weight:900;font-size:12.5px;
+  letter-spacing:1.3px;color:var(--murekkep);margin-bottom:10px}
+.en-cok ol{list-style:none;display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));gap:0 16px}
+/* Kalemler dikey çizgiyle ayrılıyor: beş başlık yan yana dizilince
+   nerede bitip nerede başladıkları okunmuyordu. İlk kalemde çizgi yok. */
+.en-cok li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;
+  align-items:start;padding-left:14px;border-left:1px solid var(--cizgi)}
+.en-cok li:first-child{border-left:0;padding-left:0}
+.en-cok .no{font-family:var(--display);font-size:25px;font-weight:900;
+  color:var(--kirmizi);line-height:.86}
+.en-cok a{font-size:13.5px;line-height:1.26;font-weight:600;color:var(--murekkep)}
+.en-cok a:hover{color:var(--kirmizi-koyu);text-decoration:underline}
+@media(max-width:900px){
+  .en-cok ol{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px}
+  .en-cok li{border-left:0;padding-left:0}
+}
+@media(max-width:480px){.en-cok ol{grid-template-columns:minmax(0,1fr)}}
+
+/* --- BÖLÜM SAYFASI: akış listesi (2 Eylül 2026, §46) ----------------
+   Kademelerin üçüncüsü: manşet ve ikincil ikiliden SONRAKİ haberler.
+   Kart değil satır — solda 150 px görsel, sağda başlık + spot; iki sütun.
+
+   Neden: 20 eşit kart, fotoğraflar büyütüldükçe 5.000 px'lik bir merdivene
+   dönüyordu ve 15. haber 2. haberle aynı ağırlıkta duruyordu. Guardian
+   /world ve BBC /news/world aynı işi aynı biçimde yapıyor — manşetten
+   sonra metin öncelikli, küçük görselli yoğun liste.
+
+   Liste BEYAZ bir blok: kutunun içi kart ızgarası yüzünden --zemin
+   grisinde (bkz. `.kutu-ic:has(>.kutu-izgara)`), satırlar o grinin
+   üstünde yüzer gibi duruyordu. */
+.akis{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0 22px;background:var(--kagit);border:1px solid var(--cizgi);
+  padding:0 16px 12px;margin-top:14px}
+.akis li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;
+  align-items:start;padding:13px 0;border-top:1px solid var(--cizgi)}
+/* İki sütunun İLK satırında üst çizgi yok: tarih ayracı zaten oradan
+   geçiyor ve iki çizgi üst üste biniyordu. */
+.akis li:nth-child(-n+2){border-top:0}
+.akis .foto{aspect-ratio:3/2}
+.akis .ust{display:flex;align-items:baseline;gap:6px;font-size:10.5px;font-weight:700;
+  color:var(--kirmizi);letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px}
+.akis .ust time{font-family:var(--govde);font-weight:400;font-size:11.5px;
+  color:var(--gri);letter-spacing:0;text-transform:none;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.akis .ust span+time::before{content:"·";margin-right:6px}
+.akis h3{font-family:var(--display);font-size:16.5px;line-height:1.19;font-weight:700}
+.akis h3 a{color:var(--murekkep)}
+.akis li:hover h3 a{color:var(--kirmizi-koyu)}
+.akis p{font-size:12.5px;line-height:1.4;color:var(--gri);margin-top:4px}
+
+/* TARİH AYRACI: arşiv sayfalarında okur "bu haberler ne zamandan" diye
+   soruyor; 31 Ekim 2025 ile 27 Haziran arka arkaya geliyor. Ayraç iki
+   sütunu da keser (`1/-1`) ve o satırda ızgara yeniden başlar. */
+.akis li.gun{grid-template-columns:minmax(0,1fr);grid-column:1/-1;
+  padding:16px 0 2px;border-top:2px solid var(--murekkep)}
+.akis li.gun:first-child{border-top:0;padding-top:12px}
+.akis li.gun span{font-family:var(--display);font-weight:900;font-size:11.5px;
+  letter-spacing:1.3px;text-transform:uppercase;color:var(--murekkep)}
+/* Ayraçtan SONRAKİ iki satırın üst çizgisi de gereksiz — ayraç zaten çizgi.
+   `:nth-child` ayraçları da saydığı için sınıfla eşleşen komşu seçiliyor. */
+.akis li.gun+li,.akis li.gun+li+li{border-top:0}
+@media(max-width:900px){
+  .akis{grid-template-columns:minmax(0,1fr)}
+  .akis li:nth-child(-n+2){border-top:1px solid var(--cizgi)}
+  .akis li:first-child{border-top:0}
+  .akis li.gun+li+li{border-top:1px solid var(--cizgi)}
+}
+@media(max-width:480px){
+  .akis li{grid-template-columns:110px minmax(0,1fr);gap:10px}
+  .akis h3{font-size:15px}
+  .akis p{display:none}
+}
 
 /* --- 12 · sekmeli servis kutusu --- */
 .servis-kutu{border:1px solid var(--cizgi);background:var(--kagit);margin-bottom:16px}
@@ -1216,21 +1365,44 @@ main{display:block;padding-top:14px}
 .film .film-meta{font-size:11.5px;color:var(--gri);padding:0 10px 11px}
 
 /* --- footer --- */
-footer{background:var(--lacivert-koyu);color:var(--kunye-yazi);padding:28px 0;font-size:13px;margin-top:18px}
+/* 3 Eylul 2026, §49: kunye TEK RITME oturdu. Eskiden ustte sutun izgarasi,
+   altlarindan ENINE akan iki ayri sira vardi -- 17 ilcenin tek satirda
+   dizildigi serit ve orta noktalarla akan kunye satiri. Iki ritim yan yana
+   durunca bolum dagilmis gorunuyordu; ikisi de sutuna cevrildi.
+   Ayrica `.kunye-alt` IKI KEZ tanimliydi (ikincisi birincinin font-size ve
+   margin degerlerini eziyordu) -- tek tanima indi. */
+footer{background:var(--lacivert-koyu);color:var(--kunye-yazi);border-top:3px solid var(--kirmizi);padding:30px 0 24px;font-size:13px;margin-top:18px}
 .kunye-ic{max-width:1480px;margin:0 auto;padding:0 12px}
-.kunye-ust{display:grid;grid-template-columns:minmax(0,2fr) repeat(4,minmax(0,1fr));gap:22px}
+.kunye-ust{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.5fr);gap:26px}
 footer a:hover{color:var(--kagit);text-decoration:underline}
-footer h2{font-family:var(--display);color:var(--kagit);font-size:15px;margin-bottom:9px;letter-spacing:.5px}
-footer ul{list-style:none;line-height:2}
+/* Baslik altindaki cizgi bes sutunun da AYNI satirdan basladigini gosterir;
+   kisa kirmizi parca sutun basini isaretler. */
+footer h2:not(.kunye-ad){font-family:var(--display);color:var(--kagit);font-size:14px;letter-spacing:.9px;padding-bottom:7px;margin-bottom:11px;border-bottom:1px solid var(--kunye-cizgi);position:relative}
+footer h2:not(.kunye-ad)::after{content:"";position:absolute;left:0;bottom:-1px;width:34px;height:1px;background:var(--kirmizi)}
+/* Satir arasini BURADA vermiyoruz: asagidaki K6 dokunma hedefi kurali
+   (`footer ul{line-height:1.45}`) kok seviyede ve dosyada sonra geliyor,
+   buradaki deger olu kalirdi. */
+footer ul{list-style:none}
 footer strong{color:var(--kagit)}
-.sosyal{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
-.sosyal a{border:1px solid var(--kunye-cizgi);padding:5px 10px;font-size:11.5px;font-family:var(--display);font-weight:700;letter-spacing:.6px}
+.kunye-ad{font-family:var(--display);color:var(--kagit);font-size:21px;letter-spacing:.6px;margin-bottom:7px}
+.kunye-slogan{max-width:40ch}
+.kunye-kapsam{margin-top:7px;max-width:40ch}
+.kunye-ihbar{margin-top:11px;display:flex;flex-wrap:wrap;gap:3px 9px;align-items:baseline}
+.kunye-ihbar b{color:var(--kagit);font-family:var(--display);font-size:17px;letter-spacing:.4px}
+.kunye-ihbar span{font-size:11.5px;opacity:.72}
+.sosyal{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+/* Kare simge dugmesi. 34x34 -> WCAG 2.5.8'in 24 px dokunma hedefinin
+   ustunde; yazili etiket kaldirildi (kunye.html'deki olcum notu). */
+.sosyal a{border:1px solid var(--kunye-cizgi);width:34px;height:34px;display:grid;place-items:center}
 .sosyal a:hover{background:var(--kirmizi);color:var(--kagit);border-color:var(--kirmizi);text-decoration:none}
-.kunye-ilce{border-top:1px solid var(--kunye-cizgi);margin-top:20px;padding-top:14px;display:flex;flex-wrap:wrap;gap:7px 14px;font-size:12.5px;align-items:baseline}
-.kunye-ilce b{font-family:var(--display);color:var(--kagit);letter-spacing:.7px;font-size:13px}
-.kunye-alt{border-top:1px solid var(--kunye-cizgi);margin-top:16px;padding-top:14px;font-size:12.5px;line-height:1.7}
-.kunye-alt b{color:var(--kagit);font-family:var(--display);letter-spacing:.5px}
-.kunye-alt{border-top:1px solid var(--kunye-cizgi);margin-top:18px;padding-top:14px;font-size:12px}
+/* 17 ilce hucrenin ICINDE iki alt sutuna boluniyor: sutun komsulariyla ayni
+   yukseklikte kaliyor ve enine serit gerekmiyor. */
+.kunye-ilce ul{columns:2;column-gap:18px}
+.kunye-ilce li{break-inside:avoid}
+/* Alt satirda yalniz telif var (kullanici istegi, 3 Eylul 2026): kunye
+   bilgileri ve uzun veri kaynagi beyani kunyeden kaldirildi. Iki sutunlu
+   izgaraya gerek kalmadi. */
+.kunye-alt{border-top:1px solid var(--kunye-cizgi);margin-top:24px;padding-top:14px;font-size:12px;line-height:1.75}
 .kunye-alt a{color:var(--kagit);text-decoration:underline;text-underline-offset:2px}
 
 .yukari{position:fixed;right:16px;bottom:16px;z-index:60;background:var(--lacivert);color:var(--kagit);border:2px solid var(--kagit);font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.8px;padding:10px 13px;cursor:pointer;opacity:0;visibility:hidden;transition:opacity .18s ease}
@@ -1463,8 +1635,6 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .serit-oge .foto{height:120px}
 .serit-oge .rozet-o{position:absolute;left:7px;bottom:7px;z-index:2;background:var(--kirmizi);color:var(--kagit);font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.9px;padding:2px 7px}
 .serit-oge h3{font-family:var(--display);font-size:15px;line-height:1.18;font-weight:700;padding:8px 9px 11px}
-footer .kapsa{display:grid;grid-template-columns:minmax(0,2fr) repeat(4,minmax(0,1fr));gap:22px}
-footer .alt{border-top:1px solid var(--kunye-cizgi);margin-top:22px;padding-top:14px;font-size:12px}
 .doviz .kapsa{display:flex;align-items:center;overflow-x:auto;scrollbar-width:none}
 .doviz .kapsa::-webkit-scrollbar{display:none}
 .doviz .zaman{margin-left:auto;padding:8px 0 8px 10px;font-size:11.5px;color:var(--gri);white-space:nowrap}
@@ -1473,7 +1643,6 @@ footer .alt{border-top:1px solid var(--kunye-cizgi);margin-top:22px;padding-top:
 .yazarlar{grid-template-columns:repeat(2,minmax(0,1fr))}
 .yazar:nth-child(2){border-right:0}
 .uclu{grid-template-columns:minmax(0,1fr)}
-footer .kapsa{grid-template-columns:repeat(2,minmax(0,1fr))}
 .kartlar{grid-template-columns:repeat(2,minmax(0,1fr))}
 .alt-manset{grid-template-columns:minmax(0,1fr)}
 .reklam.tepe{height:120px}
@@ -1802,6 +1971,11 @@ footer .kapsa{grid-template-columns:repeat(2,minmax(0,1fr))}
      dışına 126 px taşıyordu (doğrulama K1, dogrulama-kare-gundem360). */
   .kutu-izgara .kart.genis{flex-direction:column}
   .kart.genis .foto{flex:none;height:200px;min-height:0}
+  /* Sütuna dönen kartta çapraz eksen yatay: `start` fotoğrafı içeriği
+     kadar daraltırdı. Özgüllük taban kuralla EŞİT (0,4,0), dosyada sonra
+     geldiği için kazanıyor. */
+  .liste-izgara .kart.genis .foto{align-self:stretch;height:auto;
+    aspect-ratio:4/3}
   .kart.genis h3{font-size:21px}
 }
 
@@ -1837,7 +2011,6 @@ details.yer-not p{margin-top:6px}
    kart/sıra başlıkları, ilan tür düğmeleri, reklam anahtarı. */
 footer ul{line-height:1.45}
 footer ul a{display:inline-block;padding:4px 0;min-width:24px}
-.kunye-ilce a{display:inline-block;padding:5px 0}
 .bursaspor-liste a{display:inline-block;padding:4px 0;margin:-4px 0}
 .kart h3 a{display:inline-block;padding:2px 0;margin:-2px 0}
 .sira h3 a{display:inline-block;padding:3px 0;margin:-3px 0}
@@ -1882,7 +2055,7 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 .ust-baglar{display:flex;align-items:center;gap:10px}
 /* Künyedeki aynı semboller, çerçeveli düğme dilinde. */
 .sosyal a{display:inline-flex;align-items:center;gap:6px}
-.sosyal .sosyal-simge{width:14px;height:14px}
+.sosyal .sosyal-simge{width:16px;height:16px}
 
 /* --- .ust-blok: dar ekranda manşet dörtlünün önüne ------------------
    Sapma yalnız bu üç kardeş arasında; DOM ve odak sırası değişmiyor. */
@@ -1894,74 +2067,128 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
    kullanıp zeminini ve yazı rengini eziyor; yukarıda dursaydı `.kutu`nun
    beyaz zemini kazanır, beyaz yazı beyaz üstünde kaybolurdu (ölçüldü).
    Yukarı taşıma. */
-/* --- SON DAKİKA paneli (30 Ağustos 2026, §38) ----------------------
-   Kullanıcı isteği: "daha dikkat çekici hale getir".
+/* --- SON DAKİKA paneli (30 Ağustos 2026 §38 · 2 Eylül 2026 §44 ile
+   yeniden kuruldu) ---------------------------------------------------
+   Kullanıcı: "tamamen kırmızı yapma, ama onu dikkat çekici yap" — ardından
+   "global ve ulusal haber sitelerinde son dakika nasıl sunuluyor incele".
 
-   Önceki hâli beyaz `.kutu` + kırmızı `.kutu-bas.vurgu` idi — yani sayfadaki
-   EN ÇOK OKUNANLAR, BURSASPOR ve öbür bütün kutularla AYNI kalıptı; göz onu
-   bir uyarı olarak değil sıradan bir liste olarak okuyordu. Üç hamle:
+   İNCELENEN KALIPLAR (2 Eylül 2026, sayfalar tarayıcıda açılıp bakıldı):
+     Sözcü       koyu plaka + dolu kırmızı şeritte TEK manşet
+     Milliyet    nav altında tam genişlikte tek satırlık şerit
+     Hürriyet    "Bugün neler oldu?" ince şeridi + SICAK GÜNDEM plakası
+     CNN Türk    "CANLI ANLATIM" panosu: noktalı dikey zaman rayı,
+                 "2 saat önce" damgaları
+     BBC         panel YOK; başlığın önünde kırmızı ● LIVE + "17 mins ago"
+     Guardian    aynısı, küçük kırmızı "... live" rozeti
+     Spiegel     üstte son üç başlık, her birinde "Vor 6 Min"
 
-   1) KENDİ SAHASI. Panel bütünüyle koyu kırmızı zemine alındı. Sayfadaki tek
-      dolu-renk blok o; manşetin hemen altında duruyor ve gri/beyaz ritmi
-      kesiyor. Renk seçimi kontrast ölçümünden (bkz. `:root`, --sd-zemin).
-   2) HİYERARŞİ. İlk kalem manşet ağırlığında (`li.bas`), kalan beşi 14 px.
-      Altı başlık eşit puntoda basılınca liste düzleşiyor ve "en yenisi
-      hangisi" sorusu gözle cevaplanamıyordu.
-   3) CANLI PİLİ. Nabız atan noktalı beyaz pil — panelin tazeliğini söyleyen
-      tek işaret. `prefers-reduced-motion`'da nabız durur, pil ve nokta
-      GÖRÜNÜR kalır.
+   ORTAK DERS: iyi çalışan hiçbir örnek renkli kutu içinde TARİH LİSTESİ
+   değil. Ya tek satıra indirip orada bağırıyorlar, ya kutuyu sakinleştirip
+   tazeliği GÖRELİ ZAMANLA gösteriyorlar. §38'in ve 2 Eylül'ün ilk
+   denemesinin kusuru buydu: rengi değişiyordu ama kalıp "renkli kutuda
+   31 Ağu · 8 Tem · 6 Tem" olarak kalıyordu ve son dakika hissi vermiyordu.
 
-   ODAK HALKASI: sitenin varsayılan halkası `--kirmizi` ve kırmızı sahada
-   görünmez olurdu; bu panelin içinde BEYAZA çevriliyor. Kaldırma. */
-.sondakika{background:var(--sd-zemin);border-color:var(--sd-zemin);
-  color:var(--kagit);box-shadow:var(--kart-golge)}
-.sondakika .kutu-ic{padding:10px 14px 12px}
-.sondakika a{color:var(--kagit)}
-.sondakika a:hover{color:var(--kagit);text-decoration:underline}
-.sondakika a:focus-visible{outline-color:var(--kagit)}
+   PANEL İKİSİNİ BİRDEN YAPIYOR:
+   1) ŞERİT MANŞETİ. En yeni kalem listeden çıkıp şeride taşındı: koyu
+      plakada CANLI pili + "SON DAKİKA", yanında dolu kırmızı alanda tek
+      manşet (büyük harf, 19 px/900). Sayfadaki tek dolu-renk alan bu ve
+      bir satır yüksekliğinde — 200 px'lik kırmızı blok değil.
+   2) ZAMAN RAYI. Kalanlar beyaz zeminde, solda ince kırmızı ray ve her
+      kalemde bir nokta; ilk nokta DOLU, ötekiler halka. Damga "14 dk önce"
+      (bkz. `goreli_zaman`), 24 saati geçince tarihe düşer.
 
-/* Başlık şeridi parlak tonda: sahanın üstünde kendi katmanı olsun. */
-.sondakika-bas{background:var(--sd-serit);color:var(--kagit);padding:8px 14px;gap:10px}
-.sondakika-bas h2{font-family:var(--display);font-weight:900;font-size:16px;
-  letter-spacing:1.4px}
-.sondakika-bas .tumu{margin-left:auto;font-size:11.5px;color:var(--kagit)}
-.sondakika-bas .tumu a{display:inline-block;padding:6px 0}
+   ŞERİT DÜZ DEĞİL İKİ PARÇA: plaka koyu, manşet alanı kırmızı. Tek renk
+   olsaydı "SON DAKİKA" yazısı manşetin parçası gibi okunuyordu (Sözcü'nün
+   çözümü de bu). */
+.sondakika{background:var(--kagit);border:1px solid var(--cizgi);
+  box-shadow:var(--kart-golge);overflow:hidden}
+.sondakika .kutu-ic{padding:2px 14px 8px;display:flex;flex-direction:column}
 
-/* CANLI pili: beyaz zemin + koyu kırmızı yazı (parlak şerit üstünde beyaz
-   11 px yazı 4,6 ile sınırda kalıyordu — `.ihbar-bag` ile aynı ölçüm). */
+/* ŞERİT ------------------------------------------------------------- */
+.sondakika-serit{display:flex;align-items:stretch;
+  background:var(--sd-serit);color:var(--kagit)}
+.sondakika-plaka{flex:none;display:flex;align-items:center;gap:9px;
+  background:var(--sd-plaka);padding:9px 13px}
+.sondakika-plaka h2{font-family:var(--display);font-weight:900;font-size:14.5px;
+  letter-spacing:1.5px;color:var(--kagit);white-space:nowrap}
+/* Manşet alanı esner, plaka esnemez: uzun başlık iki satıra sarınca şerit
+   büyür, plaka aynı yükseklikte kalır (`align-items:stretch`). */
+.sondakika-manset{flex:1;min-width:0;display:flex;flex-direction:column;
+  justify-content:center;gap:2px;padding:8px 14px;color:var(--kagit)}
+.sondakika-manset time{font-family:var(--display);font-weight:700;font-size:11px;
+  letter-spacing:1.1px}
+/* Üç satır sınırı: şerit manşetin boyuna göre büyüyor ve 90 karakterlik bir
+   başlık (arşivde var) şeridi yandaki 300x250 panonun boyuna çıkarıyordu. */
+.sondakika-manset .baslik{font-family:var(--display);font-weight:900;
+  font-size:19px;line-height:1.14;letter-spacing:.2px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+  overflow:hidden}
+.sondakika-manset:hover .baslik{text-decoration:underline}
+.sondakika-serit a{color:var(--kagit)}
+/* Kırmızı sahada sitenin kırmızı halkası görünmez; ŞERİDİN içinde beyaza
+   çevriliyor. Halka içeride çiziliyor (`-3px`), yoksa şerit taşardı. */
+.sondakika-serit a:focus-visible{outline-color:var(--kagit);outline-offset:-3px}
+
+/* CANLI pili: koyu plaka üstünde beyaz zemin + kırmızı yazı. Nabız noktası
+   PARLAK kırmızı — pilin içindeki tek hareketli öğe o. */
 .sondakika-canli{display:inline-flex;align-items:center;gap:5px;flex:none;
-  background:var(--kagit);color:var(--sd-zemin);
-  font-family:var(--display);font-weight:900;font-size:11px;letter-spacing:1.1px;
-  padding:3px 8px;border-radius:2px}
+  background:var(--kagit);color:var(--sd-serit);
+  font-family:var(--display);font-weight:900;font-size:10.5px;letter-spacing:1.1px;
+  padding:3px 7px;border-radius:2px}
 .sondakika-canli .nokta{width:7px;height:7px;border-radius:50%;
-  background:var(--sd-zemin);animation:sd-nabiz 1.6s ease-in-out infinite}
+  background:var(--kirmizi);animation:sd-nabiz 1.6s ease-in-out infinite}
 @keyframes sd-nabiz{0%,100%{opacity:1;transform:scale(1)}
                     50%{opacity:.3;transform:scale(.72)}}
 @media(prefers-reduced-motion:reduce){.sondakika-canli .nokta{animation:none}}
 
-/* Liste IZGARA: geniş yerleşimde manşet kalemi iki sütunu birden kaplasın
-   diye `columns` değil `grid` kullanılıyor (çok sütunda `column-span`
-   güvenilir değil). Satır akışı DOM sırasını izler — odak sırası görsel
-   sırayla aynı kalır. */
-.sondakika-liste{list-style:none;display:grid;grid-template-columns:minmax(0,1fr)}
-/* Zaman sabit sütunda: başlık sarınca zamanın altına kaymaz, göz zaman
-   sütununu dikey tarayabilir. 64 px `kisa_zaman`ın en uzun çıktısına göre:
-   "31 Eki 2025" (bugün olmayan, başka yıla ait kayıt). */
-.sondakika-liste li{display:grid;grid-template-columns:64px minmax(0,1fr);
-  gap:10px;align-items:baseline;padding:9px 0;
-  border-bottom:1px solid var(--sd-cizgi)}
-.sondakika-liste li:last-child{border-bottom:0;padding-bottom:2px}
-.sondakika-liste time{font-family:var(--display);font-weight:700;font-size:12.5px;
-  color:var(--sd-saat);letter-spacing:.3px;white-space:nowrap;
-  font-variant-numeric:tabular-nums}
-.sondakika-liste a{font-size:14px;line-height:1.34;font-weight:500}
+/* ZAMAN RAYI --------------------------------------------------------
+   Ray kalemin `border-left`i: kalemler alt alta olduğu için çizgi kendi
+   kendine sürekli oluyor, ayrı bir çizgi öğesi gerekmiyor. Nokta kalemin
+   `::before`i ve rayın üstüne biniyor (`left:-6px`, 2 px ray + 10 px nokta
+   ortalanır). İlk noktanın içi DOLU: en yeni kalem gözle bulunsun.
 
-/* Manşet kalemi: en yeni haber gözle ilk bulunan olsun. */
-.sondakika-liste li.bas{padding-top:4px;padding-bottom:11px;
-  border-bottom:1px solid var(--sd-bas-cizgi)}
-.sondakika-liste li.bas time{font-size:13px}
-.sondakika-liste li.bas a{font-family:var(--display);font-weight:900;
-  font-size:19px;line-height:1.16;letter-spacing:.1px}
+   Zaman sabit sütunda: başlık sarınca damganın altına kaymaz, göz sütunu
+   dikey tarayabilir. 78 px `goreli_zaman`ın en uzun çıktısına göre —
+   "31 Eki 2025" (başka yıla ait arşiv kaydı). */
+.sondakika-liste{list-style:none;display:grid;grid-template-columns:minmax(0,1fr)}
+.sondakika-liste li{position:relative;display:grid;
+  grid-template-columns:78px minmax(0,1fr);gap:10px;align-items:baseline;
+  padding:9px 0 9px 16px;
+  border-left:2px solid var(--sd-ray);border-bottom:1px solid var(--sd-cizgi)}
+.sondakika-liste li::before{content:"";position:absolute;left:-6px;top:12px;
+  width:10px;height:10px;border-radius:50%;
+  background:var(--kagit);border:2px solid var(--sd-saat)}
+.sondakika-liste li:first-child::before{background:var(--sd-saat)}
+.sondakika-liste li:last-child{border-bottom:0}
+.sondakika-liste time{font-family:var(--display);font-weight:700;font-size:12px;
+  color:var(--sd-saat);letter-spacing:.2px;white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.sondakika-liste a{color:var(--murekkep);font-size:14.5px;line-height:1.32;
+  font-weight:500}
+.sondakika-liste a:hover{color:var(--kirmizi-koyu);text-decoration:underline}
+
+/* "TÜMÜ" şeridin sağ ucunda, kendi ayracının arkasında. Kutunun dibinde
+   ayrı satır olarak denendi: panel yandaki 300x250 panodan 55 px uzuyordu
+   (1400 px ölçümü). Ayraç (`--sd-ayrac`) beyazın %28'i — çizgi, metin değil. */
+.sondakika-tumu{flex:none;display:flex;align-items:center;
+  padding:0 14px;border-left:1px solid var(--sd-ayrac);
+  font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:1px;
+  white-space:nowrap}
+.sondakika-tumu:hover{text-decoration:underline}
+
+/* DAR BAĞLAMDA ŞERİT İKİ SATIR: üstte plaka + TÜMÜ, altta manşet.
+   Rayda (haber detay, köşe yazısı) kutu 320 px ve yan yana dizilen plaka
+   manşete ~100 px bırakıyor; başlık kelime kelime sarıp şeridi 300 px'e
+   çıkarıyordu (1400 px ekranda ölçüldü). Aynı kural anasayfanın geniş
+   kutusuna 768 px'in altında uygulanır — orada da genişlik biter. */
+.sondakika:not(.genis) .sondakika-serit{flex-wrap:wrap}
+.sondakika:not(.genis) .sondakika-plaka{flex:1 1 auto}
+.sondakika:not(.genis) .sondakika-tumu{margin-left:auto;border-left:0}
+.sondakika:not(.genis) .sondakika-manset{flex:1 1 100%;order:3;
+  padding:9px 14px 11px}
+/* Dar sütunda 19 px büyük harf başlık üç satırı hemen dolduruyor. */
+.sondakika:not(.genis) .sondakika-manset .baslik{font-size:16.5px;
+  line-height:1.18}
 
 /* --- SON DAKİKA satırı: liste + 300x250 pano (30 Ağustos 2026, §37) --
    Manşetin hemen altında, iki sütun. Sağ sütun panonun kendi ölçüsü olan
@@ -1984,8 +2211,10 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
   gap:18px;align-items:stretch;margin-bottom:16px}
 .sondakika-satir .reklam{margin-bottom:0;align-self:start}
 .sondakika-satir .sondakika{display:flex;flex-direction:column;margin-bottom:0}
-.sondakika-satir .kutu-ic{flex:1;display:flex;align-items:center}
-.sondakika-satir .sondakika-liste{width:100%}
+/* Kutu panoyla aynı boya çekilince artan yer LİSTEYE veriliyor ve satırlar
+   dikeyde ortalanıyor (`align-content`); şerit kendi yüksekliğinde kalır. */
+.sondakika-satir .kutu-ic{flex:1;display:flex;flex-direction:column}
+.sondakika-satir .sondakika-liste{width:100%;flex:1;align-content:center}
 /* Manşet alanı 1140 px'te sağ sütunu 320 -> 300 px'e indiriyor; satır onunla
    BİRLİKTE inmeli. Kural burada, çünkü `.manset-alani`nin 1140 bloğu dosyada
    çok önce geçiyor ve satırın taban kuralı onu eziyordu (ölçüldü: 1082 px'te
@@ -1993,22 +2222,14 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 @media(max-width:1140px){
   .sondakika-satir{grid-template-columns:minmax(0,1fr) 300px}
 }
-/* İki sütun: tek sütunda 6 kalem 320 px'lik bir merdiven olurdu.
-   30 Ağustos 2026, kullanıcı kararı: ilk kalem artık SATIRI KAPLAMIYOR
-   (`grid-column:1/-1` kalktı) — altı kalem de ikili sütunda, üç eşit satır.
-
-   Vurgu duruyor ama yarım sütuna sığacak ölçüde: 22 -> 17 px. Ayraç ve
-   dolgu komşusuyla eşitlendi; kaplayan hâlinden kalan `padding-top:4px`
-   ve parlak ayraç, aynı satırdaki iki başlığın üst hizasını 5 px
-   kaydırıyor ve sağ hücrede karşılığı olmayan bir çizgi bırakıyordu. */
+/* İki sütun: tek sütunda kalemler 320 px'lik bir merdiven olurdu.
+   Şerit manşeti bir kalemi yukarı aldığı için listede ALTI kalem kalıyor
+   (`SON_DAKIKA_ADET` 7) — iki sütunda üç tam satır. Sayı değişirse
+   `:nth-last-child(-n+2)` kuralı yeniden ölçülmeli: ikili sütunda son
+   SATIR iki kalemdir. Her sütunun kendi rayı var; iki ray iki akış gibi
+   okunuyor ve ölçümde sütunlar birbirine karışmıyor. */
 .sondakika.genis .sondakika-liste{grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:0 28px}
-.sondakika.genis .sondakika-liste li.bas{grid-column:auto;padding:9px 0;
-  border-bottom:1px solid var(--sd-cizgi)}
-.sondakika.genis .sondakika-liste li.bas a{font-size:17px}
-/* Alt kenar düz bitsin: `:last-child` tek sütunda son satırdı, ikili
-   sütunda son SATIR iki kalemdir. Altı kalem üç tam satır yapıyor —
-   `SON_DAKIKA_ADET` tek sayıya çekilirse bu kural yeniden ölçülmeli. */
+  gap:0 26px}
 .sondakika.genis .sondakika-liste li:nth-last-child(-n+2){border-bottom:0}
 @media(max-width:1000px){
   .sondakika-satir{grid-template-columns:minmax(0,1fr)}
@@ -2016,7 +2237,17 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 }
 @media(max-width:768px){
   .sondakika.genis .sondakika-liste{grid-template-columns:minmax(0,1fr)}
-  .sondakika.genis .sondakika-liste li.bas a{font-size:19px}
+  .sondakika.genis .sondakika-liste li:nth-last-child(-n+2){
+    border-bottom:1px solid var(--sd-cizgi)}
+  .sondakika.genis .sondakika-liste li:last-child{border-bottom:0}
+  /* Dar ekranda plaka ve manşet alt alta: 360 px'de yan yana duran plaka
+     manşete 180 px bırakıyor ve başlık dört satıra sarıyordu. */
+  .sondakika.genis .sondakika-serit{flex-wrap:wrap}
+  .sondakika.genis .sondakika-plaka{flex:1 1 auto}
+  .sondakika.genis .sondakika-tumu{margin-left:auto;border-left:0}
+  .sondakika.genis .sondakika-manset{flex:1 1 100%;order:3;
+    padding:9px 14px 11px}
+  .sondakika.genis .sondakika-manset .baslik{font-size:17px;line-height:1.18}
 }
 
 /* --- GÜNÜN MANŞETLERİ listesi (manşet 15 -> 5 + 10) ----------------- */

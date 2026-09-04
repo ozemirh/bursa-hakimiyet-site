@@ -9,13 +9,14 @@ görünmemesi yetki denetimi değildir; adres elle yazılabilir.
 """
 
 import re
+from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.views import PasswordChangeView
 from django.core.paginator import Paginator
 from django.utils.functional import cached_property
-from django.db.models import Count, IntegerField, OuterRef, Q, Subquery
+from django.db.models import Count, IntegerField, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
@@ -28,6 +29,7 @@ from .formlar import (BildirimForm, FotoGaleriForm, GazeteForm, HaberForm,
                       KategoriForm, KaynakForm, KoseYazisiForm, KullaniciForm,
                       ReklamKampanyasiForm, ReklamYuvasiForm, ResmiIlanForm,
                       SonDakikaForm, VideoForm, YazarForm, YorumForm)
+from . import okunma
 from .models import (Bildirim, Gazete, Haber, IkiAdimli, LogKaydi,
                      ReklamKampanyasi, ReklamYuvasi, ResmiIlan, SonDakika,
                      Yorum)
@@ -49,8 +51,20 @@ GORUNUR_DURUMLAR = [
 
 # Göçte kurtarılamayan iki sütunun tek yerde tutulan açıklaması. Sütunlar
 # silinmedi: eksikliği görünür tutmak, sessizce kaldırmaktan iyidir.
-OKUNMA_NOTU = ("Okunma sayıları göçte kurtarılamadı; sayaç yeni sistemde "
-               "sıfırdan başlayacak.")
+#
+# 3 Eylül 2026: sayaç açıldı ama YALNIZ HABER ailesinde (icerik/okunma.py).
+# Köşe · yazar · galeri · video listelerinde sütun hâlâ boş ve notu bu;
+# o aileler için sayaç açılmadı, açılmış gibi gösterilmiyor.
+OKUNMA_NOTU = ("Bu ailede okunma sayacı yok: eski sayılar göçte "
+               "kurtarılamadı, yeni sayaç şimdilik yalnız haberlerde "
+               "çalışıyor.")
+
+# Haber listesindeki sütunun notu. Sayı bir PENCERE ölçüsüdür; "toplam
+# okunma" sanılmasın diye penceresi sütunun yanında yazılı duruyor.
+OKUNMA_HABER_NOTU = (
+    f"Son {okunma.PENCERE_GUN} günde okunma. Sayaç 3 Eylül 2026'da sıfırdan "
+    "başladı; göçle gelen kayıtların eski okunma sayıları kurtarılamadı, bu "
+    "yüzden arşiv haberlerinde 0 görmek olağandır.")
 EDITOR_NOTU = ("Kaynak sayfada editör adı yayımlanmıyor, bu yüzden göçte "
                "taşınamadı. Panelden girilen kayıtlarda dolar.")
 
@@ -194,8 +208,14 @@ class SinirliSayfalayici(Paginator):
 
 def _liste_ciz(request, *, baslik, bolum, ust_bolum, tablo_adi, basliklar,
                sorgu, satir_kur, suzgecler, temiz_adi, notlar=(), uyari="",
-               ust_bilgi="", ek_baglantilar=(), toplu=None):
-    """Süzülmüş sorguyu sayfalayıp ortak liste şablonuna verir."""
+               ust_bilgi="", ek_baglantilar=(), toplu=None, sayfa_oncesi=None):
+    """Süzülmüş sorguyu sayfalayıp ortak liste şablonuna verir.
+
+    `sayfa_oncesi`, satırlar kurulmadan ÖNCE sayfadaki kayıtların listesiyle
+    çağrılır. Satır başına bir sorgu açmadan toplu veri toplamak için var:
+    haber listesinin okunma sütunu 25 sorgu yerine tek toplama sorgusu
+    kullanıyor (§28'in sayım maliyeti dersi).
+    """
     basliklar = list(basliklar)
     boyut = _sayfa_boyu(request)
     sayfa = SinirliSayfalayici(sorgu, boyut).get_page(
@@ -223,6 +243,10 @@ def _liste_ciz(request, *, baslik, bolum, ust_bolum, tablo_adi, basliklar,
     korunan = request.GET.copy()
     korunan.pop("sayfa", None)
 
+    kayitlar = list(sayfa)
+    if sayfa_oncesi is not None:
+        sayfa_oncesi(kayitlar)
+
     return render(request, "panel/liste.html", {
         "baslik": baslik,
         "bolum": bolum,
@@ -230,7 +254,7 @@ def _liste_ciz(request, *, baslik, bolum, ust_bolum, tablo_adi, basliklar,
         "tablo_adi": tablo_adi,
         "basliklar": basliklar,
         "sutun_sayisi": len(basliklar),
-        "satirlar": [satir_kur(n) for n in sayfa],
+        "satirlar": [satir_kur(n) for n in kayitlar],
         "sayfa": sayfa,
         "suzgecler": list(suzgecler) + [_boyut_suzgeci(boyut)],
         "temiz_adi": temiz_adi,
@@ -335,6 +359,13 @@ def akis(request):
     """
     sorgu, secili = akis_sorgusu(request.GET)
 
+    # Okunma sütunu. Sayfadaki kayıtların tamamı TEK toplama sorgusuyla
+    # geliyor; satır başına sorgu açmak 25 satırda 25 tarama demekti (§28).
+    okunmalar: dict[int, int] = {}
+
+    def sayfa_oncesi(kayitlar):
+        okunmalar.update(okunma.toplamlar([h.pk for h in kayitlar]))
+
     def satir(haber):
         return {
             "kimlik": haber.pk,
@@ -346,7 +377,7 @@ def akis(request):
                 _gorsel(haber.gorsel_yolu(),
                         haber.gorsel_alt or f"{haber.baslik} fotoğrafı"),
                 _tarih(haber.yayin_zamani),
-                _yok(OKUNMA_NOTU),
+                _metin(okunmalar.get(haber.pk, 0), "mono"),
                 _metin(haber.olusturan.get_username()) if haber.olusturan_id
                 else _yok(EDITOR_NOTU),
                 _durum_rozeti(haber),
@@ -383,10 +414,84 @@ def akis(request):
              "deger": secili["editor"]},
         ],
         toplu=toplu_baglam(request, sorgu, secili),
+        sayfa_oncesi=sayfa_oncesi,
         notlar=[
-            "Okunma: " + OKUNMA_NOTU,
+            "Okunma: " + OKUNMA_HABER_NOTU,
             "Editör sütunu göçle gelen kayıtlarda boştur: " + EDITOR_NOTU,
             "Hazırlık yalnız durum Pasif iken anlamlıdır (§9).",
+        ])
+
+
+# Raporun pencere seçenekleri. "Tüm zamanlar" BİLEREK yok: sayaç
+# 3 Eylül 2026'da sıfırdan başladı ve ömür boyu toplam, yalnızca sayacın
+# açık olduğu süreyi ölçtüğü hâlde "en çok okunan haberimiz" gibi okunurdu.
+OKUNMA_PENCERELERI = [("1", "Bugün"), ("7", "Son 7 gün"), ("30", "Son 30 gün")]
+
+
+@login_required
+def okunma_raporu(request):
+    """En çok okunan haberler — sayacın panel karşılığı.
+
+    Sitedeki üç "EN ÇOK OKUNANLAR" modülü hangi veriden besleniyorsa bu
+    ekran da ondan besleniyor (`icerik/okunma.py`), tek farkla: modüller
+    yalnız yayındaki kayıtları ve bir eşiği tutar, rapor **ham sayımı**
+    gösterir — editör listede olmayan bir haberin kaç kez açıldığını da
+    görebilmeli.
+
+    Sorgu okunma tablosundan sürülüyor (`okunmalari__gun__gte`), haber
+    tablosundan değil: 486.668 satırlık arşivi tarayıp sıralamak yerine
+    yalnız okunmuş kayıtlar toplanıyor.
+    """
+    secenekler = {p for p, _ in OKUNMA_PENCERELERI}
+    secili = request.GET.get("pencere") or str(okunma.PENCERE_GUN)
+    if secili not in secenekler:
+        secili = str(okunma.PENCERE_GUN)
+    gun = int(secili)
+
+    # Tampon boşaltılmadan rapor okunursa son turun sayımı eksik görünür.
+    okunma.bosalt()
+
+    bas = timezone.localdate() - timedelta(days=gun - 1)
+    sorgu = (Haber.objects.filter(okunmalari__gun__gte=bas)
+             .select_related("kategori")
+             .annotate(okunma_toplami=Sum("okunmalari__adet"))
+             .order_by("-okunma_toplami", "-yayin_zamani"))
+
+    def satir(haber):
+        return {
+            "kimlik": haber.pk,
+            "duzenle": f"/panel/haber/{haber.pk}",
+            "adres": haber.get_absolute_url(),
+            "hucreler": [
+                _metin(haber.okunma_toplami, "mono"),
+                _bag(f"/panel/haber/{haber.pk}", haber.baslik),
+                _metin(haber.kategori.ad),
+                _tarih(haber.yayin_zamani),
+                _durum_rozeti(haber),
+            ],
+        }
+
+    return _liste_ciz(
+        request, baslik="Okunma raporu", bolum="okunma", ust_bolum="icerik",
+        tablo_adi="En çok okunan haberler",
+        basliklar=["Okunma", "Başlık", "Kategori", "Tarih", "Durum",
+                   "İşlemler"],
+        sorgu=sorgu, satir_kur=satir, temiz_adi="panel-okunma",
+        suzgecler=[
+            {"tur": "secim", "ad": "pencere", "etiket": "Dönem",
+             "bos": "", "secenekler": OKUNMA_PENCERELERI, "deger": secili},
+        ],
+        ust_bilgi=lambda toplam: (
+            f"{bas.strftime('%d.%m.%Y')} tarihinden bu yana okunan "
+            f"{toplam} haber."),
+        notlar=[
+            "Sayaç 3 Eylül 2026'da sıfırdan başladı; göçle gelen kayıtların "
+            "eski okunma sayıları kurtarılamadı (URUN-PLANI.md §4, madde 8).",
+            "Aynı okurun aynı haberi yarım saat içinde yeniden açması bir "
+            "kez sayılır; bilinen tarayıcı ve arama motoru robotları hiç "
+            "sayılmaz.",
+            "Sayım süreç içinde tamponlanıp yaklaşık yarım dakikada bir "
+            "yazılır: son dakikanın birkaç okunması burada henüz görünmeyebilir.",
         ])
 
 

@@ -35,6 +35,8 @@ urlpatterns = [
          name="panel-cikis"),
     path("panel/", panel_gorunum.bugun, name="panel-bugun"),
     path("panel/akis", panel_gorunum.akis, name="panel-akis"),
+    # Okunma raporu salt okuma; ayri bir yetkilik acilmadi.
+    path("panel/okunma", panel_gorunum.okunma_raporu, name="panel-okunma"),
     path("panel/haber/ekle", panel_gorunum.haber_ekle, name="panel-haber-ekle"),
     # Ilgili haber secicisinin JSON ucu. Salt okuma; haber formunun
     # 356 bin secenekli <select>ini bu ucla degistirdik.

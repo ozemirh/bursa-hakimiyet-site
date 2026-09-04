@@ -17,6 +17,7 @@ F2'de içerik modelleri henüz yok, o yüzden:
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 
+from icerik import okunma
 from icerik.models import Haber
 
 from .models import Kategori, KategoriTur, Yonlendirme
@@ -66,6 +67,11 @@ def haber(request, kategori, slug, kimlik):
     if request.path.rstrip("/") != kanonik:
         return redirect(kanonik, permanent=True)
 
+    # Okunma sayacı. Kanonik denetimden SONRA: yönlendirilen istek sayılsaydı
+    # aynı okuma iki kez sayılırdı (301 + hedef). Yazma tamponludur ve
+    # hatası sayfaya yansımaz (icerik/okunma.py).
+    okunma.say(request, kayit.pk)
+
     return render(request, "haber_detay.html", {
         "haber": kayit,
         "baslik": kayit.baslik,
@@ -87,13 +93,26 @@ def _ilgili(kayit):
             .exclude(pk=kayit.pk)[:5])
 
 
+EN_COK = 5
+
+
 def _en_cok(kayit):
-    """Raydaki liste. Okunma sayacı dolana kadar anasayfayla aynı kural:
-    editör seçkisi gibi davranan en yeniler (URUN-PLANI.md §4, madde 8)."""
-    return (Haber.yayindakiler()
-            .select_related("kategori")
-            .prefetch_related("kategori__turler")
-            .exclude(pk=kayit.pk)[:5])
+    """Raydaki liste — pencerede en çok okunan haberler.
+
+    Sayaç yeterli veriyi toplayana kadar (bkz. `okunma.ESIK_OKUNMA`) liste
+    eski kuralına döner: editör seçkisi gibi davranan en yeniler
+    (URUN-PLANI.md §4, madde 8). Anasayfa ve bölüm şeridi de aynı kapıdan
+    beslenir, üçü aynı anda gerçek veriye geçer.
+    """
+    sorgu = (Haber.yayindakiler()
+             .select_related("kategori")
+             .prefetch_related("kategori__turler")
+             .exclude(pk=kayit.pk))
+    # Okunan haberin kendisi rayında durmaz: eleme `haric` ile SIRALAMA
+    # tarafında yapılıyor, yoksa beşinci sıra kendisi olduğunda liste
+    # dörde düşüp geri düşüşe geçerdi.
+    okunanlar = okunma.en_cok(sorgu, EN_COK, haric=[kayit.pk])
+    return okunanlar or sorgu[:EN_COK]
 
 
 def _ilcedekiler(kayit):

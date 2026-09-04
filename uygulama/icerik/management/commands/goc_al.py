@@ -128,6 +128,11 @@ class Command(BaseCommand):
 
         yeni_kaynaklar: set[str] = set()
         ret_nedenleri: Counter = Counter()
+        # Taninmayan kategori slug'lari. Sayi tek basina ise yaramiyordu:
+        # eslestirme yapabilmek icin HANGI slug'in dustugunu ve ornek bir
+        # adresi gormek gerek (3 Eylul 2026).
+        bilinmeyen_kategori: Counter = Counter()
+        kategori_ornegi: dict[str, str] = {}
         yigin: list[Haber] = []
         kaynak_baglari: list[tuple[int, str]] = []
 
@@ -169,6 +174,8 @@ class Command(BaseCommand):
                     sayac["kategori yonlendirmeyle cozuldu"] += 1
             if kategori is None:
                 sayac["kategori taninmadi"] += 1
+                bilinmeyen_kategori[ham_kategori] += 1
+                kategori_ornegi.setdefault(ham_kategori, d.get("url") or "")
                 continue
 
             yerel = d.get("yerel_gorseller") or []
@@ -250,6 +257,16 @@ class Command(BaseCommand):
                         "kategori taninmadi", "adres cozulemedi", "okunamadi"):
             if sayac.get(anahtar):
                 y(f"  {anahtar:20} {sayac[anahtar]:>9,}".replace(",", "."))
+        if bilinmeyen_kategori:
+            y("")
+            y(self.style.WARNING(
+                f"Tanınmayan {len(bilinmeyen_kategori)} kategori slug'ı — "
+                "bu kayıtlar ALINMADI:"))
+            for slug, adet in bilinmeyen_kategori.most_common():
+                y(f"    {slug or '(boş)':<28} {adet:>9,}".replace(",", "."))
+                y(f"      {kategori_ornegi.get(slug, '')[:96]}")
+            y("  Eşleştirme kurulduktan sonra `--yalniz-yeni` ile ikinci tur "
+              "yalnız bu dosyaları okur.")
         if yeni_kaynaklar:
             y(f"  yeni kaynak kaydı    {len(yeni_kaynaklar):>9}")
         for neden, adet in ret_nedenleri.most_common():
