@@ -61,79 +61,85 @@
      rengi değil, o yüzden metin kontrast eşiğine tabi değiller. Simgeler
      `currentColor` yerine bu değişkenleri kullanıyor: bir bulut ile bir
      güneş aynı renkte çizilince ikisi de okunmuyordu. */
-  --hv-gunes:#E8A020; --hv-bulut:#8CA0B6; --hv-yagmur:#2C79B8; --hv-kar:#8FBBD9;
-  --hv-serin:#4F9BD1; --hv-ilik:#E8A020; --hv-ay:#E8F0FA; --hv-damla:#EAF4FC;
+  --hv-gunes:#D98C0F; --hv-bulut:#7A8DA3; --hv-yagmur:#2C79B8; --hv-kar:#79A8C9;
+  --hv-ay:#4A6A99; --hv-damla:#EAF4FC;
+  /* 6 Eylül 2026, kullanıcı isteği ("klasik haber okuyucusu için fazla
+     modern"): panel kâğıda döndü, simgeler artık KOYU zemin üstünde değil
+     AÇIK zemin üstünde duruyor. Üç renk bu yüzden bir tık koyulaştı —
+     eski değerler koyu fotoğrafın üstünde parlaması için seçilmişti,
+     kâğıtta soluk kalıyorlardı (--hv-bulut #8CA0B6, --hv-kar #8FBBD9).
+     --hv-ay ise ZORUNLU değişikti: #E8F0FA neredeyse beyazdı, ay simgesi
+     açık zeminde tamamen kayboluyordu (saatlik şeritte gece hücresinde
+     eskiden de görünmüyordu, bu onun da düzeltmesi).
+
+     AYNI GÜN, ikinci tur: klasikleştirme ilk turda RENGİ DE aldı
+     götürmüştü — kullanıcının ikinci sözü "panel çok renksiz" ve
+     "grafiklerin neyi temsil ettiği tam anlaşılmıyor". Doğrusu şu:
+     klasik olan tek mürekkep değil, TABLO. Renk bilgi taşıdığı sürece
+     gazeteye ait; aşağıdaki üç aile bu yüzden geri geldi. Bezeme olarak
+     tek bir renk eklenmedi, hepsi bir veriyi söylüyor. */
+  /* Beş günlük listede 6 Eylül 2026'ya kadar ortak ölçekli bir sıcaklık
+     ÇUBUĞU vardı; yatağı soğuk uçtan sıcak uca boyanıyordu
+     (--hv-serin/--hv-ilik ve açık karşılıkları). Kullanıcı grafiği
+     beğenmedi, çubuk kalktı, bu dört renk de onunla birlikte silindi.
+     Sıcak/soğuk ayrımı listede artık YAZI rengiyle veriliyor: aşağıdaki
+     --hv-yazi-gunes ve --hv-yazi-yagis. */
   /* Beş gün listesindeki hava hali yazısı aileye göre renklenir. Bunlar
-     METİN rengi, o yüzden ölçüldüler — beyaz üstünde sırasıyla 5,93 ·
-     6,97 · 6,77 · 5,74; dördü de AA eşiğini (4,5) geçiyor. */
+     METİN rengi, o yüzden ölçüldüler — panelin yeni zemininde (#F1F6FB)
+     sırasıyla 5,45 · 6,41 · 6,23 · 5,28; dördü de AA eşiğini (4,5) geçer.
+     Beyaz üstünde daha da yüksek (5,93 · 6,97 · 6,77 · 5,74). */
   --hv-yazi-gunes:#8A5A00; --hv-yazi-bulut:#4A5B6E;
   --hv-yazi-yagis:#1C5F92; --hv-yazi-kar:#3E6B87;
-  /* Saatlik şeritteki hücre zeminleri. Neredeyse beyaz kalıyorlar:
-     üstlerindeki sıcaklık --lacivert ile yazılıyor ve okunaklılık
-     tartışma konusu olmamalı; renk yalnız "hangi saat nasıl" ipucu. */
-  --hv-ak-gunes:#FFF7E8; --hv-ak-bulut:#F1F4F8; --hv-ak-yagis:#E9F2FA;
-  --hv-ak-kar:#F1F8FC; --hv-ak-gece:#ECF0F8;
-  /* Panelin KENDİ zemin ailesi (31 Ağustos 2026, kullanıcı isteği: "daha
-     dikkat çekici ve iç açıcı"). Panel o güne kadar beyaz kâğıt üstünde
-     duran çizgili bir tabloydu; şehir servisleri satırında namaz ve eczane
-     panelleriyle aynı zemini paylaşınca üçü de aynı ağırlıkta okunuyordu.
-     Hava paneli artık kendi GÖKYÜZÜ zeminini taşıyor: üstte açık mavi,
-     aşağı inerken kâğıda dönen dikey geçiş. Aile mevcut --hv-* mavileriyle
-     akraba (#2C79B8 · #4F9BD1 · #8FBBD9); sayfaya yeni bir renk ailesi
-     sokulmadı, yalnız bu panel kendi tonuna çekildi.
+  /* Saatlik şeridin hücre zeminleri ve anlık bloğun zemini. 31 Ağustos'un
+     ilk sürümünden bir tık DOYGUN: o değerler mavi panel zemininin
+     üstündeydi ve zaten güçlükle seçiliyordu, beyaza yakın kâğıtta hiç
+     okunmuyorlardı. Yine de açıklar — üstlerindeki sıcaklık --lacivert
+     ile yazılıyor ve okunaklılık tartışma konusu olmamalı.
+     ÖLÇÜLDÜ, en dar hâl --gri (#606A75) ile: gunes 5,00 · bulut 4,85 ·
+     yagis 4,67 · kar 4,94 · gece 4,65 — beşi de AA'nın (4,5) üstünde.
+     Bunları koyulaştırırsan --gri'yi YENİDEN ölç. */
+  --hv-ak-gunes:#FFF3DA; --hv-ak-bulut:#EDF1F6; --hv-ak-yagis:#E2EEF9;
+  --hv-ak-kar:#EAF4FB; --hv-ak-gece:#E7ECF6;
+  /* Beş günlük listede BUGÜN satırının zemini. Kırmızıya çalan tek yer;
+     gün adı zaten --kirmizi-koyu, zemin onu satır boyunca sürdürüyor.
+     --gri 5,06:1, --lacivert 12,13:1. */
+  --hv-bugun:#FDF3F3;
+  /* Panelin zemini (6 Eylül 2026, kullanıcı isteği). 31 Ağustos'ta panel
+     kendi GÖKYÜZÜ zeminine çekilmişti: üstte açık mavi, aşağı inerken
+     kâğıda dönen dikey GEÇİŞ. Modern duran şey rengin kendisi değil,
+     gradyandı — gazete zemini düz basar.
 
-     Bunlar ZEMİN renkleridir; üstlerindeki yazı --lacivert ve --gri kalır.
-     ÖLÇÜLDÜ (31 Ağustos, başsız Chrome; panelin açık bölmelerindeki on üç
-     yazı öğesi sekiz genişlikte, her satırın kutusundaki EN KOYU piksele
-     karşı — 99 ölçüm, hiçbiri AA'nın altında değil). En dar hâl, gradyanın
-     dibindeki damga şeridi:
-       --gri      #606A75 / #E3EEF8   4,68:1  (AA metin eşiği 4,5)
-       --lacivert #1B2A6B / #E3EEF8  11,23:1
-     --hv-zemin-alt'ı koyulaştırırsan --gri'yi YENİDEN ölç: eşiğe yalnız
-     0,18 uzakta duruyor. */
-  --hv-zemin-ust:#F4FAFF; --hv-zemin-alt:#E3EEF8;
-  --hv-panel-zemin:linear-gradient(180deg,var(--hv-zemin-ust) 0%,
-                   var(--hv-zemin-alt) 100%);
-  /* Panelin iç çizgileri --cizgi'nin (#DFE3E8) nötr grisi değil, zeminle
-     aynı aileden mavi bir gri. Nötr gri mavi zeminin üstünde kirli
-     duruyordu. */
-  --hv-panel-cizgi:#C6DCEE; --hv-olcum-zemin:#EDF6FD;
-  /* Manzaranın üstündeki büyük simge açık gökyüzünde eriyordu; fotoğraf
-     sütunu 31 Ağustos 2026'da genişleyince simgenin arkasındaki gökyüzü de
-     büyüdü ve tek katlı yumuşak gölge yetmez oldu. En kötü hâl "çok
-     bulutlu": bulut baştan aşağı --hv-bulut (#8CA0B6) ve açık gökyüzüne
-     çok yakın, gölgesiz neredeyse görünmüyor.
+     Bir tur beyaz kâğıt denendi ve kullanıcı haklı olarak "çok renksiz"
+     dedi. Zemin şimdi DÜZ ve çok açık bir kâğıt mavisi; tablolar (saatlik
+     hücreler, çubuk yatağı, ölçüm kutucukları) beyaz kalıyor, yani panel
+     "tonlu kâğıda basılmış, üstünde beyaz tablolar duran" bir bilgi
+     kutusu — basılı gazetenin kendi mobilyası.
 
-     Değişken artık gölge DEĞİL, tam bir `filter` zinciri tutuyor — adı da
-     bu yüzden --hv-ikon-suzgec. Sebebi CSS: `drop-shadow()` box-shadow
-     gibi virgüllü liste ALMAZ, `drop-shadow(a, b)` yazınca kural
-     tamamen geçersiz oluyor ve simge hiç gölge almıyor (bir tur bu hatayla
-     geçti). Çok katlı gölge ancak zincirlenmiş drop-shadow ile olur.
+     ÖLÇÜLDÜ (#F1F6FB üstünde): --gri 5,06:1 · --lacivert 12,15:1 ·
+     --murekkep 16,39:1 · --kirmizi-koyu 6,09:1. Zemini koyulaştırırsan
+     --gri'yi yeniden ölç, eşiğe en yakın o.
 
-     Üç kat: sıfır bulanıklıklı dar kat simgenin kenarına kontur etkisi
-     verir (çizgi eklemeden), orta kat onu yumuşatır, geniş kat simgeyi
-     gökyüzünden ayırır. */
-  --hv-ikon-suzgec:drop-shadow(0 0 1px rgba(6,14,28,.85))
-                   drop-shadow(0 0 4px rgba(6,14,28,.55))
-                   drop-shadow(0 3px 10px rgba(6,14,28,.45));
-  /* Hava bloğunun karartması. Üst yarı açık bırakılıp karartma yazının
-     oturduğu alt bantta toplanıyor: arkadaki manzara (31 Ağustos 2026'dan
-     beri Uludağ fotoğrafı) görünsün, ama derece ve hâl satırı hep koyu
-     zemine bassın.
-
-     Duraklar aynı gün fotoğraf sütunu genişleyince YENİDEN kondu.
-     Sütun 214 px'ten 330 px'e çıkınca kutu boyu da 230'dan ~410 px'e
-     yükseldi ve eski duraklar (%30'da .16, %56'da .60) bu boyda kutunun
-     alt YARISINI komple karartıyordu: panel "iç açıcı" değil, sol
-     kenarında siyah bir blok taşıyan bir tabloya dönmüştü. Karartma artık
-     %38'e kadar neredeyse yok, %57'de üçte bir, asıl ağırlığı %78'den
-     sonra alıyor — yani yazının GERÇEKTEN durduğu bantta (ölçüldü: derece
-     satırı kutunun %70'inde başlıyor, "En düşük" satırı %95'inde bitiyor).
-     Yukarısında dağ açık kalıyor.
-
-     Ölçüm için `.hava-simdi` bloğunun başındaki nota bak. */
-  --hv-perde:linear-gradient(180deg,rgba(6,14,28,0) 0%,rgba(6,14,28,.05) 38%,
-             rgba(6,14,28,.32) 57%,rgba(6,14,28,.78) 78%,rgba(6,14,28,.94) 100%);
+     --hv-panel-cizgi nötr gri kalıyor: 31 Ağustos'un mavi grisi (#C6DCEE)
+     bu kadar açık bir zeminde çizgi değil leke gibi duruyordu. */
+  --hv-zemin-ust:#F1F6FB; --hv-zemin-alt:#F1F6FB;
+  --hv-panel-zemin:var(--hv-zemin-ust);
+  --hv-panel-cizgi:#CBD1D8; --hv-olcum-zemin:var(--kagit);
+  /* Büyük simgenin gölgesi (6 Eylül 2026). Üç katlı drop-shadow zinciri
+     simge FOTOĞRAFIN üstünde dururken zorunluydu: açık gökyüzünde
+     "çok bulutlu" bulutu neredeyse görünmüyordu. Panel klasikleşince
+     simge kâğıda indi; gölge orada mürekkebi kirletiyor, gazete
+     simgesi değil "uygulama rozeti" gibi duruyor. Değişken KALDI
+     (`.hava-ikon.buyuk` üstünden çağrılıyor) ama artık boş: fotoğraf
+     tekrar simgenin arkasına alınırsa yukarıdaki zincir geri konur —
+     `drop-shadow()` virgüllü liste ALMAZ, çok katlı gölge ancak
+     zincirlemeyle olur, o tuzak yerinde duruyor. */
+  --hv-ikon-suzgec:none;
+  /* --hv-perde 6 Eylül 2026'da KALKTI. Fotoğrafın üstüne binen karartma
+     perdesi, üstünde 58 punto beyaz derece duran "hava uygulaması"
+     görüntüsünün ta kendisiydi. Fotoğraf artık panelin üstünde kendi
+     çerçevesinde duruyor, sayılar kâğıda basılıyor; karartılacak bir
+     yazı kalmadı. Namaz panelinin --vk-perde'si DURUYOR, o panel
+     değişmedi. */
   /* Namaz panelinin fotoğraf şeridi (31 Ağustos 2026). Perde ALTTAN
      yukarı koyulaşır — hava panelinin tersi: orada yazı bloğu bütün
      kutuyu kaplar, burada tek satırlık "şimdi" şeridi dipte duruyor,
@@ -258,14 +264,36 @@ a.foto,.foto-bag{display:block}
 /* Yer tutucu ile reklam AYNI izgara hucresinde: reklam gelene kadar gri
    pano gorunur, geldiginde pano gizlenir ve kutu yerinden OYNAMAZ. Ust
    ust binmeleri `place-items:center` ortaliyor. */
-.reklam>span,.reklam>.gpt-yuva{grid-area:1/1}
+.reklam>span,.reklam>.gpt-yuva,.reklam>.test-yaratici{grid-area:1/1}
 /* Son emniyet agi: yuvasina sigmayan bir yaratici SAYFAYI tasirmasin.
    Asil cozum `data-gpt-harita` (dogru olcuyu dogru ekrana verir);
    bu kural yalnizca oradaki bir hata sayfanin tamamini yatay
    kaydirilir hale getirmesin diye var. */
 .reklam{overflow:hidden}
-.reklam[data-gpt-durum="dolu"]{background:none;border:0}
+.reklam[data-gpt-durum="dolu"]{background:none;border:0;padding:0}
 .reklam[data-gpt-durum="dolu"]>span{display:none}
+
+/* Yerel test yaraticisi (7 Eylul 2026) — sunum araci, reklam degil.
+   Yaratici bir `<button>` icinde: tiklaninca yuvanin sonraki olcusune
+   gecer (ust seridi 1100x150 ve 970x250 halleriyle gormek icin) ve
+   klavyeyle de gezilebilir. Dolgu `padding:0` ile kalkiyor, yoksa
+   160x600 pageskin kendi kutusuna 44 px eksik sigardi (olculdu).
+   `max-width/height` son emniyet: kutuya sigmayan olcu hic secilmiyor,
+   yine de ekran kirilma anlarinda tasma olmasin. */
+.test-yaratici{padding:0;border:0;background:none;cursor:pointer;display:block;
+  line-height:0;max-width:100%;max-height:100%}
+.test-yaratici img{display:block;max-width:100%;height:auto}
+.test-yaratici:focus-visible{outline:2px solid var(--kirmizi);outline-offset:2px}
+
+/* AdSense birimi (7 Eylul 2026) — kendi yayinci kimligimizle.
+   `<ins>` de yer tutucuyla AYNI izgara hucresinde: dolmayan yuvada gri
+   pano geri gelir, dolan yuvada kutu yerinden oynamaz.
+   Test modunda kose seridi: ekrandakinin gercek reklam olmadigi
+   okunmadan anlasilsin. Serit yalniz test modunda basiliyor. */
+.reklam>.adsbygoogle{grid-area:1/1}
+.adsense-test-seridi{grid-area:1/1;place-self:start start;z-index:2;
+  background:var(--kirmizi);color:var(--kagit);font-family:var(--display);
+  font-weight:700;font-size:10px;letter-spacing:1.4px;padding:1px 6px}
 
 /* Örnek yaratıcı — YALNIZ demo bayrağı açıkken basılır (taban.html).
    970x250 billboard formatının ayak izini gerçek ölçüsünde gösterir;
@@ -479,7 +507,11 @@ main{display:block;padding-top:14px}
    bölümde x=1023). */
 .manset-alani{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start;margin-bottom:16px}
 .slayt-kap{background:var(--kagit);border:1px solid var(--cizgi);position:relative}
-.slayt-pencere{position:relative;height:428px;background:var(--gece);overflow:hidden}
+/* 485 (6 Eylül 2026): sağ sütunun katı asgarisi büyüdü. Mini slayt artık
+   üstündeki reklamla aynı kutu (250 px) olduğu için sağ ray
+   250 + 14 margin + 14 gap + 250 = 528 px; manşet kutusu da 528 olmalı ki
+   iki sütun aynı hizada bitsin (528 - 41 denetim - 2 kenarlık = 485). */
+.slayt-pencere{position:relative;height:485px;background:var(--gece);overflow:hidden}
 .slayt{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .32s ease}
 .slayt[data-aktif="true"]{opacity:1;visibility:visible}
 @media(prefers-reduced-motion:reduce){.slayt{transition:none}}
@@ -619,14 +651,27 @@ main{display:block;padding-top:14px}
    Yalnız `liste-izgara` içinde: anasayfanın kutuları 150 px'te kalıyor,
    orada kartlar rayın yanında ve daha dar. */
 .liste-izgara .kart:not(.genis) .foto{height:auto;aspect-ratio:3/2}
-/* İLK KART DA AYNI ORANDA. Fotoğrafı yanda duruyor ve boyu metin
-   sütunundan geliyordu; 16:9 denemesinde kalemler 313 px'e çıkınca ilk
-   kart 354 px'te kalmış, kullanıcı farkı görmüştü ("ilk sıradaki
-   fotoğrafın yüksekliğini arttırmışsın ama sonrakilerin değil"). Oran
-   ikisine de verilince fark kapanmıştı: ilk kartın fotoğrafı %50−8px,
-   kalemlerinki (%100−14px)/2 — genişlik farkı 1 px. Kullanıcı sonra
-   kalemleri iki adımda alçalttı; ikisi artık AYRI oranda (4:3 ve 3:2) ve
-   sayfanın en uzun fotoğrafı ilk kartınki — istenen de bu.
+/* İLK KART DA 3:2 — 7 Eylül 2026, kullanıcı bildirimi: "en üstteki 3
+   büyük haberin görselleri tam sığmamış gibi görünüyor çerçevelerine".
+
+   Doğruydu ve nedeni ölçüldü: ARŞİVİN TAMAMI 3:2. Rastgele 1.498 dosyanın
+   1.498'i (%100) tam 1,5 oranında — kaynak sistem `_large` görselini sabit
+   oranda üretiyor. Kartın çerçevesi ise 4:3'tü; `object-fit:cover` oranı
+   tutturmak için fotoğrafı YANLARDAN kırpıyordu:
+
+       çerçeve 528x396 (1,333) · kaynak 1350x900 (1,5)
+       → 66 px yatay kırpma, alanın %11'i
+
+   Alttaki iki kart 3:2 olduğu için onlarda kırpma sıfırdı; okurun gördüğü
+   fark tam olarak buydu. Oran kaynağa çekildi, kırpma sıfırlandı.
+
+   BEDELİ BİLİNÇLİ: ilk kartın fotoğrafı artık alttakilerle AYNI boyda
+   (528x352). Eskiden 4:3 onu sayfanın en uzun fotoğrafı yapıyordu — ama
+   bunu ancak kırparak yapabiliyordu, çünkü genişlik 31 Ağustos 2026
+   kararıyla %50−8px'e çakılı (fotoğrafın sağ kenarı alttaki kartınkiyle
+   aynı çizgide bitmeli). Sabit genişlikte 3:2 tek bir yükseklik verir.
+   İlk kartın ağırlığı artık orandan değil YERLEŞİMDEN geliyor: tam
+   genişlikte satır, fotoğraf yanda, daha büyük başlık ve spot.
 
    `align-self:start` ZORUNLU: esneyen (stretch) bir hücrede çapraz ölçü
    kapsayıcıdan gelir ve `aspect-ratio` yok sayılır; fotoğraf metnin boyuna
@@ -635,7 +680,7 @@ main{display:block;padding-top:14px}
    768 px altında kart sütuna döndüğü için bu kural geri alınıyor —
    orada çapraz eksen YATAY, `start` fotoğrafı içeriği kadar daraltırdı. */
 .liste-izgara .kart.genis .foto{align-self:start;height:auto;min-height:0;
-  aspect-ratio:4/3}
+  aspect-ratio:3/2}
 
 /* --- İLÇE SAYFASI: hızlı geçiş şeridi (2 Eylül 2026, §46) -----------
    YALNIZ ilçe sayfasında çizilir. Kategori sayfasında da denendi ve
@@ -687,8 +732,13 @@ main{display:block;padding-top:14px}
 }
 @media(max-width:480px){.en-cok ol{grid-template-columns:minmax(0,1fr)}}
 
-/* --- BÖLÜM SAYFASI: akış listesi (2 Eylül 2026, §46) ----------------
-   Kademelerin üçüncüsü: manşet ve ikincil ikiliden SONRAKİ haberler.
+/* --- KONU DOSYASI: akış listesi (2 Eylül 2026, §46) -----------------
+   NOT (7 Eylül 2026, §60): bu blok BÖLÜM SAYFASI için yazılmıştı; orada
+   yerini ikili/üçlü ritme (`.akis-ritim`, dosyanın sonunda) bıraktı.
+   Kurallar SİLİNMEDİ, çünkü `konu.html` hâlâ bu listeyi kullanıyor ve
+   orada tarih ayracı dosyanın kendisidir — kronoloji o sayfanın konusu.
+   Aşağıdaki gerekçeler o sayfa için geçerliliğini koruyor.
+
    Kart değil satır — solda 150 px görsel, sağda başlık + spot; iki sütun.
 
    Neden: 20 eşit kart, fotoğraflar büyütüldükçe 5.000 px'lik bir merdivene
@@ -769,119 +819,115 @@ main{display:block;padding-top:14px}
         saatlik şeridi sıkıştırmıyor.
      2. Panelin zemini beyaz kâğıttan kendi gökyüzü geçişine döndü
         (--hv-panel-zemin), iç çizgiler nötr griden mavi griye
-        (--hv-panel-cizgi). Gerekçe --hv-zemin-ust'ün başındaki notta. */
+        (--hv-panel-cizgi). Gerekçe --hv-zemin-ust'ün başındaki notta.
+
+   6 Eylül 2026, kullanıcı isteği — panel KLASİKLEŞTİ: tasarım "klasik
+   haber okuyucusu için fazla modern"di. Dört bölmeli tablo iskeleti ve
+   çizgi mantığı aynen duruyor, değişen sayfanın dili:
+     · zemin gökyüzü geçişinden beyaz kâğıda döndü, çizgiler nötr griye
+     · anlık blokta fotoğraf yazının ARKASINDAN çıkıp üstüne taşındı,
+       karartma ve ton perdesi kalktı, sayılar mürekkeple basılıyor
+     · saatlik şeritteki renkli hücre zeminleri ve renkli üst çizgi gitti
+     · beş gün listesinde hava hali yazısı tek mürekkebe indi
+     · sıcaklık çubuğu yuvarlak-gradyandan köşeli-düz mürekkebe döndü
+   Her birinin gerekçesi kendi kuralının yanında yazılı. */
 .hava-panel{display:grid;grid-template-columns:minmax(262px,330px) minmax(0,1fr);
   grid-template-areas:"simdi saatlik" "simdi gunler" "olcum olcum" "damga damga";
   border:1px solid var(--hv-panel-cizgi);background:var(--hv-panel-zemin)}
 
-/* Anlık blok — ÜÇ KATLI (31 Ağustos 2026'da çizim fotoğrafla değişti):
-     0. `.hava-foto`  — Uludağ, karlı zirve ve açık gökyüzü
-                        (gorseller/genis/uludag.jpg)
-     1. `::before`    — havanın rengini taşıyan TON perdesi (--hv-ton)
-     1. `::after`     — yazıyı taşıyan karartma perdesi (--hv-perde)
-     2. `.hava-simdi-ic` — yazı
-   Yazı bloğu ALTTA duruyor çünkü karartma orada koyulaşıyor; üstteki
-   aydınlık gökyüzünde yalnız simge var.
+/* Anlık blok — 6 Eylül 2026'da KLASİKLEŞTİ (kullanıcı isteği: tasarım
+   "klasik haber okuyucusu için fazla modern"). 31 Ağustos'tan beri üç
+   katlıydı: arkada Uludağ fotoğrafı, üstünde renk perdesi ve karartma,
+   en üstte 58 punto beyaz derece. Bu dizilim modern hava uygulamasının
+   dilidir; gazete sayfasında fotoğraf fotoğraftır, sayı kâğıda basılır.
 
-   Ölçüldü (31 Ağustos, Uludağ fotoğrafıyla yeniden; başsız Chrome + piksel
-   örneklemesi; yazı katmanı gizlenip zemin çekildi, her satırın kutusundaki
-   EN AÇIK piksel alındı; 5 palet x 8 genişlik x 5 satır = 200 ölçüm).
-   En dar iki yer:
-     .derece (58 px, beyaz)   1100 px, m-gunes #5C6771 →  5,78:1 (eşik 3)
-     .foto-hak (9,5 px, beyaz) 900 px, m-gunes #34475B →  9,55:1 (eşik 4,5)
-   İki yüz ölçümün hiçbiri AA'nın altında değil; `.hal`, `.hissedilen` ve
-   `.uc-nokta` satırlarının hepsi 10,8'in üstünde.
+   Yeni dizilim İKİ PARÇALI ve ikisi de AKIŞTA (mutlak konumlandırma
+   yalnız künye kutucuğunda kaldı):
+     1. `.hava-foto`     — sabit yükseklikli fotoğraf şeridi, altında
+                           bölme çizgisi. Kadraj ve künye aynen duruyor.
+     2. `.hava-simdi-ic` — beyaz kâğıda basılan simge, derece, hava hali.
 
-   ÜÇ TUZAK — üçü de bu ölçümde yaşandı ve ÜÇÜ DE sessizce yanlış sayı
-   üretti, yani ölçüm "geçti" derken aslında hiçbir şey ölçülmüyordu:
-     1. Panel sayfanın aşağısında ve fotoğraf `fetchpriority="low"`.
-        Ölçmeden önce `scrollIntoView` + `img.complete` beklemezsen
-        fotoğraf HENÜZ boyanmamış olur; ölçüm fotoğrafı değil
-        `.hava-simdi`nin --gece yedek zeminini ölçer.
-     2. `Page.captureScreenshot`ta `captureBeyondViewport` AÇIK olmamalı.
-        Açıkken Chrome sayfayı yeniden düzenliyor ve fotoğraf katmanı
-        BEYAZ çıkıyor; bütün satırlar 1,1:1 ölçülüyor. `clip` yine de
-        SAYFA koordinatı ister (scrollX/scrollY eklenmiş hâli) ve kutu o
-        an görüntünün İÇİNDE olmalı — dışarıdaysa sayfa zemini (#EEF1F4)
-        çıkıyor. Doğrusu: her öğeyi tek tek `scrollIntoView` ile ortala,
-        görüntüde olduğunu doğrula, `captureBeyondViewport` verme.
-     3. `.foto-hak` kutucuğunun köşeleri yuvarlak (border-radius:2px);
-        köşe pikselleri kutunun DIŞINDAKİ gökyüzünü gösteriyor ve künye
-        2,50:1 ölçülüyordu. Kutu 3 px içeri çekilip ölçülmeli.
+   31 Ağustos'un 200 ölçümlük kontrast tablosu bu yüzden ARTIK GEREKSİZ,
+   geçersiz değil: fotoğrafın üstünde tek bir yazı kalmadı, bütün metin
+   kâğıda basıyor (--lacivert 11,23:1 · --gri 5,29:1). Fotoğrafı tekrar
+   yazının arkasına alırsan o ölçümü ve --hv-perde'yi geri getir; nedeni
+   ve ölçüm tuzakları --hv-ikon-suzgec'in yanındaki notta duruyor.
 
-   Paleti, --hv-perde'yi ya da fotoğrafı değiştirirsen bu ölçümü YENİDEN
-   yap: fotoğraf çizimden çok daha alacalı, göz kararı tutmuyor. Ölçüm
-   betiği oturumluktu; yeniden yazılması gerekirse Chrome'u
-   --remote-debugging-port ile aç (websocket el sıkışması için
-   suppress_origin gerekir) ve yukarıdaki üç maddeyi uygula. */
-.hava-simdi{grid-area:simdi;position:relative;isolation:isolate;
-  background:var(--gece);color:var(--kagit);overflow:hidden;min-height:230px;
-  --hv-ton:transparent; --hv-foto-suzgec:none}
-/* Fotoğraf dikey kutuda yüksekliğe oturur, yanlardan kırpılır; kırpma
-   ortadan alınınca minare ve kubbeler kadrajda kalıyor. */
-/* Kadraj 31 Ağustos 2026'da Uludağ fotoğrafıyla yeniden kondu ve
-   TARAYICIDA ÖLÇÜLDÜ. Kaynak 1280x720; masaüstünde kutu ~310x410 oluyor,
-   yani `cover` ölçeği 0,569 ve fotoğrafın 729 px'lik genişliğinin 419'u
-   yanlardan kesiliyor — kesilen pay kadrajın yarısından fazla, o yüzden
-   `object-position` burada süs değil.
-
-   Yatayda %50 DENENDİ ve bırakıldı: zirve kaynağın x≈800'ünde duruyor,
-   %50 kadrajı x 208-518 arasına kilitliyor ve zirve tamamen dışarıda
-   kalıyordu — kutuda yalnız solda kalan kar yamacı görünüyordu. %66'da
-   kadraj x 487-1032 arasına kayıyor, zirve kutunun %57'sine düşüyor.
-   Dikeyde kırpma yok (410 px kutu, 410 px fotoğraf); %50 orada
-   etkisizdir, dar ekran değerleri aşağıdaki sorgularda. */
-.hava-foto{position:absolute;inset:0;width:100%;height:100%;z-index:0;
-  object-fit:cover;object-position:66% 50%;filter:var(--hv-foto-suzgec)}
-/* Ton perdesi: havanın rengi çizimdeyken gökyüzünde duruyordu, fotoğrafa
-   geçince o bilgi kaybolmasın diye fotoğrafın üstüne renk olarak biniyor.
-   Güneşte neredeyse şeffaf, yağışta soğuk, karda beyaza çalan, gecede
-   lacivert — palet sınıfları aşağıda. */
-.hava-simdi::before{content:"";position:absolute;inset:0;z-index:1;
-  background:var(--hv-ton)}
-.hava-simdi::after{content:"";position:absolute;inset:0;z-index:1;
-  background:var(--hv-perde)}
-.hava-simdi-ic{position:relative;z-index:2;height:100%;padding:14px 14px 16px;
-  display:flex;flex-direction:column;align-items:center;justify-content:space-between;
-  text-align:center;gap:10px;text-shadow:var(--yazi-golge-ince)}
+   Havanın rengi BİLGİ TAŞIMAYA devam ediyor: ton perdesi (--hv-ton)
+   kalktı, geriye fotoğrafın kendi filtresi ve simgenin rengi kaldı. */
+/* Bloğun zemini HAVAYA göre renklenir (--hv-ak, aşağıdaki paletlerden).
+   Fotoğrafın altındaki yazı alanı güneşte krem, yağışta soğuk mavi,
+   gecede lacivert-gri kâğıt. 6 Eylül 2026: karartma perdesi kalkınca
+   "şu an hangi hava" bilgisini renkten okuma imkânı da kalkmıştı,
+   kullanıcı "çok renksiz" dedi — bilgi zemine taşındı. Tonlar açıktır,
+   yazı --lacivert/--gri ile basar; ölçümler --hv-ak-* notunda. */
+.hava-simdi{grid-area:simdi;position:relative;display:flex;flex-direction:column;
+  background:var(--hv-ak);color:var(--lacivert);overflow:hidden;min-height:230px;
+  border-right:1px solid var(--hv-panel-cizgi);
+  --hv-foto-suzgec:none; --hv-ak:var(--kagit)}
+/* Fotoğraf akışta ve sabit yükseklikte. Kadraj notu 31 Ağustos'tan aynen
+   geçerli: kaynak 1280x720, `cover`, yatayda %66 — zirve kutunun %57'sine
+   düşüyor. %50 DENENDİ ve bırakıldı, zirveyi kadrajın dışına atıyordu.
+   Dar ekran değeri aşağıdaki sorguda. */
+/* Fotoğraf artan boyu YUTAR (`flex:1`), yazı bloğu kendi ölçüsünde kalır.
+   Ölçüldü (6 Eylül, başsız Chrome, 1280 px): sol sütun sağdaki iki
+   bölmenin toplam boyuna geriliyor ve 590 px oluyor; fotoğraf sabit
+   158 px'ken altında 270 px boş kâğıt kalıyordu — panel "yarısı boş bir
+   sütun" gibi duruyordu. Şimdi fotoğraf ~430 px'e çıkıyor, yazı bloğu
+   dibe oturuyor. Dar ekranda gerilme bitiyor, ölçü asgariye (150 px)
+   düşüyor; o kural aşağıdaki sorguda. */
+/* `flex-basis` 158 px, `auto` DEĞİL: `auto` replaced öğede fotoğrafın
+   KENDİ boyunu (720 px) taban alıyor, sol sütun 1112 px'e uzuyor ve
+   sağdaki iki bölmeyi de geriyordu (6 Eylül ölçümü). Taban sabitlenince
+   sütun yalnız ızgaranın verdiği boya kadar büyüyor. */
+.hava-foto{display:block;width:100%;flex:1 1 158px;min-height:158px;
+  object-fit:cover;object-position:66% 50%;filter:var(--hv-foto-suzgec);
+  background:var(--foto-bekleme);
+  border-bottom:1px solid var(--hv-panel-cizgi)}
+.hava-simdi-ic{flex:0 0 auto;padding:16px 14px 18px;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:10px}
 .hava-simdi-alt{display:flex;flex-direction:column;align-items:center;gap:2px}
 
-/* Manzara paletleri: aynı fotoğraf, beş hava. Çizim döneminde palet
-   gökyüzünü boyuyordu (--s1..--s5); fotoğrafta iki kolla çalışıyor:
-     --hv-ton         fotoğrafın üstüne binen renk perdesi
-     --hv-foto-suzgec fotoğrafın kendi doygunluğu/parlaklığı
-   Güneşte fotoğraf neredeyse olduğu gibi duruyor, bulutta rengi
-   çekiliyor, yağışta soğuyup kararıyor, karda beyaza kaçıyor, gecede
-   lacivert ve yarı karanlık. Aynı kadraj beş hava. */
-   Değerler 31 Ağustos 2026'da Uludağ fotoğrafıyla birlikte yeniden
-   kuruldu. En önemli fark `m-kar`: eski fotoğrafta (Ulu Cami) kar
-   perdesi kadrajı BEYAZA çekiyordu, çünkü kadrajda hiç kar yoktu.
-   Uludağ zaten karlı ve gökyüzü açık; aynı `brightness(1.06)` burada
-   zirveyi yakıyor, üstündeki beyaz yazıyı da götürüyordu. Kar paleti
-   artık AYDINLATMIYOR, soğutup bir tık karartıyor. */
-.hava-simdi.m-gunes{--hv-ton:linear-gradient(180deg,rgba(255,196,92,.20) 0%,
-  rgba(28,86,140,.12) 100%);--hv-foto-suzgec:saturate(1.14) contrast(1.05)}
-/* Bulut ve yağış filtreleri 31 Ağustos'ta bir tık AÇILDI: perde zaten
-   alt bandı karartıyor, filtre de üstteki dağı söndürünce kutu bütünüyle
-   gri bir blok oluyordu. */
-.hava-simdi.m-bulut{--hv-ton:rgba(96,116,138,.30);
-  --hv-foto-suzgec:saturate(.76) brightness(.99)}
-.hava-simdi.m-yagis{--hv-ton:rgba(38,62,92,.44);
-  --hv-foto-suzgec:saturate(.62) brightness(.86)}
-.hava-simdi.m-kar{--hv-ton:linear-gradient(180deg,rgba(214,233,248,.40) 0%,
-  rgba(126,163,195,.40) 100%);--hv-foto-suzgec:saturate(.50) brightness(.94)}
-.hava-simdi.m-gece{--hv-ton:linear-gradient(180deg,rgba(16,34,64,.62) 0%,
-  rgba(8,18,34,.72) 100%);--hv-foto-suzgec:saturate(.55) brightness(.48)}
+/* Manzara paletleri: aynı fotoğraf, beş hava. Perde kalkınca geriye TEK
+   kol kaldı — fotoğrafın kendi doygunluğu ve parlaklığı. Değerler 6 Eylül
+   2026'da yumuşatıldı: eski ayarlar perdenin altında çalışıyordu, kâğıt
+   panelin üstünde tek başlarına fotoğrafı çamura çeviriyorlardı (yağışta
+   brightness .86, gecede .48). Gece yine de belirgin karartılır, yoksa
+   "gece" bilgisi görüntüden hiç okunmaz.
 
-.hava-simdi .derece{font-family:var(--display);font-weight:900;font-size:58px;
-  line-height:.94;letter-spacing:-2px;font-variant-numeric:tabular-nums}
-.hava-simdi .derece .birim{font-size:22px;font-weight:700;letter-spacing:0;
-  vertical-align:super;margin-left:1px}
+   NOT: bu blokta 31 Ağustos'tan kalan BOZUK bir yorum vardı — "Aynı
+   kadraj beş hava." satırının sonunda bir yorum kapanışı duruyor, altına
+   yazılan beş satır açıklama da düz metin olarak CSS'e düşüyordu.
+   Tarayıcının hata kurtarması o metni ilk süslü parantezli bloğa kadar
+   yutar; yani `m-gunes` kuralı hiç uygulanmıyordu (güneşli havada
+   fotoğraf filtresiz kalıyordu). Yorum artık tek parça — bu blokta
+   yorum kapanışı yazarken dikkat et, yorumlar iç içe geçmez. */
+.hava-simdi.m-gunes{--hv-foto-suzgec:saturate(1.10) contrast(1.03);
+  --hv-ak:var(--hv-ak-gunes)}
+.hava-simdi.m-bulut{--hv-foto-suzgec:saturate(.80) brightness(.99);
+  --hv-ak:var(--hv-ak-bulut)}
+.hava-simdi.m-yagis{--hv-foto-suzgec:saturate(.68) brightness(.92);
+  --hv-ak:var(--hv-ak-yagis)}
+.hava-simdi.m-kar{--hv-foto-suzgec:saturate(.58) brightness(.98);
+  --hv-ak:var(--hv-ak-kar)}
+.hava-simdi.m-gece{--hv-foto-suzgec:saturate(.62) brightness(.76);
+  --hv-ak:var(--hv-ak-gece)}
+
+/* 6 Eylül 2026: sayılar artık kâğıda basıyor, beyaz yazı ve gölge
+   kalktı. Derece 58'den 52 punto'ya, 900'den 800'e indi — koyu fotoğraf
+   üstünde o ağırlık gerekiyordu, mürekkepte gürültü yapıyor. Ayraç
+   çizgisi --ak-cizgi (beyaz saydam) değil panel çizgisi. */
+.hava-simdi .derece{font-family:var(--display);font-weight:800;font-size:52px;
+  line-height:.95;letter-spacing:-1px;font-variant-numeric:tabular-nums;
+  color:var(--lacivert)}
+.hava-simdi .derece .birim{font-size:20px;font-weight:700;letter-spacing:0;
+  vertical-align:super;margin-left:1px;color:var(--gri)}
 .hava-simdi .hal{font-family:var(--display);font-weight:700;font-size:14.5px;
-  letter-spacing:.4px;margin-top:5px}
-.hava-simdi .hissedilen{font-size:12px;color:var(--ak-yazi);margin-top:1px}
+  letter-spacing:.4px;margin-top:5px;color:var(--murekkep)}
+.hava-simdi .hissedilen{font-size:12px;color:var(--gri);margin-top:1px}
 .hava-simdi .uc-nokta{display:flex;gap:10px;margin-top:9px;padding-top:9px;
-  border-top:1px solid var(--ak-cizgi);font-size:11.5px;color:var(--ak-yazi);
+  border-top:1px solid var(--hv-panel-cizgi);font-size:11.5px;color:var(--gri);
   font-variant-numeric:tabular-nums}
 
 .hava-ikon{width:26px;height:26px;flex:0 0 auto}
@@ -891,7 +937,16 @@ main{display:block;padding-top:14px}
 .hava-ikon.buyuk{width:64px;height:64px;filter:var(--hv-ikon-suzgec)}
 
 .hava-panel h4{font-family:var(--display);font-size:10.5px;letter-spacing:1.3px;
-  color:var(--gri);font-weight:700;margin-bottom:7px}
+  color:var(--gri);font-weight:700;margin-bottom:7px;
+  display:flex;flex-wrap:wrap;align-items:baseline;
+  justify-content:space-between;gap:2px 10px}
+/* Başlığın sağ ucundaki anahtar, hücrede hangi değerin ne olduğunu söyler
+   (6 Eylül 2026: "grafiklerin neyi temsil ettiği tam anlaşılmıyor").
+   Etiketsiz dört sayı alt alta duruyordu; rüzgâr hızı ile sıcaklık
+   karışabiliyordu. Küçük harf ve seyrek harf aralığı: başlık değil,
+   başlığın altındaki tablo anahtarı. */
+.hava-panel h4 .anahtar{font-weight:400;font-size:10px;letter-spacing:.2px;
+  color:var(--gri);text-transform:none;white-space:nowrap}
 .hava-panel ol{list-style:none}
 
 /* Saatlik şerit: dar ekranda yatay kayar, sayfa gövdesi kaymaz. */
@@ -911,50 +966,123 @@ main{display:block;padding-top:14px}
 .hava-saatlik li{flex:1 0 66px;background:var(--kagit);display:flex;
   flex-direction:column;align-items:center;gap:3px;padding:6px 4px 7px;
   border-top:3px solid var(--hv-bulut)}
-/* Hücre zemini ve üst çizgisi o saatin havasını söyler. Zeminler bilerek
-   neredeyse beyaz: üstlerindeki sıcaklık okunaklılığını kaybetmemeli. */
+/* Hücre zemini ve üst çizgisi O SAATİN havasını söyler; şeride bakan okur
+   "öğleden sonra dönüyor" bilgisini okumadan görür. 6 Eylül 2026'da bir
+   tur kaldırıldı (klasikleştirme), aynı gün kullanıcı "çok renksiz"
+   deyince GERİ KONDU — bu renk bezeme değil, hücrenin verisi. Zeminler
+   bilerek açık: üstlerindeki sıcaklık --lacivert ile yazılıyor.
+   Üst çizgi 3 px ve tam renkte; asıl işareti o taşıyor, zemin ona eşlik
+   ediyor. */
 .hava-saatlik li.a-gunes{background:var(--hv-ak-gunes);border-top-color:var(--hv-gunes)}
 .hava-saatlik li.a-bulut{background:var(--hv-ak-bulut);border-top-color:var(--hv-bulut)}
 .hava-saatlik li.a-yagis{background:var(--hv-ak-yagis);border-top-color:var(--hv-yagmur)}
 .hava-saatlik li.a-kar{background:var(--hv-ak-kar);border-top-color:var(--hv-kar)}
-.hava-saatlik li.a-gece{background:var(--hv-ak-gece);border-top-color:var(--lacivert)}
+.hava-saatlik li.a-gece{background:var(--hv-ak-gece);border-top-color:var(--hv-ay)}
 .hava-saatlik .saat{font-family:var(--display);font-weight:700;font-size:11.5px;
   color:var(--gri);letter-spacing:.3px;font-variant-numeric:tabular-nums}
 .hava-saatlik b{font-family:var(--display);font-weight:900;font-size:19px;
   color:var(--lacivert);line-height:1;font-variant-numeric:tabular-nums}
 .hava-saatlik .ruzgar{font-size:10.5px;color:var(--gri);font-variant-numeric:tabular-nums}
 .hava-saatlik .ruzgar i{font-style:normal;letter-spacing:.2px}
+/* Nem 6 Eylül 2026'da eklendi: paket saat başına nem de veriyordu, hücre
+   yalnız rüzgârı basıyordu. Etiketi hücrede duruyor ("nem %73"), çünkü
+   altındaki iki sayı yan yana gelince hangisinin ne olduğu ancak
+   başlıktaki anahtardan anlaşılıyordu. */
+.hava-saatlik .nem{font-size:10.5px;color:var(--gri);font-variant-numeric:tabular-nums}
+.hava-saatlik .nem i{font-style:normal;font-weight:700;color:var(--hv-yazi-yagis)}
 
 /* Beş gün: çubuklar ORTAK ölçekte (yüzdeler `hava_paneli`de hesaplanır),
    satırlar arası ince çizgi. */
 .hava-gunler{grid-area:gunler;padding:12px 14px 13px}
+/* Sütun başlığı satırı (6 Eylül 2026). Listede altı sütun vardı ve
+   hiçbirinin adı yoktu: 18° ile 33° arasındaki çubuğun ne olduğu ancak
+   tahmin ediliyordu. Izgara satırla AYNI, yalnız hücreler birleşiyor —
+   başlıklar sütunların tam üstüne düşsün. Dar ekran değerleri aşağıdaki
+   sorguda; orada "hava durumu" sütunu gizlendiği için başlığı da gizli. */
+.hava-gunler .sutun-bas{display:grid;
+  grid-template-columns:60px 22px minmax(0,1fr) 78px 58px 62px 62px;
+  align-items:end;gap:9px;padding-bottom:5px;
+  border-bottom:1px solid var(--hv-panel-cizgi);
+  font-family:var(--display);font-weight:700;font-size:9.5px;
+  letter-spacing:.9px;color:var(--gri)}
+.hava-gunler .sutun-bas .s-gun{grid-column:1 / 3}
+.hava-gunler .sutun-bas .s-hal{grid-column:3 / 4}
+.hava-gunler .sutun-bas .s-ruzgar,
+.hava-gunler .sutun-bas .s-nem,
+.hava-gunler .sutun-bas .s-dusuk,
+.hava-gunler .sutun-bas .s-yuksek{text-align:right}
+/* Birim başlıkta, hücrede değil: satır satır "km/sa" yazmak beş kez aynı
+   şeyi basmak olurdu, tablo da o kadar geniş değil. Gazete tablosunun
+   sözleşmesi zaten bu. */
+.hava-gunler .sutun-bas i{font-style:normal;font-weight:400;letter-spacing:.2px}
 .hava-gunler li{display:grid;
-  grid-template-columns:60px 22px minmax(0,1fr) 30px minmax(64px,1.15fr) 30px;
-  align-items:center;gap:9px;padding:6px 0;border-top:1px solid var(--hv-panel-cizgi)}
+  grid-template-columns:60px 22px minmax(0,1fr) 78px 58px 62px 62px;
+  align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--hv-panel-cizgi)}
 .hava-gunler li:first-child{border-top:0}
 .hava-gunler .gun{display:flex;flex-direction:column;line-height:1.2}
 .hava-gunler .gun time{font-family:var(--display);font-weight:700;font-size:12.5px;
   color:var(--lacivert);letter-spacing:.3px}
 .hava-gunler .gun i{font-style:normal;font-size:10.5px;color:var(--gri)}
+/* BUGÜN satırı listenin çapası: gün adı kırmızı, zemin de onu satır
+   boyunca sürdürüyor (6 Eylül 2026). Tek kırmızı zemin burası. */
+.hava-gunler li.bugun{background:var(--hv-bugun)}
 .hava-gunler li.bugun .gun time{color:var(--kirmizi-koyu)}
 .hava-gunler .hal{font-size:12px;color:var(--gri);overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap}
-/* Hava hali yazısı aileye göre renklenir. Beyaz üstünde ölçülen kontrast
-   sırasıyla 5,93 · 6,97 · 6,77 · 5,74 — dördü de AA eşiğini geçiyor. */
+/* Hava hali yazısı aileye göre renklenir. 6 Eylül 2026'da bir tur tek
+   mürekkebe indirildi, aynı gün kullanıcı "çok renksiz" deyince geri
+   kondu: renk beş satırlık listede "hangi gün bozuyor" sorusunu okumadan
+   yanıtlıyor. Panelin yeni zemininde ölçülen kontrast 5,45 · 6,41 ·
+   6,23 · 5,28 — dördü de AA eşiğini geçiyor. */
 .hava-gunler .hal.a-gunes{color:var(--hv-yazi-gunes)}
 .hava-gunler .hal.a-bulut{color:var(--hv-yazi-bulut)}
 .hava-gunler .hal.a-yagis{color:var(--hv-yazi-yagis)}
 .hava-gunler .hal.a-kar{color:var(--hv-yazi-kar)}
-.hava-gunler .dusuk,.hava-gunler .yuksek{font-family:var(--display);font-weight:700;
-  font-size:13px;font-variant-numeric:tabular-nums}
-.hava-gunler .dusuk{color:var(--gri);text-align:right}
-.hava-gunler .yuksek{color:var(--lacivert)}
-/* Çubuğun yatağı BEYAZ: panelin zemini artık maviye çaldığı için eski
-   --yumusak yatak zeminden ayrışmıyor, çubuk "yarısı dolu" görünmüyordu. */
-.hava-gunler .cubuk{position:relative;height:6px;background:var(--kagit);
-  border:1px solid var(--hv-panel-cizgi);border-radius:4px}
-.hava-gunler .dolgu{position:absolute;top:-1px;bottom:-1px;border-radius:4px;
-  background:linear-gradient(90deg,var(--hv-serin),var(--hv-ilik))}
+/* Rüzgâr ve nem sütunları 6 Eylül 2026'da eklendi (kullanıcı: "panel çok
+   boş"). İkisi de MGM'nin gün kaydında zaten duruyordu.
+
+   Rüzgâr hücresi üç parça: ok, yön kısaltması, hız. Ok rüzgârın GİTTİĞİ
+   yönü gösterir ve açısını satır içi `transform` taşır — açı veridir,
+   sınıfa çevrilirse on altı kural yazmak gerekir. Kısaltma gri ve küçük,
+   hız mürekkep: okurun aradığı sayı hız.
+
+   `transform` bir simgeye uygulanıyor ve simge `flex` kutunun içinde;
+   `flex:0 0 auto` olmasa dönen kutu komşusunu itiyor. Dönüş için
+   `prefers-reduced-motion` gerekmez — animasyon değil, sabit açı. */
+.hava-gunler .ruzgar{display:flex;align-items:center;justify-content:flex-end;
+  gap:5px;font-size:11.5px;color:var(--gri)}
+.hava-gunler .ruzgar .ok{width:15px;height:15px;flex:0 0 auto}
+.hava-gunler .ruzgar i{font-style:normal;letter-spacing:.3px}
+.hava-gunler .ruzgar b{font-family:var(--display);font-weight:700;font-size:13px;
+  color:var(--lacivert);font-variant-numeric:tabular-nums}
+/* Nem ARALIK: günün en düşük ve en yüksek nemi. Tek sayı yazmak yanıltıcı
+   olurdu, MGM gün için iki değer veriyor. */
+.hava-gunler .nem{text-align:right;font-family:var(--display);font-weight:700;
+  font-size:12.5px;color:var(--gri);font-variant-numeric:tabular-nums}
+
+/* Sıcak/soğuk ayrımı çubuktan YAZIYA taşındı (6 Eylül 2026, kullanıcı
+   grafiği beğenmedi). İki sütun da sağa yaslı ve tabular: rakamlar alt
+   alta hizalanır, gazete tablosunda okur sütunu yukarıdan aşağı tarar.
+   Çubuğun boşalttığı yer punto olarak geri veriliyor (13 -> 17 px);
+   renkler zaten ölçülmüş --hv-yazi-* ailesinden, sayfaya yeni renk
+   girmiyor: en düşük soğuk mavi (6,23:1), en yüksek sıcak amber
+   (5,45:1). */
+.hava-gunler .dusuk,.hava-gunler .yuksek{font-family:var(--display);
+  font-size:17px;font-variant-numeric:tabular-nums;text-align:right;
+  line-height:1.1}
+.hava-gunler .dusuk{font-weight:700;color:var(--hv-yazi-yagis)}
+.hava-gunler .yuksek{font-weight:900;color:var(--hv-yazi-gunes)}
+/* Buradaki üç öğe 6 Eylül 2026'da art arda denendi ve üçü de kalktı:
+     1. ortak ölçekli SICAKLIK ÇUBUĞU (`.cubuk` / `.dolgu`) — yuvarlak
+        uçtan köşeliye, gradyandan düz mürekkebe, sonra gradyan yatağa
+        taşındı; kullanıcı grafiğin kendisini istemedi.
+     2. ölçek EKSENİ (`.hava-olcek`) — çubuğu açıklamak için eklenmişti,
+        çubukla birlikte anlamsız kaldı.
+     3. GÜNEŞ satırı (`.hava-gunes`) — eksenin yerine konmuştu, kullanıcı
+        istemedi.
+   Beş günlük liste artık grafiksiz: gün, simge, hava hali ve iki derece.
+   Sütunları `.sutun-bas` adlandırıyor, sıcak/soğuk ayrımını derecelerin
+   yazı rengi veriyor. Geri istenirse git geçmişinde duruyorlar. */
 
 /* Ölçüm kutucukları: yalnız MGM'nin ÖLÇEBİLDİĞİ alanlar gelir; boş alan
    sözlüğe girmediği için burada "veri yok" durumu çizilmez. */
@@ -979,53 +1107,60 @@ main{display:block;padding-top:14px}
 @media(max-width:880px){
   .hava-panel{grid-template-columns:minmax(0,1fr);
     grid-template-areas:"simdi" "saatlik" "gunler" "olcum" "damga"}
-  /* Dar ekranda blok yassılaşıyor: karartma yön değiştirir — yazı SOLDA
-     duruyor, manzara sağda açık kalsın diye perde soldan sağa açılıyor.
-
-     Perde burada İKİ KATLI. Yatay kat panelin genel görüntüsünü
-     kurar; ALT kat, en alttaki "En düşük / En yüksek" satırı için
-     zorunlu: o satır sağa doğru uzuyor ve fotoğrafın aydınlık yamacına
-     denk gelince --ak-yazi 3,45:1'e düşüyordu (31 Ağustos ölçümü, kar
-     paleti). Tek katlı perdeyi koyulaştırmak fotoğrafı büsbütün
-     söndürüyordu; karartma bu yüzden yalnız yazının olduğu alt banda
-     eklendi. */
-  .hava-simdi{min-height:150px;
-    --hv-perde:linear-gradient(0deg,rgba(6,14,28,.62) 0%,rgba(6,14,28,.34) 38%,
-               rgba(6,14,28,0) 66%),
-               linear-gradient(90deg,rgba(6,14,28,.88) 0%,rgba(6,14,28,.72) 46%,
-               rgba(6,14,28,.34) 76%,rgba(6,14,28,.10) 100%)}
-  /* Yassı kutuda `cover` yalnız yukarıdan/aşağıdan kırpıyor. Kadraj
+  /* Tek sütuna inince sağdaki dikey ayraç anlamını yitiriyor: bölme
+     çizgisi alta geçer. Perde kuralları (iki katlı karartma, yazının
+     fotoğrafın üstünde durduğu döneme aitti) 6 Eylül 2026'da kalktı. */
+  .hava-simdi{min-height:0;border-right:0;
+    border-bottom:1px solid var(--hv-panel-cizgi)}
+  /* Yassı şeritte `cover` yalnız yukarıdan/aşağıdan kırpıyor. Kadraj
      %28'den alınıyor: gökyüzünün alt şeridi, zirve ve karlı sırt şeride
      giriyor, altta kalan kayalık yamaç kesiliyor. (%24, Ulu Cami
      döneminin minare değeriydi; dağda gökyüzünü gereğinden çok
      büyütüyordu.) */
-  .hava-foto{object-position:50% 28%}
-  .hava-simdi-ic{flex-direction:row;flex-wrap:wrap;align-items:center;gap:14px;
-    justify-content:flex-start;text-align:left;padding:13px 14px}
+  .hava-foto{flex:0 0 auto;height:150px;min-height:0;object-position:50% 28%}
+  /* Yazı bloğu tek satıra yayılır: simge solda, sayılar yanında. */
+  .hava-simdi-ic{flex-direction:row;flex-wrap:wrap;align-items:center;gap:16px;
+    justify-content:flex-start;text-align:left;padding:14px}
   .hava-simdi-alt{align-items:flex-start}
   .hava-ikon.buyuk{width:50px;height:50px}
-  .hava-gunler li{grid-template-columns:56px 22px 28px minmax(52px,1fr) 28px}
-  .hava-gunler .hal{display:none}
+  /* Çubuk sütunu kalkınca hava hali sütunu dar ekranda da SIĞIYOR:
+     880 px'in altında gizlenmesine gerek kalmadı, yalnız daralıyor.
+     560 px'in altında hâlâ gizleniyor, o kural aşağıdaki sorguda. */
+  .hava-gunler li,.hava-gunler .sutun-bas{
+    grid-template-columns:52px 22px minmax(0,1fr) 72px 52px 52px 52px}
+  .hava-gunler .dusuk,.hava-gunler .yuksek{font-size:16px}
 }
 
 /* Telefon: Ulu Cami döneminde burada bir YAKINLAŞTIRMA vardı
-   (`scale(1.55)`), çünkü 320 px'lik yassı kutuda caminin minaresi
-   perdenin en koyu ucuna düşüyor, sağda yalnız yamaç kalıyordu. Uludağ'da
-   böyle bir sorun yok: konu tek ve kadrajın tamamına yayılmış bir dağ
-   siluetiyken 320 px'te `cover` ölçeği 0,25'e iniyor ve fotoğraf dikeyde
-   neredeyse hiç kırpılmıyor (720'nin 600'ü kutuda). Yakınlaştırma bu
-   yüzden 31 Ağustos 2026'da KALDIRILDI — dağı büyütmek zirveyi kutunun
-   dışına atıyordu.
+   (`scale(1.55)`), Uludağ'la birlikte 31 Ağustos 2026'da kaldırıldı —
+   konu tek ve kadrajın tamamına yayılmış bir dağ siluetiyken büyütmek
+   zirveyi kutunun dışına atıyordu.
 
-   Perdenin alt katı ise duruyor: kutu bu genişlikte kısalıyor, yazı alt
-   bandın yukarısına çıkıyor ve 880 px'lik perde oraya yetişmiyordu
-   (320 px'te "En düşük / En yüksek" satırı 4,84:1'e inmişti). */
+   6 Eylül 2026: perde kuralları da gitti, yerine iki ölçü kaldı.
+   Fotoğraf 150'den 124 px'e iniyor (telefonda şerit kutunun yarısını
+   yiyordu) ve derece 52'den 46 punto'ya — yassı satırda simge, derece ve
+   "En düşük / En yüksek" yan yana sığmalı. */
 @media(max-width:560px){
-  .hava-simdi{
-    --hv-perde:linear-gradient(0deg,rgba(6,14,28,.74) 0%,rgba(6,14,28,.46) 44%,
-               rgba(6,14,28,0) 74%),
-               linear-gradient(90deg,rgba(6,14,28,.88) 0%,rgba(6,14,28,.72) 46%,
-               rgba(6,14,28,.34) 76%,rgba(6,14,28,.10) 100%)}
+  .hava-foto{flex:0 0 auto;height:124px;min-height:0}
+  /* Telefonda satırda dört sütuna yer var: hava hali yazısı, rüzgâr ve
+     nem gizleniyor. Hava halini simge, rüzgâr ve nemi de "şu an" bloğunun
+     altındaki ölçüm kutucukları zaten veriyor; beş günlük listede
+     telefonda okurun aradığı şey gün ve derece.
+     (320 px ölçümü: hepsi açıkken hava hali sütununa 24 px düşüyor,
+     "A…" oluyordu.)
+
+     Izgara burada DÖRT sütun: `display:none` öğeyi yerleşimden de
+     çıkarıyor, kalan öğeler otomatik olarak sola kayıyor. Fazla sütun
+     bırakılırsa dereceler ortada kalıyor, sağda boş sütun duruyordu.
+     Esneyen sütun derecelerin ÖNÜNDE: ikisi de sağa yaslı, satırın sağ
+     ucunda birlikte. */
+  .hava-gunler .hal,.hava-gunler .sutun-bas .s-hal,
+  .hava-gunler .ruzgar,.hava-gunler .sutun-bas .s-ruzgar,
+  .hava-gunler .nem,.hava-gunler .sutun-bas .s-nem{display:none}
+  .hava-gunler li,.hava-gunler .sutun-bas{
+    grid-template-columns:52px 22px minmax(0,1fr) 52px}
+  .hava-simdi-ic{gap:12px;padding:12px}
+  .hava-simdi .derece{font-size:46px}
 }
 
 /* --- namaz paneli: fotoğraf + büyük punto + esneyen liste -----------
@@ -1272,7 +1407,16 @@ main{display:block;padding-top:14px}
    "Mısırlıcomtr Fatih Karagümrük A.Ş."…); 380 sarmanın sıfırlandığı ilk
    genişlik. Ötesi işe yaramıyor: sol sütun 861 px'te dibe vuruyor, fazladan
    genişlik yalnız sağdaki haber kartlarını daraltır (380'de 217 px). */
-.bursaspor-izgara{display:grid;grid-template-columns:380px minmax(0,1fr);gap:14px;align-items:start}
+/* `stretch` (6 Eylül 2026, kullanıcı isteği: "puan durumunu haberlerin
+   bittiği yerde bitir"). Eskiden `start` idi ve iki sütun kendi doğal
+   boyundaydı: 3x2 kart ızgarası 534 px'te biterken tam kadro tablo 790'a
+   çıkıyor, aradaki fark başlık listesiyle kapatılıyordu. Liste kalktı,
+   kart sırası üçe çıktı ve işaret döndü — kart sütunu artık 808 px, yani
+   UZUN olan taraf o. Izgara gerilince puan kutusu kartlarla aynı çizgide
+   bitiyor; tablo KIRPILMIYOR, kutunun altında birkaç piksellik pay kalıyor.
+   Tabloyu kısa gelen bir lige (18 takım) çevirince de kutu boyunu koruyor —
+   sekme değiştikçe bölüm zıplamıyor, eskiden zıplıyordu. */
+.bursaspor-izgara{display:grid;grid-template-columns:380px minmax(0,1fr);gap:14px;align-items:stretch}
 .puan-kutu{border:1px solid var(--yesil-cizgi);background:var(--kagit)}
 .puan-kutu .sek{border-bottom:1px solid var(--yesil-cizgi)}
 .puan-kutu .sek button{font-size:11.5px;padding:8px 2px;letter-spacing:.3px;border-right-color:var(--yesil-cizgi)}
@@ -1328,15 +1472,6 @@ main{display:block;padding-top:14px}
    (ölçüldü). Boşluk kart EKLEYEREK değil, başlık listesiyle kapatılıyor;
    liste dikeyde ucuz ve on iki eşit kart bölümü kart duvarına çevirirdi.
    Tarih solda, başlıktan önce: kulüp haberi zamana duyarlıdır. */
-.bursaspor-liste{margin-top:14px;border-top:2px solid var(--yesil);padding-top:8px}
-.bursaspor-liste h3{font-family:var(--display);font-weight:900;font-size:11.5px;letter-spacing:1.1px;color:var(--yesil-koyu);padding-bottom:3px}
-.bursaspor-liste ul{list-style:none}
-.bursaspor-liste li{display:flex;gap:12px;align-items:baseline;padding:11px 0;border-bottom:1px dotted var(--cizgi)}
-.bursaspor-liste li:last-child{border-bottom:0;padding-bottom:0}
-.bursaspor-liste time{flex:none;width:70px;font-size:11.5px;color:var(--gri);font-variant-numeric:tabular-nums;white-space:nowrap}
-.bursaspor-liste a{font-family:var(--display);font-weight:700;font-size:13.5px;line-height:1.25;letter-spacing:.2px}
-.bursaspor-liste a:hover{color:var(--yesil-koyu)}
-
 /* --- 16 · galeriler --- */
 .galeri-izgara{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .galeri-kart{position:relative;background:var(--kagit);border:1px solid var(--cizgi)}
@@ -1441,8 +1576,9 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
   .manset-alani{grid-template-columns:minmax(0,1fr) 300px}
   /* 392 idi: sağ sütunun katı asgarisi (reklam 250 + mini) 472 px ve
      stretch'li ızgarada 36 px boş şerit kalıyordu (doğrulama 2. tur).
-     428'de iki sütun 1141+ ile aynı biçimde buluşuyor. */
-  .slayt-pencere{height:428px}
+     Mini slayt reklam boyuna çıkınca (6 Eylül 2026) o asgari 528'e taşındı;
+     485'te iki sütun 1141+ ile aynı biçimde buluşuyor. */
+  .slayt-pencere{height:485px}
   .ana-izgara{grid-template-columns:minmax(0,1fr) 300px}
 }
 /* Bandın tek satırda kalma bütçesi (30 Ağustos 2026, §36 ölçümü).
@@ -1513,7 +1649,10 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
   .bursaspor-haber{grid-template-columns:repeat(2,minmax(0,1fr))}
   .slayt h3{font-size:30px}
   .slayt-pencere{height:300px}
-  .manset-yan{flex-direction:column}
+  /* Sütun yönünde `align-items:flex-start` (1000 px kuralı) çapraz eksen
+     GENİŞLİK demek: mini slayt içerik boyuna, 202 px'e düşüyordu
+     (ölçüldü, 6 Eylül 2026). */
+  .manset-yan{flex-direction:column;align-items:stretch}
   .manset-yan .reklam{flex:none;width:100%;margin-bottom:14px}
   .doviz-ic{flex-wrap:wrap;overflow-x:visible}
   .doviz .etiket{padding-right:9px}
@@ -1764,12 +1903,22 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
    Eskiden sağ sütun (reklam + 5 slaytlı kutu) kendi doğal boyundaydı
    ve manşetin altında boşluk kalıyordu. Artık ızgara geriyor, mini
    slayt kalan yüksekliği kaplıyor: iki sütun aynı hizada bitiyor. */
-.manset-alani{align-items:stretch}
-.manset-yan{gap:14px;min-height:0}
-.manset-yan .reklam{flex:0 0 auto}
-.manset-yan .mini-slayt{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
-.mini-slayt .slayt-pencere{flex:1 1 auto;height:auto;min-height:150px}
-.mini-slayt .slayt-denetim{flex:0 0 auto}
+/* 6 Eylül 2026 · iki düzeltme:
+   (a) Blok `min-width:1001px` ile sınırlandı. Medya sorgularından SONRA
+       geldiği için koşulsuz hâli dar ekrandaki kuralları eziyordu: 1000 px
+       altında reklamın `flex:0 0 300px` ölçüsü `flex:0 0 auto`ya dönüyor ve
+       300x250'lik pano 113 px'e büzülüyordu (ölçüldü).
+   (b) Asgari pencere 150 -> 207. Mini slaytın kutusu böylece üstündeki
+       reklamla aynı: 207 + 41 denetim + 2 kenarlık = 250 px. 150'de başlık
+       bloğu (168 px) pencereden taşıyordu. */
+@media(min-width:1001px){
+  .manset-alani{align-items:stretch}
+  .manset-yan{gap:14px;min-height:0}
+  .manset-yan .reklam{flex:0 0 auto}
+  .manset-yan .mini-slayt{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+  .mini-slayt .slayt-pencere{flex:1 1 auto;height:auto;min-height:207px}
+  .mini-slayt .slayt-denetim{flex:0 0 auto}
+}
 
 /* --- piyasa bandı: sayfanın en üstünde, dikkat çeken şerit --------
    Koyu zemin gazetenin lacivertinden; sayılar iri ve tabular-nums ile
@@ -1975,7 +2124,7 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
      kadar daraltırdı. Özgüllük taban kuralla EŞİT (0,4,0), dosyada sonra
      geldiği için kazanıyor. */
   .liste-izgara .kart.genis .foto{align-self:stretch;height:auto;
-    aspect-ratio:4/3}
+    aspect-ratio:3/2}
   .kart.genis h3{font-size:21px}
 }
 
@@ -2011,7 +2160,6 @@ details.yer-not p{margin-top:6px}
    kart/sıra başlıkları, ilan tür düğmeleri, reklam anahtarı. */
 footer ul{line-height:1.45}
 footer ul a{display:inline-block;padding:4px 0;min-width:24px}
-.bursaspor-liste a{display:inline-block;padding:4px 0;margin:-4px 0}
 .kart h3 a{display:inline-block;padding:2px 0;margin:-2px 0}
 .sira h3 a{display:inline-block;padding:3px 0;margin:-3px 0}
 .ilan-bas .tumu{padding:4px 0;margin-top:-4px;margin-bottom:-4px}
@@ -2180,10 +2328,17 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
    Rayda (haber detay, köşe yazısı) kutu 320 px ve yan yana dizilen plaka
    manşete ~100 px bırakıyor; başlık kelime kelime sarıp şeridi 300 px'e
    çıkarıyordu (1400 px ekranda ölçüldü). Aynı kural anasayfanın geniş
-   kutusuna 768 px'in altında uygulanır — orada da genişlik biter. */
+   kutusuna 768 px'in altında uygulanır — orada da genişlik biter.
+
+   Bu dizilişte TÜMÜ plakanın hemen yanında duruyor ve kırmızı kalınca üst
+   satır iki renge bölünmüş görünüyordu; plakayla aynı laciverte çekildi,
+   arasına 2 px beyaz ayraç kondu (şeffaf --sd-ayrac lacivert üstünde
+   kayboluyor). Geniş kutunun tek satırlı hâlinde TÜMÜ kırmızı manşet
+   alanının devamı olduğu için orada kırmızı kalır. */
 .sondakika:not(.genis) .sondakika-serit{flex-wrap:wrap}
 .sondakika:not(.genis) .sondakika-plaka{flex:1 1 auto}
-.sondakika:not(.genis) .sondakika-tumu{margin-left:auto;border-left:0}
+.sondakika:not(.genis) .sondakika-tumu{margin-left:auto;background:var(--sd-plaka);
+    border-left:2px solid var(--kagit)}
 .sondakika:not(.genis) .sondakika-manset{flex:1 1 100%;order:3;
   padding:9px 14px 11px}
 /* Dar sütunda 19 px büyük harf başlık üç satırı hemen dolduruyor. */
@@ -2244,7 +2399,8 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
      manşete 180 px bırakıyor ve başlık dört satıra sarıyordu. */
   .sondakika.genis .sondakika-serit{flex-wrap:wrap}
   .sondakika.genis .sondakika-plaka{flex:1 1 auto}
-  .sondakika.genis .sondakika-tumu{margin-left:auto;border-left:0}
+  .sondakika.genis .sondakika-tumu{margin-left:auto;background:var(--sd-plaka);
+    border-left:2px solid var(--kagit)}
   .sondakika.genis .sondakika-manset{flex:1 1 100%;order:3;
     padding:9px 14px 11px}
   .sondakika.genis .sondakika-manset .baslik{font-size:17px;line-height:1.18}
@@ -2303,11 +2459,13 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
    altına düşmesin. */
 .servis-dilim{background:var(--kagit);border:1px solid var(--cizgi);padding:12px;
   scroll-margin-top:74px}
-/* Hava paneli üçünün içinde en görsel olanı ve satırın tamamını kaplıyor;
-   31 Ağustos 2026'da kartın kendisi de panelin gökyüzü tonuna çekildi ki
-   altındaki namaz/eczane kartlarından ayrışsın (kullanıcı isteği). Yazı
-   renkleri değişmedi, yalnız zemin. */
-#panel-hava{background:var(--hv-zemin-ust);border-color:var(--hv-panel-cizgi)}
+/* 31 Ağustos 2026'da kartın kendisi de panelin gökyüzü tonuna çekilmişti
+   ki altındaki namaz/eczane kartlarından ayrışsın. 6 Eylül 2026, kullanıcı
+   isteği: panel klasikleşince o ton kalktı, kart üç kardeşiyle aynı beyaz
+   kâğıda döndü. Ayrışmayı artık zemin değil, panelin kendi tablo dokusu
+   ve satırın tamamını kaplaması sağlıyor. Kural DURUYOR (değişkenler
+   beyaza çekildi): rengi geri istersen tek yer burası. */
+#panel-hava{background:var(--hv-zemin-ust);border-color:var(--cizgi)}
 .servis-dilim h3{font-family:var(--display);font-size:12px;letter-spacing:1.1px;
   color:var(--lacivert);border-bottom:2px solid var(--kirmizi);
   padding-bottom:6px;margin-bottom:10px}
@@ -2462,3 +2620,319 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 @media(max-width:768px){
   .son-haberler .kart.genis .foto{height:220px}
 }
+
+/* ---- KONU DOSYALARI (5 Eylül 2026) ------------------------------------
+   Haber sayfasındaki "KONUNUN AKIŞI" bloğu, /konu/<slug> künyesi ve
+   /konular dizini. Renkler :root değişkenlerinden; yeni renk yok. */
+.konu-akis{margin:22px 0 6px;padding:14px 16px 12px;background:var(--yumusak);
+  border:1px solid var(--cizgi);border-left:4px solid var(--lacivert);border-radius:4px}
+.konu-akis .konu-bas{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-bottom:8px}
+.konu-akis .rozet-k{background:var(--lacivert);color:var(--kagit)}
+.konu-akis h2{font-family:var(--display);font-size:20px;font-weight:900;line-height:1.15;margin:0}
+.konu-akis h2 a{color:var(--murekkep)}
+.konu-akis h2 a:hover{color:var(--kirmizi-koyu);text-decoration:underline}
+.konu-akis .konu-ozet{font-size:12.5px;color:var(--gri)}
+.konu-akis .konu-ozet b{color:var(--artis)}
+.konu-zaman{list-style:none;margin:0;padding:0;border-left:2px solid var(--cizgi);margin-left:6px}
+.konu-zaman li{position:relative;display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;
+  padding:6px 0 6px 16px;font-size:14px;line-height:1.35}
+.konu-zaman li::before{content:"";position:absolute;left:-6px;top:12px;width:10px;height:10px;
+  border-radius:50%;background:var(--kagit);border:2px solid var(--lacivert)}
+.konu-zaman li.simdi::before{background:var(--kirmizi);border-color:var(--kirmizi)}
+.konu-zaman li.simdi span{font-weight:700}
+.konu-zaman li.daha{font-size:12.5px;grid-template-columns:minmax(0,1fr)}
+.konu-zaman li.daha::before{border-style:dotted;border-color:var(--gri)}
+.konu-zaman time{font-family:var(--display);font-size:12.5px;color:var(--gri);letter-spacing:.3px;padding-top:2px}
+.konu-zaman a{color:var(--murekkep)}
+.konu-zaman a:hover{color:var(--kirmizi-koyu);text-decoration:underline}
+.konu-tumu{margin:10px 0 0 22px;font-size:13.5px;font-weight:700}
+.konu-tumu a{color:var(--lacivert)}
+.konu-kunye{display:flex;flex-wrap:wrap;gap:8px 22px;padding:10px 14px;font-size:13.5px;
+  border-bottom:1px solid var(--cizgi);background:var(--yumusak)}
+.konu-kunye b{font-family:var(--display);font-size:11.5px;letter-spacing:1px;color:var(--gri);margin-right:4px}
+.suruyor{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:1px;
+  color:var(--kagit);background:var(--artis);padding:2px 7px;border-radius:3px;align-self:center}
+.konu-ozet-metin{padding:12px 14px 0;font-size:15.5px;line-height:1.5;border-left:4px solid var(--kirmizi);margin:12px 14px 0}
+.konu-dizin{list-style:none;margin:0;padding:0}
+.konu-dizin li{padding:12px 0;border-bottom:1px dotted var(--cizgi)}
+.konu-dizin li:last-child{border:0}
+.konu-dizin .ust{display:flex;gap:10px;align-items:center;font-family:var(--display);font-size:12.5px;color:var(--gri);letter-spacing:.3px}
+.konu-dizin h2{font-family:var(--display);font-size:19px;font-weight:900;line-height:1.15;margin:3px 0 4px}
+.konu-dizin h2 a{color:var(--murekkep)}
+.konu-dizin h2 a:hover{color:var(--kirmizi-koyu);text-decoration:underline}
+.konu-dizin p{font-size:13.5px;color:var(--gri);line-height:1.4}
+@media(max-width:768px){
+  .konu-zaman li{grid-template-columns:minmax(0,1fr);gap:2px}
+  .konu-akis h2{font-size:18px}
+}
+
+/* =================================================================
+   DAHA FAZLA GÖSTER — 6 Eylül 2026 (§48)
+   Numaralı sayfalama kategori/ilçe sayfasından kalktı; yerini akışın
+   altındaki tek düğme aldı. Düğme HTML'de bir <a>; JavaScript onu
+   yalnızca zenginleştiriyor, o yüzden burada bağlantı gibi değil
+   DÜĞME gibi görünmesi gerekiyor (tam genişlik, kalın çerçeve).
+   ================================================================= */
+.daha-fazla-kap{margin:18px 0 16px;text-align:center}
+.daha-fazla{display:block;width:100%;font-family:var(--display);font-weight:900;
+  font-size:15px;letter-spacing:.6px;text-transform:uppercase;color:var(--lacivert);
+  background:var(--kagit);border:2px solid var(--lacivert);padding:14px 18px;
+  transition:background .15s ease,color .15s ease}
+.daha-fazla:hover{background:var(--lacivert);color:var(--kagit)}
+.daha-fazla[aria-busy="true"]{color:var(--gri);border-color:var(--cizgi);cursor:progress}
+/* Durum satırı GÖRÜNÜR değil ama ekranda okunabilir bir yer kaplar:
+   içi boşken satır yüksekliği doğurmasın diye :empty gizleniyor. */
+.daha-fazla-durum{margin:8px 0 0;font-size:13px;color:var(--gri)}
+.daha-fazla-durum:empty{display:none}
+/* Arşivin sonu. Odak buraya alınıyor (site.js), o yüzden odak halkası
+   görünür olmalı — tarayıcı varsayılanı yeterli değil, zemin açık. */
+.daha-fazla-son{margin:18px 0 16px;padding:14px;text-align:center;
+  font-family:var(--display);font-size:13.5px;letter-spacing:.4px;color:var(--gri);
+  background:var(--yumusak);border:1px solid var(--cizgi)}
+.daha-fazla-son:focus-visible{outline:3px solid var(--lacivert);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.daha-fazla{transition:none}}
+
+/* =================================================================
+   BÖLÜM SAYFASININ İKİ YENİ BLOĞU — 6 Eylül 2026 (§59)
+   Kullanıcı: "kategori sayfalarının içeriğini çeşitlendirmeni de
+   istiyorum". Sayfa tek tip kronolojik listeydi; üstüne servis
+   şeridi, akışın altına görüntü kuşağı geldi.
+   ================================================================= */
+
+/* --- SERVİS PANELİ — 7 Eylül 2026 (§62) -----------------------------
+   6 Eylül'de tek satırlık bir şeritti; kullanıcı kararıyla sitenin kendi
+   `.kutu` bileşenine çevrildi: başlık çubuğu, gövde, künye. Şerit veriyi
+   taşıyordu ama SUNMUYORDU — döviz beş kalemi tek satıra sıkıştırıyor,
+   puan yalnız bir satır söylüyor, eczane adresi ve haritayı hiç
+   göstermiyordu.
+
+   Panel gazetenin kendi renklerinde: lacivert başlık, kırmızı vurgu.
+   Bölüme özel renk denendi ve 7 Eylül 2026'da kullanıcı kararıyla geri
+   alındı — gerekçe URUN-PLANI.md §63'te. */
+.bolum-servis{margin-bottom:14px}
+/* Başlık çubuğu için AYRI KURAL YOK: varsayılan `.kutu-bas` (lacivert
+   zemin, beyaz yazı, kırmızı fitil) sitenin her yerindeki kutuyla aynı.
+   Bir süre bölüm rengini alıyordu; renk temaları 7 Eylül 2026'da kullanıcı
+   kararıyla geri alındı ve çubuk da varsayılana döndü. */
+/* Künye satırı üç panelde de ortak: verinin ne olduğunu ve ne zamana ait
+   olduğunu okur panelden çıkmadan öğreniyor. */
+.servis-kunye{margin:12px 0 0;padding-top:10px;border-top:1px dotted var(--cizgi);
+  font-size:12.5px;line-height:1.45;color:var(--gri)}
+
+/* PİYASA: beş kalem, beş göz. Şeritte hepsi tek satıra sıkışıyordu ve
+   alış/satış hiç görünmüyordu. Üst kenarlık yönü söylüyor — renk tek
+   başına bilgi taşımasın diye ok işareti de duruyor. */
+.piyasa-izgara{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.piyasa-kalem{display:flex;flex-direction:column;gap:2px;padding:12px 14px;
+  background:var(--yumusak);border:1px solid var(--cizgi);border-top:3px solid var(--cizgi)}
+.piyasa-kalem.artiyor{border-top-color:var(--artis)}
+.piyasa-kalem.azaliyor{border-top-color:var(--kirmizi)}
+.piyasa-kalem .ad{font-family:var(--display);font-size:11.5px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;color:var(--gri)}
+.piyasa-kalem .deger{font-family:var(--display);font-size:26px;font-weight:900;
+  line-height:1.05;color:var(--murekkep);font-variant-numeric:tabular-nums}
+.piyasa-kalem .deger .birim{font-size:16px;font-weight:700;color:var(--gri)}
+.piyasa-kalem .fark{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.piyasa-kalem.artiyor .fark{color:var(--artis)}
+.piyasa-kalem.azaliyor .fark{color:var(--kirmizi-koyu)}
+.piyasa-kalem .alis-satis{margin-top:4px;font-size:11.5px;color:var(--gri);
+  font-variant-numeric:tabular-nums}
+.piyasa-kalem .veri-yok{color:var(--gri)}
+
+/* PUAN: solda haftanın maçı, sağda tablonun Bursaspor penceresi. */
+.puan-panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);
+  gap:14px;align-items:start}
+.mac-karti{display:flex;flex-direction:column;gap:8px;padding:14px 16px;
+  background:var(--yumusak);border:1px solid var(--cizgi)}
+.mac-bas{font-family:var(--display);font-size:11px;font-weight:900;letter-spacing:1.3px;
+  color:var(--kirmizi-koyu)}
+.mac-takimlar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  gap:10px;align-items:center}
+.mac-takimlar b{font-family:var(--display);font-size:16px;font-weight:700;line-height:1.15;
+  color:var(--murekkep)}
+.mac-takimlar b:last-child{text-align:right}
+.mac-takimlar b.bizim{color:var(--kirmizi-koyu);font-weight:900}
+/* Sınıf `skor` DEĞİL `mac-skor`: anasayfanın Bursaspor kutusunda
+   `.skor` bir KUTUDUR (açık yeşil zemin, kenarlık, ortalanmış) ve
+   buradaki span onun kurallarını miras alıyordu — saatin arkasında
+   sebepsiz bir yeşil kutu çıkıyordu (7 Eylül 2026, başsız Chrome). */
+.mac-takimlar .mac-skor{font-family:var(--display);font-size:26px;font-weight:900;
+  color:var(--murekkep);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mac-takimlar .mac-skor.bekliyor{font-size:19px;color:var(--gri)}
+.mac-zaman{font-size:12.5px;color:var(--gri)}
+/* Tablo kendi içinde kayar; dar ekranda sayfa yatay taşmaz. */
+.puan-pencere{overflow-x:auto}
+.bolum-servis .puan{width:100%;border-collapse:collapse;font-size:13.5px}
+.bolum-servis .puan th{font-family:var(--display);font-size:11px;font-weight:900;
+  letter-spacing:.8px;color:var(--gri);text-align:right;padding:6px 8px;
+  border-bottom:2px solid var(--cizgi)}
+.bolum-servis .puan th:nth-child(-n+2){text-align:left}
+.bolum-servis .puan td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--cizgi);
+  font-variant-numeric:tabular-nums}
+/* Bu üç kural YALNIZ hizalama ve ağırlık verir, RENK VERMEZ. Renk
+   bildirimi denendi ve geri alındı: `.bolum-servis .puan td.ad` özgüllükte
+   `.puan tr.bizim td`yi (kulüp yeşili zemin + beyaz yazı) eziyor ve
+   Bursaspor'un satırı koyu yeşilin üstünde koyu yeşil yazıya dönüyordu
+   (7 Eylül 2026, başsız Chrome denetiminde görüldü). Sıra numarasının
+   grisi de aynı nedenle `tr:not(.bizim)` ile sınırlandı. */
+.bolum-servis .puan td.sira-no{text-align:left;width:1%}
+.bolum-servis .puan tr:not(.bizim) td.sira-no{color:var(--gri)}
+.bolum-servis .puan td.ad{text-align:left;font-family:var(--display);font-weight:700}
+.bolum-servis .puan td.p{font-weight:900}
+/* "Bizim" ve "Bursalı" satırlarının muamelesi BURADA TANIMLANMIYOR:
+   `.puan tr.bizim td` (dolu kulüp yeşili + beyaz yazı) ve
+   `.puan tr.bursali td` (açık yeşil zemin) sitede zaten kurulu ve doğru.
+   Burada yalnız yazı rengini değiştiren bir kural DENENDİ ve geri alındı —
+   zemini değiştirmediği için koyu yeşilin üstünde koyu yeşil yazı
+   kalıyordu (7 Eylül 2026, başsız Chrome denetiminde görüldü). */
+
+/* NÖBETÇİ ECZANE: dört göz. Şeritte yalnız ad ve telefon vardı; okurun
+   gece yarısı ihtiyacı olan şey adres ve harita. */
+.eczane-izgara{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;margin:0;padding:0}
+.eczane-izgara li{display:flex;flex-direction:column;gap:3px;padding:12px 14px;
+  background:var(--yumusak);border:1px solid var(--cizgi);
+  border-left:3px solid var(--lacivert)}
+.eczane-izgara b{font-family:var(--display);font-size:15.5px;font-weight:900;line-height:1.18;
+  color:var(--murekkep)}
+.eczane-izgara .yer{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--kirmizi)}
+.eczane-izgara .adres{font-size:12.5px;line-height:1.4;color:var(--gri)}
+.eczane-izgara .baglar{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:5px;font-size:12.5px}
+.eczane-izgara .tel{font-family:var(--display);font-weight:700;color:var(--murekkep);
+  font-variant-numeric:tabular-nums}
+.eczane-izgara .harita{color:var(--lacivert);font-weight:700}
+.eczane-izgara a:hover{text-decoration:underline}
+
+@media(max-width:1100px){
+  .piyasa-izgara{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .eczane-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:820px){
+  .puan-panel{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:560px){
+  .piyasa-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .piyasa-kalem .deger{font-size:22px}
+  .eczane-izgara{grid-template-columns:minmax(0,1fr)}
+}
+
+/* --- görüntü kuşağı ------------------------------------------------
+   Izgaralar anasayfadakiyle AYNI (`.galeri-izgara`, `.video-izgara`);
+   buraya yalnız kuşağın kendi ara başlığı eklendi. */
+.goruntu-bas{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  font-family:var(--display);font-size:12px;font-weight:900;letter-spacing:1.2px;
+  color:var(--gri);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--cizgi)}
+.goruntu-bas a{font-size:12.5px;font-weight:700;letter-spacing:.4px;color:var(--lacivert);white-space:nowrap}
+.goruntu-bas a:hover{color:var(--kirmizi-koyu);text-decoration:underline}
+.bolum-goruntu .galeri-izgara+.goruntu-bas,
+.bolum-goruntu .video-izgara+.goruntu-bas{margin-top:18px}
+
+@media(max-width:768px){
+  /* Dört sütunluk kuşak dar ekranda ikiye iner; anasayfadaki ızgaraların
+     kendi kırılma noktası bölüm sayfasında da geçerli. */
+  .bolum-goruntu .galeri-izgara,
+  .bolum-goruntu .video-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .servis-eczane{flex-direction:column;gap:4px}
+}
+
+/* =================================================================
+   BÖLÜM AKIŞI: İKİLİ / ÜÇLÜ RİTİM — 7 Eylül 2026 (§60)
+   Kullanıcı: "kategori sayfalarında haberlerin tarihlere bölünmesini
+   kaldır, onun yerine 2'li ve 3'lü haberlerin sunulacağı bir akış
+   hazırla".
+
+   Eski akış (`.akis`) 150 px görselli iki sütunlu satır listesiydi ve
+   gün değiştikçe araya tarih ayracı giriyordu. İkisi de kalktı; ayraç
+   kalkarken zaman bilgisi kartın kendi damgasında duruyor.
+
+   Sınıf `.akis` DEĞİL: konu dosyası sayfası eski listeyi kullanmaya
+   devam ediyor ve iki yerleşim aynı sınıfı paylaşsaydı biri diğerini
+   bozardı.
+   ================================================================= */
+.akis-ritim{background:var(--kagit);border:1px solid var(--cizgi);
+  padding:14px 16px 16px;margin-top:14px}
+.akis-blok{display:grid;gap:16px}
+/* Bloklar arasındaki çizgi RİTMİN KENDİSİ: ikiliden üçlüye geçişi
+   gözle ölçülebilir kılıyor. İlk blokta yok — kutunun kenarlığı zaten
+   orada. */
+.akis-blok+.akis-blok{margin-top:16px;padding-top:16px;border-top:1px solid var(--cizgi)}
+.akis-blok.ikili{grid-template-columns:repeat(2,minmax(0,1fr))}
+.akis-blok.uclu{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* Eksik blok (bölümün son sayfası) hücreyi BOŞ bırakır: kartı gerip
+   satırı doldurmak, o haberi olmadığı kadar önemli gösterirdi. */
+.akis-blok .kart{background:var(--kagit);border:0}
+/* 3:2 — arşivin kendi oranı. 6 Eylül'de 16:9 konmuştu ve aynı kusuru
+   üretiyordu: `object-fit:cover` fotoğrafı ALTTAN VE ÜSTTEN kırpıyor,
+   ölçülen kayıp %16 (512x288 çerçevede 53 px). Dikey kırpma haber
+   fotoğrafında yatay kırpmadan daha zararlı — kadrajın kestiği şey baş ve
+   ayak oluyor. Sitenin öbür ızgaraları da 3:2; oran artık istisnasız. */
+.akis-blok .foto{aspect-ratio:3/2;height:auto}
+.akis-blok .ic{padding:10px 0 0}
+.akis-blok .ust{display:flex;align-items:baseline;gap:6px;font-size:10.5px;font-weight:700;
+  color:var(--kirmizi);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px}
+.akis-blok .ust time{font-family:var(--govde);font-weight:400;font-size:11.5px;
+  color:var(--gri);letter-spacing:0;text-transform:none;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.akis-blok .ust span+time::before{content:"·";margin-right:6px}
+.akis-blok h3 a{color:var(--murekkep)}
+.akis-blok .kart:hover h3 a{color:var(--kirmizi-koyu)}
+/* Ağırlık farkı ritmin kendisi: ikili geniş ve spotlu, üçlü dar ve
+   yalnız başlık. İkisi aynı görünseydi bölmenin anlamı kalmazdı. */
+.akis-blok.ikili h3{font-family:var(--display);font-size:20px;line-height:1.16;font-weight:900}
+.akis-blok.ikili p{font-size:13.5px;line-height:1.42;color:var(--gri);margin-top:5px}
+.akis-blok.uclu h3{font-family:var(--display);font-size:16px;line-height:1.2;font-weight:700}
+
+/* ÜÇLÜ BLOK 700 px'e KADAR ÜÇ SÜTUN KALIR — ölçülerek karar verildi.
+   Önce 900 px'te ikiye indiriliyordu; 860 px'te ölçüldüğünde üçüncü kart
+   tek başına ikinci satıra düşüyor ve yanında boş bir hücre kalıyordu.
+   Ritmin anlamı "üç dar kart"; ikiye inince blok ikiliden ayırt
+   edilemiyor, üstüne bir de delik açılıyor. Üç sütun 700 px'te 209 px'e
+   iniyor — dar ama bütün. Altında ikisi de tek sütuna geçer. */
+@media(max-width:900px){
+  .akis-blok{gap:14px}
+  .akis-blok.ikili h3{font-size:18px}
+  .akis-blok.uclu h3{font-size:15px}
+  .akis-blok.uclu .ic{padding-top:8px}
+}
+@media(max-width:700px){
+  .akis-ritim{padding:12px 12px 14px}
+  .akis-blok.ikili,.akis-blok.uclu{grid-template-columns:minmax(0,1fr)}
+  .akis-blok.ikili h3{font-size:17.5px}
+  .akis-blok.uclu h3{font-size:16px}
+}
+
+/* --- "daha fazla göster" sonrası iniş — 7 Eylül 2026 ----------------
+   Kullanıcı bildirimi: "butona tıklandığında sayfa aşağı ilerlemiyor
+   yeni haberleri göstermek için". Betik yeni yığının ilk bloğunu
+   görüş alanına alıyor; kategori bandı `position:sticky` olduğu için
+   hedef onun ALTINA oturmalı, yoksa ilk satır bandın altında kalır.
+
+   ÖLÇÜLDÜ (başsız Chrome): bant 1440 px'te 50 px, 390 px'te 82 px.
+   Üstüne birkaç piksel nefes payı bırakılıyor. */
+.akis-blok,.son-haberler .kart{scroll-margin-top:58px}
+@media(max-width:900px){
+  .akis-blok,.son-haberler .kart{scroll-margin-top:92px}
+}
+/* Odak da yeni yığına taşınıyor (klavyeyle gezen okur listenin başına
+   dönmesin). Blok bir KAP; fare/dokunmayla gelen odakta halka çizmek
+   gereksiz gürültü olurdu, klavye okurunda ise şart. */
+.akis-blok:focus{outline:none}
+.akis-blok:focus-visible{outline:3px solid var(--lacivert);outline-offset:4px}
+
+/* =================================================================
+   BÖLÜM RENK TEMALARI GERİ ALINDI — 7 Eylül 2026 (§63)
+   Kullanıcı kararı: "farklı renk temalarını geri al".
+
+   6 saat önce (§62) dört bölüm kendi vurgu rengini almıştı: kulüp yeşili,
+   kent mavisi, piyasa amberi, sağlık turkuazı. Karar geri alındı ve
+   `[data-bolum]` düzeneğinin tamamı — nitelik, değişkenler, kurallar —
+   kalktı. Bölüm sayfaları gazetenin lacivert-kırmızısında.
+
+   §35'in "site lacivert-kırmızı kalır" kuralı böylece istisnasız sürüyor;
+   tek istisna anasayfadaki `#bursaspor` kutusudur ve o 29 Ağustos 2026'da
+   ayrıca kararlaştırılmıştı.
+
+   SERVİS PANELLERİ KALDI (§62'nin birinci yarısı): piyasa ızgarası, puan
+   penceresi ve nöbetçi eczane kartları yerinde. Giden yalnız renkti.
+   ================================================================= */

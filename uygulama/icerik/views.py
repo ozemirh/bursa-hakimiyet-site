@@ -32,7 +32,7 @@ from .templatetags.site_etiket import baslikla
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 
 from .arama_metni import sorgu_coz
-from .canli import anasayfa_verisi, oku
+from .canli import anasayfa_verisi, oku, puan_ligleri, puan_takibi
 from . import eczane as eczane_sayfa
 from . import okunma
 from .models import Haber, ResmiIlan
@@ -57,25 +57,17 @@ EN_COK = 5
 # Anasayfada gösterilen resmî ilan adedi. İki sütunda dört satır: bölüm
 # haber akışının önüne geçmeden süzgeci anlamlı kılacak kadar kayıt.
 ILAN = 8
-BURSASPOR = 6
-# Fotoğraflı kartların ALTINDAKİ başlık listesi (29 Ağustos 2026).
-# Neden: tablo tam kadro olunca sol sütun 958 px'e çıkıyor, altı kart ise
-# 546 px'te bitiyordu — 1280 ve 1600 px'te sağ altta 412 px'lik boşluk
-# kalıyordu (ölçüldü). Boşluk kart sayısını artırarak değil, başlık
-# listesiyle kapatılıyor: on iki kart bölümü düz bir kart duvarına
-# çevirirdi (URUN-PLANI.md §32). Toplam 6 + 7 = 13 kayıt.
+# Bursaspor bölümündeki fotoğraflı kart sayısı: 3x3 ızgara.
 #
-# 9'dan 7'ye indi: puan tablosunun sütunu 300 -> 380 px'e genişleyince
-# (takım adları artık sarmıyor) tablo 865 px'e KISALDI ve bu kez sağ sütun
-# 100 px uzun kaldı. Denge satır sayısıyla kuruluyor; satır 41 px, iki satır
-# eksilince fark -18 px'e iniyor (ölçüldü).
-#
-# 31 Ağustos 2026, kullanıcı isteği: liste DÖRT satıra indi. Sayı artık
-# sütun dengesinden değil karardan geliyor; denge yine de ölçüldü ve
-# işareti değişti — 7 satırda sağ sütun 56 px UZUNDU (794 / 850), 4 satırda
-# ~67 px KISA kalıyor. Büyüklük aynı sınıfta, o yüzden yerleşim düzeltmesi
-# yapılmadı; sayı bir daha oynatılırsa fark yeniden ölçülmeli.
-BURSASPOR_LISTE = 4
+# 6 Eylül 2026, kullanıcı isteği: 6 -> 9. Aynı kararla kartların altındaki
+# "SON GELİŞMELER" başlık listesi (`BURSASPOR_LISTE`, 29 Ağustos'ta konmuş,
+# 31 Ağustos'ta dört satıra inmişti) tümüyle KALKTI. Listenin gerekçesi sağ
+# alttaki boşluğu kart eklemeden kapatmaktı; üçüncü kart sırası o boşluğu
+# zaten dolduruyor ve sağ sütun artık puan tablosundan UZUN (ölçüldü:
+# kart sütunu 808 px, tablo 790 px). Denge bu kez tablo tarafında kuruluyor —
+# `.bursaspor-izgara` gerilip puan kutusunu kartların bittiği yerde
+# bitiriyor (site.css). Sayı değişirse iki sütunun farkı yeniden ölçülmeli.
+BURSASPOR = 9
 SAYFA_BOYU = 20
 # Resmî ilan DİZİNİNİN sayfa boyu — haber listelerinden ayrı.
 #
@@ -224,12 +216,8 @@ def anasayfa(request):
 
     bursaspor = Kategori.objects.filter(ad="BURSASPOR").first()
     bursaspor_haberleri = []
-    bursaspor_liste = []
     if bursaspor:
-        havuz = list(_liste().filter(kategori=bursaspor)
-                     [:BURSASPOR + BURSASPOR_LISTE])
-        bursaspor_haberleri = havuz[:BURSASPOR]
-        bursaspor_liste = havuz[BURSASPOR:]
+        bursaspor_haberleri = list(_liste().filter(kategori=bursaspor)[:BURSASPOR])
 
     return render(request, "anasayfa.html", {
         "anasayfa_mi": True,
@@ -239,7 +227,6 @@ def anasayfa(request):
         "dortlu": dortlu,
         "kutular": kutular,
         "bursaspor_haberleri": bursaspor_haberleri,
-        "bursaspor_liste": bursaspor_liste,
         "en_cok": en_cok,
         "ilanlar": ilanlar,
         "ilan_turleri": ResmiIlan.tur_dagilimi(ilanlar),
@@ -268,6 +255,79 @@ def anasayfa(request):
 # özel").
 KATEGORI_EN_COK = 5
 
+# ---------------------------------------------------------------------------
+# AKIŞ RİTMİ — 7 Eylül 2026 (§60, kullanıcı isteği: "kategori sayfalarında
+# haberlerin tarihlere bölünmesini kaldır, onun yerine 2'li ve 3'lü
+# haberlerin sunulacağı bir akış hazırla").
+#
+# Tarih ayracı (2 Eylül, §46) KALKTI. Bilgi kaybolmuyor: her kartın kendi
+# zaman damgası zaten var ve `kisa_zaman` süzgeci aynı günün haberinde saat,
+# eskisinde tarih basıyor ("31 Eki 2025") — ayracın söylediğini kart tek
+# başına söylüyor.
+#
+# Yerine gelen ritim: iki geniş kart, üç dar kart, iki, üç… Blok boyu
+# sayfada ölçülebilir bir kesme yapıyor; eskiden yirmi eşit satır art arda
+# geliyordu ve sayfanın hiçbir yerinde durak yoktu.
+#
+# SAYI SEÇİMİ TESADÜF DEĞİL. Ritmin bir turu 5 kayıt ve sayfa boyları buna
+# tam oturuyor:
+#
+#     1. sayfa akışı  = 20 − 3 (üstteki kart kademesi) = 17 = 2+3+2+3+2+3+2
+#     2+. sayfa akışı = 20                             = 3+2+3+2+3+2+3+2
+#
+# İkisi de TAM bölünüyor, yani hiçbir blok yarım kalmıyor. Üstelik 1. sayfa
+# ikiliyle bitiyor ve sonraki sayfa ÜÇLÜYLE başlıyor (`ilk_uclu`): "daha
+# fazla göster" ile eklenen dilim, ritmi bozmadan kaldığı yerden sürüyor.
+# Sayfa boyu ya da kart kademesi değişirse bu iki toplam yeniden kontrol
+# edilmeli — test (`tests_akis_ritmi`) bunu bekliyor.
+AKIS_RITMI = (2, 3)
+# 1. sayfanın başındaki kart kademesi: 1 geniş + 2 normal (§46).
+KATEGORI_KART = 3
+
+
+def _akis_bloklari(kalemler, ilk_uclu=False):
+    """Kalemleri ikili ve üçlü bloklara böler.
+
+    `ilk_uclu`, ritmin nerede kaldığını taşır: 1. sayfa ikiliyle bittiği
+    için sonraki dilim üçlüyle başlar. Bu tek bayrak olmasa "daha fazla
+    göster"in eklediği ilk blok, sayfadaki son blokla aynı boyda çıkar ve
+    ritim seamde tekler.
+
+    Son blok EKSİK kalabilir — bölümün son sayfasında kalem sayısı 5'in
+    katı olmayabilir. Izgara o durumda hücreyi boş bırakır; kartı gerip
+    satırı doldurmak, o haberi olmadığı kadar önemli gösterirdi.
+    """
+    bloklar = []
+    sira = 1 if ilk_uclu else 0
+    i = 0
+    while i < len(kalemler):
+        boy = AKIS_RITMI[sira % len(AKIS_RITMI)]
+        bloklar.append({
+            "tur": "uclu" if boy == 3 else "ikili",
+            "boy": boy,
+            # Spot YALNIZ ikilide: üçlü blokta sütun 357 px'e iniyor ve
+            # üç satırlık spot başlığı bastırıyor. Ağırlık farkı ritmin
+            # kendisi — iki blok aynı görünseydi bölmenin anlamı kalmazdı.
+            "spot": boy == 2,
+            "kalemler": kalemler[i:i + boy],
+        })
+        i += boy
+        sira += 1
+    return bloklar
+
+
+def _bolum_akisi(sayfa):
+    """Bölüm sayfasının akış blokları.
+
+    1. sayfada ilk üç kayıt yukarıdaki kart kademesindedir ve akışa
+    girmez; sonraki sayfalar kronolojik devamdır, kademe yoktur.
+    """
+    kalemler = list(sayfa)
+    ilk = sayfa.number == 1
+    if ilk:
+        kalemler = kalemler[KATEGORI_KART:]
+    return _akis_bloklari(kalemler, ilk_uclu=not ilk)
+
 
 def _bolum_en_cok(sorgu, sayfa):
     """Şeridin kalemleri — bu bölümün pencerede en çok okunanları.
@@ -293,6 +353,145 @@ def _bolum_en_cok(sorgu, sayfa):
     return list(sorgu[bas:bas + KATEGORI_EN_COK])
 
 
+# ---------------------------------------------------------------------------
+# BÖLÜM SAYFASININ İKİ YENİ BLOĞU (6 Eylül 2026, §59, kullanıcı isteği:
+# "kategori sayfalarının içeriğini çeşitlendirmeni de istiyorum").
+#
+# Sayfa tek bir şey yapıyordu: kronolojik liste. Eklenen iki şey, Guardian ·
+# BBC · NYT · Hürriyet bölüm sayfalarında ortak olup bizde bulunmayanlardan
+# ÖLÇÜLEREK seçildi — yani verisi bugün var olanlar:
+#
+#   1. GÖRÜNTÜ KUŞAĞI — o bölümün videoları ve foto galerileri. 31.075
+#      videonun ve 2.872 galerinin kategorisi dolu; sorgu 1 ms.
+#   2. SERVİS ŞERİDİ — bölümü okuyanın işine yarayan canlı veri. Ekonomi'de
+#      döviz bandı, spor bölümlerinde Bursaspor'un lig satırı ve haftanın
+#      maçı, sağlıkta ve İLÇE sayfalarında nöbetçi eczane.
+#
+# Denenip ELENENLER (veri yok, uydurulmaz): bölümün yazarları — 6.713 köşe
+# yazısının TAMAMININ kategorisi boş; etiket bulutu — 23 etiket, 23 bağ.
+# İkisi de veri işi; kurulursa bu blokların yanına eklenir.
+# ---------------------------------------------------------------------------
+
+# Kuşaktaki kalem sayısı. Dörder: ızgaralar (`.galeri-izgara`,
+# `.video-izgara`) anasayfada da dörtlü ve aynı CSS kullanılıyor.
+BOLUM_GALERI = 4
+BOLUM_VIDEO = 4
+# Servis panelinde listelenen nöbetçi eczane adedi. Panel bir ÖZETTİR;
+# tam liste kendi sayfasında (`/nobetci-eczane`) duruyor. 4 = ızgaranın bir
+# tam satırı; 3 bırakıldığında son gözde delik kalıyordu.
+SERVIS_ECZANE = 4
+
+# Puan tablosundan gösterilen pencere: Bursaspor'un ÜSTÜNDE ve ALTINDA kaç
+# takım. 2 + 2 + kendisi = 5 satır — okurun "kiminle yarışıyoruz" sorusunu
+# yanıtlayacak kadar, tabloyu bölüm sayfasına taşımayacak kadar.
+PUAN_PENCERE = 2
+
+# Hangi bölüm hangi servisi görür. Slug **tür satırının** slug'ıdır.
+SERVIS_DOVIZ = {"ekonomi"}
+SERVIS_PUAN = {"bursaspor", "spor", "bursa-da-spor"}
+SERVIS_NOBET = {"saglik"}
+
+# NOT — BÖLÜME ÖZEL RENK denendi ve GERİ ALINDI (7 Eylül 2026, §62 → §63).
+# Dört bölüm kendi vurgusunu alıyordu: kulüp yeşili (bursaspor), kent
+# mavisi (bursa + ilçeler), piyasa amberi (ekonomi), sağlık turkuazı
+# (saglik). Kullanıcı kararıyla düzeneğin tamamı kalktı; bölüm sayfaları
+# gazetenin lacivert-kırmızısında. Aynı kararın ikinci yarısı OLDUĞU GİBİ
+# DURUYOR: servis panelleri (piyasa ızgarası, puan penceresi, eczane
+# kartları) yerinde — giden yalnız renkti.
+
+
+def _bolum_gorselleri(kategori):
+    """Bölümün video ve galerileri. İkisi de boşsa kuşak hiç çizilmez.
+
+    Gündemde galeri YOK, aktüalite ve savunma sanayinde ikisi de yok
+    (ölçüldü). Şablon boş listeyi karşılıyor; "arşiv göç etmedi" gibi bir
+    yer tutucu basmıyor — bölüm sayfasında o cümle okura hiçbir şey
+    anlatmaz, yalnızca yer kaplar.
+    """
+    ortak = ["kategori"]
+    return {
+        "bolum_galerileri": list(
+            FotoGaleri.yayindakiler().filter(kategori=kategori)
+            .select_related(*ortak).prefetch_related("kategori__turler")[:BOLUM_GALERI]),
+        "bolum_videolari": list(
+            Video.yayindakiler().filter(kategori=kategori)
+            .select_related(*ortak).prefetch_related("kategori__turler")[:BOLUM_VIDEO]),
+    }
+
+
+def _nobet_ozeti(slug="", ad=""):
+    """Nöbetçi eczane panelinin içeriği. Kayıt yoksa None — sahte satır yok."""
+    panel = eczane_sayfa.gunun_paketi()
+    tumu = panel["eczaneler"] if panel else []
+    kayitlar = [e for e in tumu if e["ilce_anahtar"] == slug] if slug else tumu
+    if not kayitlar:
+        return None
+    return {
+        "tur": "nobet",
+        "eczaneler": kayitlar[:SERVIS_ECZANE],
+        "adet": len(kayitlar),
+        "yer": ad,
+        "yol": eczane_sayfa.ilce_yolu(slug),
+        "gun": panel["gun"] if panel else None,
+        # Nöbet aralığı ("08:30 – 08:30 ertesi gün") ve şu an nöbette olan
+        # sayısı panelin künyesinde duruyor: okur "bu liste ne zamana ait"
+        # sorusunu paneli terk etmeden yanıtlıyor.
+        "pencere": panel.get("pencere") if panel else "",
+        "kaynak": panel.get("kaynak") if panel else None,
+    }
+
+
+def _puan_penceresi(puan, takip):
+    """Bursaspor'un bulunduğu grubun tablosundan onun ETRAFINDAKİ satırlar.
+
+    Tablonun tamamı anasayfada duruyor ve bölüm sayfasına taşınsa haber
+    akışını yirmi satır aşağı iterdi. Okurun burada sorduğu şey "kiminle
+    yarışıyoruz": beş satır onu yanıtlıyor.
+
+    Pencere tablonun ucuna dayanırsa kaydırılır — Bursaspor birinciyken de
+    sonuncuyken de beş satır gösterilir, üstü boş bırakılmaz.
+    """
+    if not takip:
+        return []
+    boy = 2 * PUAN_PENCERE + 1
+    for lig in puan_ligleri(puan):
+        for grup in lig.get("gruplar") or []:
+            takimlar = grup.get("takimlar") or []
+            for i, t in enumerate(takimlar):
+                if t.get("bizim"):
+                    bas = max(0, min(i - PUAN_PENCERE, len(takimlar) - boy))
+                    return takimlar[bas:bas + boy]
+    return []
+
+
+def _bolum_servisi(slug="", ilce=None):
+    """Bölüme özel canlı veri şeridi — yoksa None, şablon hiç çizmez.
+
+    Veri ZATEN toplanıyor (`canli.py`, `icerik/eczane.py`) ve anasayfada
+    duruyor; buraya taşınan tek şey sunum. Şerit anasayfadaki panellerin
+    kopyası DEĞİL, özeti: ekonomi bandı aynı bant, spor şeridi tablonun
+    tamamı değil Bursaspor'un satırı, eczane şeridi listenin ilk üçü.
+    """
+    if ilce is not None:
+        # İlçe sayfası: o ilçenin bugünkü nöbetçileri. Hava durumu BURSA
+        # merkezi için tek pakettir (`hava_paneli`), ilçeye inmiyor — ilçe
+        # sayfasında merkezin havasını basmak yanlış bilgi olurdu.
+        return _nobet_ozeti(ilce.slug, ilce.ad)
+    if slug in SERVIS_DOVIZ:
+        doviz = oku("doviz")
+        return {"tur": "doviz", "doviz": doviz} if doviz else None
+    if slug in SERVIS_PUAN:
+        puan = oku("puan-durumu")
+        takip = puan_takibi(puan)
+        if not takip:
+            return None
+        return {"tur": "puan", "takip": takip,
+                "pencere": _puan_penceresi(puan, takip)}
+    if slug in SERVIS_NOBET:
+        return _nobet_ozeti()
+    return None
+
+
 def kategori(request, slug):
     """Kategori listesi. Slug **tür satırından** gelir, kategori adından değil."""
     kategori = get_object_or_404(Kategori, turler__tur=Kategori.TUR_HABER,
@@ -304,6 +503,12 @@ def kategori(request, slug):
         "baslik": baslikla(kategori.ad),
         "sayfa": sayfa,
         "en_cok": _bolum_en_cok(sorgu, sayfa),
+        # "Daha fazla göster" düğmesinin çektiği uç. Slug **tür satırından**
+        # gelen slug'dır, kategori adından türetilmiş olan değil.
+        "daha_uc": f"/daha-fazla?kaynak=kategori&slug={slug}",
+        "servis": _bolum_servisi(slug=slug),
+        "akis": _bolum_akisi(sayfa),
+        **_bolum_gorselleri(kategori),
     })
 
 
@@ -316,6 +521,129 @@ def ilce(request, slug):
         "ilce": ilce,
         "sayfa": sayfa,
         "en_cok": _bolum_en_cok(sorgu, sayfa),
+        "daha_uc": f"/daha-fazla?kaynak=ilce&slug={slug}",
+        # İlçenin görüntü kuşağı YOK: galeri ve videonun kategorisi var,
+        # ilçesi yok (`medya.models.KategoriliIcerik`). Uydurma bir eşleme
+        # yapmaktansa blok hiç çizilmiyor.
+        "servis": _bolum_servisi(ilce=ilce),
+        "akis": _bolum_akisi(sayfa),
+    })
+
+
+# ---------------------------------------------------------------------------
+# "DAHA FAZLA GÖSTER" (6 Eylül 2026, kullanıcı isteği: "hem anasayfada hem de
+# kategori sayfalarında daha fazla göster seçeneği ekle haberler için,
+# numaralara bölme sayfaları").
+#
+# Numaralı sayfalama kategori/ilçe sayfasından KALKTI; yerine akışın altında
+# tek bir düğme duruyor. Düğme GERÇEK BİR BAĞLANTIDIR (`?sayfa=2`) ve bu
+# bilinçli: JavaScript yoksa okur sonraki sayfaya gider, arama motoru da aynı
+# zinciri yürüyerek arşivin tamamına iner. Numaralar gitti, tarama yolu değil.
+#
+# Anasayfanın SON HABERLER ızgarasında sayfalama YOKTU: kartlar tek havuzun
+# sabit diliminden geliyor. Düğmenin çektiği dilim o havuzun BİTTİĞİ yerden
+# başlar (`ANASAYFA_ATLA`), yoksa ilk tıklamada sayfada zaten duran haberler
+# ikinci kez görünürdü. JavaScript'siz karşılığı `/son-haberler` sayfasıdır —
+# orada liste baştan başlar, çünkü kendi başına açılan bir sayfanın 46.
+# haberden başlaması okura hiçbir şey anlatmaz.
+# ---------------------------------------------------------------------------
+
+# Anasayfada ızgaraya kadar basılan her dilim. EN_COK burada YOK: o kutu
+# okunma sayacından besleniyor ve havuzun sırasını takip etmiyor.
+ANASAYFA_ATLA = MANSET + MANSET_LISTE + IKINCIL + DORTLU + KUTU
+# Anasayfada bir tıklamanın getirdiği kart sayısı. Kategori akışının 20'si
+# değil: ızgara iki sütunlu ve fotoğraflı, 20 kart tek tıklamada 10 satır
+# açardı. 10 = beş satır.
+ANASAYFA_DAHA = 10
+
+
+def _akis_sorgusu(kaynak, slug):
+    """Düğmenin çektiği dilimlerin kaynağı — sayfadakiyle AYNI sıralama.
+
+    Dönen ikinci değer kategori nesnesidir; akış satırı kendi bölüm adını
+    tekrar basmasın diye şablona geçiyor (`kategori_gizle`).
+    """
+    if kaynak == "kategori":
+        kategori = get_object_or_404(Kategori, turler__tur=Kategori.TUR_HABER,
+                                     turler__slug=slug, aktif=True)
+        return _liste().filter(kategori=kategori), kategori
+    if kaynak == "ilce":
+        get_object_or_404(Ilce, slug=slug)
+        return _liste().filter(ilce__slug=slug), None
+    return _liste(), None
+
+
+def _dilim(sorgu, numara, boy, atla=0):
+    """`numara`ıncı dilim ve "devamı var mı" — SAYIM YAPMADAN.
+
+    Parça ucunun `Paginator`a ihtiyacı yok: numara listesi, toplam sayı,
+    "kaçıncı sayfadasınız" bilgisi yanıtta zaten görünmüyor. Sayımın bedeli
+    ise gerçek — `SinirliSayfalayici` bunun için yazılmıştı ve o bile
+    1.000'de kesiyor, yani düğme 50. tıklamadan sonra "daha var" diyemezdi.
+
+    Yerine BİR FAZLA kayıt çekiliyor: yirmi bir satır geldiyse devamı vardır.
+    Bedeli tek satır, sonucu kesin ve arşivin derinliğiyle sınırlı değil.
+
+    `atla` anasayfa içindir: ızgarada zaten basılmış kayıtların üstünden
+    atlar, yoksa ilk tıklamada manşet ikinci kez görünürdü.
+    """
+    bas = atla + max(numara - 1, 0) * boy
+    kayitlar = list(sorgu[bas:bas + boy + 1])
+    return kayitlar[:boy], len(kayitlar) > boy
+
+
+def daha_fazla(request):
+    """Akışın sonraki dilimi — düğmenin çektiği HTML parçası.
+
+    Yanıt bir PARÇADIR, sayfa değil: kalemler ve onları saran, "daha var mı"
+    bilgisini taşıyan tek bir kap. JSON değil — kart ve akış satırı şablonları
+    sunucuda duruyor ve ikinci bir kopyayı JavaScript'te tutmak ikisinin
+    sessizce ayrışması demekti.
+    """
+    kaynak = request.GET.get("kaynak") or "anasayfa"
+    if kaynak not in {"anasayfa", "son", "kategori", "ilce"}:
+        raise Http404("Bilinmeyen akış")
+    slug = request.GET.get("slug") or ""
+    if kaynak in {"kategori", "ilce"} and not slug:
+        raise Http404("Bölüm belirtilmedi")
+    try:
+        numara = max(int(request.GET.get("sayfa") or 1), 1)
+    except (TypeError, ValueError):
+        numara = 1
+    sorgu, kategori = _akis_sorgusu(kaynak, slug)
+    if kaynak == "anasayfa":
+        kalemler, devam = _dilim(sorgu, numara, ANASAYFA_DAHA, atla=ANASAYFA_ATLA)
+    else:
+        kalemler, devam = _dilim(sorgu, numara, SAYFA_BOYU)
+    return render(request, "parca/akis_parcasi.html", {
+        "kalemler": kalemler,
+        # Anasayfa ızgarası ritim tanımıyor (kart ızgarası, akış değil);
+        # kalan üç kaynak bölüm akışının bloklarını basar. `ilk_uclu`
+        # bilerek koşulsuz: düğme bu uçları hep 2. sayfadan itibaren
+        # çağırıyor ve 1. sayfa ikiliyle bitiyor.
+        "akis": ([] if kaynak == "anasayfa"
+                 else _akis_bloklari(kalemler, ilk_uclu=numara > 1)),
+        "devam": devam,
+        "kaynak": kaynak,
+        "kategori": kategori,
+    })
+
+
+def son_haberler(request):
+    """Bütün bölümlerin ortak akışı — anasayfa düğmesinin JS'siz karşılığı.
+
+    Kategori sayfasının şablonunu kullanır; tek farkı kapsamının bölümle
+    sınırlı olmaması. "EN ÇOK OKUNANLAR" şeridi BİLEREK yollanmıyor: burada
+    kapsam site geneli olurdu ve anasayfadaki aynı adlı kutunun kopyası
+    olarak dururdu.
+    """
+    sorgu = _liste()
+    sayfa = _sayfala(request, sorgu, sinirli=True)
+    return render(request, "kategori.html", {
+        "baslik": "Son haberler",
+        "sayfa": sayfa,
+        "daha_uc": "/daha-fazla?kaynak=son",
+        "akis": _bolum_akisi(sayfa),
     })
 
 
@@ -658,3 +986,38 @@ def _sayfala(request, sorgu, sinirli=False, boy=SAYFA_BOYU):
         sayfa.number, on_each_side=2, on_ends=1))
         if sayfa.paginator.num_pages > 1 else [])
     return sayfa
+
+
+# ---------------------------------------------------------------------------
+# Konu dosyaları (5 Eylül 2026). Yalnız onaylı dosya görünür; motorun
+# önerileri panelde bekler. Okuma yardımcıları `icerik/konu.py` içinde.
+# ---------------------------------------------------------------------------
+
+from . import konu as konu_yardimci  # noqa: E402
+from .models import Konu  # noqa: E402
+
+KONU_SAYFA_BOYU = 30
+
+
+def konular(request):
+    """Onaylı dosyaların dizini; en son gelişme önde."""
+    sorgu = Konu.yayindakiler().order_by("-bitis", "-id")
+    sayfa = Paginator(sorgu, KONU_SAYFA_BOYU).get_page(request.GET.get("sayfa") or 1)
+    return render(request, "konular.html", {
+        "baslik": "Konu Dosyaları",
+        "sayfa": sayfa,
+        "surenler": Konu.yayindakiler().filter(acik=True).count(),
+    })
+
+
+def konu(request, slug):
+    kayit = Konu.yayindakiler().filter(slug=slug).first()
+    if kayit is None:
+        raise Http404("Konu yok")
+    haberler = konu_yardimci.uyeler(kayit)
+    return render(request, "konu.html", {
+        "konu": kayit,
+        "baslik": kayit.ad,
+        "haberler": haberler,
+        "son": haberler[-1] if haberler else None,
+    })

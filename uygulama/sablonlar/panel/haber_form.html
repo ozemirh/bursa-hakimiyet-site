@@ -27,7 +27,7 @@
         <summary>İkinci başlık ekle</summary>
         {% include "panel/parca/alan.html" with alan=form.ikinci_baslik ipucu="İsteğe bağlı." %}
       </details>
-      {% include "panel/parca/alan.html" with alan=form.spot ipucu="En çok 160 karakter. Yayına almak için zorunlu." %}
+      {% include "panel/parca/alan.html" with alan=form.spot ipucu="En çok 320 karakter. Arama sonucunda ilk ~160 karakter görünür; önemli olanı başa yazın. Yayına almak için zorunlu." %}
       {% include "panel/parca/alan.html" with alan=form.govde ipucu="Yayına almak için en az iki paragraf." %}
     </fieldset>
 
@@ -77,6 +77,27 @@
       {% include "panel/parca/alan.html" with alan=form.yayin_zamani %}
       {% include "panel/parca/alan.html" with alan=form.guncelleme_zamani %}
     </fieldset>
+
+    {% comment %}Sosyal paylaşım — §25. Kutular Yayın bölümünün hemen
+       ardında: paylaşım kararı yayın kararının devamı ve editör ikisini
+       aynı anda veriyor. Alan yalnız yayınlayabilen kullanıcıda var;
+       görünmemesi yetki denetimi değildir, denetim formda.{% endcomment %}
+    {% if form.sosyal_hesaplar %}
+      <fieldset>
+        <legend>Sosyal medyada paylaş</legend>
+        {% if form.sosyal_hesaplar.field.queryset.exists %}
+          {% include "panel/parca/alan.html" with alan=form.sosyal_hesaplar %}
+          <p class="alt-not">Gönderi metni başlık, spot, adres ve
+            etiketlerden kurulur; kuyrukta düzenlenebilir. Kaydettikten
+            sonra <a href="{% url 'panel-sosyal' %}">Sosyal Paylaşım</a>
+            ekranından izleyin.</p>
+        {% else %}
+          <p class="alt-not">Tanımlı sosyal hesap yok. Hesaplar
+            {% if kullanici_yonetir %}<a href="{% url 'panel-sosyal-hesaplar' %}">Ayarlar › Sosyal Hesaplar</a>{% else %}Ayarlar › Sosyal Hesaplar{% endif %}
+            ekranında tanımlanır.</p>
+        {% endif %}
+      </fieldset>
+    {% endif %}
 
     {% if mansete_alabilir %}
       <fieldset>

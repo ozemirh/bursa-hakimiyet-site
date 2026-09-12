@@ -229,7 +229,10 @@ class HaberFormuAlanSozlesmesi(TestCase):
         self.assertEqual(form.cleaned_data["etiketler"], ["BURSA"])
 
     def test_etiket_slugu_turkce_harfi_atmiyor(self):
-        """Django `slugify`'ı Türkçe harfi çevirmez, ATAR: Şehreküstü→ehrekst."""
+        """Django `slugify`'ı noktasız `ı`yı ATAR: "ışık" → `sk` (5 Eylül ölçümü).
+
+        "Şehreküstü" ikisinde de aynı çıkıyor; ayrım `ı` ve kesme işaretinde.
+        """
         Etiket.objects.all().delete()
         etiketleri_kur(["Şehreküstü"])
         self.assertEqual(Etiket.objects.get().slug, "sehrekustu")

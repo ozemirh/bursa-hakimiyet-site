@@ -136,6 +136,34 @@
     });
   }
 
+  /* ---- test reklamı anahtarı: yerel hizmet, dış ağ değil ----
+     Düğme yalnız sunum oturumunda çiziliyor (icerik/baglam.py). Dolguyu
+     reklam-test.js yapar; burada yalnız tercih tutulup ona haber veriliyor.
+     Reklamlar gizliyken test dolgusu da anlamsız — kutular görünmüyor —
+     o yüzden gizleme anahtarı her değiştiğinde dolgu yeniden çalışır. */
+  var testAnahtar = document.querySelector('.reklam-test-anahtar');
+  if(testAnahtar){
+    var kokEl = document.documentElement;
+    var testYazi = testAnahtar.querySelector('.reklam-test-yazi');
+    var testUygula = function(acik, yaz){
+      if(acik){ kokEl.setAttribute('data-reklam-test', 'acik'); }
+      else { kokEl.removeAttribute('data-reklam-test'); }
+      testAnahtar.setAttribute('aria-pressed', acik ? 'true' : 'false');
+      if(testYazi){ testYazi.textContent = acik ? 'Test reklamı açık' : 'Test reklamı'; }
+      if(yaz){ try{ localStorage.setItem('bh-reklam-test', acik ? 'acik' : 'kapali'); }catch(e){} }
+      if(window.BH_reklamTestiUygula){ window.BH_reklamTestiUygula(); }
+    };
+    testUygula(kokEl.getAttribute('data-reklam-test') === 'acik', false);
+    testAnahtar.addEventListener('click', function(){
+      testUygula(testAnahtar.getAttribute('aria-pressed') !== 'true', true);
+    });
+    if(reklamAnahtar){
+      reklamAnahtar.addEventListener('click', function(){
+        if(window.BH_reklamTestiUygula){ window.BH_reklamTestiUygula(); }
+      });
+    }
+  }
+
   /* ---- bandda arama: dar ekranda simgeyle açılır ---- */
   var aramaDugme = document.querySelector('.ara-ac');
   var aramaFormu = document.getElementById('bant-ara');
@@ -372,6 +400,142 @@
       });
     }
   }
+
+  /* ---- daha fazla göster (6 Eylül 2026) ----------------------------------
+     Düğme HTML'de gerçek bir bağlantıdır (`?sayfa=2`, anasayfada
+     `/son-haberler`) ve burası yalnızca onu ZENGİNLEŞTİRİR: tıklama
+     yakalanır, dilim `data-uc` ucundan çekilir, kalemler listenin sonuna
+     eklenir. Bu blok hiç çalışmazsa (eski tarayıcı, betik yüklenmedi)
+     bağlantı kendi işini görür — kırılan bir şey olmaz.
+
+     Sunucudan HTML geliyor, JSON değil: kart ve akış satırı şablonları
+     sunucuda duruyor ve ikinci bir kopyayı burada tutmak ikisinin bir gün
+     sessizce ayrışması demekti. */
+  function dahaFazlaKur(dugme){
+    var hedef = document.querySelector(dugme.getAttribute('data-hedef') || '');
+    var uc = dugme.getAttribute('data-uc');
+    if(!hedef || !uc || !window.fetch){ return; }
+
+    var kap = dugme.parentNode;
+    var durum = kap.querySelector('.daha-fazla-durum');
+    var sayfa = parseInt(dugme.getAttribute('data-sayfa'), 10) || 1;
+    var ilkMetin = dugme.textContent.trim();
+    var mesgul = false;
+
+    function bitir(metin, odakla){
+      /* Arşivin sonu: düğme yerini bir satıra bırakır. Odak düğmedeydi;
+         düğme silinince odak <body>'ye düşerdi. Odak zaten yeni içeriğe
+         taşındıysa (aşağıya bakın) satıra ALINMAZ — okuru listenin
+         başından alıp sonundaki nota atmak, yeni gelenleri atlatırdı. */
+      var not = document.createElement('p');
+      not.className = 'daha-fazla-son';
+      not.setAttribute('tabindex', '-1');
+      not.textContent = metin;
+      kap.parentNode.replaceChild(not, kap);
+      if(odakla){ not.focus(); }
+    }
+
+    /* Sayfayı yeni gelenlere İNDİRİR — 7 Eylül 2026, kullanıcı bildirimi:
+       "daha fazla göster butonu tıklandığında sayfa aşağı ilerlemiyor yeni
+       haberleri göstermek için, sadece yukarıda yeni haberler gösteriyor".
+
+       Kalemler düğmenin ÜSTÜNE giriyor, yani düğme aşağı kayıyor ve okurun
+       baktığı piksel değişmiyor. Yerleşim düzeltildikten sonra (düğme artık
+       listenin hemen altında) yeni kalemler doğru yere geliyor, ama okurun
+       gözü hâlâ eski son satırda kalıyordu; "daha fazla göster"in beklenen
+       davranışı yeni yığının BAŞINA inmektir.
+
+       Odak da oraya taşınıyor: klavyeyle gezen okur Tab'a bastığında yeni
+       kalemlerin içinde devam etsin, listenin en başına dönmesin. Kaydırma
+       `scroll-margin-top` ile yapışkan bandın altına oturur (site.css). */
+    function yeniyeIn(ilk){
+      if(!ilk){ return; }
+      ilk.setAttribute('tabindex', '-1');
+      try{ ilk.focus({preventScroll: true}); }catch(hata){ ilk.focus(); }
+      try{
+        ilk.scrollIntoView({block: 'start',
+                            behavior: azalt.matches ? 'auto' : 'smooth'});
+      }catch(hata){ ilk.scrollIntoView(true); }
+    }
+
+    dugme.addEventListener('click', function(e){
+      e.preventDefault();
+      if(mesgul){ return; }
+      mesgul = true;
+      dugme.setAttribute('aria-busy', 'true');
+      dugme.textContent = 'Yükleniyor…';
+
+      fetch(uc + (uc.indexOf('?') < 0 ? '?' : '&') + 'sayfa=' + sayfa,
+            {credentials: 'same-origin'})
+        .then(function(yanit){
+          if(!yanit.ok){ throw new Error('HTTP ' + yanit.status); }
+          return yanit.text();
+        })
+        .then(function(html){
+          var gecici = document.createElement('div');
+          gecici.innerHTML = html;
+          var parca = gecici.querySelector('.akis-parca');
+          if(!parca){ throw new Error('parça yok'); }
+
+          /* Taşınan çocuklar iki biçimde geliyor: bölüm akışında
+             ikili/üçlü BLOKLAR (§60), anasayfa ızgarasında tek tek kartlar.
+             Sayım okura kaç HABER geldiğini söylemeli, kaç kap geldiğini
+             değil — blok kendi kalemlerini sayıyor. */
+          var yeniler = Array.prototype.slice.call(parca.children);
+          var haber = 0;
+          var ilkYeni = yeniler.length ? yeniler[0] : null;
+          yeniler.forEach(function(el){
+            haber += el.classList.contains('akis-blok') ? el.children.length : 1;
+            hedef.appendChild(el);
+          });
+
+          mesgul = false;
+          dugme.removeAttribute('aria-busy');
+          dugme.textContent = ilkMetin;
+          sayfa += 1;
+          dugme.setAttribute('data-sayfa', sayfa);
+          /* Orta tıklamayla yeni sekmede açan okur da devamını görsün.
+             Adresi yalnız `sayfa` parametresi TAŞIYORSA güncelliyoruz;
+             anasayfanın `/son-haberler` adresi başka bir sayfadır ve ona
+             sayfa numarası eklemek yanlış yere götürürdü. */
+          try{
+            var adres = new URL(dugme.href, window.location.href);
+            if(adres.searchParams.has('sayfa')){
+              adres.searchParams.set('sayfa', sayfa);
+              dugme.href = adres.pathname + adres.search;
+            }
+          }catch(hata){}
+
+          if(parca.getAttribute('data-devam') !== '1'){
+            /* Kalem geldiyse odak ONA gider, nota değil: not listenin
+               sonunda ve okuru oraya atmak yeni gelenleri atlatırdı. */
+            bitir(haber ? 'Bu listedeki tüm haberler yüklendi.'
+                        : 'Başka haber yok.', !haber);
+            yeniyeIn(ilkYeni);
+            return;
+          }
+          /* "N haber eklendi…" satırı 7 Eylül 2026'da kullanıcı isteğiyle
+             KALDIRILDI. Ekran okuyucu bilgisiz kalmıyor: aynı gün odak
+             yeni yığının ilk kalemine taşınmaya başladı (§61) ve okuyucu
+             odaklanılan kalemi zaten okuyor — satır o değişiklikten sonra
+             aynı şeyi ikinci kez söylüyordu. Durum alanı DURUYOR, çünkü
+             hata dalı hâlâ oraya yazıyor. */
+          yeniyeIn(ilkYeni);
+        })
+        .catch(function(){
+          mesgul = false;
+          dugme.removeAttribute('aria-busy');
+          dugme.textContent = ilkMetin;
+          if(durum){
+            durum.textContent = 'Haberler yüklenemedi. Bağlantıya tıklayarak sonraki sayfaya geçebilirsiniz.';
+          }
+          /* Uç yanıt vermiyorsa zenginleştirmeden ÇEKİLİYORUZ: bundan
+             sonraki tıklama bağlantının kendi işini yapmasına bırakılır. */
+          dugme.replaceWith(dugme.cloneNode(true));
+        });
+    });
+  }
+  dizi('.daha-fazla').forEach(dahaFazlaKur);
 
   /* ---- yukarı çık ---- */
   var yukari = document.querySelector('.yukari');

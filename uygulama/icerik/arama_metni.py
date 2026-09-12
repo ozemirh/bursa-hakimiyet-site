@@ -67,6 +67,9 @@ ONEK_EN_AZ = 3
 _VERI = Path(__file__).resolve().parent / "veri" / "turkce_durak.json"
 _KELIME_AYIRICI = re.compile(r"[^\w]+", re.UNICODE)
 
+# Slug'da yalnız ASCII harf/rakam kalır; gerisi tek tireye iner.
+_SLUG_AYIRICI = re.compile(r"[^a-z0-9]+")
+
 
 def anahtar(metin: str | None) -> str:
     """Metnin aranabilir hâli: Türkçe-doğru küçük harf + ASCII katlama.
@@ -75,6 +78,37 @@ def anahtar(metin: str | None) -> str:
     True
     """
     return _kucult(metin or "").translate(_KATLAMA)
+
+
+def slugla(metin: str | None, uzunluk: int = 220) -> str:
+    """Adres parçası: Türkçe-doğru küçültme + ASCII katlama + tireleme.
+
+    **Django'nun `slugify`'ı bu iş için yanlış — iki noktada.** NFKD
+    ayrıştırması ü/ö/ç/ş/ğ'yi doğru katlıyor, ama (5 Eylül 2026'da ölçüldü):
+
+        girdi                          slugify              slugla
+        Nilüfer Çayı için büyük adım   nilufer-cay-icin-    nilufer-cayi-icin-
+                                       buyuk-adm            buyuk-adim
+        Bursa'da ışık ve İnegöl        bursada-sk-ve-inegol bursa-da-isik-ve-inegol
+        Kurban Bayramı'nda … açık      kurban-bayramnda-…-  kurban-bayrami-nda-…-
+                                       ack                  acik
+
+    1. **Noktasız `ı` düşüyor.** NFKD karşılığı yok, `encode("ascii","ignore")`
+       harfi tamamen atıyor: "adım" → `adm`, "ışık" → `sk`.
+    2. **Kesme işareti tire olmuyor**, siliniyor: `bursada` — arşiv ise
+       `bursa-da` diyor.
+
+    Arşivdeki 1.038.474 adres eski sistemin katlamasıyla üretilmiş ve ikisini
+    de doğru yapıyor (`kurban-bayrami-nda-bursa-da-hangi-eczaneler-acik`),
+    yani panelden girilen yeni haber arşivdeki desene uymuyordu.
+
+    Katlama burada, aramayla aynı kaynaktan (`anahtar`) geliyor: iki ayrı
+    tablo tutulsaydı biri düzeltilip diğeri unutulurdu. Modülün "katlama
+    yalnız aramada, gösterimde asla" kuralı bozulmuyor — slug gösterim
+    değil, **adres**tir; başlık sayfada kendi yazımıyla basılmaya devam eder.
+    """
+    ham = _SLUG_AYIRICI.sub("-", anahtar(metin)).strip("-")
+    return ham[:uzunluk].strip("-")
 
 
 def kelimeler(metin: str | None) -> list[str]:

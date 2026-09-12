@@ -108,7 +108,7 @@ dosyalarda yok, bu bir çıkarımdı (bkz. §18, karar 6).
 | 1 | `csrf` | hidden | — | — | evet | Korunur, gizli |
 | 2 | `title` | text | **60** | var | **evet** | Başlık — sayaç görünür |
 | 3 | `title2` | text | 60 | — | hayır | İkinci başlık — varsayılan kapalı, açılır |
-| 4 | `summery` | textarea | **160** | var | **hayır** | Spot — **gerçekten zorunlu yapıldı** |
+| 4 | `summery` | textarea | **160** | var | **hayır** | Spot — **gerçekten zorunlu yapıldı**; sınır **320**'ye çıkarıldı (5 Eylül 2026 ölçümü: yayınlanmış 1.038.455 spotun **%57'si 160'ın üzerinde**, ortanca 175 — eski sınır formda duruyor ama içerikte tutmuyordu. URUN-PLANI.md §56) |
 | 5 | `ckeditor` | textarea | — | var | evet | Gövde — en az 2 paragraf |
 | 6 | `status` | select | — | — | evet | Durum — Aktif/Pasif/Arşiv (§9) |
 | 7 | `tagElementName[i]` / `tagElementValue[i]` | dinamik | — | var | **hayır** | Etiketler — **gerçekten zorunlu yapıldı**, çip arayüzü |
@@ -789,7 +789,7 @@ tek sütuna iniyor.
 |---|---|
 | Slug üretimi (Türkçe harfler) | "Bursa Kestel'de 40 yıllık sulama sorunu çözülüyor" → `bursa-kestel-de-40-yillik-sulama-sorunu-cozuluyor` |
 | Adres önizlemesi | `.../bursa/bursa-kestel-de-...-{id}` — kategori segmenti canlı |
-| Karakter sayaçları | başlık 49/60 · spot 160 sınırı |
+| Karakter sayaçları | başlık 49/60 · spot 160 sınırı (yeni panelde **320** — §56) |
 | Paragraf sayacı | 2 paragraf |
 | Hazırlık ölçeri | 3/6 |
 | **Doğrulama gerçekten engelliyor** | "Yayınlanamaz — eksik: spot, etiket." · 2 alan kırmızı · odak ilk eksiğe gitti |
@@ -1564,3 +1564,151 @@ ilan · 32 bildirim) elle girilecek; yuvaların 44'ü otomatik taşınamıyor (�
 yok. Sıradaki koordinasyon kalemi `meta_yazar` backfill'idir:
 `bulk_create`ın `save()` çağırmaması ve `meta_yazar_elle` semantiği panel
 tarafının alanıdır (§7).
+
+---
+
+## 25. Sosyal medya paylaşımı — karar ve kurulum (5 Eylül 2026)
+
+Panelden yayına alınan haber, seçilen sosyal medya hesaplarında da
+paylaşılıyor. İş `uygulama/sosyal/` altında **ayrı bir uygulama**; haber
+tablosuna tek bir alan eklenmedi (§24'ün ölçülmüş kuralı: `icerik_haber`e
+alan eklemek bir milyon satırı yeniden kurdurur).
+
+### Kullanıcının verdiği üç karar
+
+| Soru | Cevap |
+|---|---|
+| Hangi platformlar | **X · Facebook sayfası · Instagram** |
+| Gönderim nasıl | **İkisi birden**: anahtar varsa API, yoksa elle paylaşım |
+| Tetik | **Yayına alınınca, kutucuk işaretliyse** |
+
+Dördüncü platform sonradan geldi: **YouTube ayrı**. Gazete YouTube'da
+haber paylaşmıyor, ayrıca çekilmiş **özel videolar** yayımlıyor. Bu yüzden
+YouTube hesabı otomatik akışa girmiyor — haber formundaki kutularda
+görünmüyor, kuyruğa yalnız editörün elle açtığı "video yüklenecek" satırı
+olarak düşüyor ve o satır her zaman ELLE durumunda. `videos.insert` ucu
+bilerek yazılmadı: yarım bir yükleyici, olmayan yükleyiciden kötüdür.
+
+### Kuyruk: niyet ile gerçekleşme ayrı
+
+Haber formundaki kutu bir **niyet** kaydeder (`SosyalGonderi`); gönderim
+ayrı bir adımdır. İki durum var ve ikisi de normal:
+
+    Anahtar tam   → BEKLIYOR  → gönderici alır, dış kimlik geri yazılır
+    Anahtar yok   → ELLE      → panel metni + paylaş bağlantısını hazırlar
+
+Gazetenin bugün API anahtarı yok. Aracın anahtar gelene kadar hiçbir işe
+yaramaması kabul edilebilir değildi; **elle yol birinci sınıf yoldur**,
+yedek değil.
+
+**Satır haber taslakken de açılabilir.** Gönderici haberin durumuna bakıyor
+(`gonderilebilir_mi`), kuyruk bakmıyor. Kazancı şu: akış ekranındaki toplu
+"Yayına al" fiiline tek satır kod eklemek gerekmedi — satır zaten kuyrukta
+bekliyordu, haber yayına çıkınca gönderilebilir oldu.
+
+### Gönderim istek içinde değil
+
+Haber kaydeden editörü üç ağ isteği kadar bekletmek kabul edilemezdi.
+Kaydetme yalnız satır açar. Gönderimi iki şey yapar:
+
+    python manage.py sosyal_gonder            # zamanlanmış görev, 5 dk'da bir
+    Panel → Sosyal Paylaşım → Şimdi gönder    # editör sonucu görmek istiyor
+
+Komut çalışmıyorsa hiçbir şey kaybolmaz: satırlar kuyrukta bekler ve
+panelden elle gönderilebilir. `--kuru` ne gideceğini gönderemeden yazar.
+
+### Yetkilik açılmadı
+
+§24'ün kuralı korundu; iki ekran mevcut on dört yetkilikten birine bağlandı:
+
+    Kuyruk · gönderim   → icerik.kendi_haberini_yayinlama
+    Hesaplar (jetonlar) → icerik.kullanici_yonetimi
+
+Gerekçe: paylaşmak **yayımlamanın devamı**; jeton ise hesabın anahtarı ve
+onu görmek kullanıcı yönetimiyle aynı ağırlıkta. Yayınlayamayan editör
+haber formunda kutuları hiç görmez.
+
+### Anahtarlar nerede duruyor
+
+Önce ortam değişkeni, sonra veritabanı:
+
+    BH_SOSYAL_X_ERISIM_JETONU · BH_SOSYAL_FACEBOOK_SAYFA_JETONU · …
+    (kalıp: BH_SOSYAL_<PLATFORM>_<ALAN>)
+
+Ortamda duran anahtar veritabanı yedeğine düşmez. Panelde jeton alanları
+**boş doğar ve geri gösterilmez**; boş bırakılırsa kayıtlı değer korunur.
+Alanların hangi platformda ne olduğu düzenleme ekranında yazılı.
+
+| Platform | İstenen | Not |
+|---|---|---|
+| X | API anahtarı + gizi, erişim jetonu + gizi | OAuth 1.0a imza; uygulama izni "Read and write" olmalı |
+| Facebook | Sayfa kimliği + sayfa jetonu | `pages_manage_posts`; kısa ömürlü jetonu uzuna çevirin |
+| Instagram | İş hesabı kimliği + jeton | **Görsel zorunlu** ve site dışarıdan erişilebilir olmalı |
+| YouTube | — | Anahtar istemez, gönderim elle |
+
+### Metin: kopyalanmıyor, kuruluyor
+
+Gönderi başlık · spot · adres · etiketlerden kurulur; gövdeden cümle
+alınmaz (kural motorunun editoryal çizgisi). Kalıp hesapta boşsa platformun
+varsayılanı kullanılır.
+
+Ölçüde bir tuzak var ve testte tutuluyor: **X'te bağlantı kaç karakter
+olursa olsun 23 sayılır** (t.co). Ham `len()` ile ölçmek, 280'e sığdığını
+sandığımız gönderinin reddedilmesi demekti. Sığmayan metinde kısaltma
+sırası: spot → etiketler → başlık. Başlık en son, çünkü haberin kimliği.
+
+Instagram kalıbında **adres yok**: altyazıdaki bağlantı tıklanmıyor, yerine
+profildeki bağlantıya işaret eden cümle var. Bu bir tercih değil,
+platformun davranışı.
+
+### İki kez paylaşmama
+
+Aynı haberin aynı hesapta iki kez paylaşılması bu aracın yapabileceği en
+görünür hata. Üç katman var: form her kaydedildiğinde açık satır aranıyor,
+veritabanında kısmi tekillik kısıtı duruyor (`sosyal_tek_gonderim`, yalnız
+GÖNDERİLDİ satırlarını kilitler), ve **kayıtlı haberde kutu kendiliğinden
+işaretlenmiyor** — arşivden bir haberi açıp kaydeden editör on beş yıllık
+haberi sosyal medyada paylaşmış olmuyor. Varsayılan işaret yalnız yeni
+haberde.
+
+Haber formu yalnız **kendi açtığı** satırları (kaynak = otomatik) iptal
+eder; editörün elle açtığı YouTube satırını kapatmaz.
+
+### Yapılmayanlar (bilerek)
+
+- **X'e görsel yükleme.** Ayrı ve üç adımlı bir uç; bağlantının kart
+  önizlemesi görseli zaten gösteriyor.
+- **İleri tarihli paylaşım.** Kuyrukta `planlanan_zaman` yok; gönderim
+  haberin yayınına bağlı.
+- **Etkileşim geri okuma** (beğeni, erişim). Bu, Etkileşim bölümünün ayrı
+  bir kalemi olur.
+- **LinkedIn · Telegram · Bluesky · Threads.** Sağlayıcı defteri açık;
+  eklemek bir dosya + bir satır demek.
+- **Log kaydı.** `LogKaydi`ye yazan bir yol panelde henüz yok; kuyruk
+  satırının kendisi (kim açtı, ne zaman gitti, dış kimlik) izin kendisidir.
+
+### Ölçüm
+
+`sosyal/tests.py` **32 test**; tüm takım **773 test, hepsi geçiyor**.
+Gerçek uçlara istek atan test YOK — böyle bir test her çalıştığında
+gazetenin hesabına gönderi atardı; sağlayıcı testte sahteyle değiştiriliyor.
+Ekranlar (`/panel/sosyal`, `/panel/sosyal/hesaplar`, `/panel/sosyal/gonder`,
+`/panel/sosyal/ekle`) gerçek veritabanında **200** dönüyor ve boş kuyrukta
+ısınmış istekte **11 ms** sürüyor.
+
+Yerleşim başsız Chrome'da ölçüldü (`BH_PANEL_OLCUM=1`): beş yeni ekran
+listeye eklendi, **44 ekran × 7 genişlik = 308 ölçüm, bulgu 0**; font
+engelli turda 225 ölçüm, bulgu 0. Ölçüm ilk turda **üç gerçek kusur**
+buldu ve üçü de düzeltildi:
+
+1. **Liste şeridi 360 px'de 57 px taşıyordu.** `liste.html` ek bağlantıları
+   aralarında boşluk bırakmadan basıyordu; `.dugme` `white-space:nowrap`
+   taşıdığı için üç düğme tek kırılmaz satır oluyordu. Şablona boşluk
+   kondu — kusur sosyal ekranda göründü ama şablonun kendisindeydi.
+2. **Künyedeki tam adres kartı 70 px taşırıyordu.** `.yan-kart code`
+   artık `overflow-wrap:anywhere`.
+3. **Ölçüm aracı bağlantıyı kaynak sanıyordu.** "Dış kaynak" kuralı
+   `[src],[href]` diyordu; `<a href>` hiçbir şey yüklemez. Kural
+   yüklenen kaynaklarla sınırlandı, dış bağlantılar ayrıca sayılıp
+   rapora yazılıyor (bugün tek satır: `Sosyal gonderi:1`) — panele
+   sessizce dışarı açılan bir bağ eklenirse yine görünür.

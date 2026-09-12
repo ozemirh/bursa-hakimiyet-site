@@ -29,10 +29,11 @@ from .formlar import (BildirimForm, FotoGaleriForm, GazeteForm, HaberForm,
                       KategoriForm, KaynakForm, KoseYazisiForm, KullaniciForm,
                       ReklamKampanyasiForm, ReklamYuvasiForm, ResmiIlanForm,
                       SonDakikaForm, VideoForm, YazarForm, YorumForm)
-from . import okunma
-from .models import (Bildirim, Gazete, Haber, IkiAdimli, LogKaydi,
-                     ReklamKampanyasi, ReklamYuvasi, ResmiIlan, SonDakika,
-                     Yorum)
+from . import okunma, yz_kopru
+from .arama_metni import slugla
+from .models import (YZ_BASLIK_ISARETI, Bildirim, Gazete, Haber, IkiAdimli,
+                     LogKaydi, ReklamKampanyasi, ReklamYuvasi, ResmiIlan,
+                     SonDakika, Yorum)
 
 SAYFA_BOYU = 25
 
@@ -86,6 +87,10 @@ def _yetkiler(kullanici) -> dict:
         "yorum_onaylar": kullanici.has_perm("icerik.yorum_onaylama"),
         "sayfa_duzeni_yapar": kullanici.has_perm("icerik.sayfa_duzeni"),
         "reklam_yonetir": kullanici.has_perm("icerik.reklam_kampanyasi"),
+        "konu_yonetir": kullanici.has_perm("icerik.konu_yonetimi"),
+        # Sosyal paylaşım yayımlamanın devamıdır; ayrı yetkilik açılmadı
+        # (PANEL-NOTLARI.md §25). Hesap ekranı `kullanici_yonetir`de.
+        "sosyal_paylasir": kullanici.has_perm("icerik.kendi_haberini_yayinlama"),
     }
 
 
@@ -552,21 +557,146 @@ def _kaydet(form, request):
     **Kimlik adresin parçasıdır** ve göçte eski kimlikler korunmuştur; yeni
     haberler mevcut en büyük kimliğin üstünden devam eder ki eski adreslerle
     hiç çakışmasın.
-    """
-    from django.utils.text import slugify
 
+    **Slug bir kez yazılır.** Django'nun `slugify`'ı burada kullanılmıyor:
+    Türkçe harfi çevirmez, atar ("Nilüfer Çayı" → `nilfer-ay`) ve arşivdeki
+    1.038.474 adresin deseniyle çelişirdi (`arama_metni.slugla`). Yapay zekâ
+    aracının işaretli başlığı da slug üretmez — o başlık editörün yazacağı
+    gerçek başlık değil, yer tutucudur; slug ilk gerçek başlıkta kurulur.
+    """
     haber = form.save(commit=False)
     if haber.pk is None:
         en_buyuk = Haber.objects.order_by("-id").values_list("id", flat=True).first()
         haber.id = (en_buyuk or 0) + 1
-    if not haber.slug:
-        haber.slug = slugify(haber.baslik, allow_unicode=False)[:220] or f"haber-{haber.id}"
+    if not haber.slug and not haber.baslik.startswith(YZ_BASLIK_ISARETI):
+        haber.slug = slugla(haber.baslik, 220) or f"haber-{haber.id}"
     if haber.olusturan_id is None:
         haber.olusturan = request.user
     haber.save()
     form.save_m2m()
     form._kategori_degisimini_yonlendir(haber)
+    _sosyal_kuyrugu_esitle(form, haber, request)
     return haber
+
+
+def _sosyal_kuyrugu_esitle(form, haber, request):
+    """Sosyal paylaşım kutularını kuyruğa yazar (PANEL-NOTLARI.md §25).
+
+    Alan formda yoksa (yayın yetkisi olmayan editör) kuyruğa DOKUNULMAZ:
+    boş seçim sanılıp başkasının açtığı satırlar iptal edilirdi.
+
+    Burada ağ isteği yapılmıyor — yalnız satır açılıyor. Gönderimi
+    `manage.py sosyal_gonder` ya da panelin "Şimdi gönder" düğmesi yapar;
+    gerekçesi `sosyal/kuyruk.py` başında.
+    """
+    if "sosyal_hesaplar" not in form.fields:
+        return
+    from sosyal.kuyruk import haber_kaydedildi
+    sonuc = haber_kaydedildi(haber, form.cleaned_data.get("sosyal_hesaplar"),
+                             request.user)
+    if sonuc["acilan"]:
+        messages.success(request, _sosyal_ozeti(haber, sonuc["acilan"]))
+
+
+def _sosyal_ozeti(haber, acilan) -> str:
+    from sosyal.models import SosyalGonderi
+    adlar = ", ".join(g.hesap.ad for g in acilan)
+    bekleyen = [g for g in acilan if g.durum == SosyalGonderi.BEKLIYOR]
+    elle = [g for g in acilan if g.durum == SosyalGonderi.ELLE]
+    ozet = f"Sosyal paylaşım kuyruğuna {len(acilan)} satır açıldı: {adlar}."
+    if bekleyen and haber.durum != Haber.DURUM_AKTIF:
+        ozet += " Haber yayına alınınca gönderilecek."
+    if elle:
+        ozet += (f" {len(elle)} tanesi ELLE paylaşılacak (hesabın anahtarı "
+                 "yok); metin Sosyal Paylaşım ekranında hazır.")
+    return ozet
+
+
+# ===========================================================================
+# Yapay zekâ ile taslak — `arac/` köprüsü (`yz_kopru`)
+# ===========================================================================
+
+@login_required
+@permission_required("icerik.haber_girme", raise_exception=True)
+def yz_taslak_ekle(request):
+    """Bir haber adresinden taslak açar.
+
+    Ekran yalnızca **taslak** açar; yayına alma panelin haber formundan,
+    kendi yetkisi ve kendi eşiğiyle olur. Sağlayıcı seçimi editöre bırakıldı:
+    kural motoru anlık ama gövde yazmaz, model yolları dakikalar sürer.
+    """
+    hata = ""
+    adres = (request.POST.get("adres") or "").strip()
+    saglayici = (request.POST.get("saglayici") or "kural").strip()
+    if request.method == "POST":
+        try:
+            haber, _paket, _notlar = yz_kopru.taslak_al(
+                adres, request.user, saglayici)
+        except yz_kopru.YzHatasi as e:
+            hata = str(e)
+        else:
+            messages.success(
+                request, "Taslak açıldı: #%s. Yayına almadan önce gözden "
+                         "geçirin." % haber.pk)
+            return redirect("panel-yz-taslak", kimlik=haber.pk)
+
+    return render(request, "panel/yz_taslak.html", {
+        "baslik": "Yapay zekâ ile haber al",
+        "bolum": "yz-taslak",
+        "ust_bolum": "icerik",
+        "saglayicilar": yz_kopru.SAGLAYICILAR,
+        "secili_saglayici": saglayici,
+        "adres": adres,
+        "hata": hata,
+        "arac_var": yz_kopru.arac_var_mi(),
+        **_yetkiler(request.user),
+    })
+
+
+@login_required
+@permission_required("icerik.haber_girme", raise_exception=True)
+def yz_taslak_detay(request, kimlik):
+    """Taslağın yanında kaynağı ve ham malzemeyi gösterir.
+
+    Editör gövdeyi burada okuduğu kaynaktan **kendi cümleleriyle** yazar;
+    tezgah kaynağın cümlelerini taşımak için değil, neyin önemli olduğunu
+    göstermek içindir.
+    """
+    haber = get_object_or_404(Haber, pk=kimlik)
+    paket = yz_kopru.paket_oku(haber.pk) or {}
+    taslak = paket.get("taslak") or {}
+    return render(request, "panel/yz_taslak_detay.html", {
+        "baslik": "Taslak #%s" % haber.pk,
+        "bolum": "yz-taslak",
+        "ust_bolum": "icerik",
+        "haber": haber,
+        "paket_var": bool(paket),
+        "kaynak": paket.get("kaynak") or {},
+        "taslak": taslak,
+        "uretim": paket.get("uretim") or {},
+        "tezgah": paket.get("tezgah") or [],
+        "notlar": paket.get("panel_notlari") or [],
+        "dogrulanacaklar": taslak.get("dogrulanmasi_gerekenler") or [],
+        "hassas": taslak.get("hassas_konu") or {},
+        "etiketler": list(haber.etiketler.values_list("ad", flat=True)),
+        **_yetkiler(request.user),
+    })
+
+
+@login_required
+@permission_required("icerik.haber_girme", raise_exception=True)
+def yz_gorsel_indir(request, kimlik):
+    """Kaynağın fotoğrafını arşive indirir — editörün açık kararı.
+
+    Taslak açılırken indirilmiyor: fotoğrafın hak durumu haber haber
+    değerlendirilmeli (`yz_kopru.gorsel_indir` belgesi).
+    """
+    haber = get_object_or_404(Haber, pk=kimlik)
+    if request.method != "POST":
+        return redirect("panel-yz-taslak", kimlik=haber.pk)
+    oldu, mesaj = yz_kopru.gorsel_indir(haber)
+    (messages.success if oldu else messages.error)(request, mesaj)
+    return redirect("panel-yz-taslak", kimlik=haber.pk)
 
 
 @login_required
@@ -2883,3 +3013,145 @@ def galeri_ara(request):
          "etiket": f"[{g.pk}] {g.baslik[:70]}",
          "tarih": g.yayin_zamani.strftime("%d.%m.%Y") if g.yayin_zamani else ""}
         for g in bulunan], "uyari": ""})
+
+
+# ---------------------------------------------------------------------------
+# Konu takibi (5 Eylül 2026) — PANEL-NOTLARI.md §15'in ürün karşılığı.
+#
+# Motor (`konu_tara`) öneri yazar, editör burada onaylar. Onaylanmamış
+# dosya sitede görünmez; "Onayla" düğmesi CLAUDE.md'deki "onaysız
+# bağlanmaz" kuralının tek kapısıdır. Hassas uyarı dosya sayfasının İLK
+# öğesidir (§15): Bozbey dosyasına haber bağlayan editörün göreceği ilk
+# şey masumiyet karinesi notu olmalı.
+# ---------------------------------------------------------------------------
+
+from .formlar import KonuForm  # noqa: E402
+from .models import Konu, KonuHaber  # noqa: E402
+
+
+def _konu_rozeti(konu):
+    return {
+        Konu.ONAY_BEKLIYOR: _rozet("Bekliyor", "incelemede"),
+        Konu.ONAY_ONAYLI: _rozet("Onaylı", "aktif"),
+        Konu.ONAY_RET: _rozet("Ret", "silinmis"),
+    }[konu.onay]
+
+
+@login_required
+@permission_required("icerik.konu_yonetimi", raise_exception=True)
+def konu_listesi(request):
+    sorgu = Konu.objects.all()
+    secili_onay = request.GET.get("onay") or ""
+    secili_kaynak = request.GET.get("kaynak") or ""
+    aranan = (request.GET.get("q") or "").strip()
+    if secili_onay in dict(Konu.ONAYLAR):
+        sorgu = sorgu.filter(onay=secili_onay)
+    if secili_kaynak in dict(Konu.KAYNAKLAR):
+        sorgu = sorgu.filter(kaynak=secili_kaynak)
+    if aranan:
+        sorgu = sorgu.filter(ad__icontains=aranan)
+    # Bekleyenlerde güven önde: editör en sağlam öneriyi ilk görsün.
+    if secili_onay == Konu.ONAY_BEKLIYOR:
+        sorgu = sorgu.order_by("-guven", "-bitis", "-id")
+
+    def satir(k):
+        return {
+            "kimlik": k.pk,
+            "duzenle": f"/panel/konu/{k.pk}",
+            "adres": k.get_absolute_url() if k.onay == Konu.ONAY_ONAYLI else "",
+            "hucreler": [
+                _bag(f"/panel/konu/{k.pk}", k.ad),
+                _metin(f"{k.baslangic:%d.%m.%Y} – {k.bitis:%d.%m.%Y}", "mono"),
+                _metin(k.haber_sayisi, "mono"),
+                _metin(k.guven, "mono") if k.kaynak == Konu.KAYNAK_MOTOR else _yok("Editör dosyası"),
+                _rozet("Motor", "arsiv") if k.kaynak == Konu.KAYNAK_MOTOR else _rozet("Editör", "hazir"),
+                _konu_rozeti(k),
+            ],
+        }
+
+    bekleyen = Konu.objects.filter(onay=Konu.ONAY_BEKLIYOR).count()
+    return _liste_ciz(
+        request, baslik="Konu takibi", bolum="konular", ust_bolum="icerik",
+        tablo_adi="Konu dosyaları",
+        basliklar=["Dosya", "Dönem", "Haber", "Güven", "Kaynak", "Durum", "İşlemler"],
+        sorgu=sorgu, satir_kur=satir, temiz_adi="panel-konular",
+        suzgecler=[
+            _arama_suzgeci(aranan, "Dosya adında ara"),
+            {"tur": "secim", "ad": "onay", "etiket": "Durum", "bos": "Durum seç",
+             "secenekler": list(Konu.ONAYLAR), "deger": secili_onay},
+            {"tur": "secim", "ad": "kaynak", "etiket": "Kaynak", "bos": "Kaynak seç",
+             "secenekler": list(Konu.KAYNAKLAR), "deger": secili_kaynak},
+        ],
+        ust_bilgi=f"Onay bekleyen öneri: {bekleyen}. Sitede yalnız onaylı dosya görünür.",
+        notlar=[
+            "Öneriler `konu_tara` komutundan gelir: başlık ve tarih üzerinden "
+            "zincirlenen haberler. Motor bağlamaz, önerir; onay burada verilir.",
+            "Güven 0-100: çekirdek kökün kapsaması, arşivde nadirliği, gün "
+            "sayısı ve gelişme dili. Kesin ölçüt değil, sıralama ipucu.",
+            "TÜİK enflasyonu, hava durumu, döviz gibi periyodik türler motorda "
+            "elenir; kaçanı burada reddet.",
+        ])
+
+
+@login_required
+@permission_required("icerik.konu_yonetimi", raise_exception=True)
+def konu_duzenle(request, kimlik):
+    kayit = get_object_or_404(Konu, pk=kimlik)
+    form = KonuForm(request.POST or None, instance=kayit)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Dosya künyesi kaydedildi.")
+        return redirect("panel-konu-duzenle", kimlik=kayit.pk)
+    baglar = list(kayit.baglar.select_related("haber", "haber__kategori")
+                  .prefetch_related("haber__kategori__turler")
+                  .order_by("tarih", "haber_id"))
+    return render(request, "panel/konu_form.html", {
+        "baslik": kayit.ad,
+        "bolum": "konular", "ust_bolum": "icerik",
+        "form": form, "konu": kayit, "baglar": baglar,
+        "geri_adi": "panel-konular",
+        "adres": kayit.get_absolute_url() if kayit.onay == Konu.ONAY_ONAYLI else "",
+        "kilitli": [("Kimlik", kayit.pk), ("Kaynak", kayit.get_kaynak_display()),
+                    ("Güven", kayit.guven if kayit.kaynak == Konu.KAYNAK_MOTOR else "—"),
+                    ("Haber", kayit.haber_sayisi),
+                    ("Onaylayan", kayit.onaylayan.get_username() if kayit.onaylayan_id else "—")],
+        **_yetkiler(request.user),
+    })
+
+
+@login_required
+@permission_required("icerik.konu_yonetimi", raise_exception=True)
+def konu_karar(request, kimlik):
+    """Onayla / reddet / beklemeye al. Yalnız POST: karar bağlantıyla verilmez."""
+    if request.method != "POST":
+        return redirect("panel-konu-duzenle", kimlik=kimlik)
+    kayit = get_object_or_404(Konu, pk=kimlik)
+    karar = request.POST.get("karar")
+    if karar not in dict(Konu.ONAYLAR):
+        messages.error(request, "Karar anlaşılmadı.")
+        return redirect("panel-konu-duzenle", kimlik=kayit.pk)
+    kayit.onay = karar
+    if karar == Konu.ONAY_ONAYLI:
+        kayit.onaylayan = request.user
+        kayit.onay_zamani = timezone.now()
+    kayit.save(update_fields=["onay", "onaylayan", "onay_zamani"])
+    messages.success(request, {
+        Konu.ONAY_ONAYLI: "Dosya onaylandı; sitede görünüyor.",
+        Konu.ONAY_RET: "Dosya reddedildi; motor bir daha önermez.",
+        Konu.ONAY_BEKLIYOR: "Dosya beklemeye alındı.",
+    }[karar])
+    return redirect("panel-konu-duzenle", kimlik=kayit.pk)
+
+
+@login_required
+@permission_required("icerik.konu_yonetimi", raise_exception=True)
+def konu_haber_cikar(request, kimlik, haber_id):
+    """Yanlış bağlanmış haberi dosyadan çıkarır. Haber silinmez, bağ silinir."""
+    if request.method != "POST":
+        return redirect("panel-konu-duzenle", kimlik=kimlik)
+    kayit = get_object_or_404(Konu, pk=kimlik)
+    silinen, _ = kayit.baglar.filter(haber_id=haber_id).delete()
+    if silinen:
+        kayit.sayilari_tazele()
+        messages.success(request, "Haber dosyadan çıkarıldı.")
+    return redirect("panel-konu-duzenle", kimlik=kayit.pk)

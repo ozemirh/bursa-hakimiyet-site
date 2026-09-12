@@ -2107,7 +2107,7 @@ window.BHVeri = {
 
     var taslak = {
       baslik_secenekleri: [
-        { metin: "", gerekce: "Düz haber başlığı: ne oldu, kim yaptı, nerede. En fazla 70 karakter." },
+        { metin: "", gerekce: "Düz haber başlığı: ne oldu, kim yaptı, nerede. En fazla 60 karakter." },
         { metin: "", gerekce: "Sonuç/etki odaklı: bu gelişme okur için ne değiştiriyor?" },
         { metin: "", gerekce: "Kısa ve vurucu: 6-7 kelime. Tıklama tuzağı yok." }
       ],
@@ -3061,9 +3061,9 @@ const ORNEKLER = {
       const g = document.createElement("span"); g.className = "gerekce"; g.textContent = s.gerekce;
       const u = document.createElement("span"); u.className = "uzunluk";
       function uzunlukYaz(){
-        u.textContent = yazi.value.length + " / 70 karakter" +
+        u.textContent = yazi.value.length + " / 60 karakter" +
           (i === secili ? " · seçili" : "");
-        u.classList.toggle("asti", yazi.value.length > 70);
+        u.classList.toggle("asti", yazi.value.length > 60);
       }
       uzunlukYaz();
       l.append(r, b, g, u);
@@ -3079,7 +3079,7 @@ const ORNEKLER = {
         });
         kap.querySelectorAll(".uzunluk").forEach(function(x, j){
           const n = t.baslik_secenekleri[j].metin.length;
-          x.textContent = n + " / 70 karakter" + (j === i ? " · seçili" : "");
+          x.textContent = n + " / 60 karakter" + (j === i ? " · seçili" : "");
         });
         seoOner(); onizlemeCiz();
       });
@@ -3088,7 +3088,7 @@ const ORNEKLER = {
     secili = t.onerilen_baslik_indeksi;
 
     $("t-spot").value = t.spot;
-    sayacYaz($("t-spot"), $("spot-sayac"), 260);
+    sayacYaz($("t-spot"), $("spot-sayac"), 300);
 
     const ml = $("t-maddeler"); ml.textContent = "";
     t.uc_madde.forEach(function(m, i){
@@ -3644,7 +3644,7 @@ const ORNEKLER = {
   });
 
   $("t-spot").addEventListener("input", function(){
-    sayacYaz(this, $("spot-sayac"), 260); onizlemeCiz();
+    sayacYaz(this, $("spot-sayac"), 300); onizlemeCiz();
   });
   $("t-seo-baslik").addEventListener("input", function(){ sayacYaz(this, $("seo-baslik-sayac"), 60); });
   $("t-seo-aciklama").addEventListener("input", function(){ sayacYaz(this, $("seo-aciklama-sayac"), 155); });

@@ -18,9 +18,15 @@ yazılır. Bu hatanın panelin yerleşimini bir kez bozduğu kayıtlı
 
   {% if uyari %}<div class="kutu uyari serit" role="status">{{ uyari }}</div>{% endif %}
   {% if ust_bilgi or ek_baglantilar %}
+    {% comment %}Bağlantılar arasında BOŞLUK olmak zorunda: `.dugme`
+       `white-space:nowrap` taşıyor ve aralarında boşluk olmayan düğmeler tek
+       bir kırılmaz satır oluşturuyor. Ölçüldü (5 Eylül 2026): üç düğmeli
+       sosyal kuyruk şeridi 360 px'de 57 px taşıyordu.{% endcomment %}
     <p class="alt-not serit">
       {{ ust_bilgi }}
-      {% for adres, ad in ek_baglantilar %}<a class="dugme ufak" href="{{ adres }}">{{ ad }}</a>{% endfor %}
+      {% for adres, ad in ek_baglantilar %}
+        <a class="dugme ufak" href="{{ adres }}">{{ ad }}</a>
+      {% endfor %}
     </p>
   {% endif %}
 

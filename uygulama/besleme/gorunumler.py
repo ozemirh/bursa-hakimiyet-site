@@ -72,6 +72,12 @@ def robots(istek):
         "Disallow: /ara",
         "Disallow: /panel/",
         "Disallow: /yonetim/",
+        # "Daha fazla göster" düğmesinin ucu (6 Eylül 2026). SAYFA DEĞİL,
+        # parça döndürür: künyesiz, başlıksız bir kalem listesi. Taranırsa
+        # aynı haberler ikinci kez, gövdesiz bir adreste görünür. Bölümün
+        # devamına giden gerçek yol düğmenin kendi bağlantısı (`?sayfa=N`)
+        # ve o AÇIK — arşivin taranması bu satırdan etkilenmez.
+        "Disallow: /daha-fazla",
         "",
         f"Sitemap: {siteharitasi.dosya_adresi(kok, siteharitasi.INDEKS_ADI)}",
         f"Sitemap: {siteharitasi.dosya_adresi(kok, siteharitasi.GOOGLE_NEWS_ADI)}",

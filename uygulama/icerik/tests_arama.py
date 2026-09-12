@@ -12,7 +12,7 @@ from pathlib import Path
 from django.test import TestCase
 
 from .arama_metni import (ONEK_EN_AZ, Cozum, anahtar, durak_mi, kelimeler,
-                          sorgu_coz)
+                          slugla, sorgu_coz)
 
 
 class TurkceAnahtar(TestCase):
@@ -44,6 +44,46 @@ class TurkceAnahtar(TestCase):
     def test_bos_ve_none(self):
         self.assertEqual(anahtar(None), "")
         self.assertEqual(anahtar(""), "")
+
+
+class SlugKatlamasi(TestCase):
+    """`slugla` — adresin Türkçe katlaması (5 Eylül 2026).
+
+    Ölçüt arşivin kendi deseni: 1.038.474 adres eski sistemin katlamasıyla
+    üretildi ve panelden girilen yeni haber ona uymak zorunda.
+    """
+
+    def test_noktasiz_i_dusmuyor(self):
+        """Django `slugify` bu harfi tamamen atıyordu: "adım" → `adm`."""
+        self.assertEqual(slugla("Nilüfer Çayı için büyük adım"),
+                         "nilufer-cayi-icin-buyuk-adim")
+        self.assertEqual(slugla("ışık"), "isik")
+
+    def test_kesme_isareti_tireye_donuyor(self):
+        """Arşiv deseni `bursa-da`; `slugify` `bursada` üretiyordu."""
+        self.assertEqual(slugla("Bursa'da ışık ve İnegöl"),
+                         "bursa-da-isik-ve-inegol")
+        self.assertEqual(slugla("Kurban Bayramı'nda hangi eczaneler açık"),
+                         "kurban-bayrami-nda-hangi-eczaneler-acik")
+
+    def test_arsiv_deseniyle_ortusuyor(self):
+        """Arşivden alınmış iki gerçek adres birebir yeniden üretiliyor."""
+        self.assertEqual(
+            slugla("Bursa'da kullanılmayan ilaçlar için yeni dönem: "
+                   "Eczanelere özel kutular yerleştirildi"),
+            "bursa-da-kullanilmayan-ilaclar-icin-yeni-donem-eczanelere-ozel-"
+            "kutular-yerlestirildi")
+        self.assertEqual(
+            slugla("Nöbetçi eczanelerde salgın yoğunluğu"),
+            "nobetci-eczanelerde-salgin-yogunlugu")
+
+    def test_uzunluk_sinirinda_tire_kalmiyor(self):
+        self.assertEqual(slugla("bir iki üç", 8), "bir-iki")
+
+    def test_bos_ve_yalniz_isaretli_metin_bos_doner(self):
+        self.assertEqual(slugla(""), "")
+        self.assertEqual(slugla(None), "")
+        self.assertEqual(slugla("!!! ??? ..."), "")
 
 
 class PythonLowerTuzagi(TestCase):

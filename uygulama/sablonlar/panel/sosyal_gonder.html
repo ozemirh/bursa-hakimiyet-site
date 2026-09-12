@@ -1,0 +1,41 @@
+{% extends "panel/taban.html" %}
+
+{% comment %}"Bekleyenleri gönder" onayı.
+
+GET onay gösterir, POST gönderir. Gönderim bir ağ işidir ve geri alınamaz:
+bağlantı gittikten sonra silinmesi ayrı bir iştir. Bu yüzden ne kadarının
+gideceği ve hangilerinin gideceği ÖNCE yazılı.{% endcomment %}
+
+{% block icerik %}
+  <div class="onay-kutu">
+    {% if sayi %}
+      <div class="kutu uyari" role="alert">
+        <p>Gönderilmeye hazır <b>{{ sayi }}</b> satır var; bu istekte en çok
+           <b>{{ sinir }}</b> tanesi gönderilecek.</p>
+        <p>Gönderim geri alınamaz: paylaşılan gönderiyi silmek platformun
+           kendi ekranından yapılır.</p>
+      </div>
+
+      <h2 class="onay-bas">Gidecek gönderiler</h2>
+      <ul class="onay-ornek">
+        {% for g in hazir %}
+          <li><b>{{ g.hesap.ad }}</b> ← [{{ g.haber_id }}] {{ g.haber.baslik|truncatechars:70 }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="kutu bilgi">
+        <p><b>Gönderilecek satır yok.</b> Kuyruktaki satırlar ya haberin
+           yayına çıkmasını bekliyor, ya hesabın anahtarı eksik (elle
+           paylaşım), ya da hepsi gönderilmiş.</p>
+      </div>
+    {% endif %}
+
+    <form method="post" action="{{ request.path }}" class="onay-form">
+      {% csrf_token %}
+      <div class="eylem">
+        {% if sayi %}<button type="submit" class="dugme dolu">Gönder</button>{% endif %}
+        <a class="dugme ufak" href="{% url 'panel-sosyal' %}">Kuyruğa dön</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

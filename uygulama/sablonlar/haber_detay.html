@@ -62,6 +62,11 @@
                 {% for k in haber.kaynaklar.all %}<p>{{ k.ad }}</p>{% endfor %}
               </div>
             {% endif %}
+
+            {% comment %}KONUNUN AKIŞI (5 Eylül 2026): haber onaylı bir konu
+            dosyasındaysa dosyanın önceki ve sonraki haberleri. Motor önerisi
+            burada görünmez; onay panelde verilir (icerik/konu.py).{% endcomment %}
+            {% if konu_akisi %}{% include "parca/konu_akisi.html" with a=konu_akisi %}{% endif %}
           </article>
 
           <div class="kutu">

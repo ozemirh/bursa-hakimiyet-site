@@ -413,8 +413,9 @@ class FormKolayliklari(TestCase):
         """Sayaçları betik çiziyor; işaretler sunucudan gelmeli."""
         self.client.force_login(self.yonetmen)
         icerik = self.client.get("/panel/haber/ekle").content.decode()
-        self.assertIn('data-sayac="60"', icerik)
-        self.assertIn('data-sayac="160"', icerik)
+        from .formlar import BASLIK_SINIR, SPOT_SINIR
+        self.assertIn('data-sayac="%d"' % BASLIK_SINIR, icerik)
+        self.assertIn('data-sayac="%d"' % SPOT_SINIR, icerik)
 
     def test_hatali_alan_isaretleniyor(self):
         """Odak yönetimi betikte; sunucu `.hatali` sınıfını basmalı."""

@@ -17,8 +17,14 @@ bağlantıda. İnternetsizde Georgia'ya düşer, sayfa açılmaya devam eder.{% 
 {% if reklam_dugmesi %}{% comment %}Reklam anahtarinin tercihi sayfa cizilmeden
   okunur; sonradan okunsaydi panolar bir an gorunup kaybolurdu. Dugmenin
   kendisi ust serittedir ve yalniz gelistirme/panel oturumunda cizilir
-  (icerik/baglam.py, `_reklam_dugmesi`).{% endcomment %}
+  (icerik/baglam.py, `sunum_araci_mi`).{% endcomment %}
 <script>try{if(localStorage.getItem('bh-reklam')==='kapali'){document.documentElement.setAttribute('data-reklam','kapali');}}catch(e){}</script>
+{% endif %}{% if reklam_test %}{% comment %}Test reklami tercihi de sayfa
+  cizilmeden okunur; sonradan okunsaydi gri panolar bir an gorunup yerlerini
+  yaraticiya birakirdi. `?reklam-test=acik` ayni tercihi ADRESTEN acar:
+  sunum sirasinda bir bagla acik/kapali halini gostermek ve basssiz
+  tarayiciyla olcmek icin.{% endcomment %}
+<script>try{var bhq=new URLSearchParams(location.search).get('reklam-test');if(bhq==='acik'||bhq==='kapali'){localStorage.setItem('bh-reklam-test',bhq);}if(localStorage.getItem('bh-reklam-test')==='acik'){document.documentElement.setAttribute('data-reklam-test','acik');}}catch(e){}</script>
 {% endif %}</head>
 <body>
 <a class="atla" href="#ana-icerik">İçeriğe atla</a>
@@ -135,6 +141,30 @@ Ayrintili gerekce `cekirdek/settings.py` REKLAM_DEMO yaninda.{% endcomment %}
 <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
 <script>window.BH_REKLAM_YOLU = "{{ reklam_yolu|escapejs }}";</script>
 <script src="{% static 'betik/reklam.js' %}"></script>
+{% endif %}
+{% if reklam_test or adsense_ayar %}{% comment %}Yuva olcu sozlesmesini okuyan
+ortak parca: `data-gpt`, `data-gpt-harita`, yuva adi, sigma hesabi. Hem
+yerel test hizmeti hem AdSense bunu kullanir; `reklam.js` (demo agi)
+bilerek disarida — gerekce dosyanin basinda.{% endcomment %}
+<script src="{% static 'betik/reklam-olcu.js' %}"></script>
+{% endif %}{% if reklam_test %}{% comment %}Yerel test reklam hizmeti (7 Eylul
+2026). Demo agindan farki: yaratici SUNUCUDA uretilir, istenen olcude,
+cerezsiz ve internetsiz. Betik yalniz sunum oturumunda basilir ve
+kendiliginden doldurmaz — ust banttaki "Test reklami" dugmesi acilinca
+baslar. Ayrintili gerekce `icerik/reklam.py` basinda.{% endcomment %}
+<script>window.BH_REKLAM_TEST_KOK = "/reklam/test/";</script>
+<script src="{% static 'betik/reklam-test.js' %}"></script>
+{% endif %}{% if adsense_ayar %}{% comment %}AdSense — gazetenin KENDI yayinci
+kimligi (7 Eylul 2026 karari). Kimlik `BH_ADSENSE_ID` ile verilmedikce bu
+blok hic basilmaz. Test modunda (`data-adtest="on"`) yalniz sunum
+oturumuna cizilir: test yaraticisi okura gosterilecek sey degil.
+
+`adsbygoogle.js` UCUNCU TARAF CEREZI birakir; gercek yayina gecmeden once
+cerez aydinlatmasi ayri bir istir. Ayar `json_script` ile gomuluyor:
+kimlik ve birim numaralari betige kacisli gecsin.{% endcomment %}
+{{ adsense_ayar|json_script:"adsense-ayar" }}
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_ayar.kimlik|urlencode }}" crossorigin="anonymous"></script>
+<script src="{% static 'betik/reklam-adsense.js' %}"></script>
 {% endif %}
 {% block betik %}{% endblock %}
 </body>

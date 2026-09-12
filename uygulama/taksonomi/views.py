@@ -17,6 +17,8 @@ F2'de içerik modelleri henüz yok, o yüzden:
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 
+from icerik import ilgili as ilgili_yardimci
+from icerik import konu as konu_yardimci
 from icerik import okunma
 from icerik.models import Haber
 
@@ -72,25 +74,34 @@ def haber(request, kategori, slug, kimlik):
     # hatası sayfaya yansımaz (icerik/okunma.py).
     okunma.say(request, kayit.pk)
 
+    # Konu akışı önce: ilgili haberler kutusu akışta zaten görünenleri
+    # atlar, aynı başlık sayfada iki kez basılmaz (5 Eylül 2026).
+    akis = konu_yardimci.akis(kayit)
     return render(request, "haber_detay.html", {
         "haber": kayit,
         "baslik": kayit.baslik,
-        "ilgili": _ilgili(kayit),
+        "ilgili": _ilgili(kayit, akis),
         # Sağ ray (29 Ağustos görsel denetimi): `.izgara` iki sütun ayırıyor
         # ama şablon tekini dolduruyordu — her makale sayfasında 342 px ölü
         # sütun (ölçüldü). Ray anasayfanın bileşenlerini yeniden kullanır.
         "en_cok": _en_cok(kayit),
         "ilcedekiler": _ilcedekiler(kayit),
+        # Konu dosyası akışı; haber onaylı bir dosyada değilse None ve
+        # şablon bloğu hiç çizmez (5 Eylül 2026).
+        "konu_akisi": akis,
     })
 
 
-def _ilgili(kayit):
-    """Aynı kategoriden, kendisi hariç en yeni haberler."""
-    return (Haber.yayindakiler()
-            .select_related("kategori")
-            .prefetch_related("kategori__turler")
-            .filter(kategori=kayit.kategori)
-            .exclude(pk=kayit.pk)[:5])
+ILGILI_ADET = 6   # iki sütunlu ızgara; 5'te son satır tek kalıyordu
+
+
+def _ilgili(kayit, akis=None):
+    """Başlıkça ilgili haberler (icerik/ilgili.py); akışta görünenler hariç.
+    Eskiden "aynı kategoriden en yeni 5" idi — o kural artık yalnız dolgu."""
+    haric = []
+    if akis:
+        haric = [h.pk for h in akis["oncekiler"]] + [h.pk for h in akis["sonrakiler"]]
+    return ilgili_yardimci.bul(kayit, adet=ILGILI_ADET, haric=haric)
 
 
 EN_COK = 5

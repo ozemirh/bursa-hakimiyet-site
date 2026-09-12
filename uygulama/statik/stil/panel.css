@@ -140,6 +140,15 @@ input:disabled,textarea:disabled,select:disabled{opacity:.55;cursor:not-allowed}
 .kutucuk input{margin-top:2.5px;width:16px;height:16px;flex:0 0 16px;accent-color:var(--lacivert);cursor:pointer}
 .kutucuk .yazi b{display:block;font-weight:600}
 .kutucuk .yazi span{color:var(--gri);font-size:12.5px}
+/* Çoklu onay kutusu (sosyal hesap seçimi). Django `CheckboxSelectMultiple`i
+   her seçeneği kendi <div>üne sarıp <label> içine koyuyor; kutu ile yazıyı
+   `.kutucuk` ile aynı ölçüye getiren kural bu. */
+.kutucuk-liste>div{margin-bottom:8px}
+.kutucuk-liste>div:last-child{margin-bottom:0}
+.kutucuk-liste label{display:flex;align-items:center;gap:9px;font-size:14px;
+  font-weight:400;cursor:pointer}
+.kutucuk-liste input{width:16px;height:16px;flex:0 0 16px;
+  accent-color:var(--lacivert);cursor:pointer}
 fieldset{border:0}
 legend{font-weight:600;font-size:14px;margin-bottom:6px}
 .yatay{display:flex;gap:18px;flex-wrap:wrap}
@@ -204,6 +213,10 @@ legend{font-weight:600;font-size:14px;margin-bottom:6px}
 .yan-kart h2{font-family:var(--serif);font-size:15.5px;font-weight:700;margin-bottom:11px;
   display:flex;align-items:center;gap:8px}
 .yan-kart h2 .oran-yazi{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--gri-acik);font-weight:400}
+/* Künyedeki adresler kırılabilmeli. Ölçüldü (5 Eylül 2026): sosyal gönderi
+   ekranındaki tam adres (site kökü + haber yolu) 360 px'de kartı 70 px
+   taşırıyordu; boşluğu olmayan uzun metni tarayıcı kendiliğinden kırmıyor. */
+.yan-kart code{overflow-wrap:anywhere}
 
 .kontrol{list-style:none;font-size:13.5px}
 .kontrol li{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--cizgi)}
@@ -541,3 +554,40 @@ legend{font-weight:600;font-size:14px;margin-bottom:6px}
 .acilir-alan summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:13px}
 .acilir-alan[open] summary{border-bottom:1px solid var(--cizgi);margin-bottom:10px}
 .acilir-alan .alan{margin-bottom:12px}
+
+/* ---- Konu takibi (5 Eylül 2026): dosya ekranındaki haber listesi ---- */
+.konu-baglar{list-style:none;margin:0;padding:0}
+.konu-baglar li{display:grid;grid-template-columns:82px minmax(0,1fr) auto auto;gap:10px;
+  align-items:center;padding:8px 0;border-bottom:1px dotted var(--cizgi);font-size:13.5px;line-height:1.35}
+.konu-baglar li:last-child{border:0}
+.konu-baglar .mono{font-family:var(--mono);font-size:12px;color:var(--gri)}
+.konu-baglar .satir-fiil{margin:0}
+.kayit-duzen .kutu-kart{margin-top:18px}
+@media(max-width:768px){.konu-baglar li{grid-template-columns:minmax(0,1fr) auto;row-gap:4px}
+  .konu-baglar .mono{grid-column:1/-1}}
+
+/* ---- Adresten taslak (5 Eylül 2026): kaynak metni + ham malzeme ----
+   Kaynağın gövdesi 250-800 kelime; kart genişliğine yayılınca satır 110
+   karakteri buluyor ve okunmuyordu. Ölçü `max-width` ile satır başına
+   ~70 karaktere iniyor. Ham malzeme aynı cümlelerin puanlanmış hâli,
+   bu yüzden `details` içinde KAPALI duruyor — ekran onsuz da tam. */
+.kayit-ana{min-width:0}
+.yz-metin{max-width:70ch;font-size:14px;line-height:1.62;margin-top:14px}
+.yz-metin p{margin-bottom:11px}
+.yz-metin p:last-child{margin-bottom:0}
+.yz-kaynak-baslik{font-family:var(--serif);font-size:17px;font-weight:700;
+  line-height:1.35;letter-spacing:-.2px}
+.yz-alt-bas{font-family:var(--mono);font-size:10.5px;letter-spacing:.6px;
+  text-transform:uppercase;color:var(--gri-acik);margin:16px 0 5px}
+.yz-metin>.yz-alt-bas:first-child{margin-top:0}
+.yz-katlanir{margin:18px 0 0}
+.yz-tezgah{margin:8px 0 12px;padding-left:20px;font-size:13px;line-height:1.55;
+  color:var(--gri)}
+.yz-tezgah li{margin-bottom:9px}
+.yz-tezgah li:last-child{margin-bottom:0}
+.yz-liste{margin:0;padding-left:17px;font-size:13px;line-height:1.5;color:var(--gri)}
+.yz-liste li{margin-bottom:6px}
+.yz-liste li:last-child{margin-bottom:0}
+.yz-damgalar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px}
+.yz-gorsel{display:block;width:100%;max-height:165px;object-fit:cover;
+  border:1px solid var(--cizgi);border-radius:9px;margin-bottom:8px}

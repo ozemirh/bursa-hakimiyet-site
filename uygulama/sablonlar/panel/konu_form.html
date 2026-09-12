@@ -1,0 +1,95 @@
+{% extends "panel/taban.html" %}
+
+{% comment %}KONU DOSYASI EKRANI (5 Eylül 2026) — PANEL-NOTLARI.md §15.
+
+Sol: künye formu (ad · özet · hassas uyarı · sürüyor) ve dosyanın
+haberleri tarih sırasında; her satırda "Çıkar" (yalnız POST).
+Sağ: karar kutusu (Onayla · Reddet · Beklet), motorun gerekçesi, künye.
+
+Hassas uyarı varsa sütunun İLK öğesidir (§15 ölçümü): Bozbey dosyasına
+bakan editörün göreceği ilk şey masumiyet karinesi notu olmalı.
+
+Onay bir POST fiilidir; GET ile karar verilmez. Menüde bağlantının
+görünmemesi yetki denetimi değildir — görünüm kendi yetkiliğini taşır.{% endcomment %}
+
+{% block icerik %}
+  <div class="kayit-duzen">
+    <div>
+      {% if konu.hassas_uyari %}
+        <div class="kutu uyari" role="note"><b>HASSAS DOSYA.</b> {{ konu.hassas_uyari }}</div>
+      {% endif %}
+
+      <form method="post" class="kayit-form" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="kutu tehlike" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% for alan in form %}
+          {% include "panel/parca/alan.html" with alan=alan ipucu="" %}
+        {% endfor %}
+        <div class="eylem">
+          <button type="submit" class="dugme dolu">Künyeyi kaydet</button>
+          <a class="dugme ufak" href="{% url geri_adi %}">Listeye dön</a>
+        </div>
+      </form>
+
+      <section class="kutu-kart" aria-labelledby="dosya-haberleri">
+        <div class="bas">
+          <h2 id="dosya-haberleri">Dosyadaki haberler</h2>
+          <span class="damga">{{ baglar|length }} haber</span>
+        </div>
+        <div class="kutu-govde">
+          {% if baglar %}
+          <ol class="konu-baglar">
+            {% for b in baglar %}
+            <li>
+              <span class="mono">{{ b.tarih|date:"d.m.Y" }}</span>
+              <a href="{% url 'panel-haber-duzenle' kimlik=b.haber_id %}">{{ b.haber.baslik }}</a>
+              {% if b.elle %}<span class="durum-etiket hazir">elle</span>{% endif %}
+              <form method="post" action="{% url 'panel-konu-haber-cikar' kimlik=konu.pk haber_id=b.haber_id %}" class="satir-fiil">
+                {% csrf_token %}
+                <button type="submit" class="dugme ufak" aria-label="{{ b.haber.baslik|truncatechars:60 }} haberini dosyadan çıkar">Çıkar</button>
+              </form>
+            </li>
+            {% endfor %}
+          </ol>
+          {% else %}<p class="alt-not">Dosyada haber kalmadı.</p>{% endif %}
+        </div>
+      </section>
+    </div>
+
+    <aside class="kayit-yan" aria-label="Dosya kararı">
+      <div class="yan-kart">
+        <h2>Karar</h2>
+        <p class="alt-not">Durum: <b>{{ konu.get_onay_display }}</b>. Sitede yalnız onaylı dosya görünür.</p>
+        <form method="post" action="{% url 'panel-konu-karar' kimlik=konu.pk %}" class="eylem">
+          {% csrf_token %}
+          {% if konu.onay != "onayli" %}<button type="submit" name="karar" value="onayli" class="dugme dolu">Onayla</button>{% endif %}
+          {% if konu.onay != "ret" %}<button type="submit" name="karar" value="ret" class="dugme ufak">Reddet</button>{% endif %}
+          {% if konu.onay != "bekliyor" %}<button type="submit" name="karar" value="bekliyor" class="dugme ufak">Beklet</button>{% endif %}
+        </form>
+      </div>
+
+      {% if konu.gerekce %}
+      <div class="yan-kart">
+        <h2>Motorun gerekçesi</h2>
+        <p class="alt-not">{{ konu.gerekce }}</p>
+        {% if konu.anahtarlar %}<p class="alt-not">Anahtar: {{ konu.anahtarlar|join:" · " }}</p>{% endif %}
+      </div>
+      {% endif %}
+
+      <div class="yan-kart">
+        <h2>Künye</h2>
+        <dl class="kunye-liste">
+          {% for ad, deger in kilitli %}
+            <dt>{{ ad }}</dt><dd>{{ deger }}</dd>
+          {% endfor %}
+        </dl>
+        {% if adres %}
+          <p class="alt-not">Adres: <code>{{ adres }}</code></p>
+          <a class="dugme ufak" href="{{ adres }}">Sayfada gör</a>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+{% endblock %}

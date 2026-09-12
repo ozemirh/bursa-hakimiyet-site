@@ -19,7 +19,7 @@ from django.utils import timezone
 from taksonomi.models import Ilce, Kategori, KategoriTur
 
 from .models import Haber
-from .temizle import govde_temizle
+from .temizle import govde_temizle, metin_duzelt
 from .templatetags.site_etiket import baslikla, buyult
 
 
@@ -75,6 +75,49 @@ class GovdeTemizleyici(TestCase):
 
     def test_bos_govde(self):
         self.assertEqual(govde_temizle(""), "")
+
+
+class DuzMetinOnarimi(TestCase):
+    """`temizle.metin_duzelt` — arşivin başlık/spot artıkları (5 Eylül 2026).
+
+    Örnekler uydurma değil: hepsi arşivden alındı.
+    """
+
+    def test_cozulmemis_varlik_kacisi(self):
+        self.assertEqual(metin_duzelt("Ug&#774;ur Aslan'dan eşiyle pozu"),
+                         "Uğur Aslan'dan eşiyle pozu")
+        self.assertEqual(
+            metin_duzelt("19 Mayıs Atatu&#776;rk'u&#776; Anma"),
+            "19 Mayıs Atatürk'ü Anma")
+
+    def test_ayrismis_harf_nfc_ile_birlesiyor(self):
+        """Ekranda ü gibi görünür ama aramada başka bir dizidir."""
+        self.assertEqual(metin_duzelt("Atatürk"), "Atatürk")
+
+    def test_kucultmeden_kalan_nokta_dusuyor(self):
+        """NFC "i" + U+0307'yi birleştirmez; artık okunurluğu bozuyordu."""
+        self.assertEqual(metin_duzelt("Rus ve İngi̇liz gemileri"),
+                         "Rus ve İngiliz gemileri")
+
+    def test_gorunmez_karakterler_siliniyor(self):
+        self.assertEqual(metin_duzelt("​​Yerel basının nabzı"),
+                         "Yerel basının nabzı")
+
+    def test_bosluk_varsayilan_olarak_daraltilmiyor(self):
+        """Bu işlev bozulmayı onarır, metni yeniden biçimlendirmez."""
+        self.assertEqual(metin_duzelt("iki  boşluk "), "iki  boşluk ")
+        self.assertEqual(metin_duzelt("dar boşluk", bosluk=True),
+                         "dar boşluk")
+
+    def test_saglam_metin_degismiyor(self):
+        for saglam in ("Bursa'da yeni hat açıldı", "TOFAŞ & Fiat anlaşması",
+                       "Nilüfer Çayı için büyük adım"):
+            self.assertEqual(metin_duzelt(saglam), saglam)
+
+    def test_kendini_tekrar_ettiginde_degistirmiyor(self):
+        """Komut iki kez çalışabilir; ikinci tur veriye dokunmamalı."""
+        bir = metin_duzelt("Ug&#774;ur &amp; Ali​")
+        self.assertEqual(metin_duzelt(bir), bir)
 
 
 class TurkceBuyukKucuk(TestCase):
@@ -436,26 +479,29 @@ class BolumDurustlugu(TestCase):
 
     # -- Bursaspor ---------------------------------------------------------
 
-    def test_bursaspor_listesi_kartlari_tekrarlamiyor(self):
-        """Liste kartların DEVAMIDIR; aynı haber iki kez görünmez.
+    def test_bursaspor_kartlari_tekrarsiz_ve_yeniden_eskiye(self):
+        """Bölüm 3x3 ızgara: dokuz kart, tekrarsız, en yeniden eskiye.
 
-        Liste, tam kadro tablonun açtığı 412 px'lik boşluğu kapatmak için
-        var (URUN-PLANI.md §32); havuzu kartlarla ortak.
+        6 Eylül 2026'da kartların altındaki "SON GELİŞMELER" listesi
+        kaldırıldı ve `BURSASPOR` 6 -> 9 oldu; bu test o listenin
+        tekrarsızlık kontrolünün yerini alıyor. Bağlamda `bursaspor_liste`
+        ARTIK YOK — şablon da onu aramıyor.
         """
-        from .views import BURSASPOR, BURSASPOR_LISTE
+        from .views import BURSASPOR
         tur = KategoriTur.objects.filter(
             tur=Kategori.TUR_HABER, slug="bursaspor").first()
-        for n in range(BURSASPOR + BURSASPOR_LISTE + 3):
+        for n in range(BURSASPOR + 3):
             Haber.objects.create(
                 id=810000 + n, slug=f"bs-{n}", baslik=f"Bursaspor başlığı {n}",
                 spot="spot", govde="<p>gövde</p>", kategori=tur.kategori,
                 yayin_zamani=timezone.now() - timezone.timedelta(hours=n))
         yanit = self.client.get("/")
         kart = [h.id for h in yanit.context["bursaspor_haberleri"]]
-        liste = [h.id for h in yanit.context["bursaspor_liste"]]
         self.assertEqual(len(kart), BURSASPOR)
-        self.assertEqual(len(liste), BURSASPOR_LISTE)
-        self.assertEqual(set(kart) & set(liste), set())
+        self.assertEqual(len(set(kart)), BURSASPOR)
+        self.assertNotIn("bursaspor_liste", yanit.context)
+        zamanlar = [h.yayin_zamani for h in yanit.context["bursaspor_haberleri"]]
+        self.assertEqual(zamanlar, sorted(zamanlar, reverse=True))
 
     def test_kisa_zaman_yili_gizlemiyor(self):
         """Yılsız "31 Eki" 2025 haberini bu yılın haberi gibi gösteriyordu.
@@ -861,3 +907,214 @@ class ReklamDemoAgi(TestCase):
         self.assertIn("data-reklam", betik)
         self.assertIn("offsetParent === null", betik)
 
+
+class YerelTestReklami(TestCase):
+    """Yerel test reklam hizmeti (7 Eylül 2026, kullanıcı isteği).
+
+    Dört şey kilitleniyor: kapı (sıradan ziyaretçi göremez), ölçü (istenen
+    ölçüde yaratıcı gerçekten üretiliyor), dışa bağımsızlık (yaratıcıda
+    dış adres yok) ve yaratıcının reklam gibi görünmemesi.
+    """
+
+    KOK = Path(__file__).resolve().parent.parent
+
+    @classmethod
+    def setUpTestData(cls):
+        from django.contrib.auth.models import User
+        from django.core.management import call_command
+        call_command("taksonomi_kur", verbosity=0)
+        cls.personel = User.objects.create_user(
+            "sunumcu", password="x", is_staff=True)
+
+    def test_siradan_ziyaretci_goremez(self):
+        """Kapı sunum oturumu: anonim ziyaretçi 404 alır.
+
+        Canlıda bir okurun yuvasına test görseli düşmesi bu yüzden
+        mümkün değil — adres de düğme de betik de yok.
+        """
+        self.assertEqual(
+            self.client.get("/reklam/test/300x250.svg").status_code, 404)
+        metin = self.client.get("/").content.decode()
+        self.assertNotIn("betik/reklam-test.js", metin)
+        self.assertNotIn("reklam-test-anahtar", metin)
+
+    def test_sunum_oturumunda_yaratici_uretiliyor(self):
+        self.client.force_login(self.personel)
+        yanit = self.client.get("/reklam/test/300x250.svg")
+        self.assertEqual(yanit.status_code, 200)
+        self.assertIn("image/svg+xml", yanit["Content-Type"])
+        svg = yanit.content.decode()
+        self.assertIn('width="300"', svg)
+        self.assertIn('height="250"', svg)
+        self.assertIn("TEST REKLAMI", svg)
+
+    def test_yaratici_disariya_baglanmiyor(self):
+        """Sayfanın internetsiz açılması kuralı yaratıcıda da geçerli."""
+        self.client.force_login(self.personel)
+        svg = self.client.get("/reklam/test/970x250.svg").content.decode()
+        for iz in ("http://", "https://", "//cdn", "url("):
+            if iz == "https://":
+                # Tek izinli mutlak adres SVG ad alanıdır.
+                self.assertEqual(svg.count(iz), 0)
+                continue
+            self.assertNotIn(iz, svg.replace(
+                "http://www.w3.org/2000/svg", ""))
+
+    def test_yaratici_reklam_taklidi_degil(self):
+        """Marka yok, reklamveren yok: üstünde ne olduğu yazıyor."""
+        self.client.force_login(self.personel)
+        svg = self.client.get(
+            "/reklam/test/728x90.svg?yuva=Haber arası1").content.decode()
+        self.assertIn("TEST", svg)
+        self.assertIn("Haber arası1", svg)
+
+    def test_yuva_adi_kacisli_basiliyor(self):
+        """Etiket adresten geliyor; ham basılırsa SVG'ye betik girerdi."""
+        self.client.force_login(self.personel)
+        svg = self.client.get(
+            "/reklam/test/300x250.svg?yuva=%3Cscript%3E").content.decode()
+        self.assertNotIn("<script>", svg)
+        self.assertIn("&lt;script&gt;", svg)
+
+    def test_olcu_sinirlari(self):
+        self.client.force_login(self.personel)
+        self.assertEqual(
+            self.client.get("/reklam/test/10x10.svg").status_code, 404)
+        self.assertEqual(
+            self.client.get("/reklam/test/3000x3000.svg").status_code, 404)
+
+    def test_sayfa_betigi_yalniz_sunum_oturumunda(self):
+        self.client.force_login(self.personel)
+        metin = self.client.get("/").content.decode()
+        self.assertIn("betik/reklam-test.js", metin)
+        self.assertIn("reklam-test-anahtar", metin)
+        self.assertIn("BH_REKLAM_TEST_KOK", metin)
+
+    def test_bayrak_kapaliyken_hicbir_sey_basilmiyor(self):
+        """`BH_REKLAM_TEST=0` hizmeti tümden kapatır."""
+        self.client.force_login(self.personel)
+        with override_settings(REKLAM_TEST=False):
+            metin = self.client.get("/").content.decode()
+        self.assertNotIn("betik/reklam-test.js", metin)
+        self.assertNotIn("reklam-test-anahtar", metin)
+
+    def test_rozet_yazisi_zemine_gore_seciliyor(self):
+        """Vurgu rengi her palette koyu değil; sabit beyaz rozet kaybolur.
+
+        Saha yeşili paletinde vurgu açık yeşil (#EAF4EE) ve "TEST" rozeti
+        beyaz yazıyla görünmüyordu — ölçüldü, renk artık parlaklıktan.
+        """
+        from .reklam import _okunur_yazi
+        self.assertEqual(_okunur_yazi("#EAF4EE"), "#14181D")
+        self.assertEqual(_okunur_yazi("#E4222B"), "#FFFFFF")
+        self.assertEqual(_okunur_yazi("#1B2A6B"), "#FFFFFF")
+
+    def test_betik_demo_agiyla_carpismiyor(self):
+        """İki bayrak birlikte açıkken aynı kutuda iki reklam olmaz."""
+        betik = (self.KOK / "statik" / "betik" / "reklam-test.js").read_text(
+            encoding="utf-8")
+        self.assertIn("gpt-yuva", betik)
+        self.assertIn("adsbygoogle", betik)
+        self.assertIn("data-reklam-test", betik)
+        # Görünmeyen yuva kuralı ortak parçaya taşındı (§66).
+        ortak = (self.KOK / "statik" / "betik" / "reklam-olcu.js").read_text(
+            encoding="utf-8")
+        self.assertIn("offsetParent === null", ortak)
+
+
+class AdSenseKendiKimligi(TestCase):
+    """AdSense — gazetenin kendi yayıncı kimliği (7 Eylül 2026, §66).
+
+    Dört kapı kilitleniyor: kimlik yokken hiçbir dış betik basılmaz, test
+    modu okura çizilmez, gerçek yayında herkese çizilir, ads.txt kimlikten
+    üretilir.
+    """
+
+    KOK = Path(__file__).resolve().parent.parent
+    KIMLIK = "ca-pub-0000000000000000"
+
+    @classmethod
+    def setUpTestData(cls):
+        from django.contrib.auth.models import User
+        from django.core.management import call_command
+        call_command("taksonomi_kur", verbosity=0)
+        cls.personel = User.objects.create_user(
+            "reklamci", password="x", is_staff=True)
+
+    def test_kimlik_yokken_dis_betik_yok(self):
+        """Varsayılan: kimlik boş, site dışarıdan yalnız Google Fonts çeker."""
+        self.client.force_login(self.personel)
+        with override_settings(ADSENSE_ID=""):
+            metin = self.client.get("/").content.decode()
+        self.assertNotIn("adsbygoogle", metin)
+        self.assertNotIn("pagead2.googlesyndication.com", metin)
+
+    def test_test_modu_yalniz_sunum_oturumunda(self):
+        """Test yaratıcısı okura gösterilecek şey değil.
+
+        `data-adtest="on"` gösterim saymaz ama ekranda reklam görünür;
+        sıradan ziyaretçiye çizilirse okur onu gerçek reklam sanar.
+        """
+        with override_settings(ADSENSE_ID=self.KIMLIK, ADSENSE_TEST=True,
+                               ADSENSE_SLOT="1234567890"):
+            anonim = self.client.get("/").content.decode()
+            self.client.force_login(self.personel)
+            sunum = self.client.get("/").content.decode()
+        self.assertNotIn("adsbygoogle", anonim)
+        self.assertIn("adsbygoogle.js?client=ca-pub-0000000000000000", sunum)
+        self.assertIn("betik/reklam-adsense.js", sunum)
+        self.assertIn("betik/reklam-olcu.js", sunum)
+
+    def test_gercek_yayinda_herkese_ciziliyor(self):
+        """Test kapatıldığında kapı da kalkar — asıl yayın hâli budur."""
+        with override_settings(ADSENSE_ID=self.KIMLIK, ADSENSE_TEST=False,
+                               ADSENSE_SLOT="1234567890"):
+            metin = self.client.get("/").content.decode()
+        self.assertIn("adsbygoogle", metin)
+
+    def test_ayar_json_script_ile_gomuluyor(self):
+        """Kimlik ve birim numaraları betiğe kaçışlı geçmeli."""
+        self.client.force_login(self.personel)
+        with override_settings(ADSENSE_ID=self.KIMLIK, ADSENSE_TEST=True,
+                               ADSENSE_SLOT="1234567890",
+                               ADSENSE_YUVALAR={"Manşet yanı": "999"}):
+            metin = self.client.get("/").content.decode()
+        self.assertIn('id="adsense-ayar"', metin)
+        self.assertIn('"varsayilan": "1234567890"', metin)
+        self.assertIn('"999"', metin)
+
+    def test_ads_txt_kimlikten_uretiliyor(self):
+        with override_settings(ADSENSE_ID=self.KIMLIK):
+            yanit = self.client.get("/ads.txt")
+        self.assertEqual(yanit.status_code, 200)
+        self.assertIn("text/plain", yanit["Content-Type"])
+        satir = yanit.content.decode().strip()
+        # "ca-" öneki ads.txt satırında yer almaz.
+        self.assertEqual(
+            satir, "google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0")
+
+    def test_ads_txt_kimliksiz_404(self):
+        """Yanlış ya da boş ads.txt, dosyanın hiç olmamasından kötüdür."""
+        with override_settings(ADSENSE_ID=""):
+            self.assertEqual(self.client.get("/ads.txt").status_code, 404)
+
+    def test_betik_sozlesmeyi_koruyor(self):
+        betik = (self.KOK / "statik" / "betik" / "reklam-adsense.js").read_text(
+            encoding="utf-8")
+        # Test modu işareti, esnemeyen sabit ölçü ve dolmayan yuva kuralı.
+        self.assertIn("data-adtest", betik)
+        self.assertIn("data-full-width-responsive", betik)
+        self.assertIn("unfilled", betik)
+        # Tanımsız yuvaya uydurma birim kimliği gönderilmez.
+        self.assertIn("if (!birim) { return; }", betik)
+
+    def test_olcu_sozlesmesi_ortak_parcada(self):
+        """Yuva sözleşmesi üç kez kopyalanmasın; ortak dosyada."""
+        ortak = (self.KOK / "statik" / "betik" / "reklam-olcu.js").read_text(
+            encoding="utf-8")
+        self.assertIn("offsetParent === null", ortak)
+        self.assertIn("data-gpt-harita", ortak)
+        for ad in ("reklam-test.js", "reklam-adsense.js"):
+            betik = (self.KOK / "statik" / "betik" / ad).read_text(
+                encoding="utf-8")
+            self.assertIn("BHReklamOlcu", betik)

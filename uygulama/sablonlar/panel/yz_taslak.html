@@ -1,0 +1,72 @@
+{% extends "panel/taban.html" %}
+
+{% comment %}Adresten taslak açma ekranı — `icerik/yz_kopru.py`.
+
+Ekran YALNIZCA taslak açar. Yayına alma haber formundan, kendi yetkisi ve
+kendi eşiğiyle (spot + en az iki paragraf + etiket) olur; buradan yayına
+giden bir yol yok.{% endcomment %}
+
+{% block icerik %}
+  <p class="alt-not">
+    Haberin adresini verin: araç sayfayı indirir, ayıklar ve panele
+    <b>taslak</b> açar. Taslak <b>pasif</b> doğar — yayına almadan önce
+    okunur, yazılır ve haber formundan yayınlanır.
+  </p>
+
+  {% if not arac_var %}
+    <div class="kutu tehlike" role="alert">
+      Araç klasörü (<code>arac/</code>) bulunamadı. Depo eksik indirilmiş
+      olabilir; bu ekran onsuz çalışmaz.
+    </div>
+  {% endif %}
+
+  {% if hata %}
+    <div class="kutu tehlike" role="alert">{{ hata }}</div>
+  {% endif %}
+
+  <form method="post" class="haber-form" novalidate>
+    {% csrf_token %}
+
+    <fieldset>
+      <legend>Kaynak</legend>
+      <div class="alan">
+        <label for="adres">Haber adresi</label>
+        <input type="url" id="adres" name="adres" value="{{ adres }}"
+               placeholder="https://…" autocomplete="off" required
+               aria-describedby="adres-not">
+        <div class="sag-not" id="adres-not">
+          Sayfa JavaScript ile kuruluyorsa ya da ödeme duvarı arkasındaysa
+          metin çıkarılamaz; araç bunu söyler.
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Yöntem</legend>
+      {% for kod, ad, aciklama in saglayicilar %}
+        <label class="kutucuk">
+          <input type="radio" name="saglayici" value="{{ kod }}"
+                 {% if kod == secili_saglayici %}checked{% endif %}>
+          <span class="yazi"><b>{{ ad }}</b><span>{{ aciklama }}</span></span>
+        </label>
+      {% endfor %}
+      <div class="sag-not">
+        Model yolları makinedeki <code>claude</code> oturumunu kullanır; API
+        anahtarı istemez. Sayfa üretim bitene kadar bekler.
+      </div>
+    </fieldset>
+
+    <div class="eylem">
+      <button type="submit" class="dugme dolu">Taslak aç</button>
+      <a class="dugme ufak" href="{% url 'panel-akis' %}">Vazgeç</a>
+    </div>
+  </form>
+
+  <div class="kutu bilgi">
+    <b>Aracın uymadığı iki şey var, ikisi de bilerek:</b> kural motoru gövde
+    yazmaz — kaynağın cümleleri yalnız <i>ham malzeme</i> olarak gösterilir,
+    haberi siz yazarsınız. Kaynağın fotoğrafı da otomatik indirilmez; hak
+    durumu haber haber değerlendirilir, indirme taslak ekranında ayrı bir
+    düğmedir.
+  </div>
+{% endblock %}

@@ -17,7 +17,9 @@ from django.views.static import serve
 from django.contrib.auth import views as kimlik_gorunum
 
 from icerik import panel as panel_gorunum
+from icerik import reklam as reklam_gorunum
 from icerik import views as icerik_gorunum
+from sosyal import panel as sosyal_gorunum
 
 urlpatterns = [
     # Arsiv gorselleri repo disinda (D: surucusu). Gelistirmede Django
@@ -38,6 +40,13 @@ urlpatterns = [
     # Okunma raporu salt okuma; ayri bir yetkilik acilmadi.
     path("panel/okunma", panel_gorunum.okunma_raporu, name="panel-okunma"),
     path("panel/haber/ekle", panel_gorunum.haber_ekle, name="panel-haber-ekle"),
+    # Yapay zeka koprusu: adresten taslak acar, yayinlamaz.
+    path("panel/yz-taslak", panel_gorunum.yz_taslak_ekle,
+         name="panel-yz-taslak-ekle"),
+    path("panel/yz-taslak/<int:kimlik>", panel_gorunum.yz_taslak_detay,
+         name="panel-yz-taslak"),
+    path("panel/yz-taslak/<int:kimlik>/gorsel", panel_gorunum.yz_gorsel_indir,
+         name="panel-yz-gorsel"),
     # Ilgili haber secicisinin JSON ucu. Salt okuma; haber formunun
     # 356 bin secenekli <select>ini bu ucla degistirdik.
     path("panel/haber-ara", panel_gorunum.haber_ara,
@@ -58,6 +67,15 @@ urlpatterns = [
     path("panel/toplu/<str:aile>", panel_gorunum.medya_toplu_islem,
          name="panel-medya-toplu"),
     path("panel/mansetler", panel_gorunum.mansetler, name="panel-mansetler"),
+    # Konu takibi (5 Eylul 2026): liste, dosya, onay fiili, haber cikarma.
+    # Yetkilik `konu_yonetimi` (Editor, Yayin Yonetmeni).
+    path("panel/konular", panel_gorunum.konu_listesi, name="panel-konular"),
+    path("panel/konu/<int:kimlik>", panel_gorunum.konu_duzenle,
+         name="panel-konu-duzenle"),
+    path("panel/konu/<int:kimlik>/karar", panel_gorunum.konu_karar,
+         name="panel-konu-karar"),
+    path("panel/konu/<int:kimlik>/cikar/<int:haber_id>", panel_gorunum.konu_haber_cikar,
+         name="panel-konu-haber-cikar"),
     path("panel/kose", panel_gorunum.kose_listesi, name="panel-kose"),
     path("panel/kose/<int:kimlik>", panel_gorunum.kose_duzenle,
          name="panel-kose-duzenle"),
@@ -113,6 +131,24 @@ urlpatterns = [
          name="panel-bildirimler"),
     path("panel/bildirim/<int:kimlik>", panel_gorunum.bildirim_duzenle,
          name="panel-bildirim-duzenle"),
+
+    # --- Sosyal medya paylasimi (5 Eylul 2026). Sabit yollar
+    # ("hesaplar", "ekle", "gonder") <int:kimlik> kalibindan ONCE gelmek
+    # zorunda degil (int kalibi harf yakalamaz) ama okunurluk icin once
+    # yaziliyor. Yetkilik acilmadi; ekranlar mevcut ikisine bagli.
+    path("panel/sosyal", sosyal_gorunum.gonderi_listesi, name="panel-sosyal"),
+    path("panel/sosyal/gonder", sosyal_gorunum.bekleyenleri_gonder,
+         name="panel-sosyal-gonder"),
+    path("panel/sosyal/ekle", sosyal_gorunum.gonderi_ekle,
+         name="panel-sosyal-ekle"),
+    path("panel/sosyal/hesaplar", sosyal_gorunum.hesap_listesi,
+         name="panel-sosyal-hesaplar"),
+    path("panel/sosyal/hesap/ekle", sosyal_gorunum.hesap_ekle,
+         name="panel-sosyal-hesap-ekle"),
+    path("panel/sosyal/hesap/<int:kimlik>", sosyal_gorunum.hesap_duzenle,
+         name="panel-sosyal-hesap"),
+    path("panel/sosyal/<int:kimlik>", sosyal_gorunum.gonderi_detay,
+         name="panel-sosyal-gonderi"),
     # Log SALT OKUNUR: duzenlenebilen log, log degildir.
     path("panel/log", panel_gorunum.log_listesi, name="panel-log"),
     path("panel/log/<int:kimlik>", panel_gorunum.log_detay,
@@ -127,9 +163,24 @@ urlpatterns = [
     path("panel/sifre", panel_gorunum.SifreDegistir.as_view(),
          name="panel-sifre"),
 
+    # Yerel test reklam hizmeti (7 Eylul 2026). Iki dilimli oldugu icin
+    # taksonomi kaliplarindan ONCE gelmeli. Kapisi sunum oturumu; siradan
+    # ziyaretci 404 alir (bkz. icerik/reklam.py).
+    re_path(r"^reklam/test/(?P<en>\d{2,4})x(?P<boy>\d{2,4})\.svg$",
+            reklam_gorunum.test_yaratici, name="reklam-test"),
+
+    # ads.txt — AdSense kimligi verildiyse yayimlanir, yoksa 404.
+    path("ads.txt", reklam_gorunum.ads_txt, name="ads-txt"),
+
     path("", icerik_gorunum.anasayfa, name="anasayfa"),
     path("ara", icerik_gorunum.arama, name="arama"),
     path("ilceler", icerik_gorunum.ilceler, name="ilceler"),
+
+    # "Daha fazla göster" (6 Eylul 2026). `/daha-fazla` sayfa degil PARCA
+    # dondurur; `/son-haberler` o dugmenin JavaScript'siz karsiligidir.
+    # Ikisi de tek dilimli, kategori kalibindan ONCE gelmek zorunda.
+    path("daha-fazla", icerik_gorunum.daha_fazla, name="daha-fazla"),
+    path("son-haberler", icerik_gorunum.son_haberler, name="son-haberler"),
     re_path(r"^ilce/(?P<slug>[-\w]+)/?$", icerik_gorunum.ilce, name="ilce"),
     path("resmi-ilan", icerik_gorunum.resmi_ilan, name="resmi-ilan"),
 
@@ -143,6 +194,11 @@ urlpatterns = [
     # Kunyedeki beyan sayfasi. Tek dilimli; kategori kalibindan ONCE.
     path("veri-kaynaklari", icerik_gorunum.veri_kaynaklari,
          name="veri-kaynaklari"),
+    # Konu dosyalari (5 Eylul 2026). "konular" tek dilimli, kategori
+    # kalibindan ONCE; "konu/<slug>" iki dilimli, haber kalibindan ONCE
+    # (haber kalibi sondaki sayiyi kimlik sanir).
+    path("konular", icerik_gorunum.konular, name="konular"),
+    re_path(r"^konu/(?P<slug>[-\w]+)/?$", icerik_gorunum.konu, name="konu"),
 
     # Besleme: /rss tek dilimli oldugu icin en sondaki kategori kalibi onu
     # yakalardi; kategori kalibindan ONCE gelmek zorunda.

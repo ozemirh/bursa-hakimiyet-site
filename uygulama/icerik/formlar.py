@@ -35,13 +35,20 @@ from django.utils import timezone
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 from taksonomi.models import Etiket, Ilce, Kategori, Kaynak, Yonlendirme
 
-from .arama_metni import anahtar
-from .models import (Bildirim, Gazete, Haber, ReklamKampanyasi,
-                     ReklamYuvasi, ResmiIlan, SonDakika, Yorum)
+from .arama_metni import anahtar, slugla
+from .models import (YZ_BASLIK_ISARETI, Bildirim, Gazete, Haber,
+                     ReklamKampanyasi, ReklamYuvasi, ResmiIlan, SonDakika,
+                     Yorum)
 from .yetkiler import ROLLER
 
 BASLIK_SINIR = 60      # §4 alan 2 — ekranda sayaç görünür
-SPOT_SINIR = 160       # §4 alan 4
+# §4 alan 4'te ölçülen sınır 160'tı; mevcut panelin `summery` alanındaki
+# `maxlength` bu. Ama o sınır YALNIZ FORMDA duruyormuş: 5 Eylül 2026'da
+# 1.038.455 spot ölçüldü ve **%57'si 160'ın üzerinde** — ortanca 175, p75
+# 244, p90 330. Yani gazetenin kendi yayını sınırı yarısından çoğunda
+# çiğniyor; sınır gerçeği değil eski formun bir niteliğini anlatıyordu.
+# 320'ye çıkarıldı (arşivin ~%89'unu kapsar). Kullanıcı kararı.
+SPOT_SINIR = 320       # §4 alan 4 — ölçümle güncellendi (URUN-PLANI §56)
 EN_AZ_PARAGRAF = 2     # §4 alan 5
 
 
@@ -184,12 +191,12 @@ def etiketleri_kur(adlar) -> list:
 
     Eşleştirme SLUG üzerinden: "Nilüfer Çayı" ile "nilüfer çayı" aynı etiket
     olmalı, iki satır değil. Slug Türkçe-doğru küçültme + ASCII katlamayla
-    üretiliyor (`arama_metni.anahtar`); Django'nun `slugify`'ı Türkçe harfi
+    üretiliyor (`arama_metni.slugla`); Django'nun `slugify`'ı Türkçe harfi
     çevirmez, **atar** — "Şehreküstü" → "ehrekst".
     """
     kayitlar = []
     for ad in adlar:
-        slug = re.sub(r"[^a-z0-9]+", "-", anahtar(ad)).strip("-")[:60]
+        slug = slugla(ad, 60)
         if not slug:
             continue
         etiket, _ = Etiket.objects.get_or_create(slug=slug, defaults={"ad": ad})
@@ -218,6 +225,17 @@ class HaberForm(forms.ModelForm):
                                 etiketleyici=_haber_etiketleri),
         help_text="Aramayla ekleyin. Betik kapalıysa yeni ekleme yapılamaz "
                   "ama bağlı haberler görünür ve kaldırılabilir.")
+
+    # Sosyal medyada paylaşım — kutular. Alan `Meta.fields` DIŞINDA: seçim
+    # habere değil, `sosyal` uygulamasının kuyruğuna yazılıyor ve bağı
+    # `panel._kaydet` kuruyor. Haber tablosuna alan eklenmedi (§24 kuralı).
+    sosyal_hesaplar = forms.ModelMultipleChoiceField(
+        queryset=None, required=False, label="Sosyal medyada paylaş",
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "kutucuk-liste"}),
+        help_text="İşaretli hesaplar için kuyruğa satır açılır. Gönderim "
+                  "haber YAYINA çıkınca olur; taslakta satır bekler. "
+                  "YouTube burada yok: orada haber değil, ayrıca çekilmiş "
+                  "özel video paylaşılıyor.")
 
     # §4 alan 27 — mevcut panelde `galleriesSelect2` vardı, bizde eksikti.
     bagli_galeriler = forms.ModelMultipleChoiceField(
@@ -318,6 +336,41 @@ class HaberForm(forms.ModelForm):
             for ad in ("manset_ana", "manset_tepe", "manset_kare"):
                 self.fields.pop(ad)
 
+        self._sosyali_kur(kullanici)
+
+    def _sosyali_kur(self, kullanici):
+        """Sosyal paylaşım kutularını hazırlar.
+
+        **Yayınlayamayan görmez:** paylaşmak yayımlamanın devamıdır, ayrı
+        bir yetkilik açılmadı (PANEL-NOTLARI.md §25).
+
+        **Mevcut haberde kutu kendiliğinden işaretlenmez.** Varsayılan
+        işaret yalnız YENİ haberde uygulanıyor; arşivden bir kaydı açıp
+        kaydeden editör, on beş yıllık haberi sosyal medyada paylaşmış
+        olmamalı. Kayıtlı haberde işaret, o haberin kuyruktaki açık
+        satırlarından gelir.
+        """
+        # Dairesel içe aktarma riski: `sosyal` uygulaması `icerik`ten
+        # besleniyor, tersi burada yalnız çağrı anında kuruluyor.
+        from sosyal.kuyruk import acik_gonderiler, secilebilir_hesaplar
+
+        if kullanici is not None and not (
+                kullanici.has_perm("icerik.kendi_haberini_yayinlama")
+                or kullanici.has_perm("icerik.baskasinin_haberini_yayinlama")):
+            self.fields.pop("sosyal_hesaplar")
+            return
+
+        self.fields["sosyal_hesaplar"].queryset = secilebilir_hesaplar()
+        if self.is_bound:
+            return
+        if self.instance.pk:
+            self.initial["sosyal_hesaplar"] = list(
+                acik_gonderiler(self.instance).values_list("hesap_id", flat=True))
+        else:
+            self.initial["sosyal_hesaplar"] = list(
+                secilebilir_hesaplar().filter(varsayilan=True)
+                .values_list("id", flat=True))
+
     # -- alan denetimleri --------------------------------------------------
 
     def clean_baslik(self):
@@ -369,6 +422,12 @@ class HaberForm(forms.ModelForm):
             return veri
 
         eksik = []
+        # Yapay zekâ aracı, motor başlık yazmadığında başlığı işaretleyerek
+        # bırakır. İşaret yayına giderken kapıyı kapatır: kaynağın başlığı
+        # kazara yayınlanmasın (`yz_kopru.baslik_al`).
+        if (veri.get("baslik") or "").startswith(YZ_BASLIK_ISARETI):
+            eksik.append("başlık (taslakta '%s' işareti duruyor)"
+                         % YZ_BASLIK_ISARETI)
         if not (veri.get("spot") or "").strip():
             eksik.append("spot")
         govde = (veri.get("govde") or "").strip()
@@ -1009,3 +1068,22 @@ class SonDakikaForm(forms.ModelForm):
                 "Ya serbest adres ya da bağlı haber verilmeli; bantta "
                 "tıklanamayan kayıt olmamalı.")
         return veri
+
+
+class KonuForm(forms.ModelForm):
+    """Konu dosyası künyesi (5 Eylül 2026). Motorun alanları (güven,
+    gerekçe, anahtarlar) formda YOK: ölçümdür, düzenlenmez."""
+
+    class Meta:
+        from .models import Konu
+        model = Konu
+        fields = ["ad", "ozet", "hassas_uyari", "acik"]
+        labels = {"ad": "Dosya adı", "ozet": "Özet",
+                  "hassas_uyari": "Hassas dosya uyarısı", "acik": "Dosya sürüyor"}
+        help_texts = {
+            "ozet": "Bir paragraf; konu sayfasının üstünde ve dizinde görünür.",
+            "hassas_uyari": "Yargı süreci gibi dosyalarda editörün göreceği not; "
+                            "okura basılmaz.",
+        }
+        widgets = {"ozet": forms.Textarea(attrs={"rows": 4}),
+                   "hassas_uyari": forms.Textarea(attrs={"rows": 2})}

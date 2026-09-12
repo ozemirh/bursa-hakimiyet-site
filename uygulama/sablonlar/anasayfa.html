@@ -1,37 +1,21 @@
 {% extends "taban.html" %}
 {% load site_etiket static %}
-{% comment %}`l10n`: sıcaklık çubuğunun yüzdesi satır içi CSS'e giriyor ve
-Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersiz CSS,
-çubuk hiç çizilmiyordu (30 Ağustos ölçümü).{% endcomment %}
+{% comment %}`l10n`: rüzgâr okunun açısı satır içi CSS'e giriyor ve Türkçe
+yerelleştirme sayıyı virgülle basabiliyor — virgüllü sayı geçersiz CSS, ok
+hiç dönmez. Aynı tuzak 30 Ağustos'ta sıcaklık çubuğunun yüzdesinde
+yaşanmıştı.{% endcomment %}
 {% load l10n %}
 
 {% block icerik %}
 
       <p class="suz-bilgi" role="status" aria-live="polite"></p>
 
+      {% comment %}Bandın kendisi `parca/doviz.html`e taşındı (6 Eylül 2026,
+      §59): EKONOMİ bölümünün servis şeridi aynı bandı basıyor ve iki kopya
+      tutmak ikisinin ayrışması demekti.{% endcomment %}
       <section class="doviz" id="doviz" aria-label="Döviz, altın ve borsa">
         <h2 class="gorsel-gizli">Piyasa</h2>
-        {% comment %}Beş kalem sabittir (URUN-PLANI.md §1, bileşen 9). Kaynağı
-        bulunamayan kalem (gram altın · BIST 100) çizgiyle gösterilir —
-        uydurma değer basmaktansa "veri yok" demek doğru.{% endcomment %}
-        {% if doviz %}
-        <div class="doviz-ic">
-          <span class="etiket">PİYASA</span>
-          <dl>
-            {% for k in doviz.kalemler %}
-              <div>
-                <dt>{{ k.ad }}</dt>
-                <dd>
-                  {% if k.deger %}{{ k.deger|floatformat:2 }}{% if k.birim == "TL" %} &#8378;{% endif %}
-                    {% if k.degisim_yuzde %}<span class="fark {% if k.yon == 'yukari' %}artis{% else %}azalis{% endif %}" aria-label="yüzde {{ k.degisim_yuzde|mutlak|floatformat:2 }} {% if k.yon == 'yukari' %}yükseldi{% else %}geriledi{% endif %}">{% if k.yon == 'yukari' %}&#9650;{% else %}&#9660;{% endif %} %{{ k.degisim_yuzde|mutlak|floatformat:2 }}</span>{% endif %}
-                  {% else %}<span class="veri-yok" title="Kaynak bulunamadı, panelden elle girilir">&ndash;</span>{% endif %}
-                </dd>
-              </div>
-            {% endfor %}
-          </dl>
-          <span class="tarih">{{ doviz.guncelleme|slice:"11:16" }}{% if doviz.bayat %} · güncel değil{% endif %}</span>
-        </div>
-        {% endif %}
+        {% include "parca/doviz.html" %}
       </section>
 
       {% comment %}`.ust-blok` üç bileşeni tek kapta toplar: dörtlü ·
@@ -164,6 +148,20 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
 {% for h in kutular %}                {% include "parca/kart.html" with h=h goster_foto=1 zaman_gizle=1 genis=forloop.first %}
 {% endfor %}
               </div>
+
+              {% comment %}DAHA FAZLA GÖSTER (6 Eylül 2026, §48, kullanıcı
+              isteği). Izgara tek havuzun sabit diliminden geliyordu ve
+              11 kartta bitiyordu; okur "devamı" için başka bir sayfaya
+              gitmek zorundaydı.
+
+              Düğmenin çektiği dilim havuzun BİTTİĞİ yerden başlar
+              (`ANASAYFA_ATLA`, icerik/views.py) — yoksa ilk tıklamada
+              manşetteki haberler ızgarada ikinci kez görünürdü.
+
+              JavaScript'siz adres `/son-haberler`: orada liste baştan
+              başlar, çünkü kendi başına açılan bir sayfanın 46. haberden
+              başlaması okura hiçbir şey anlatmaz.{% endcomment %}
+              {% include "parca/daha_fazla.html" with devam=1 sonraki=1 daha_uc="/daha-fazla?kaynak=anasayfa" daha_adres="/son-haberler" daha_hedef=".son-haberler" %}
             </div>
           </div>
         </div>
@@ -293,36 +291,28 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
 
                 {% comment %}Arka planda 31 Ağustos 2026'dan beri ÇİZİM DEĞİL
                 FOTOĞRAF var. Gerekçe, panelin Bursa'ya ait olduğunu ilk bakışta
-                söylemesi — çizim her kentte olabilecek bir siluetti.
+                söylemesi — çizim her kentte olabilecek bir siluetti. Kadraj
+                Uludağ (`uludag.jpg`): kentin havasını belirleyen dağ, karlı
+                zirve, açık gökyüzü. Namaz panelinin camisiyle çakışmıyor.
+                Görsel CC BY-SA 4.0, künyesi fotoğrafın üstünde (`.foto-hak`).
 
-                Fotoğraf aynı gün İKİNCİ kez değişti (kullanıcı isteği: panel
-                "daha dikkat çekici ve iç açıcı" olsun). Eskisi Ulu Cami'ydi
-                (`kent.jpg`): kadrajın büyük kısmı puslu gökyüzü ve sıkışık
-                kent dokusuydu, gri-yeşile çalıyordu ve iki adım ötede duran
-                namaz vakitleri panelinin fotoğrafı da bir camiydi — iki panel
-                yan yana aynı şeyi söylüyordu. Yenisi Uludağ (`uludag.jpg`):
-                kentin havasını belirleyen dağ, karlı zirve ve açık gökyüzü.
-                Hem panelin konusuyla doğrudan ilgili, hem daha açık renkli,
-                hem de namaz panelinin camisiyle çakışmıyor.
+                6 Eylül 2026, kullanıcı isteği ("klasik haber okuyucusu için
+                fazla modern"): fotoğraf artık yazının ARKASINDA değil, panelin
+                ÜSTÜNDE kendi çerçevesinde duruyor. Derece, hava hali ve
+                en düşük/en yüksek satırı beyaz kâğıda basılıyor. DOM aynen
+                kaldı — değişikliğin tamamı `site.css`te, `.hava-simdi`
+                bölümünde; oradaki not neyin neden kalktığını yazıyor.
 
-                Görsel CC BY-SA 4.0; künyesi namaz panelindeki gibi fotoğrafın
-                ÜSTÜNDE duruyor (`.foto-hak`) — sayfa mobilyasında altına künye
-                satırı açılacak yer yok. Bu, `kent.jpg` döneminden kalan
-                "künye yalnız KAYNAKLAR.md'de duruyor, bu yetmez" açığını da
-                kapatıyor.
-
-                Havanın rengi BİLGİ TAŞIMAYA DEVAM EDİYOR: beş palet (güneş,
-                bulut, yağış, kar, gece) artık gökyüzünü değil fotoğrafın
-                üstündeki ton perdesini boyuyor, `.hava-simdi.m-*` içinde.
-                Palet `hava_panel.manzara`dan gelir; gece kararı Diyanet'in
-                doğuş/batış saatinden hesaplanır, kaba bir saat aralığından
-                değil. Fotoğraf yereldir (`gorseller/`), dış adres yoktur;
-                sayfa internetsiz de aynı açılır.
+                Havanın rengi bilgi taşımaya devam ediyor: karartma ve ton
+                perdesi gitti, geriye fotoğrafın kendi filtresi (beş palet,
+                `.hava-simdi.m-*`) ve simgenin rengi kaldı. Palet
+                `hava_panel.manzara`dan gelir; gece kararı Diyanet'in
+                doğuş/batış saatinden hesaplanır. Fotoğraf yereldir
+                (`gorseller/`), dış adres yoktur; sayfa internetsiz de açılır.
 
                 Boş `alt` + `aria-hidden`: fotoğraf bezemedir, taşıdığı bilgi
-                hemen yanında yazıyla duruyor; ekran okuyucuya iki kez
-                söylenmemeli. `width`/`height` yer ayırmak için, kutu zaten
-                sabit yükseklikte ama sıçrama olmasın diye.{% endcomment %}
+                hemen altında yazıyla duruyor; ekran okuyucuya iki kez
+                söylenmemeli. `width`/`height` yer ayırmak için.{% endcomment %}
                 <div class="hava-simdi m-{{ hava_panel.manzara }}">
                   <img class="hava-foto" src="{% static 'gorseller/genis/uludag.jpg' %}"
                        alt="" aria-hidden="true" width="1280" height="720"
@@ -343,7 +333,13 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
 
                 {% if hava_panel.saatlik %}
                 <div class="hava-saatlik">
-                  <h4>SAATLİK TAHMİN</h4>
+                  {% comment %}Başlığın yanındaki anahtar 6 Eylül 2026'da
+                  eklendi (kullanıcı: "grafiklerin neyi temsil ettiği tam
+                  anlaşılmıyor"). Hücrede dört değer alt alta duruyor ve
+                  hiçbirinin etiketi yok; rüzgâr hızını sıcaklık sanmamak
+                  için okurun anahtara bakması yetiyor. Gazetenin tablo
+                  başlığı mantığı.{% endcomment %}
+                  <h4>SAATLİK TAHMİN<span class="anahtar">saat &middot; hava &middot; sıcaklık &middot; rüzgâr &middot; nem</span></h4>
                   <ol>
                     {% for s in hava_panel.saatlik %}
                     <li class="a-{{ s.aile }}">
@@ -352,6 +348,7 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
                       <span class="gorsel-gizli">{{ s.hadise.ad }}</span>
                       <b>{{ s.sicaklik|floatformat:0 }}°</b>
                       {% if s.ruzgar_hiz is not None %}<span class="ruzgar">{{ s.ruzgar_hiz|floatformat:0 }}<i> km/sa</i></span>{% endif %}
+                      {% if s.nem is not None %}<span class="nem">nem <i>%{{ s.nem|floatformat:0 }}</i></span>{% endif %}
                     </li>
                     {% endfor %}
                   </ol>
@@ -361,18 +358,37 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
                 {% if hava_panel.gunler %}
                 <div class="hava-gunler">
                   <h4>BEŞ GÜNLÜK TAHMİN</h4>
-                  {% comment %}Çubuk beş günün ORTAK ölçeğinde çizilir; her
-                  satır kendi ölçeğinde olsaydı 17-31° ile 17-33° aynı boyda
-                  görünür, çubuk hiçbir şey anlatmazdı. Yüzdeler
-                  `hava_paneli`de hesaplanıyor.{% endcomment %}
+                  {% comment %}Burada 6 Eylül 2026'ya kadar ortak ölçekli bir
+                  SICAKLIK ÇUBUĞU vardı; kullanıcı grafiği beğenmedi ve
+                  kaldırıldı. En düşük/en yüksek bilgisi duruyor, yalnız
+                  yazıyla — sütunları başlık satırı adlandırıyor.
+
+                  6 Eylül 2026: sütunların adı yoktu, okur hangi sayının ne
+                  olduğunu tahmin ediyordu. Başlık satırı ızgarayla birebir
+                  hizalı — gazete tablosunun kendi mobilyası.{% endcomment %}
+                  <p class="sutun-bas">
+                    <span class="s-gun">GÜN</span>
+                    <span class="s-hal">HAVA DURUMU</span>
+                    <span class="s-ruzgar">RÜZGÂR <i>km/sa</i></span>
+                    <span class="s-nem">NEM <i>%</i></span>
+                    <span class="s-dusuk">EN DÜŞÜK</span>
+                    <span class="s-yuksek">EN YÜKSEK</span>
+                  </p>
                   <ol>
                     {% for g in hava_panel.gunler %}
                     <li{% if g.bugun %} class="bugun"{% endif %}>
                       <span class="gun"><time datetime="{{ g.tarih|date:'Y-m-d' }}">{% if g.bugun %}Bugün{% else %}{{ g.tarih|kisa_gun }}{% endif %}</time><i>{{ g.tarih|date:"j M" }}</i></span>
                       <svg class="hava-ikon" aria-hidden="true"><use href="#{{ g.simge }}"></use></svg>
                       <span class="hal a-{{ g.aile }}">{{ g.hadise.ad }}</span>
+                      {% comment %}Rüzgâr ve nem 6 Eylül 2026'da eklendi
+                      (kullanıcı: "panel çok boş"). İkisi de MGM paketinin
+                      gün kaydında ZATEN duruyordu, sayfaya çıkmıyordu.
+                      Ok rüzgârın gittiği yönü gösterir, açı `_ok_acisi`den
+                      gelir; yön adı ekran okuyucuya tam yazıyla verilir,
+                      gözle görülen kısaltmadır.{% endcomment %}
+                      <span class="ruzgar">{% if g.ruzgar_ok is not None %}<svg class="hava-ikon ok" aria-hidden="true" style="transform:rotate({{ g.ruzgar_ok|unlocalize }}deg)"><use href="#hv-ok"></use></svg>{% endif %}{% if g.ruzgar_yon %}<span class="gorsel-gizli">{{ g.ruzgar_yon }} yönünden, </span><i>{{ g.ruzgar_kisa }}</i>{% endif %}{% if g.ruzgar_hiz is not None %}<b>{{ g.ruzgar_hiz|floatformat:0 }}</b>{% endif %}</span>
+                      <span class="nem">{% if g.nem_dusuk is not None %}{{ g.nem_dusuk|floatformat:0 }}&ndash;{{ g.nem_yuksek|floatformat:0 }}{% endif %}</span>
                       <span class="dusuk">{{ g.en_dusuk|floatformat:0 }}°</span>
-                      <span class="cubuk">{% if g.cubuk %}<span class="dolgu" style="left:{{ g.cubuk.sol|unlocalize }}%;width:{{ g.cubuk.genislik|unlocalize }}%"></span>{% endif %}</span>
                       <span class="yuksek">{{ g.en_yuksek|floatformat:0 }}°</span>
                     </li>
                     {% endfor %}
@@ -556,8 +572,9 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
 
               {% comment %}Açık sekme Bursaspor'un ligi (veri `takip.lig`
               alanından); 2. ve 3. Lig grup usulü oynandığı için Bursaspor'un
-              — yoksa en çok Bursa kulübünün — bulunduğu grup öne alınır ve
-              okur grubu değiştirebilir. Tablo kırpılmaz.{% endcomment %}
+              bulunduğu grup öne alınır ve okur grubu değiştirebilir. Kalan
+              gruplar kaynaktaki sırayla dizilir — 3. Lig 1. Grup'tan başlar
+              (6 Eylül 2026, kullanıcı isteği). Tablo kırpılmaz.{% endcomment %}
               {% for lig in puan_ligler %}
                 <div class="panel" id="puan-{{ lig.anahtar }}" role="tabpanel" aria-labelledby="sek-{{ lig.anahtar }}" data-acik="{{ lig.acik|yesno:"true,false" }}" tabindex="0">
                   {% if lig.coklu_grup %}
@@ -591,30 +608,17 @@ Türkçe yerelleştirme onu "12,5" diye basıyordu — virgüllü sayı geçersi
 
             </div>
 
-            <div>
-              <div class="bursaspor-haber">
-{% for h in bursaspor_haberleri %}                {% include "parca/kart.html" with h=h goster_foto=1 %}
-{% empty %}                <p class="bos">Bu kategoride henüz haber yok.</p>
-{% endfor %}              </div>
-
-              {% comment %}Kartların altındaki başlık listesi bölümün
-              yerleşiminden doğdu: tablo tam kadro olunca sol sütun 958 px'e
-              çıkıyor, altı kart 546 px'te bitiyordu ve 1280-1600 px'te sağ
-              altta 412 px boşluk kalıyordu (ölçüldü). Kart sayısını
-              artırmak yerine liste konuldu — on iki eşit ağırlıklı kart
-              bölümü kart duvarına çevirirdi; kulüp sayfalarının klasik
-              çözümü üstte görselli seçki, altında tarihli başlık dizisidir.
-              Geri dönen okur fotoğrafa değil başlığa bakar.{% endcomment %}
-              {% if bursaspor_liste %}
-              <div class="bursaspor-liste">
-                <h3>SON GELİŞMELER</h3>
-                <ul>
-{% for h in bursaspor_liste %}                  <li><time datetime="{{ h.yayin_zamani|date:"c" }}" title="{{ h.yayin_zamani|date:"j F Y, H:i" }}">{{ h.yayin_zamani|kisa_zaman }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
-{% endfor %}                </ul>
-              </div>
-              {% endif %}
-
-            </div>
+            {% comment %}Kartların altındaki "SON GELİŞMELER" listesi 6 Eylül
+            2026'da kullanıcı kararıyla KALDIRILDI; yerini üçüncü kart sırası
+            aldı (`views.BURSASPOR` 6 -> 9). Liste 29 Ağustos'ta sağ alttaki
+            boşluğu kapatmak için konmuştu ve o gerekçe artık geçersiz: dokuz
+            kart sütunu zaten tabloyu geçiyor. Sarmalayıcı `<div>` de kalktı —
+            ızgaranın sağ gözünde tek çocuk kaldı, `.bursaspor-haber` doğrudan
+            ızgara öğesi.{% endcomment %}
+            <div class="bursaspor-haber">
+{% for h in bursaspor_haberleri %}              {% include "parca/kart.html" with h=h goster_foto=1 %}
+{% empty %}              <p class="bos">Bu kategoride henüz haber yok.</p>
+{% endfor %}            </div>
 
           </div>
         </div>

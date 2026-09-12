@@ -4971,3 +4971,1441 @@ doğrulanamıyor**; o aralık için DevTools protokolü (Emulation) gerekiyor.
   Mobil uygulama, E-gazete. **KVKK ve Gizlilik'in yokluğu ayrı bir
   eksiktir**, tasarım kararı değil.
 - 360–390 px ölçümü (yukarıdaki tuzak).
+
+---
+
+## §50 — konu takibi arşive işlendi (5 Eylül 2026)
+
+Kullanıcı isteği: "daha önce geliştirdiğimiz konu takibi özelliğini mevcut
+haberlere işleyebilir miyiz — haber başlıkları üzerinden bağlantı kuran,
+girilme tarihine göre ilişkilendiren bir motor. Ama sadece gerçekten önü
+arkası takip edilmesi gereken konulara; TÜİK'in açıkladığı enflasyon
+haberleri gibi klasik haberlere gerek yok."
+
+İkinci cümle **bağlayıcı karardır** ve motorun tasarımını belirledi.
+
+### 1. Motor — `icerik/konu_motoru.py`
+
+Veritabanı görmez; `(kimlik, başlık, tarih)` alır, `Konu` listesi verir.
+Model yok, anahtar yok, dış servis yok — `arac/` tarafındaki `kural`
+sağlayıcısıyla aynı ilke. 1.038.456 başlık ~5 dakikada taranıyor.
+
+| Adım | Ne yapar |
+|---|---|
+| Kök çıkarma | Türkçe küçültme, durak kelime, unvan düşürme, basit son ek atma (`arac/kural_motoru.kokle` ile aynı yaklaşım). Yan yana iki büyük harfli kelime ayrıca **ikili kök** ("ece_gürel"). |
+| Varlık tespiti | Cümle ortasında büyük harf payı ≥ %60 olan kök **varlıktır** (kişi, kurum, yer). Ölçüm, 2024 sonrası başlıklar: bozbey 799/799, gürel 27/27, chp 627/627; yakalandı 1/4074, yaralı 13/5779. Ayrım net. |
+| Zincirleme | Tarih sırasında; son 45 gün içinde en az bir **nadir varlık kökü** paylaşan başlıklar puanlanır (nadirlik ağırlığı toplamı ≥ 1,0). Yer adı tek başına bağlamaz — "Şanlıurfa'da yangın" ile "Şanlıurfa'da operasyon" aynı dosya değil. |
+| Çekirdek | Zincir 4 üyeyi geçince yeni üye, üyelerin yarısında geçen köklerden birini paylaşmak zorunda; zincir konu değiştiremez. |
+| Ayıklama | ≥3 haber, ≥3 ayrı gün, ≤3 yıl, ≥3 farklı başlık; çekirdek kök üyelerin ≥%60'ında; **yoğunluk**: 12+ üyeli zincirin yarısı tek bir 30 günlük pencereye düşmeli. |
+| Bölme | Yoğunluk şartını geçemeyen kişi kapsaması zinciri (Bozbey 2026: 180 haber, Ocak–Ağustos) olay kelimesine göre alt zincirlere bölünür → "Bozbey · rüşvet" ayrı dosya çıkar. |
+| Birleştirme | Aynı ikili adı çekirdek edinmiş, zamanca bitişik zincirler birleşir (Ece Gürel 2025'te ikiye bölünmüştü). |
+
+**Neyin konu sayılmadığı** — üç katman:
+
+1. `RUTIN_KALIPLARI`: hava durumu, namaz/iftar vakti, nöbetçi eczane,
+   döviz/altın/akaryakıt fiyatı, TÜİK ve enflasyon açıklaması, faiz kararı,
+   burç, maç kadrosu/sonucu, "(10 Mart 2025 …)" tarihli servis başlıkları,
+   günlük can kaybı sayacı, haftalık "etkisiz hâle getirildi" bilançosu,
+   aylık meclis toplantısı, protokol telefon görüşmeleri, "emsal karar"
+   dizisi, video dizisi numaraları. Rutin başlık zincire hiç girmez.
+2. Yalnız varlık kökü zincir kurar. 2025 denemesinde "yaralı", "kaza",
+   "ele geçirildi" 400 üyelik sahte konular üretmişti; bu kural onları
+   sıfırladı.
+3. Yoğunluk: bir dosyanın patlama anı vardır (Ece Gürel: 20 haberin 19'u
+   Mart 2025). Bir kişinin yıl boyu haberi düz yayılır (Arda Güler 2025:
+   191 haber, her ay benzer) — o kapsama, dosya değil.
+
+Kalibrasyon 2025 ve 2026 dilimlerinde yapıldı: Ece Gürel, Maydonoz Döner,
+Sumud Filosu, Ferdi Zeyrek, Gülistan Doku, Bozbey · rüşvet dosyaları
+çıkıyor; TÜİK, hava durumu, Bursaspor maç haberleri çıkmıyor.
+
+### 2. Veri modeli — `Konu`, `KonuHaber` (göç 0014)
+
+Ayrı tablolar; `Haber`e sütun eklenmedi (SQLite 1 milyon satırlık tabloyu
+yeniden kurardı, bkz. `Okunma`). `KonuHaber.tarih` haberin yayın gününün
+kopyası: akış sıralaması arşiv tablosuna katılmadan çıkar.
+
+`Konu.onay` ∈ {bekliyor, onaylı, ret}. **Sitede yalnız onaylı dosya
+görünür** — CLAUDE.md'nin "konu takibi onaysız bağlamaz" kuralı sütuna
+bağlandı. `kaynak` ∈ {motor, editör}; motorun `guven` (0-100) ve
+`gerekce` alanları panelde okunur, düzenlenmez.
+
+### 3. Komut — `konu_tara`
+
+`--bas/--son` aralık, `--kuru` yazmadan rapor, `--onay-esigi N` güveni
+≥N olanı onaylı yazar. Yeniden çalıştırma **onay bekleyen** motor
+önerilerini siler ve baştan yazar; onaylı ve reddedilmişe dokunmaz;
+onaylı bir dosyayla üyelerinin yarısından çoğu örtüşen öneri yazılmaz.
+Yargı dili geçen dosyaya `hassas_uyari` (masumiyet karinesi notu)
+otomatik yazılır — demo dönemindeki `konular.json` "hassas" alanının
+karşılığı.
+
+### 4. Site
+
+- `/konular` — onaylı dosyaların dizini, son gelişmesi en yeni önde.
+- `/konu/<slug>` — dosyanın bütün haberleri **en eskiden en yeniye**,
+  gün ayraçlı; bölüm sayfasının `.akis` iskeletiyle (yeni kalıp yok).
+- Haber sayfasında **KONUNUN AKIŞI**: 4 önceki + 5 sonraki haber, okunan
+  haber işaretli ve bağlantı değil. Haber onaylı bir dosyada değilse blok
+  hiç çizilmez.
+
+Adres sırası: `konular` tek dilimli → kategori kalıbından önce;
+`konu/<slug>` iki dilimli → haber kalıbından önce (haber kalıbı sondaki
+sayıyı kimlik sanır).
+
+### 5. Panel — `/panel/konular`, `/panel/konu/<id>`
+
+Yetkilik `konu_yonetimi` (Editör, Yayın Yönetmeni) — §11 matrisinde zaten
+vardı, ilk kez bir ekrana bağlandı. Liste: dosya · dönem · haber · güven ·
+kaynak · durum; bekleyenler güvene göre sıralı. Dosya ekranı: künye formu
+(ad · özet · hassas uyarı · sürüyor), haber listesi ve satır başına
+"Çıkar"; sağda karar kutusu (Onayla · Reddet · Beklet). Karar yalnız
+POST. Hassas uyarı sütunun ilk öğesi (PANEL-NOTLARI.md §15).
+
+### 6. Sonuç (tam arşiv, 5 Eylül 2026)
+
+| Ölçü | Değer |
+|---|---|
+| Taranan başlık | 1.038.456 (yayında, yayın zamanı olan) |
+| Rutin diye elenen başlık | ~%2,7 (2025 diliminde 1.947 / 74.777) |
+| Süre | okuma 30 s · zincirleme ~5 dk · yazma ~1,5 dk |
+| Öneri (konu dosyası) | **23.458** |
+| Bağlanan haber | **135.136** (arşivin %13'ü) |
+| Güven dağılımı | 40-49: 95 · 50-59: 2.004 · 60-69: 10.695 · 70-79: 9.419 · 80-89: 1.221 · 90+: 24 |
+| `--onay-esigi 80` ile onaylanan | **1.245** (sitede görünen); 32'si "sürüyor" |
+| Panelde bekleyen | 22.213 |
+
+**Güncel (§50.10 sonrası, çekirdek 2. üyeden):** 23.325 öneri · 133.543
+haber · onaylı 19.966 · bekleyen 3.359 (2022+, güven <65).
+
+İlk tarama 23.904 öneri vermişti; üst sıralardaki tekrarlanan reklam
+başlığı, protokol telefon görüşmeleri ("Erdoğan Trump ile görüştü"),
+"emsal karar" dizisi ve video dizisi numaraları rutin kalıbına alındıktan
+sonra 23.458'e indi. Onay eşiği 80 komutu çalıştıranın kararıdır;
+`Konu.objects.filter(kaynak="motor").update(onay="bekliyor")` geri alır.
+
+Doğrulama sunucusu 8732'de: `/konular` 1.245 dosya listeledi; `/konu/
+ihsan-aktas-2026-01` 29 haberi gün ayraçlı bastı; o dosyadaki bir haberin
+sayfasında KONUNUN AKIŞI 2 önceki + 5 sonraki haberi ve "21 sonraki
+haber" bağını gösterdi. 1200 px'te ölçüldü. 360 px'te konu sayfası
+kategori sayfasıyla **aynı** yatay taşmayı gösteriyor (§49 açık kalan
+"360–390 px ölçümü"); konu sayfasına özgü değil.
+
+### 7. İlgili haberler kutusu — başlığa göre (aynı gün, kullanıcı isteği)
+
+Kullanıcı: "ilgili haberler kısmında gerçekten o haberle ilgili haberleri
+gösterebilir miyiz, bir de oradaki haber sayısını 6'ya çıkaralım, bir
+satır tek haberde kalıyor." Kısa bir araştırma da istedi: yayıncıların
+yaygın yöntemi varlık ağırlıklı TF-IDF benzerliği + yakın tarih +
+çeşitlilik ([INMA](https://www.inma.org/blogs/value-content/post.cfm/news-media-should-understand-framework-of-content-based-recommendations),
+[TF-IDF ile ilgili makale sıralaması](https://raw.org/software/databases/tf-idf-with-mysql/)).
+
+`icerik/ilgili.py` aynı düzenin **indekssiz** hâli (tam metin indeksi F7
+kalemi): başlıktaki varlık kökleri (ikili ad → cümle ortası büyük harf →
+cümle başı; yer adı grubunun sonunda) ±60 günlük dilimde `LIKE` ile
+aranır, adaylar ortak köke göre puanlanır (ikili ad 3, ad 1, yer 0,5),
+beraberlikte tarih yakınlığı. Ad ortak değilse ("plaj" gibi sıradan
+kelime) aday sayılmaz. Altıyı dolduramazsa aynı kategoriden, haberin
+**kendi döneminden** geriye doğru doldurulur — eski kural olan "en yeni
+5" 2023 sayfasına 2026 haberi koyuyordu. Konu akışında zaten görünen
+haberler kutuda tekrarlanmaz. Sayı 5 → **6**: iki sütunlu ızgarada son
+satır tek kalıyordu.
+
+Ölçüm: ±180 gün 2021 diliminde 165.667 satır, terim başına 410 ms, dört
+terimle 4,6 s → ±60 gün ve üç terimle 80–200 ms; sonuç 6 saat
+önbellekli (2 ms). Örnekler: Aziz İhsan Aktaş duruşma haberi → davanın
+öbür günleri; Bursaspor-Kütahyaspor → aynı maçın hakem/başkan haberleri;
+Lucescu–Sayyadmanesh → oyuncunun transfer süreci.
+
+### 8. 2021 sonuna kadar biten dosyalar toplu açıldı (aynı gün, kullanıcı kararı)
+
+Kullanıcı: "2021'e kadar olan haberlere uygula konu takibini." Arşivin
+eski bölümünde tek tek panel onayı beklemek anlamsız; yeni komut
+`konu_onayla --son 2021-12-31` bitişi 2021 sonunda ya da öncesinde olan
+**10.537** bekleyen motor önerisini onayladı (574'ü zaten eşikle
+onaylıydı). Sitede onaylı dosya 1.245 → **11.782**; bekleyen 11.676
+(hepsi 2022 ve sonrası). Komut yalnız motor kaynaklı ve bekleyen dosyaya
+dokunur; `--geri` yalnız komutun/eşiğin açtığını kapatır, editör onayı
+(`onaylayan` dolu) korunur. Bu dönemde güveni düşük dosyalar da açıldı
+("Akil · adamlar", "Harlem Shake" gibi); yanlışı panelden "Reddet".
+
+### 9. 2022 sonrası için eşik 65 (aynı gün, kullanıcı kararı)
+
+Kullanıcı yeni haberlerde blok göremeyince ölçüldü: 2026 haberlerinin
+%18'i bir dosyadaydı ama yalnız %2'si onaylı dosyadaydı (eşik 80).
+Karar: "2022 sonrası için güven oranını 65 yap." `konu_onayla --bas
+2022-01-01 --guven 65` **7.959** dosya açtı. Sitede onaylı dosya 11.782 →
+**19.741** (226'sı sürüyor); bekleyen 3.717 (hepsi 2022+, güven <65).
+Yıl kapsaması: 2026 %13, 2025 %11, 2024 %12, 2023 %12, 2022 %11 —
+anasayfadaki son 40 haberin 4'ünde blok var. Kalan %85 tasarım gereği
+dosyasız: tek seferlik haber zincir kurmaz.
+
+### 10. Çekirdek kuralı 2. üyeden (aynı gün, kullanıcı kararı)
+
+Kullanıcı ilgili haberler kutusunun sıkılığını konu dosyalarında da
+istedi; tartışma sonucu: "en fazla 5 satır gösteriyoruz, çekirdek
+kuralını 2. üyeden başlat." Zincir iki üyeye ulaşınca çekirdeği (ikisinde
+de geçen kökler) oluşur; üçüncü haber onu taşımak zorunda. Eskiden 4.
+üyeydi. 2025 dilimi ölçümü: 1.841 → 2.173 dosya, zincirler daha küçük ve
+tek kimlikli; Ece Gürel, Maydonoz Döner, Ferdi Zeyrek yerinde.
+
+Tam arşiv `konu_tara --sifirla` ile yeniden yazıldı (yeni seçenek:
+editör eli değmemiş motor dosyalarını siler, panelden onaylanan ve
+reddedilen kalır), ardından aynı politika: `konu_onayla --son 2021-12-31`
+ve `konu_onayla --bas 2022-01-01 --guven 65`. Sayılar §50.6 tablosunun
+altındaki güncel satırda.
+
+### Doğrulama
+
+`icerik/tests_konu.py` — 18 test (biri toplu onay/geri alma) (ikisi ilgili haberler: başlığa göre
+eşleşme ve akışla tekrar etmeme): rutin kalıpları, kesme/unvan düşürme,
+ikili ad, sentetik derlemde yalnız gerçek dosyanın konu olması (TÜİK
+aylık ve tek günlük olay elenir), komutun yazması/yeniden yazması/onay
+eşiği/kuru çalışma, onaysız dosyanın sitede 404 olması, onaylı dosyanın
+sayfası ve akış penceresi, panel yetkisi (5 rol), kararın yalnız POST'la
+verilmesi, haber çıkarma ve künye kaydı.
+
+### Açık kalan
+
+- Motor başlığa bakıyor; gövde ve etiket kullanılmıyor (etiket verisi
+  arşivde yok: 1.038.474 haberin 1'inde etiket var).
+- FETÖ/Narkoçelik gibi **numaralı seri operasyonlar** ve "Anayasa
+  Mahkemesi" gibi kurum kapsamaları hâlâ yüksek güvenle çıkabiliyor;
+  ayrım editörde. Yeni bir periyodik tür görülürse `RUTIN_KALIPLARI`ye
+  eklenir.
+- Yeni girilen haberin canlı olarak bir dosyaya önerilmesi (panelde
+  aday kutusu) yapılmadı; şimdilik `konu_tara` yeniden çalıştırılır.
+- Konu sayfasının 360 px ölçümü.
+
+---
+
+## §50 — sosyal medya paylaşımı panele bağlandı (5 Eylül 2026)
+
+Panelden yayına alınan haber, işaretlenen sosyal hesaplarda da paylaşılıyor.
+Kararlar ve kurulum `PANEL-NOTLARI.md` §25'te; buradaki, işin dosya
+dökümü.
+
+**Yeni uygulama:** `uygulama/sosyal/` — `models.py` (iki tablo),
+`metin.py` (gönderi metni), `kuyruk.py` (satır açma/gönderme),
+`saglayicilar/` (`x` · `meta` · `youtube` + `taban`), `panel.py` (dört
+ekran), `formlar.py`, `tests.py` (32 test),
+`management/commands/sosyal_gonder.py`.
+
+**Dokunulan yerler — beş dosya, hepsi ekleme:**
+
+| Dosya | Ne |
+|---|---|
+| `cekirdek/settings.py` | `INSTALLED_APPS` + `"sosyal"` |
+| `cekirdek/urls.py` | yedi panel adresi (`/panel/sosyal…`) |
+| `icerik/formlar.py` | `HaberForm.sosyal_hesaplar` kutuları |
+| `icerik/panel.py` | `_kaydet` sonrası kuyruk eşitleme + `sosyal_paylasir` |
+| `sablonlar/panel/` | `taban.html` menü, `haber_form.html` bölüm, `liste.html` şerit boşluğu, iki yeni şablon |
+| `statik/stil/panel.css` | `.kutucuk-liste`, `.yan-kart code` kırılması |
+| `icerik/tests_panel_olcum.py` | beş ekran ölçüme eklendi, "dış kaynak" kuralı daraltıldı |
+
+`icerik_haber` tablosuna **alan eklenmedi**; §24'ün kuralı korundu.
+Göç ya da veri dönüşümü yok, iki tablo boş doğdu.
+
+**Ölçüm:** 773 test geçiyor; bu turun katkısı 32 test. Yeni ekranlar gerçek veritabanında
+200 dönüyor; boş kuyrukta ısınmış istek 11 ms. İlk isteğin 3,8 saniyesi
+menü bağlamının kategori sayımından geliyor ve bu ekranla ilgili değil,
+her panel sayfasında var.
+
+Başsız Chrome turu: 44 ekran × 7 genişlik = **308 ölçüm, bulgu 0** (ilk
+turda üç kusur çıktı, üçü de düzeltildi — ayrıntı PANEL-NOTLARI.md §25).
+
+**Sıradaki iki iş:** zamanlanmış görevin kurulması (`sosyal_gonder` beş
+dakikada bir) ve gerçek hesap anahtarlarının girilmesi. İkisi de repo
+dışında kalıyor.
+
+---
+
+## §50 — yapay zekâ aracı panele bağlandı: adresten taslak (5 Eylül 2026)
+
+Araç (`arac/`) demo döneminden beri duruyor ve çalışıyor, ama ürünle bağı
+yoktu: `arac/yayin.py` hâlâ `tasarim-*.html` dosyalarına yazıyor, panel ise
+aracı hiç tanımıyordu. Kullanıcının isteği tekti — **mevcut sitede haber
+yayınlayabilmek**. Bu turda araç panele bağlandı.
+
+### Plandaki yeri
+
+Fazlarda (F1-F8) karşılığı yok: bu bir **ek yetenek**, faz işi değil. Sapma
+sessiz kalmasın diye buraya yazıldı. Faz durumlarına dokunulmadı.
+
+### Akış
+
+    /panel/yz-taslak → adres + yöntem → köprü → TASLAK Haber (Pasif)
+                                                     ↓
+    /panel/yz-taslak/<id> → kaynak + ham malzeme + gerekçeler
+                                                     ↓
+    /panel/haber/<id> → editör yazar → mevcut form yayınlar
+
+Yayına alma yolu **değişmedi**: aynı form, aynı yetki (`kendi_haberini_yayinlama`
+/ `baskasinin_haberini_yayinlama`), aynı eşik (spot + en az iki paragraf +
+etiket). Köprüden yayına giden hiçbir yol yok.
+
+### Dört karar
+
+1. **Taslak açar, yayınlamaz.** Kayıt `Pasif · Taslak` doğar, `yayin_zamani`
+   boştur, `masada_mi()` true döner — yani Bugün ekranının kuyruğuna düşer.
+2. **Başlık işaretlenir.** Kural motoru başlık yazmaz; köprü başlığı
+   `[yazılacak] …` diye bırakır ve `HaberForm.clean` bu işareti taşıyan
+   haberi **yayına almaz**. Kaynağın başlığının kazara yayınlanması böyle
+   kapandı. İşaretin değeri `models.YZ_BASLIK_ISARETI` — iki taraf da onu
+   okuyor.
+3. **Slug boş doğar.** İşaretli başlıktan slug üretilseydi adres kalıcı
+   olarak bozulurdu; `panel._kaydet` slug'ı editörün yazdığı gerçek
+   başlıktan kuruyor.
+4. **Görsel indirilmez.** Demoda kaynağın fotoğrafı indiriliyordu; burada
+   yalnız `gorsel_url` saklanıyor, `gorsel_var=False`. İndirme taslak
+   ekranında ayrı bir düğme — hak durumu haber haber değerlendirilecek.
+
+### Eşleme kararları
+
+- **Kategori.** Aracın 14 sözlük kategorisi gazetenin 13 kategorisine
+  `yz_kopru.KATEGORI_ESLEME` ile iniyor. İki yerel kural üstüne biniyor:
+  Bursa ilgisi ölçülen "Gündem" haberi **BURSA**'ya, metninde Bursaspor
+  geçen "Spor" haberi **BURSASPOR**'a gidiyor. Gerekçe ekranda yazılı.
+- **İlçe.** Aracın 17 ilçe ipucu `taksonomi_ilce` ile birebir örtüşüyor;
+  eşleme gerekmedi.
+- **Kaynak.** `ayiklayici.asil_kaynak_bul` önce geliyor (CLAUDE.md: sayfa
+  kendi kaynağını belirtmişse kaynak odur), sonra `goc_kaynak.kaynak_kabul`
+  kapısı: "Haber Merkezi" gibi künye değerleri ve kendi yayınımız kaynak
+  sayılmıyor, taksonomi tablosuna çöp kayıt açılmıyor. Kabul edilen kaynakta
+  `kaynak_turu` ajans/dış yayın olarak ayrılıyor, meta yazar modelin kendi
+  türetiminden geliyor (dış yayın → **Alıntı/İktibas**).
+
+### Dosyalar — ekleme, göç yok
+
+| Dosya | Ne |
+|---|---|
+| `icerik/yz_kopru.py` | **yeni** — köprünün tamamı (tembel `sys.path`, eşleme, taslak yazma, görsel indirme) |
+| `icerik/panel.py` | üç görünüm: taslak aç · taslak ekranı · görsel indir |
+| `icerik/models.py` | `YZ_BASLIK_ISARETI` sabiti |
+| `icerik/formlar.py` | yayın kapısına işaretli başlık denetimi |
+| `cekirdek/urls.py` | üç adres (`/panel/yz-taslak…`) |
+| `sablonlar/panel/` | `yz_taslak.html`, `yz_taslak_detay.html`, `taban.html` menü satırı |
+| `management/commands/taslak_al.py` | komut satırı yolu (uzun süren model yolları için) |
+| `icerik/tests_yz.py` | **29 test** |
+
+`icerik_haber` tablosuna alan eklenmedi; §24'ün kuralı korundu. Araç paketi
+`arac/cikti/haber-<id>.json` olarak diskte duruyor — taslak ekranı onu
+okuyor, dosya `yapay-zeka-editor.html` sayfasına da sürüklenebiliyor.
+
+### Ölçüm
+
+- **773 test geçiyor** (bu turdan önce 744; katkı 29).
+- Gerçek adres denendi (`kentbursa.com`, kural motoru): taslak **#1696272**
+  açıldı — kategori BURSA / Nilüfer, 7 etiket, kaynak "Kent Bursa Gazetesi",
+  `kaynak_turu=dis_yayin` → meta yazar **Alıntı/İktibas**, gövde 0 kelime
+  (motor dil üretmez), durum Pasif · Taslak.
+- Başsız Chrome, 7 genişlik: iki yeni ekranda **yatay taşma 0/14**.
+  (Aynı turda `Sosyal Paylaşım` ve `Sosyal gönderi` ekranlarında 360 px'te
+  57 ve 70 px taşma **duruyor** — bu turdan önce de vardı, bu işin parçası
+  değil, ayrıca kapatılmalı.)
+
+### Bilinen sınırlar
+
+- Model yolları (`cli`, `skill`) isteği **bekletir**: 1-3 dakika. Tek
+  kullanıcılı geliştirme ortamında sorun değil; çok kullanıcılı yayında
+  kuyruğa alınmalı. Komut satırı yolu (`manage.py taslak_al`) bu yüzden var.
+- Taslağın hangi adresten geldiği **veritabanında tutulmuyor**; iz, disk
+  üzerindeki paket dosyası ve kaynak kaydı. Şemaya `yz_kaynak_url` eklemek
+  ayrı bir karar.
+- `arac/yayin.py` hâlâ demo şablonlarına yazıyor. Silinmedi; ürünün yayın
+  yolu artık panel.
+
+---
+
+## §51 — yeni haberin adresi arşivin desenine oturdu (5 Eylül 2026)
+
+§50'nin taslak akışı panelden haber girmeyi asıl yol hâline getirince slug
+üretimi ölçüldü. `panel._kaydet` Django'nun `slugify`'ını kullanıyordu ve
+arşivin deseninden **iki noktada** ayrılıyor:
+
+| girdi | `slugify` | arşiv deseni / `slugla` |
+|---|---|---|
+| Nilüfer Çayı için büyük adım | `nilufer-cay-icin-buyuk-adm` | `nilufer-cayi-icin-buyuk-adim` |
+| Bursa'da ışık ve İnegöl | `bursada-sk-ve-inegol` | `bursa-da-isik-ve-inegol` |
+| Kurban Bayramı'nda … açık | `kurban-bayramnda-…-ack` | `kurban-bayrami-nda-…-acik` |
+
+1. **Noktasız `ı` düşüyor.** NFKD ayrıştırması ü/ö/ç/ş/ğ'yi doğru katlıyor
+   ama `ı`nın ayrışmış karşılığı yok; `encode("ascii","ignore")` harfi
+   tamamen atıyor. "adım" → `adm`, "ışık" → `sk`.
+2. **Kesme işareti siliniyor**, arşiv ise tireye çeviriyor: canlı sitedeki
+   `bursa-da-kullanilmayan-ilaclar-icin-yeni-donem-…` bunun kanıtı.
+
+Not: daha önce bu kusur "Türkçe harfleri atıyor" diye anlatılmıştı
+(`tests_panel` belgesinde "Şehreküstü → ehrekst"). **Ölçüm bunu doğrulamadı**
+— "Şehreküstü" iki işlevde de `sehrekustu` çıkıyor. Ayrım yalnız `ı` ve
+kesme işaretinde; belge düzeltildi.
+
+### Karar
+
+Katlama tek kaynağa bağlandı: `arama_metni.slugla()`. Zaten var olan
+`anahtar()` üstüne kuruluyor — aramanın katlamasıyla adresin katlaması iki
+ayrı tablo olsaydı biri düzeltilip diğeri unutulurdu. Modülün "katlama
+gösterimde asla" kuralı bozulmuyor: slug gösterim değil **adres**tir,
+başlık sayfada kendi yazımıyla basılmaya devam ediyor.
+
+Kullanan üç yer: `panel._kaydet` (haber), `formlar.etiketleri_kur` (etiket,
+zaten aynı işi satır içinde yapıyordu) ve `eczane.haber_slugu` + eczane
+etiketleri. Eczanede Ağustos kaydının slug'ı **değişmiyor** (o metinde `ı`
+yok); fark Aralık ayında çıkardı: `aralk` → `aralik`.
+
+### Geriye dönük etki: yok
+
+Ölçüldü: panelden girilmiş (`olusturan` dolu) kayıt sayısı **1** ve o da
+§50'de açılan taslak, slug'ı henüz boş. Arşivden gelen 1.038.474 adresin
+slug'ına dokunulmadı — göç eski slug'ı olduğu gibi taşıyor. Yani bu kusur
+**hiç canlı adres üretmemiş**; düzeltme ileriye dönük.
+
+### Yapay zekâ taslağıyla kesişme
+
+`[yazılacak]` işaretli başlık artık slug **üretmiyor**: yer tutucu
+başlıktan adres kurulsaydı editör başlığı düzeltse bile adres
+`yazilacak-…` kalırdı (slug bir kez yazılır). Slug ilk gerçek başlıkta
+kuruluyor, yayın kapısı da işaretli başlığı zaten geçirmiyor.
+
+**Ölçüm:** 781 test geçiyor (bu turun katkısı 8 — beşi `slugla` birimi,
+üçü taslak → yayın akışı).
+
+### Konu dosyaları da düzeltildi — 5.584 adres
+
+`/konu/<slug>` bir adres ve `konu_tara._slug` de `slugify` kullanıyordu.
+Ölçüm: diskteki **23.458 konunun 5.584'ünün** slug'ı bozuktu —
+`aziz-yldrm-2012-01`, `milli-takm-2012-02`, `gezi-park-2013-05`.
+
+Üretici `slugla`ya geçirildi ve duran kayıtlar tek seferlik bir betikle
+yenilendi. Slug alanı `unique` olduğu için iki aşamalı yazıldı (önce geçici
+değer, sonra kesin değer), hepsi tek işlemde. Sonuç: **23.458 / 23.458
+benzersiz**, geçici kalan 0. Örnek doğrulama — `/konu/pinar-gultekin-2020-06`
+(127 haber), `/konu/gezi-parki-2013-05` (167 haber),
+`/konu/tokyo-olimpiyatlari-2020-12` (175 haber) hepsi **200**.
+
+Eski adresler için yönlendirme yazılmadı: konu dosyaları bugün açıldı,
+hiçbiri dışarıya verilmedi ve site henüz kesime girmedi (F8).
+
+**Ölçüm:** 784 test geçiyor. Panel yerleşim turu (46 ekran × 7 genişlik =
+322 ölçüm) **bulgu 0** — §50'de duran iki sosyal ekranı taşması da bu arada
+kapandı; "dış kaynak 1" bulgusu ise ölçüm aracının kendi yanılmasıymış
+(`<a href>` kaynak sayılıyordu), araç artık bulguda sayı yerine **adresi**
+yazıyor.
+
+---
+
+## §52 — taslak ekranı panelin kabuğuna oturdu (5 Eylül 2026)
+
+§50'nin taslak ekranı "dağınık" bulundu. Başsız Chrome'da bakıldığında
+sebep üç kalemdi:
+
+1. **Kabuk panelin dili değildi.** Ekran kendi `.ikili` ızgarasını
+   kuruyordu; panelin geri kalanı `kayit-duzen` + `kutu-kart` + `yan-kart`
+   kullanıyor. Kart olmayınca metin doğrudan sayfa zemininde akıyor ve
+   panelin hiçbir ekranına benzemiyordu.
+2. **Aynı cümleler üç kez.** Kaynağın spotu, kaynağın metni ve "ham
+   malzeme" büyük ölçüde aynı paragraflardı; sayfanın **2.322 px**inin
+   çoğu tekrardı.
+3. **Uyarı kutuları içeriğin önündeydi.** Araç notları ve doğrulanacaklar
+   listesi tam genişlikte, ilk ekranı tamamen kaplıyordu.
+
+### Yapılan
+
+- Kabuk panelin kayıt düzenine alındı: solda **Kaynak** kartı (künye +
+  başlık + metin), sağda 316 px'lik sütunda dört kart — Taslak künyesi +
+  eylemler · Yayından önce · Görsel · Araç ne yaptı.
+- Kaynağın metni okunur ölçüye oturtuldu (`max-width:70ch`); satır 110
+  karakterden ~70'e indi.
+- **Ham malzeme katlandı** (`details`, kapalı): aynı cümlelerin puanlanmış
+  hâli, ekran onsuz da tam.
+- Kaynağın spotu kaldırıldı — metnin ilk iki cümlesinin tekrarıydı.
+- Görsel önizlemesi 165 px'e kırpıldı (satır içi `style` yerine `.yz-gorsel`).
+
+Sonuç: sayfa **2.322 → 1.729 px**, ham malzeme açılmadan. Yeni sınıflar
+`panel.css` sonunda (`.yz-*`), yeni renk tanımı yok.
+
+### İki kusur ölçümde çıktı
+
+- `{{ kaynak.kaynak_alan|default:kaynak.kaynak_url }}` — `default`
+  filtresine **değişken** argüman verilmişti; paketi olmayan bir taslakta
+  `kaynak` boş sözlük olduğu için sayfa 500 veriyordu. Ölçüm bunu "yanlış
+  sayfa · panel.css yok" diye yakaladı. `{% firstof %}`e çevrildi.
+- Çok satırlı `{# … #}` yazılmıştı; `tests.ProjeKurallariSayiyla` bunu
+  yakaladı (§12'nin kuralı, Django o yorumu **düz metin** basar).
+  `{% comment %}`e çevrildi.
+
+**Ölçüm:** 786 test geçiyor · panel yerleşim turu 46 ekran × 7 genişlik =
+322 ölçüm, **bulgu 0**; iki ekranın da yatay taşması yedi genişlikte 0.
+
+---
+
+## §53 — kaynak başlığındaki `&#039;` (5 Eylül 2026)
+
+Panelde bir taslağın kaynak başlığı şöyle görünüyordu:
+
+    OECD&#039;den Türkiye&#039;nin iki yeni eğitim projesine destek - Olay Gazetesi Bursa
+
+Gerçek sayfada tırnak yerinde, sorun ayıklamadaydı ve **iki ayrı kusur**
+üst üste binmişti.
+
+### 1. JSON-LD'den gelen değer ham kalıyordu
+
+`ayiklayici` başlığı önce JSON-LD `headline` alanından alır. JSON-LD bir
+`<script>` bloğunun içindedir ve `HTMLParser` script gövdesini CDATA sayıp
+`convert_charrefs`i kapatır — yani **meta etiketlerinden gelen değer
+çözülmüşken JSON-LD'den gelen değer ham kalıyor**. Kaçış tek yerde,
+`_duz()` içinde çözüldü; o işlev JSON-LD alanlarının tek geçiş noktası
+(başlık, spot, tarih, yazar, görsel hepsi oradan geçiyor).
+
+Tek geçiş yapılıyor: çift kodlanmış metni ikinci kez çözmek `&amp;lt;`
+gibi bilerek yazılmış metni bozardı.
+
+### 2. Başlık yayının adını taşıyordu
+
+`headline` çoğu sitede sayfa `<title>`ının kopyasıdır: "…destek **- Olay
+Gazetesi Bursa**". `<title>` yolunda bu kuyruk zaten kesiliyordu, JSON-LD
+yolunda kesilmiyordu. `_yayin_kuyrugu_at()` eklendi ve **körlemesine
+kesmiyor**: kuyruk yalnız yayın adıyla ya da alan adıyla eşleşiyorsa
+atılıyor — haber başlığında tire bulunabilir ("Bursa - Ankara hattı").
+
+### Ölçüm
+
+Gerçek sayfada doğrulandı (olay.com.tr):
+
+    önce : OECD&#039;den Türkiye&#039;nin iki yeni eğitim projesine destek - Olay Gazetesi Bursa
+    sonra: OECD'den Türkiye'nin iki yeni eğitim projesine destek
+
+Diskte duran bir paket (`haber-1696274.json`) tek seferlik bir betikle
+onarıldı; taslak ekranı kaynağı o dosyadan okuyor. **789 test geçiyor**,
+bu turun katkısı 3 (ağa çıkmayan, elle kurulmuş HTML üzerinde: kaçış
+çözümü · yayın adı kuyruğu · başlıktaki tirenin korunması).
+
+### Kalan
+
+Arşivde **67 haberin başlığında** aynı türden kaçış duruyor
+(`Ug&#774;ur Aslan'dan…`, sıfır genişlikli `&#8203;` dizileri). Bunlar
+araçtan değil eski sitenin verisinden geliyor; göç sırasında olduğu gibi
+alındı. Ayrı bir temizlik işi.
+
+---
+
+## §54 — arşivin başlık ve spotları onarıldı (5 Eylül 2026)
+
+§53 aracın kaçış kusurunu kapattı; aynı türden artık **arşivde** de duruyordu
+ve o araçtan değil eski sitenin verisinden geliyordu. Dört sınıf ölçüldü
+(1.038.477 haber + medya aileleri, toplam 1.080.351 kayıt):
+
+| sınıf | ne | kayıt |
+|---|---|---|
+| Çözülmemiş kaçış | `Ug&#774;ur Aslan'dan…` | 2.300 |
+| Ayrışmış harf | "Atatu" + U+0308 — ekranda ü, aramada başka dizi | 176 |
+| Görünmez karakter | sıfır genişlikli boşluk, BOM, satır ayırıcı | 639 |
+| Kırılmaz boşluk | görünüşte boşluk, eşleşmede değil | 15.950 |
+
+Onarım kuralı tek yerde: `icerik/temizle.metin_duzelt` — kaçış çözülür,
+NFC ile ayrışmış harfler birleşir, `İ` küçültmesinden kalan U+0307 düşer,
+görünmezler silinir. Sıra önemli: NFC önce gelseydi `&#776;` henüz birleşen
+işarete dönüşmemiş olurdu.
+
+**Kırılmaz boşluk varsayılana alınmadı** (`--bosluk` bayrağı). Ekranda bozuk
+görünmüyor, yalnız arama ve eşleştirmede ayrı bir karakter; 15.950 kayıt
+sırf bunun için değişirdi. Ayrı bir karar, kullanıcıya bırakıldı.
+
+**Gövdeye ve slug'a dokunulmadı.** Gövde HTML'dir ve orada `&amp;` doğrudur;
+slug donmuş adrestir, başlığın düzelmesi adresi değiştirmez.
+
+### Uygulama
+
+    python manage.py metin_temizle --dene    # sayar, yazmaz
+    python manage.py metin_temizle           # yazar
+
+Sonuç: **4.890 kayıt onarıldı**, 12,3 sn. İkinci tur **0 değişiklik**
+buluyor — komut kendini tekrar ettiğinde veriye dokunmuyor.
+
+### Ölçüm sırasında çıkan iki şey
+
+1. **SQLite açık imleçle yazınca satır atlıyor.** İlk sürüm yığın dolunca
+   yazıyordu; ikinci deneme turu 3 kayıt daha buldu. Yazma taramadan sonraya
+   alındı (değişen kayıt sayısı bellekte tutulabilecek kadar az).
+2. **`Video.spot` HTML taşıyor** (31.084 kaydın 56'sında `<p>` var). Risk
+   arandı: hiçbir alanda `<script` yok ve spot şablonda **kaçırılarak**
+   basılıyor (`{{ haber.spot }}`), yani `&amp;` çözülmesi görüntüyü
+   düzeltiyor, işaretleme açığı üretmiyor.
+
+### Kalan
+
+**59 kayıt onarılamaz**: içlerinde U+FFFD (`&#65533;`) var — özgün karakter
+kodlama hatasında kaybolmuş, geri getirilemez. Komut bunları sayıyor ve
+raporluyor; uydurma karakter yazılmıyor.
+
+**Ölçüm:** 796 test geçiyor (bu turun katkısı 7).
+
+---
+
+## §55 — gövdedeki `&#x27;` — kaçış bizden çıkıyordu (5 Eylül 2026)
+
+Model yolunun yazdığı gövde panele şöyle düşüyordu:
+
+    <p>Cormann, İstanbul&#x27;da düzenlenen OECD 6. Beceriler
+    Zirvesi&#x27;nin ardından…</p>
+    <p>&quot;Zirveden çıkan mesaj açıktı…&quot;</p>
+
+Bu §53'ün devamı değil, **ayrı ve bizim ürettiğimiz** bir kusur.
+`yz_kopru.govde_html` bloğu HTML'e çevirirken `html.escape(metin)`
+çağırıyordu. `escape` varsayılan olarak `quote=True` çalışır ve tırnakları
+da kaçırır — ama o varsayılan **nitelik değeri** içindir
+(`title="…"` içinde tırnak işaretlemeyi bozar). Metin gövdesinde tırnak
+olduğu gibi durabilir.
+
+    escape("İstanbul'da \"Zirve\" & sonrası")
+      → İstanbul&#x27;da &quot;Zirve&quot; &amp; sonrası
+    escape(..., quote=False)
+      → İstanbul'da "Zirve" &amp; sonrası
+
+`quote=False`e geçildi. İşaretlemeyi bozan üçlü — `&`, `<`, `>` —
+kaçırılmaya devam ediyor; testte ikisi birlikte kilitlendi.
+
+### Diskteki iki taslak onarıldı
+
+Model yoluyla açılmış iki taslağın gövdesinde 21 ve 24 kaçış vardı; tek
+seferlik bir betikle çözüldü. Yalnız `&#x27;` · `&#39;` · `&quot;`
+karşılığına çevrildi — üçü de işaretleme üretemez. `&amp;`, `&lt;`,
+`&gt;` **ellenmedi**: onlar gövdede doğru duruyor.
+
+Arşive dokunulmadı. Ölçüm: arşiv gövdelerinde `&quot;` 5.025 kayıtta
+geçiyor ve orada **doğru** — eski sitenin işaretlemesi öyle yazmış,
+tarayıcıda tırnak olarak çiziliyor.
+
+**Ölçüm:** 797 test geçiyor (bu turun katkısı 1).
+
+---
+
+## §56 — spot sınırı 160 → 320 (5 Eylül 2026)
+
+Model yolu sürekli 160'ı aşan spot yazıyordu ve her taslak yayın kapısına
+takılıyordu. İki yol vardı: modeli 160'ın altına zorlamak ya da sınırı
+yükseltmek. **Kullanıcı sınırı yükseltmeyi seçti** ve ölçüm onu doğruladı.
+
+### Ölçüm — 1.038.455 spot
+
+    ortanca (p50)   175
+    p75             244
+    p90             330
+    p95             392
+    en uzun       5.794 · ortalama 198
+
+    > 160   592.422  (%57,0)
+    > 240   268.633  (%25,9)
+    > 320   115.708  (%11,1)
+    > 400    47.207  (%4,5)
+
+Yani **gazetenin yayınlanmış içeriğinin %57'si eski sınırın üzerinde.**
+`PANEL-NOTLARI.md` §4'teki 160, mevcut panelin `summery` alanındaki
+`maxlength` niteliğidir — formda duruyor ama içerikte tutmuyor. Sınır
+gerçeği değil, eski formun bir ayarını anlatıyormuş.
+
+### Karar
+
+`SPOT_SINIR = 320`. Arşiv pratiğinin ~%89'unu kapsıyor, spotu hâlâ kısa bir
+paragrafta tutuyor. Alan sözleşmesi (`PANEL-NOTLARI.md` §4 alan 4) ve §21
+ölçüm satırı bu gerekçeyle güncellendi — sessiz sapma bırakılmadı.
+
+Formun ipucu metni de değişti: **"Arama sonucunda ilk ~160 karakter görünür;
+önemli olanı başa yazın."** Sınırı yükseltmek SEO gerçeğini değiştirmiyor,
+sayfa `meta description`'ı zaten 300 karakterde kesiyor.
+
+Sayaç işaretlerini sınayan test artık sayıyı elle taşımıyor, sözleşmeden
+okuyor (`data-sayac="%d" % SPOT_SINIR`) — sınır bir daha değişirse test
+kendiliğinden takip eder.
+
+**Ölçüm:** 797 test geçiyor. #1696274 taslağı (spot 216) artık yayın
+doğrulamasından **geçiyor**.
+
+### Kalan
+
+Araç hâlâ hiçbir sınır bilmiyor; 320'yi de aşan bir spot yazarsa form yine
+uyarır. `haber_taslak.SISTEM` istemine "spot en çok 320 karakter" satırı
+eklemek ayrı bir iş — editoryal kuralları gevşetmez, sayı ekler.
+
+---
+
+## §57 — aracın sınırları panelin sözleşmesine bağlandı (5 Eylül 2026)
+
+§56 spot sınırını 320'ye çıkardı; araç hâlâ kendi sayılarıyla yazıyordu.
+Sebep ortaya çıktı: `haber_taslak.SISTEM` **"spot: 1-2 cumle, 160-260
+karakter"** diyordu — yani model 216 karakterlik spotu *isteneni yaparak*
+yazmıştı. Aynı çelişki başlıkta da vardı ve fark edilmemişti: istem **70**
+karakter diyor, panel **60** kabul ediyordu.
+
+    alan      araç (önce)   panel   araç (sonra)
+    başlık    70            60      60
+    spot      160-260       320     160-300   (üstte pay bırakıldı)
+
+`taslak-denetimi` skill'inin Mod 2'si izlendi: çelişkide **README esastır**,
+`SISTEM` ve `SEMA` ona göre düzeltilir. Sıra: `README` tablosu → `SISTEM`
+alan kuralları → `denetim.py` eşikleri → iki motorun gerekçe metni
+(`kural_motoru.py` + `motor.js`, birebir aynı kalmalı) → editör sayfasının
+sayaçları.
+
+**Ölçümler:** `hiza.py` → *altı yer de hizalı* · `parite.py` → *0 sapma /
+15 paket* · `gomulu_uret.py` çalıştırıldı, `--kontrol` → *güncel*.
+
+### Sayılar artık iki yerde de sabit
+
+`denetim.py` eşikleri satır içi sayı olmaktan çıkıp `BASLIK_SINIR` ·
+`SPOT_ALT` · `SPOT_UST` sabitlerine taşındı. Yeni test (`tests_yz.SinirHizasi`)
+bunları panelin `formlar.BASLIK_SINIR` / `SPOT_SINIR` değerleriyle
+karşılaştırıyor: sınır bir daha değişip araç unutulursa **test düşer**.
+§56'daki gibi sessiz bir çelişki bir daha aylarca durmaz.
+
+### Yeni eşiğin ilk hasadı
+
+`denetim.py "arac/cikti/*.json"` → 15 paketin 3'ünde başlık aşımı çıktı
+(61 · 67 · 61 karakter). Üçü de demo döneminden kalma temsili paketler ve
+üçü de bugünkü panelden **yayına alınamazdı** — eşik doğru yeri gösteriyor.
+
+**Ölçüm:** 799 test geçiyor (bu turun katkısı 2).
+
+---
+
+## §58 — numaralı sayfalama gitti, «daha fazla göster» geldi (6 Eylül 2026)
+
+Kullanıcı isteği: *"hem anasayfada hem de kategori sayfalarında daha fazla
+göster seçeneği ekle haberler için, numaralara bölme sayfaları"*.
+
+### Ne değişti
+
+| Sayfa | Önce | Sonra |
+|---|---|---|
+| Kategori · ilçe | `← Önceki · 1 … 4 [5] 6 … 50 · Sonraki →` | tek düğme: **DAHA FAZLA HABER GÖSTER** |
+| Anasayfa (SON HABERLER) | 11 kartta bitiyordu, devamı yoktu | aynı düğme, tıklama başına 10 kart |
+| Arama · konu dizini · ilan dizini | numaralı | **numaralı kaldı** |
+
+Son satır bilinçli: bu üçü bir *sonuç kümesi* gösteriyor ve orada
+"kaçıncı sayfadayım" bilgisi okurun işine yarıyor. `parca/sayfalama.html`
+silinmedi.
+
+### Düğme `<button>` değil, bağlantı
+
+Numaralar gidince arşivin **tek** tarama yolu bu düğme kaldı. O yüzden
+düğme gerçek bir `<a href="?sayfa=2" rel="next">`; JavaScript onu yalnızca
+zenginleştiriyor. Betik yüklenmezse, uc çökerse ya da okur orta tıklarsa
+bağlantı kendi işini görüyor. Anasayfada JavaScript'siz karşılık yeni
+`/son-haberler` sayfasıdır — bütün bölümlerin ortak akışı, kategori
+şablonuyla.
+
+### Sayfa değil, parça
+
+`/daha-fazla?kaynak=…&sayfa=N` bir **parça** döndürüyor: kalemler ve onları
+saran, `data-devam` taşıyan tek kap. JSON değil — kart ve akış satırı
+şablonları sunucuda duruyor, ikinci bir kopyayı JavaScript'te tutmak ikisinin
+sessizce ayrışması demekti. Uc `robots.txt`te kapalı (parça taranırsa aynı
+haberler künyesiz bir adreste ikinci kez görünür); düğmenin kendi
+`?sayfa=N` adresi açık.
+
+### Sayım yok
+
+Parça `Paginator` kullanmıyor (`_dilim`): **bir fazla kayıt** çekiliyor,
+yirmi bir satır geldiyse devamı vardır. Bedeli tek satır. Önemi şu:
+`SinirliSayfalayici` sayımı 1.000'de kesiyor ve sayıma dayansaydık düğme
+50. tıklamadan sonra "daha var" diyemezdi — ölçüldü, 40 tıklamada 817
+benzersiz kalem sorunsuz geldi.
+
+### Anasayfa kendini tekrarlamıyor
+
+Izgara tek havuzun sabit diliminden geliyor; parça o havuzun **bittiği**
+yerden başlıyor (`ANASAYFA_ATLA` = 45 = manşet 15 + liste 10 + ikincil 5 +
+dörtlü 4 + kutu 11). Ölçüldü: ızgaranın 11 adresiyle parçanın 10 adresi
+kesişmiyor.
+
+### Gün ayracı
+
+Akışta gün ayracı var ve parça bir önceki dilimin son kaydını görmüyor.
+Dilimin **başındaki** ayraç listede zaten duran son ayraçla aynı günü
+söylüyorsa betik onu atıyor. Ölçüldü: 40 tıklama, 373 ayraç, **sıfır**
+ardışık tekrar.
+
+### Tarayicıda ölçüldü (başsız Chrome, CDP)
+
+    kategori  6 tıklama   17 → 137 kalem, 137 benzersiz
+    anasayfa  4 tıklama   11 →  51 kart,   51 benzersiz
+    arşivin sonu          düğme → "Bu listedeki tüm haberler yüklendi.", odak satıra geçti
+    uç 500 verdi         düğme geri geldi, href `?sayfa=2`, durum satırı okuru yönlendirdi
+
+Dar ekran (390 px) ve geniş ekran (1440 px) ekran görüntüsüyle bakıldı;
+düğme iki genişlikte de tam genişlik ve 54 px yüksek (dokunma hedefi).
+
+### Erişilebilirlik
+
+Odak düğmede kalıyor, `aria-busy` yükleme sırasında açılıyor, kaç haberin
+geldiği `role="status"` satırından duyuluyor. Arşivin sonunda düğme
+kalktığı için odak `<body>`ye düşmesin diye yerine geçen satıra alınıyor.
+
+**Ölçüm:** 815 test geçiyor (bu turun katkısı 16, `icerik/tests_daha_fazla.py`).
+
+---
+
+## §59 — bölüm sayfası çeşitlendi: servis şeridi + görüntü kuşağı (6 Eylül 2026)
+
+Kullanıcı isteği: *"kategori sayfalarının içeriğini çeşitlendirmeni de
+istiyorum, başka ne ekleyebiliriz araştır ve düşün"*.
+
+### Önce ölçüldü, sonra seçildi
+
+Guardian · BBC · NYT · Hürriyet bölüm sayfalarında ortak olup bizde
+bulunmayanlar listelendi, sonra **her biri için veri var mı** diye
+veritabanına bakıldı:
+
+    aday                              veri                          sorgu
+    bölümün konu dosyaları            19.966 onaylı, her bölümde 20+  31 ms
+    bölümün videoları / galerileri    31.075 video · 2.872 galeri      1 ms
+    arşivden bugün                    arşiv 2012'ye iniyor            143 ms
+    yıl/ay arşiv dizini               1.038.477 haber                    —
+    bölüme özel servis                canli.py zaten topluyor           ~0
+    bölümün ilçe dağılımı             yalnız 20.366 haberde ilçe       23 ms
+    bölümün yazarları                 YOK — 6.713 yazının hepsi kategorisiz
+    etiket bulutu                     YOK — 23 etiket, 23 bağ
+
+Son iki satır **uydurulmadı**: veri yoksa blok da yok. İkisi de editoryal
+bir iş; kurulursa bu blokların yanına eklenir.
+
+Kullanıcı seçimi: **görüntü kuşağı** ve **servis şeridi**. Konu dosyaları,
+arşivden bugün ve arşiv dizini bu turda kurulmadı.
+
+### Servis şeridi — sayfanın başında
+
+| Bölüm | Şerit |
+|---|---|
+| EKONOMİ | döviz bandı (anasayfadakiyle **aynı parça**) |
+| BURSASPOR · SPOR · BURSA'DA SPOR | Bursaspor'un lig satırı + haftanın maçı |
+| SAĞLIK | bugünün nöbetçi eczaneleri (ilk 3 + toplam) |
+| İlçe sayfaları | **o ilçenin** nöbetçileri |
+
+Şerit anasayfadaki panellerin kopyası değil **özeti**: puan tablosunun
+tamamı taşınsaydı haber akışı 20 satır aşağı inerdi. Hangi bölümün ne
+göreceği `_bolum_servisi`de, şablonda değil — şablon `servis.tur`e bakıp
+çiziyor, test bunu koruyor.
+
+Döviz bandı `parca/doviz.html`e çıkarıldı ve anasayfa da oradan besleniyor;
+iki kopya tutmak ikisinin ayrışması demekti.
+
+İlçe sayfasında **hava durumu yok**: `hava_paneli` Bursa merkezi için tek
+pakettir, ilçeye inmiyor. Merkezin havasını ilçe sayfasında basmak yanlış
+bilgi olurdu.
+
+### Görüntü kuşağı — akışın altında, düğmenin üstünde
+
+Bölümün 4 videosu ve 4 galerisi, anasayfadakiyle aynı bileşenlerle
+(`video_kart`, `galeri_kart`) ve aynı ızgara CSS'iyle. Yeri bilinçli:
+akışın **altında** (liste kesintisiz kalıyor), "daha fazla göster"
+düğmesinin **üstünde** (okur düğmeye basmadan görüyor).
+
+**İlçe sayfasında kuşak yoktur.** Galeri ve videonun kategorisi var, ilçesi
+yok (`medya.models.KategoriliIcerik`); uydurma bir eşleme yapmaktansa blok
+hiç çizilmiyor. Gündemde galeri, aktüalite ve savunma sanayinde ikisi de
+olmadığı için oralarda da kutu boş çerçeve olarak durmuyor.
+
+### Ölçüm
+
+    sayfa           medyan    sorgu        (iki blok dahil)
+    /bursaspor      26,0 ms      14
+    /ekonomi        25,4 ms      14
+    /gundem         21,3 ms      13   (kuşak yok: galerisi yok)
+    /ilce/nilufer   23,9 ms      10   (kuşak yok, şerit var)
+
+Başsız Chrome ile 1440 px ve 390 px'te bakıldı: yatay taşma yok, kuşak dar
+ekranda iki sütuna iniyor, eczane şeridi alt alta diziliyor.
+
+**Ölçüm:** 827 test geçiyor (bu turun katkısı 12,
+`icerik/tests_bolum_bloklari.py`).
+
+---
+
+## §60 — bölüm akışı: tarih ayracı gitti, ikili/üçlü ritim geldi (7 Eylül 2026)
+
+Kullanıcı isteği: *"kategori sayfalarında haberlerin tarihlere bölünmesini
+kaldır, onun yerine 2'li ve 3'lü haberlerin sunulacağı bir akış hazırla"*.
+
+### Ne kalktı
+
+§46'da kurulan akış, solda 150 px görselli iki sütunlu bir **satır
+listesiydi** ve gün değiştikçe araya **tarih ayracı** giriyordu. İkisi de
+kalktı.
+
+**Zaman bilgisi kalkmadı.** Kartın kendi damgası duruyor ve `kisa_zaman`
+süzgeci aynı günün haberinde saat, eskisinde tarih basıyor ("31 Eki 2025") —
+ayracın söylediğini kart tek başına söylüyor.
+
+### Ne geldi
+
+İki geniş kart, üç dar kart, iki, üç… Ağırlık farkı ritmin kendisi:
+
+    ikili   2 sütun · 16/9 fotoğraf · başlık 20 px · SPOT VAR
+    üçlü    3 sütun · 16/9 fotoğraf · başlık 16 px · spot yok
+
+İki blok aynı görünseydi bölmenin anlamı kalmazdı. Spot üçlüde yok çünkü
+sütun 357 px'e iniyor ve üç satırlık spot başlığı bastırıyor.
+
+### Sayılar tesadüf değil
+
+Ritmin bir turu 5 kayıt ve sayfa boyları buna **tam** oturuyor:
+
+    1. sayfa akışı  = 20 − 3 (kart kademesi) = 17 = 2+3+2+3+2+3+2
+    2+. sayfa akışı = 20                          = 3+2+3+2+3+2+3+2
+
+Hiçbir blok yarım kalmıyor. Üstelik 1. sayfa **ikiliyle** bitiyor ve
+sonraki dilim **üçlüyle** başlıyor (`ilk_uclu`): "daha fazla göster" ile
+eklenen parça ritmi seamde teklemeden sürdürüyor. Sayfa boyu ya da kart
+kademesi değişirse `tests_akis_ritmi` düşer ve hesap yeniden yapılır.
+
+### Sınıf `.akis` değil `.akis-ritim`
+
+Konu dosyası sayfası (`konu.html`) eski `.akis` listesini **tarih
+ayraçlarıyla** kullanmaya devam ediyor ve orada ayraç dosyanın kendisidir —
+kronoloji o sayfanın konusu. İki yerleşim aynı sınıfı paylaşsaydı biri
+diğerini bozardı; eski CSS silinmedi, başlığı "konu dosyası" diye
+güncellendi.
+
+### Kırılma noktası ÖLÇÜLEREK düzeldi
+
+Üçlü blok önce 900 px'te ikiye indiriliyordu. 860 px'te bakıldığında
+üçüncü kart tek başına ikinci satıra düşüyor ve yanında **boş bir hücre**
+kalıyordu: ritmin anlamı kayboluyor, üstüne delik açılıyordu. Üç sütun
+artık **700 px'e kadar** duruyor (o genişlikte sütun 209 px), altında ikisi
+de tek sütuna geçiyor.
+
+### Tarayıcıda ölçüldü (başsız Chrome, CDP)
+
+Kategori · ilçe · son haberler sayfalarında, açılış + 3 tıklama:
+
+    blok       7 → 31
+    haber     17 → 77   (77'si de benzersiz, 0 tekrar)
+    ritim     2323232323232323232323232323232   (hiç 22 ya da 33 yok)
+    ayraç      0
+    yatay taşma yok · 390 px'te tek sütun (318 px)
+
+**Ölçüm:** 839 test geçiyor (bu turun katkısı 15,
+`icerik/tests_akis_ritmi.py`).
+
+---
+
+## §61 — "daha fazla göster" artık yeni haberlere iniyor (7 Eylül 2026)
+
+Kullanıcı bildirimi: *"daha fazla göster butonu tıklandığında sayfa aşağı
+ilerlemiyor yeni haberleri göstermek için, sadece yukarıda yeni haberler
+gösteriyor, bu daha fazla göster özelliğinin genelde kullanım mantığına
+uymuyor"*. Doğru; iki ayrı kusur vardı.
+
+### 1. Düğme yanlış yerdeydi
+
+§59'da görüntü kuşağı eklenirken düğme kuşağın **altına** konmuştu —
+"okur düğmeye basmadan kuşağı görsün" diye. Sonuç ölçüldü (1440 px,
+`/gundem`):
+
+    akış biter        4.097 px
+    kuşak başlar      4.126 px
+    DÜĞME             4.498 px   ← okurun baktığı yer
+
+Yani okur düğmeye bakarken akışın sonu ekranın 400 px yukarısındaydı ve
+tıklayınca 20 haber oraya, **görmediği yere** giriyordu. Ekranda hiçbir şey
+olmuyormuş gibi görünüyordu.
+
+Sıra artık **akış → düğme → kuşak** ve düğme listenin kendi kutusunun
+içinde. Kuşak düğmenin hemen altında kalıyor: her tıklamada onunla birlikte
+aşağı kayıyor, yani kaç kalem yüklenirse yüklensin düğmenin alt komşusu
+olmayı sürdürüyor — §59'un "kuşak görünsün" amacı da korunuyor. Test
+(`test_dugme_kusagin_USTUNDE_ve_akisin_hemen_altinda`) bu sırayı bağlıyor.
+
+### 2. Sayfa yeni yığına inmiyordu
+
+Yerleşim düzelse bile okurun gözü eski son satırda kalıyor. "Daha fazla
+göster"in beklenen davranışı yeni yığının **başına inmektir**. Betik artık
+ilk yeni bloğu görüş alanına alıyor (`yeniyeIn`), odağı da oraya taşıyor —
+klavyeyle gezen okur Tab'a bastığında yeni kalemlerin içinde devam ediyor,
+listenin başına dönmüyor.
+
+Kaydırma `scroll-margin-top` ile yapışkan kategori bandının altına oturuyor;
+bant ölçüldü: 1440 px'te **50 px**, 390 px'te **82 px**. `prefers-reduced-
+motion: reduce` diyen okurda yumuşak kaydırma yok, doğrudan atlıyor.
+
+Arşivin sonunda odak artık "tümü yüklendi" satırına GİTMİYOR (kalem geldiği
+sürece): okuru listenin başından alıp sonundaki nota atmak, yeni gelenleri
+atlatırdı. Not yine ekranda ve düğmenin yerinde duruyor.
+
+### Tarayıcıda ölçüldü (başsız Chrome, CDP)
+
+Okur düğmeyi ekranın ortasına getirip tıklıyor; ölçülen, tıklamadan sonraki
+durum:
+
+    sayfa            kaydı    ilk yeni kalem    bant    odak
+    kategori 1440   +347 px        58 px         50    yeni blokta
+    kategori  390   +254 px        92 px         82    yeni blokta
+    ilçe     1440   +346 px        58 px         50    yeni blokta
+    anasayfa 1440   +362 px        58 px         50    yeni kartta
+    anasayfa  390   +267 px        92 px         82    yeni kartta
+
+Beş durumda da sayfa aşağı iniyor, ilk yeni kalem yapışkan bandın **altında**
+ve ekranda. Ritim, tekrarsızlık ve uç çökmesi davranışı bozulmadı (yeniden
+ölçüldü: 3 tıklama → 31 blok, 77 benzersiz haber, `2323…` dizisi kesintisiz).
+
+### Durum satırı kalktı (aynı gün, kullanıcı isteği)
+
+*"20 haber eklendi, listenin devamı için düğmeye basın yazısını kaldır"*.
+
+Satır §48'de ekran okuyucu için konmuştu: odak düğmede kalıyordu ve okuyucu
+listeye kalem eklendiğini kendiliğinden söylemiyordu. **Bu gerekçe yukarıdaki
+değişiklikle ortadan kalktı** — odak artık yeni yığının ilk kalemine
+taşınıyor ve okuyucu odaklanılan kalemi zaten okuyor; satır aynı şeyi ikinci
+kez söylüyordu.
+
+Alan (`.daha-fazla-durum`, `role="status"`) SİLİNMEDİ: **hata dalı** hâlâ
+oraya yazıyor. Uç çökerse düğme görünüşte hiçbir şey yapmamış olur ve okurun
+ne olduğunu, ne yapabileceğini okuması gerekir. Boşken `:empty` ile
+gizleniyor — ölçüldü: tıklamadan önce de sonra da `display:none`, yükseklik
+0 px, yani düğmenin altında ölü bir satır kalmıyor.
+
+**Ölçüm:** 842 test geçiyor (bu turun katkısı 3).
+
+---
+
+## §62 — servis alanı panel oldu, bölümler kendi rengini aldı (7 Eylül 2026)
+
+İki istek, tek tur:
+
+1. *"kategorilere özel koyduğumuz alanların şu anki halinden memnun
+   değilim, sadece sayfanın üst kısmına konulmuş tek satırlık şerit hoş bir
+   görüntü değil… düzgün bir alan olarak koymalıyız"*
+2. *"kategori sayfalarında o kategoriye özel tasarım ve tema değişiklikleri
+   istiyorum uygun kategoriler için"*
+
+### 1. Şerit gitti, panel geldi
+
+§59'daki şerit veriyi **taşıyordu ama sunmuyordu**: döviz beş kalemi tek
+satıra sıkıştırıyor, puan yalnız bir cümle söylüyor, eczane adresi ve
+haritayı hiç göstermiyordu. Panel artık sitenin kendi `.kutu` bileşeni —
+başlık çubuğu, gövde, künye.
+
+| bölüm | önce | sonra |
+|---|---|---|
+| EKONOMİ | 5 kalem tek satırda | **5 gözlü ızgara**: değer, yön, %, alış/satış; TCMB bülten no'su ve son güncelleme künyede |
+| BURSASPOR · SPOR · BURSA'DA SPOR | tek satır | **maç kartı + puan penceresi**: tablonun Bursaspor'un etrafındaki 5 satırı |
+| SAĞLIK · İLÇE | ad + telefon | **4 gözlü kart**: ad, ilçe, adres, telefon, harita; gün ve nöbet aralığı künyede |
+
+**Puan penceresi** tablonun tamamı değil (`_puan_penceresi`): tam tablo
+anasayfada duruyor ve bölüm sayfasına taşınsa haber akışını yirmi satır
+aşağı iterdi. Okurun burada sorduğu şey "kiminle yarışıyoruz"; beş satır
+onu yanıtlıyor. Pencere tablonun ucuna dayanırsa kaydırılır — Bursaspor
+birinciyken de sonuncuyken de beş satır gösterilir.
+
+**Yeri değişmedi** (kırıntının altı): bölümün canlı verisi o bölümün
+kimliğidir ve okur sayfayı onun için de açıyor. Bloomberg /markets ve ESPN
+takım sayfaları da aynı yeri kullanıyor.
+
+**Döviz bandı ayrıştı.** §59'da `parca/doviz.html`e çıkarılmıştı ve bölüm
+sayfası onu aynen basıyordu; artık basmıyor. Biçim BİLEREK ayrıldı — aynı
+veriyi iki farklı yerde iki farklı işe koşuyoruz. Ortak olan sayının
+kaynağı (`oku("doviz")`), sunumu değil; test bunu ölçüyor.
+
+### 2. Bölüm kimliği
+
+**Kural tek cümle: kendi kimliği olan bölüm kendi rengini alır.**
+
+| bölüm | renk | gerekçe |
+|---|---|---|
+| BURSASPOR | `--yesil` #00693E | kulüp renkleri; 29 Ağustos'ta zaten alınmış karar |
+| BURSA + 17 ilçe | `--isaret-bursa` #0E6E8C | kent |
+| EKONOMİ | `--isaret-ekonomi` #7A5200 | piyasa |
+| SAĞLIK | **yeni** `--saglik` #0F6B5C | servis bölümü |
+
+Kalan dokuz bölüm (gündem, dünya, spor, magazin, teknoloji, yaşam,
+Bursa'da spor, aktüalite, savunma sanayi) gazetenin lacivert-kırmızısında
+**kalır**. On üç bölüme on üç renk vermek kimliği kimlik olmaktan çıkarır.
+
+**SPOR ve BURSA'DA SPOR bilerek dışarıda:** ikisi de puan panelini görüyor
+ama renk verilseydi kulüp yeşilinin yanında ikinci bir yeşil olurdu
+(#00693E ile #0E5C36 gözle aynı) ve okur bölümleri ayırt edemezdi.
+
+### Renkler ölçülerek seçildi
+
+    bölüm       vurgu     beyaz  --zemin  kendi açığı   beyaz/vurgu  beyaz/koyu
+    bursaspor   #00693E    6,80    5,99      6,04          6,80        10,28
+    bursa       #0E6E8C    5,79    5,11      5,13          5,79         8,25
+    ekonomi     #7A5200    6,92    6,10      6,27          6,92         9,60
+    sağlık      #0F6B5C    6,41    5,65      5,73          6,41         9,21
+
+Dördü de AA metin eşiğini (4,5) her zeminde geçiyor; beyaz yazı koyu
+kardeşin üstünde AAA (7) eşiğinin de üstünde. Tablo `site.css` içinde
+duruyor — yeni bir bölüm rengi eklenecekse aynı dört ölçüm yapılmadan
+eklenmez.
+
+### Kapsam: yalnız `<main data-bolum>`
+
+Üst bant, menü, künye ve anasayfa **dokunulmadı**; §35'in "site
+lacivert-kırmızı kalır" kararı sürüyor. Her temalı kural
+`var(--bolum-…, <yedek>)` biçiminde, yani temasız sayfada eski değer aynen
+geçerli. Tema bir `<main>` niteliğidir, sarmalayıcı `<div>` değil — yeni
+bir DOM düğümü `main`in yerleşim kurallarını yeniden ölçmeyi gerektirirdi.
+
+Ölçülen (başsız Chrome, hesaplanmış renkler):
+
+    sayfa          tema        başlık       servis paneli   düğme        üst bant
+    /bursaspor     bursaspor   0,105,62     0,105,62        0,105,62     27,42,107
+    /bursa         bursa       14,110,140   —               14,110,140   27,42,107
+    /ekonomi       ekonomi     122,82,0     122,82,0        122,82,0     27,42,107
+    /saglik        saglik      15,107,92    15,107,92       15,107,92    27,42,107
+    /ilce/nilufer  bursa       14,110,140   14,110,140      14,110,140   27,42,107
+    /gundem        —           228,34,43    —               27,42,107    27,42,107
+    /spor          —           228,34,43    27,42,107       27,42,107    27,42,107
+
+Üst bant beş temada da lacivert: kimlik sayfanın içinde, gazetenin
+kabuğunda değil.
+
+### Görsel denetimde çıkan iki kusur
+
+1. **Puan tablosunda Bursaspor'un satırı okunmuyordu.** Yeni kural yalnız
+   yazı rengini değiştiriyordu; zemin sitede kurulu `.puan tr.bizim td`
+   kuralından (dolu kulüp yeşili) geliyordu ve koyu yeşilin üstüne koyu
+   yeşil yazı düşüyordu. Kural geri alındı — kurulu muamele doğru.
+2. **Başlık fitili renkli zeminde kırmızı kalıyordu.** Anasayfadaki
+   `#bursaspor .kutu-bas h2::before` aynı sorunu 29 Ağustos'ta beyaza
+   çevirerek çözmüştü; aynı düzeltme panele ve temalı başlığa uygulandı.
+
+1440 · 390 px'te bakıldı, yatay taşma yok. Piyasa ızgarası 1100 px'te üçe,
+560 px'te ikiye; eczane dörtten ikiye, sonra tek sütuna; puan paneli
+820 px'te alt alta iniyor. "Daha fazla göster", ritim ve tekrarsızlık
+yeniden ölçüldü, bozulmadı.
+
+**Ölçüm:** 853 test geçiyor (bu turun katkısı 11).
+
+---
+
+## §63 — bölüm renk temaları geri alındı (7 Eylül 2026)
+
+Kullanıcı kararı: *"farklı renk temalarını geri al"*.
+
+§62'de dört bölüm kendi vurgu rengini almıştı — kulüp yeşili (bursaspor),
+kent mavisi (bursa + 17 ilçe), piyasa amberi (ekonomi), sağlık turkuazı
+(saglik). Düzeneğin **tamamı** kalktı:
+
+    views.py        BOLUM_TEMA, ILCE_TEMA ve `bolum_tema` bağlam değişkeni
+    taban.html      `ana_nitelik` bloğu (main artık nitelik almıyor)
+    kategori.html   `data-bolum` yazan blok
+    site.css        `[data-bolum]` kuralları, `--bolum-*` değişkenleri,
+                    `--saglik*` ve `--isaret-*-koyu/-ak/-cizgi` renkleri
+
+Panelin içindeki `var(--bolum-…, <yedek>)` kalıpları da açıldı: değişken
+artık hiçbir yerde tanımlı olmadığı için bırakılsaydı ölü bir düzenek
+olurdu. Servis panelinin başlık çubuğu da kendi kuralını bıraktı ve
+varsayılan `.kutu-bas`a döndü — sitenin her yerindeki kutuyla aynı.
+
+§35'in *"site lacivert-kırmızı kalır"* kuralı böylece **istisnasız**
+sürüyor; tek istisna anasayfadaki `#bursaspor` kutusudur ve o 29 Ağustos
+2026'da ayrıca kararlaştırılmıştı.
+
+### Giden renkti, panel değil
+
+§62'nin **birinci yarısı olduğu gibi duruyor**: piyasa ızgarası (5 göz,
+alış/satış, TCMB künyesi), puan penceresi (maç kartı + Bursaspor'un
+etrafındaki 5 satır), nöbetçi eczane kartları (adres, telefon, harita).
+
+### Geri alırken çıkan kusur
+
+Maç kartındaki saatin arkasında sebepsiz bir açık yeşil kutu vardı.
+Nedeni tema değil, **sınıf çakışmasıydı**: anasayfanın Bursaspor
+kutusunda `.skor` bir KUTU (açık yeşil zemin, kenarlık, ortalanmış) ve
+paneldeki `<span class="skor">` onun kurallarını miras alıyordu. Yeşil
+temada göze batmıyordu, tema kalkınca ortaya çıktı. Sınıf `mac-skor`
+oldu.
+
+**Şablon önbelleği notu:** doğrulama sırasında sunucu şablonları
+önbellekten veriyordu ve `--noreload` ile şablon değişikliği görünmüyordu.
+Ölçüm taze sunucuda tekrarlandı — `GELISTIRME-SUNUCUSU` alışkanlığı
+şablon değişikliklerinde de geçerli.
+
+### Ölçüm (başsız Chrome, hesaplanmış renkler)
+
+Sekiz bölüm sayfasının hepsinde: başlık `rgb(228,34,43)` (kırmızı), servis
+paneli ve "daha fazla göster" `rgb(27,42,107)` (lacivert), `data-bolum`
+niteliği yok. "Daha fazla göster"in inişi, ikili/üçlü ritim ve
+tekrarsızlık yeniden ölçüldü, bozulmadı.
+
+**Ölçüm:** 850 test geçiyor (§62'nin 11 testinden 5'i kalktı, yerine
+kararı tutan 2 test geldi).
+
+---
+
+## §64 — çerçeve oranı arşivin oranına çekildi (7 Eylül 2026)
+
+Kullanıcı bildirimi: *"kategori sayfalarında en üstteki 3 büyük haberin
+görselleri tam sığmamış gibi görünüyor çerçevelerine"*.
+
+### Ölçüm önce, karar sonra
+
+Arşivden rastgele **1.498 dosyanın 1.498'i (%100)** tam **3:2**. Kaynak
+sistem `_large` görselini sabit oranda üretiyor; sitede oran tahmini bir
+şey değil, ölçülebilir bir olgu.
+
+Çerçevelerin ikisi bu orana uymuyordu ve `object-fit:cover` farkı
+**kırparak** kapatıyordu:
+
+    alan                 çerçeve        kaynak      kırpma
+    üst kademe · geniş   4:3  (1,333)   3:2 (1,5)   66 px YANLARDAN, %11
+    üst kademe · normal  3:2  (1,5)     3:2 (1,5)   yok
+    akış · ikili        16:9  (1,778)   3:2 (1,5)   53 px ALT/ÜST, %16
+    akış · üçlü         16:9  (1,778)   3:2 (1,5)   35 px ALT/ÜST, %16
+
+Okurun gördüğü fark tam olarak buydu: aynı satırdaki üç fotoğraftan
+ikisi tam, biri kırpık. Örnek kayıtta lead fotoğraf bir kolaj (kaza +
+düğün) ve 4:3 pencere kolajın iki ucunu da kesiyordu.
+
+### İkisi de 3:2 oldu
+
+Akış bloklarındaki 16:9 bir gün önce (§60) benim koyduğum orandı ve daha
+zararlıydı: **dikey** kırpma haber fotoğrafında baş ve ayak kesiyor.
+Kullanıcı yalnız üst kademeyi bildirdi ama kusur aynı kusurdu.
+
+Dar ekran kuralı ayrı bir yerde duruyordu ve unutulmaya müsaitti: 768 px
+altında `.liste-izgara .kart.genis .foto` kendi `aspect-ratio:4/3`ünü
+yazıyor. O da düzeltildi — kırpma **dört kırılma noktasında da sıfır**
+(1440 · 1024 · 768 · 390 px'te ölçüldü).
+
+### Bedeli bilinçli
+
+İlk kartın fotoğrafı artık alttakilerle **aynı boyda** (528x352). Eskiden
+4:3 onu sayfanın en uzun fotoğrafı yapıyordu (§46'daki karar) — ama bunu
+ancak kırparak yapabiliyordu: genişlik 31 Ağustos 2026 kararıyla %50−8px'e
+çakılı (fotoğrafın sağ kenarı alttaki kartınkiyle aynı çizgide bitmeli) ve
+sabit genişlikte 3:2 tek bir yükseklik verir.
+
+İlk kartın ağırlığı artık orandan değil **yerleşimden** geliyor: tam
+genişlikte satır, fotoğraf yanda, daha büyük başlık ve spot.
+
+Lead fotoğrafın yeniden en uzun olması istenirse iki yol var ve ikisi de
+başka bir kararı bozar: (a) fotoğrafı genişletmek — 31 Ağustos'taki hizalama
+isteğini bozar, (b) fotoğrafı metnin üstüne tam genişlikte almak — §46'nın
+"5.000 px'lik merdiven" kararını bozar.
+
+**Ölçüm:** 851 test geçiyor (bu turun katkısı 1; oranı bağlayan
+`test_cerceve_orani_arsivin_oraniyla_ayni`).
+
+---
+
+## §65 — reklam kutuları için yerel test hizmeti (7 Eylül 2026)
+
+Kullanıcı isteği: "mevcut reklam kutularında test reklamı gösterebileceğimiz
+bir hizmet istiyorum."
+
+Google demo ağı (§42) duruyor ve kaldırılmadı; yanına **yerel** bir hizmet
+kondu. Sebep, §42'de kendi ölçümlerimizle yazılmış üç kısıt:
+
+| kısıt | demo ağı | yerel hizmet |
+|---|---|---|
+| ölçü | yalnız 300×250, 160×600, 728×90 dolar | **istenen her ölçü** |
+| çerez | üçüncü taraf çerezi bırakır | çerez yok |
+| internet | ağ yoksa hiçbir kutu dolmaz | **internetsiz de dolar** |
+
+Yani üst şerit (1100×150 · 970×250) ve 300×600 demo ağıyla hiç
+görülemiyordu; §42 eki 3'te üst şerit bu yüzden demo dışı bırakılmıştı.
+
+### Nasıl çalışıyor
+
+- **Yaratıcı sunucuda üretiliyor.** `icerik/reklam.py` → `/reklam/test/<en>x<boy>.svg`.
+  SVG'de dış adres yok (tek mutlak adres SVG ad alanı), yazı tipi sistem
+  yığınından; sayfa internetsiz açılırken yuvalar da dolu açılıyor.
+- **Yuvalar işaretten okunuyor.** `statik/betik/reklam-test.js`, `reklam.js`
+  ile aynı sözleşmeyi kullanıyor: `data-gpt` ölçü listesi, `data-gpt-harita`
+  görünüm haritası. Şablonlarda **tek bir yuva işareti değişmedi**.
+- **Ölçü kutuya göre seçiliyor.** Aday ölçülerden kutuya sığan basılıyor;
+  sığmayan hiç istenmiyor. Demo ağının kusuru buydu (728×90 yaratıcı
+  250 px'lik billboard kutusunun ortasında duruyordu).
+- **Tıklayınca sonraki ölçüye geçiyor.** Üst şerit 1100×150 ve 970×250
+  hâlleriyle sırayla görülebiliyor. Yaratıcı `<button>` içinde: klavyeyle
+  de geziliyor, odak halkası var.
+
+### Kapı: sunum aracı, okur özelliği değil
+
+`baglam.sunum_araci_mi` (eski adı `_reklam_dugmesi`; "reklamları gizle"
+düğmesiyle **aynı kapı**) — geliştirme makinesi ya da panele girmiş
+kullanıcı. Sıradan ziyaretçi adresten **404** alır, sayfasında ne düğme ne
+betik basılır. Üstelik betik basılsa bile kendiliğinden doldurmaz: üst
+banttaki "Test reklamı" düğmesi açılınca başlar, tercih `localStorage`da
+yaşar, `?reklam-test=acik` adresten de açar (sunumda bağ paylaşmak ve
+başsız tarayıcıyla ölçmek için).
+
+`BH_REKLAM_TEST=0` hizmeti tümden kapatır. Varsayılan açık — bayrak tek
+başına hiçbir şey göstermediği için.
+
+### Yaratıcı reklam taklidi DEĞİL
+
+Marka, reklamveren, ürün, fiyat yok. Üstünde "TEST REKLAMI", ölçüsü, yuva
+adı ve yer varsa "yerel test görseli · reklam değil" yazıyor. Yuvalar
+birbirinden ayrılsın diye dört palet dönüyor (sitenin kendi renkleri;
+yeni renk uydurulmadı) ve palet yuva adına bağlı — her yenilemede aynı.
+
+### §42 eki 3'ten farkı bilinçli
+
+Üst şeritteki `data-gpt-demo="kapali"` **yerinde duruyor ve demo ağını
+kapatmaya devam ediyor**; ama yerel hizmeti bağlamıyor, çünkü o işaretin
+gerekçesi "ağ yanlış ölçü basıyor"du ve burada ölçü tam. Bir yuvayı test
+dışında tutmak için ayrı işaret var: `data-gpt-test="kapali"`.
+
+**Ölçüm:** 860 test geçiyor (bu turun katkısı 9). Başsız Chrome'da 1600 ·
+1280 · 390 px'te ölçüldü: 1600'de altı yuva dolu (iki pageskin dâhil),
+1280'de üst şerit 1100×150, 390'da üst şerit haritası gereği boş kalıyor
+ve dar ekranda yatay taşma yok (test kapalıyken alınan görüntüyle birebir
+aynı genişlik).
+
+---
+
+## §66 — AdSense: gazetenin kendi yayıncı kimliği (7 Eylül 2026)
+
+Kullanıcı kararı: "kendi yayıncı kimliğim ile yapayım." Hesap **AdSense**
+(`ca-pub-…`), Ad Manager değil.
+
+Artık üç yol yan yana duruyor ve üçü de **aynı yuva işaretlerini** okuyor
+(`data-gpt`, `data-gpt-harita`) — şablonlarda tek bir yuva değişmedi:
+
+| yol | kaynak | kimlik | çerez | internetsiz |
+|---|---|---|---|---|
+| yerel test (§65) | kendi sunucumuz | gerekmez | yok | **çalışır** |
+| demo ağı (§42) | Google örnek envanteri | gerekmez | bırakır | çalışmaz |
+| **AdSense (bu bölüm)** | **kendi hesabımız** | `ca-pub-…` | bırakır | çalışmaz |
+
+### Ayarlar
+
+    BH_ADSENSE_ID        ca-pub-0000000000000000   (boşken hiçbir şey basılmaz)
+    BH_ADSENSE_TEST      1 = test yaratıcısı (varsayılan) · 0 = gerçek yayın
+    BH_ADSENSE_SLOT      tüm yuvalar için varsayılan reklam birimi
+    BH_ADSENSE_YUVALAR   {"Manşet yanı": "1234567890", …} yuva adı → birim
+
+Yuva adı **panelin `ReklamYuvasi.ad` sözleşmesiyle aynı** (F1 ölçütü 3);
+envanterdeki ad ile AdSense birimi böyle bağlanıyor. Birimi tanımlı
+olmayan yuva **boş bırakılıyor** — uydurma `data-ad-slot` göndermek
+AdSense tarafında hatalı istek demek.
+
+### Test modu okura çizilmiyor
+
+`data-adtest="on"` gösterim saymaz, geçersiz trafik üretmez; ama ekranda
+reklam **görünür**. Bu yüzden test modundayken sayfa yalnız sunum
+oturumuna (geliştirme makinesi ya da panele girmiş kullanıcı) çiziliyor —
+"reklamları gizle" düğmesiyle aynı kapı. `BH_ADSENSE_TEST=0` yapıldığında
+(gerçek yayın) kapı kalkıyor, herkese çiziliyor. Kutuya ayrıca kırmızı
+**TEST** şeridi basılıyor ki ekrandakinin gerçek reklam olmadığı belli olsun.
+
+### Beş teknik karar
+
+1. **Ölçü sabit veriliyor.** `<ins>` kutunun ölçüsünde inline-block;
+   `data-full-width-responsive="false"`. Esneyen birim üst şeridi
+   250 px'lik kutuda kendi boyuna çekerdi — yuva ölçüsü yerleşimin parçası.
+2. **Sığanların İLKİ seçiliyor**, en büyüğü değil: üst şeritte 1100×150
+   gazetenin kendi sattığı ölçü, 970×250 programatik karşılığı, 728×90
+   yedek. "En büyüğü" deseydik gazetenin kendi yuvası hiç istenmezdi.
+3. **Dolmayan yuva daraltılmıyor.** AdSense `<ins>` üzerine
+   `data-ad-status="unfilled"` yazıyor; izleniyor, gri yer tutucu geri
+   geliyor ve kutu yüksekliği korunuyor.
+4. **Görünmeyen yuva istenmiyor** — dar ekranda pageskin'ler çizilmiyor,
+   dolmayacak istek gerçek sunumda geçersiz gösterim sayılır.
+5. **Tek geçiş.** AdSense birimi bir kez `push` ediliyor; ekran genişliği
+   değişince kutu yeniden kurulmuyor ("already have ads" hatası).
+
+### ads.txt kimlikten üretiliyor
+
+`/ads.txt` → `google.com, pub-…, DIRECT, f08c47fec0942fa0`. İçerik
+`BH_ADSENSE_ID`den türüyor, elle tutulan ikinci kopya yok. Kimlik yokken
+**404**: boş ya da yanlış bir ads.txt, dosyanın hiç olmamasından kötüdür.
+
+### Ölçü sözleşmesi ortak parçaya alındı
+
+`statik/betik/reklam-olcu.js`: harita çözümü, sığma hesabı, yuva adı,
+görünürlük kuralı. Yerel test ve AdSense bunu kullanıyor. **`reklam.js`
+(demo ağı) bilerek dışarıda** — 31 Ağustos'ta ölçülerek yazıldı, kendi
+testleri var; çalışan tek dosyayı ayıklama uğruna kırmanın karşılığı yok.
+Üçünü birleştirmek demo yolu kalkarken (F7b) yapılacak iş.
+
+### AdSense yolu ASKIDA — kimlik doğrulaması istenmiyor (12 Eylül 2026)
+
+Kullanıcı kararı: "AdSense benden kimlik doğrulamamı istiyor ama ben
+sadece test reklamı göstereceğim, bunlarla uğraşmak istemiyorum."
+
+AdSense hesabının menüsünde Siteler ve Reklamlar bölümleri açılmıyor;
+hesap kimlik doğrulaması bekliyor. Doğrulama tamamlanmadan **test reklamı
+da gelmez** (`data-adtest="on"` geçersiz gösterimi önler, yayıncı hesabı
+hazır değilse yuva boş döner) — yani bu yol bugünkü ihtiyaca, yani
+yuvaların dolu görünmesine, hiçbir şey katmıyor.
+
+Kod SİLİNMEDİ, uykuda: `BH_ADSENSE_ID` boş olduğu sürece tek bir dış
+istek atılmıyor, `/ads.txt` 404 veriyor, şablon hiçbir betik basmıyor.
+Hesap ileride hazır olursa tek satır ayarla açılır. Test reklamı ihtiyacı
+şu iki yolla karşılanıyor ve ikisi de **hesap istemiyor**.
+
+### İki yol birlikte: demo ağı + yerel hizmet (12 Eylül 2026)
+
+Demo ağı altı yuvanın hepsini tanımlıyor ama üçünü boş döndürüyor. Eskiden
+yerel hizmet, GPT'nin tanımladığı her kutuyu "başkası aldı" sayıp atlıyordu;
+artık **boş döneni dolduruyor**: GPT'nin `slotRenderEnded` olayı dinleniyor,
+`data-gpt-durum="bos"` olan kutu yerel yaratıcıyla dolduruluyor ve bu karar
+`data-gpt-bos` ile kalıcı işaretleniyor (ekran değişiminde kutu yeniden boş
+sanılmasın diye).
+
+**Ölçüldü (12 Eylül 2026, başsız Chrome, 1500 px, iki bayrak da açık):**
+altı yuvanın altısı dolu, gri kutu kalmıyor —
+
+| yuva | ne geldi |
+|---|---|
+| Üst şerit 1100×150 | yerel test (şerit demo dışı) |
+| Sol pageskin 160×600 | Google örnek yaratıcısı |
+| Sağ pageskin 160×600 | **boş döndü → yerel test** |
+| Manşet yanı 300×250 | gerçek Google reklamı (Chrome) |
+| Manşet altı1 300×250 | gerçek Google reklamı |
+| Haber arası1 300×250 | gerçek Google reklamı |
+
+### Demo ağı ölçüldü: dört yol, tek çalışan (12 Eylül 2026)
+
+Kullanıcı "gerçek Google reklamı sadece bir tane, gerisi yer tutucu" dedi.
+Doğru: demo ağının döndürdüğünün bir kısmı Google'ın KENDİ gri örnek
+kutuları, yalnız bir yuvaya gerçek yaratıcı (Chrome tanıtımı) geliyor ve
+hangisinin ne döneceği bizim elimizde değil.
+
+Dört demo yolu yedi ölçüyle ölçüldü (başsız Chrome, `slotRenderEnded`):
+
+| yol | dolan ölçüler |
+|---|---|
+| `/6355419/Travel/Europe/France/Paris` (mevcut) | 728x90 · 300x250 · 160x600 |
+| `/6355419/Travel` | **hiçbiri** |
+| `/22639388115/example/fixed-size-ad` | **hiçbiri** |
+| `/22639388115/example/adsense-backfill` | **hiçbiri** |
+
+Yani mevcut yol denenenlerin en iyisi ve tavan bu: 1100x150, 970x250,
+300x600 ve 320x100 hiçbir yolda dolmuyor. Demo ağından daha fazlası
+**hesap** ister, hesap da kimlik doğrulaması — kullanıcı bunu istemedi.
+
+### Yaratıcı reklam biçimine getirildi (12 Eylül 2026)
+
+İlk sürüm ortalanmış yazıdan ibaretti ve ekranda Google'ın gri örnek
+kutularından ayrılmıyordu. Yeni yaratıcı gerçek bir görüntülü reklamın
+parçalarını taşıyor: **görsel alanı** (soyut şekil), **başlık**, **çağrı
+düğmesi**, yuva adı. Palet yuva adından türüyor, kutular birbirinden
+ayırt ediliyor.
+
+Sahte reklam yine değil: marka, reklamveren, ürün, fiyat ya da kampanya
+çağrısı yok — görsel alanı şekil, düğmenin üstünde ölçü yazıyor, köşede
+TEST rozeti duruyor (uydurma içerik yasağı, CLAUDE.md).
+
+İki yerleşim kusuru ölçülüp düzeltildi: 300x250'de yuva adı düğmenin
+altında kalıyordu, 160x600'ün alt yarısı boştu. Yazı bloğu artık görselle
+düğme arasına ortalanıyor ve sığmayan satır basılmıyor.
+
+### Gerçek yayına geçmeden önce iki iş kaldı
+
+- **Çerez aydınlatması.** `adsbygoogle.js` üçüncü taraf çerezi bırakıyor;
+  KVKK tarafında ayrı bir iştir ve bu bölümün kapsamında değil.
+- **Reklam birimleri.** AdSense arayüzünde yuva ölçülerinde birim açılıp
+  kimlikleri `BH_ADSENSE_YUVALAR`a yazılmalı: 1100×150 · 970×250 ·
+  728×90 · 300×250 · 160×600.
+
+**Ölçüm:** 869 test geçiyor (bu turun katkısı 9). Başsız Chrome'da
+doğrulandı: sahte kimlikle `<ins>` doğru ölçü ve niteliklerle kuruluyor
+(`data-adtest="on"`, `data-full-width-responsive="false"`),
+`data-ad-status="unfilled"` dönünce gri pano geri geliyor. Ortak parçaya
+geçen yerel test hizmeti 1500 px'te 1100×150 + iki pageskin, 800 px'te
+728×90 + 300×250 dolduruyor — refactor öncesiyle aynı.

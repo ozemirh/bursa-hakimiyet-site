@@ -43,7 +43,7 @@ from __future__ import annotations
 from datetime import date
 
 from django.utils import formats
-from django.utils.text import slugify
+from .arama_metni import slugla
 
 from taksonomi.models import Ilce
 
@@ -267,8 +267,10 @@ def haber_slug(panel: dict) -> str:
     Ayrıca "…-ilce-ilce-adres-ve-telefon-listesi" kuyruğu adresi uzatıyor;
     adres okurun aradığı üç sözcüğü taşımalı.
     """
-    return slugify(f"{_tarih_yaz(panel['gun'])} Bursa nobetci eczaneler",
-                   allow_unicode=False)
+    # Katlama `arama_metni.slugla` ile: Django'nun `slugify`'ı noktasız `ı`yı
+    # atıyor ve "Aralık" ayında slug `aralk` olurdu. Ağustos kaydında iki
+    # işlev aynı sonucu veriyor, yani duran kaydın adresi değişmiyor.
+    return slugla(f"{_tarih_yaz(panel['gun'])} Bursa nobetci eczaneler")
 
 
 def haber_spotu(panel: dict) -> str:

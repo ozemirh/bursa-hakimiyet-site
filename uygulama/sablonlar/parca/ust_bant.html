@@ -34,11 +34,19 @@ sabit "34°C" ve "%81" değerleri 25 Ağustos 2026 demosuna aitti.
       </span>
       {% if reklam_dugmesi %}{% comment %}SUNUM ANAHTARI, okur ozelligi degil:
       yayin ekibine sayfayi reklamsiz gosterebilmek icin. Siradan ziyaretcide
-      hic cizilmez — kapisi `icerik/baglam.py` icindeki `_reklam_dugmesi`.
+      hic cizilmez — kapisi `icerik/baglam.py` icindeki `sunum_araci_mi`.
       `aria-pressed` acik/kapali durumu ekran okuyucuya soyler.{% endcomment %}
       <span class="ayrac"></span>
       <button class="reklam-anahtar" type="button" aria-pressed="false">
         <span class="reklam-anahtar-yazi">Reklamları gizle</span>
+      </button>{% endif %}{% if reklam_test %}{% comment %}Test reklami anahtari
+      (7 Eylul 2026). Ayni kapidan gecer; kutulari yerel test yaraticisiyla
+      doldurur, disariya istek atmaz. Reklam gizleme anahtarinin YANINDA
+      duruyor cunku ikisi de sunum araci.{% endcomment %}
+      <span class="ayrac"></span>
+      <button class="reklam-anahtar reklam-test-anahtar" type="button"
+              aria-pressed="false">
+        <span class="reklam-test-yazi">Test reklamı</span>
       </button>{% endif %}
     </span>
   </div>

@@ -32,9 +32,9 @@ from datetime import date, datetime, time
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
-from django.utils.text import slugify
 
 from icerik import eczane as eczane_metni
+from icerik.arama_metni import slugla
 from icerik.models import Haber
 from taksonomi.models import Etiket, Kategori, Kaynak
 
@@ -157,7 +157,7 @@ class Command(BaseCommand):
         haber.kaynaklar.set([kaynak])
         haber.etiketler.set([
             Etiket.objects.get_or_create(
-                ad=ad, defaults={"slug": slugify(ad, allow_unicode=False)})[0]
+                ad=ad, defaults={"slug": slugla(ad, 60)})[0]
             for ad in paket["etiketler"]])
         return haber
 

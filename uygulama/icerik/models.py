@@ -21,6 +21,12 @@ from .yetkiler import OZEL_IZINLER
 
 from taksonomi.models import Etiket, Ilce, Kategori, Kaynak
 
+#: Yapay zekâ aracı başlık yazmadan taslak açtığında başlığın başına konan
+#: işaret (`yz_kopru`). Buraya konması bir bağımlılık zorunluluğu: hem köprü
+#: hem de formun yayın kapısı bu değeri bilmek zorunda ve ikisi birbirini
+#: içe aktarmıyor. Kapı `formlar.HaberForm.clean` içinde.
+YZ_BASLIK_ISARETI = "[yazılacak]"
+
 
 class Haber(models.Model):
     DURUM_AKTIF, DURUM_PASIF, DURUM_SILINMIS, DURUM_ARSIV = 1, 2, 3, 4
@@ -883,3 +889,102 @@ class Okunma(models.Model):
 
     def __str__(self) -> str:
         return f"{self.haber_id} {self.gun}: {self.adet}"
+
+
+class Konu(models.Model):
+    """Konu dosyası — birbirini izleyen haberlerin zinciri (5 Eylül 2026).
+
+    Demo dönemindeki `arac/konular.json` dosyasının ürün karşılığı.
+    Dosyanın haberleri `KonuHaber` bağlarıyla durur; sayfadaki "konunun
+    akışı" bloğu ve `/konu/<slug>` sayfası bu tabloyu okur.
+
+    **İki kaynak, tek onay.** Motor (`icerik/konu_motoru.py`,
+    `konu_tara` komutu) arşivi tarayıp öneri yazar; editör panelde
+    onaylar ya da reddeder. Sitede yalnız `onay="onayli"` olan görünür —
+    CLAUDE.md'deki "konu takibi onaysız bağlamaz" kuralı burada sütuna
+    bağlandı, alışkanlığa değil. `konu_tara --onay-esigi N` yüksek
+    güvenli önerileri toplu onaylar; o da bir editör kararıdır, komutu
+    çalıştıran verir.
+
+    Neden `Haber`e sütun değil: arşiv tablosu 1 milyon satır ve SQLite
+    sütun eklerken tabloyu yeniden kurar (bkz. `Okunma`). Ayrıca bir
+    haber birden çok dosyada olabilir (Bozbey davası + Büyükşehir bütçesi).
+    """
+
+    KAYNAK_MOTOR, KAYNAK_EDITOR = "motor", "editor"
+    KAYNAKLAR = [(KAYNAK_MOTOR, "Motor önerisi"), (KAYNAK_EDITOR, "Editör")]
+    ONAY_BEKLIYOR, ONAY_ONAYLI, ONAY_RET = "bekliyor", "onayli", "ret"
+    ONAYLAR = [(ONAY_BEKLIYOR, "Onay bekliyor"), (ONAY_ONAYLI, "Onaylı"),
+               (ONAY_RET, "Reddedildi")]
+
+    ad = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=220, unique=True)
+    ozet = models.TextField(blank=True, help_text="Dosyanın bir paragraflık özeti.")
+    anahtarlar = models.JSONField(default=list, blank=True,
+                                  help_text="Motorun çekirdek kökleri; gösterim için.")
+    hassas_uyari = models.CharField(
+        max_length=300, blank=True,
+        help_text="Yargı süreci gibi hassas dosyalarda editörün göreceği uyarı "
+                  "(masumiyet karinesi). Konu sütununun ilk öğesi olarak basılır.")
+    kaynak = models.CharField(max_length=8, choices=KAYNAKLAR, default=KAYNAK_EDITOR)
+    onay = models.CharField(max_length=10, choices=ONAYLAR, default=ONAY_BEKLIYOR,
+                            db_index=True)
+    guven = models.PositiveSmallIntegerField(
+        default=0, help_text="Motorun 0-100 güven puanı; editör dosyasında 0.")
+    gerekce = models.TextField(blank=True, help_text="Motorun okunabilir gerekçesi.")
+    acik = models.BooleanField(default=False, help_text="Dosya sürüyor mu.")
+    baslangic = models.DateField(db_index=True)
+    bitis = models.DateField()
+    haber_sayisi = models.PositiveIntegerField(default=0)
+    olusturma = models.DateTimeField(auto_now_add=True)
+    onaylayan = models.ForeignKey(
+        "auth.User", null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="onayladigi_konular")
+    onay_zamani = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "konu"
+        verbose_name_plural = "konular"
+        ordering = ["-bitis", "-id"]
+        indexes = [models.Index(fields=["onay", "-bitis"], name="konu_onay_bitis")]
+
+    def __str__(self) -> str:
+        return self.ad
+
+    def get_absolute_url(self) -> str:
+        return f"/konu/{self.slug}"
+
+    @classmethod
+    def yayindakiler(cls):
+        return cls.objects.filter(onay=cls.ONAY_ONAYLI)
+
+    def sayilari_tazele(self) -> None:
+        """Bağlar değişince başlangıç, bitiş ve sayı yeniden hesaplanır."""
+        toplu = self.baglar.aggregate(
+            n=models.Count("id"), bas=models.Min("tarih"), son=models.Max("tarih"))
+        self.haber_sayisi = toplu["n"] or 0
+        if toplu["bas"]:
+            self.baslangic, self.bitis = toplu["bas"], toplu["son"]
+        self.save(update_fields=["haber_sayisi", "baslangic", "bitis"])
+
+
+class KonuHaber(models.Model):
+    """Konu ↔ haber bağı. `tarih` haberin yayın gününün kopyasıdır: akış
+    sıralaması ve konu aralığı 1 milyonluk tabloya katılmadan çıksın."""
+
+    konu = models.ForeignKey(Konu, on_delete=models.CASCADE, related_name="baglar")
+    haber = models.ForeignKey(Haber, on_delete=models.CASCADE,
+                              related_name="konu_baglari")
+    tarih = models.DateField(db_index=True)
+    puan = models.PositiveSmallIntegerField(default=0)
+    elle = models.BooleanField(default=False, help_text="Editör bağladı.")
+
+    class Meta:
+        verbose_name = "konu bağı"
+        verbose_name_plural = "konu bağları"
+        ordering = ["tarih", "haber_id"]
+        constraints = [models.UniqueConstraint(fields=["konu", "haber"],
+                                               name="konu_haber_tek")]
+
+    def __str__(self) -> str:
+        return f"{self.konu_id} ← {self.haber_id}"

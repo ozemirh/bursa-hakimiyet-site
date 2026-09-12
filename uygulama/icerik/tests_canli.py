@@ -332,8 +332,8 @@ class PuanDurumu(TestCase):
     """Bursaspor bölümünün üç kararı (29 Ağustos 2026).
 
     1. Açık sekme **Bursaspor'un ligi** — listenin ilki değil.
-    2. Grup **körlemesine** seçilmez: Bursaspor'un, yoksa en çok Bursa
-       kulübünün bulunduğu grup öne gelir; kalan gruplar düşmez.
+    2. Grup **körlemesine** seçilmez: Bursaspor'un grubu öne gelir, kalan
+       gruplar kaynaktaki sırayla dizilir ve hiçbiri düşmez.
     3. Tablo **kırpılmaz**; grubun bütün takımları basılır.
     """
 
@@ -383,14 +383,41 @@ class PuanDurumu(TestCase):
         del veri["takip"]
         self.assertTrue(puan_ligleri(veri)[0]["acik"])
 
-    def test_bursaspor_grubu_one_gelir(self):
-        """Bursaspor'un kendi ligi tek gruplu; grup sırası Bursa'ya göre."""
+    def test_gruplar_kaynak_sirasini_korur(self):
+        """Bursaspor başka ligde: gruplar kaynaktaki sırayla, ilki açık.
+
+        6 Eylül 2026, kullanıcı isteği: "3. Lig'de sıralamayı 1. Grup'tan
+        başlat". Eskiden ikinci ölçüt Bursa kulübü SAYISIYDI — Kırmızı'da iki
+        Bursa takımı olduğu için o öne geçiyordu; 3. Lig de tek Bursa takımı
+        2. Grup'ta olduğu için oradan açılıyordu.
+        """
         ligler = {l["anahtar"]: l for l in puan_ligleri(self._veri())}
         iki = ligler["2lig"]
-        # Kırmızı'da iki Bursa kulübü var, Beyaz'da bir → Kırmızı önde
-        self.assertEqual([g["ad"] for g in iki["gruplar"]], ["Kırmızı", "Beyaz"])
+        self.assertEqual([g["ad"] for g in iki["gruplar"]], ["Beyaz", "Kırmızı"])
         self.assertTrue(iki["gruplar"][0]["acik"])
+        self.assertFalse(iki["gruplar"][1]["acik"])
         self.assertTrue(iki["coklu_grup"])
+
+    def test_bursasporun_kendi_grubu_one_gelir(self):
+        """Kaynak sırası kuralı Bursaspor'un grubunu geçemez.
+
+        Bursaspor ikinci gruba taşınırsa o grup başa alınır ve açılır;
+        kalan gruplar aralarındaki kaynak sırasını korur.
+        """
+        veri = self._veri()
+        veri["ligler"].append(
+            {"anahtar": "3lig", "ad": "3. Lig", "hafta": None,
+             "gruplar": [
+                 {"grup_id": 3543, "ad": "1. Grup", "takimlar": [
+                     self._takim(1, "BİR SPOR")]},
+                 {"grup_id": 3544, "ad": "2. Grup", "takimlar": [
+                     self._takim(1, "BURSASPOR", kulup_id=3601)]},
+                 {"grup_id": 3545, "ad": "3. Grup", "takimlar": [
+                     self._takim(1, "ÜÇ SPOR")]}]})
+        uc = {l["anahtar"]: l for l in puan_ligleri(veri)}["3lig"]
+        self.assertEqual([g["ad"] for g in uc["gruplar"]],
+                         ["2. Grup", "1. Grup", "3. Grup"])
+        self.assertTrue(uc["gruplar"][0]["acik"])
 
     def test_gruplarin_hicbiri_dusmuyor(self):
         iki = {l["anahtar"]: l for l in puan_ligleri(self._veri())}["2lig"]
@@ -489,23 +516,17 @@ class HavaPaneli(TestCase):
         nem = [o for o in panel["olcumler"] if o["ad"] == "Nem"][0]
         self.assertTrue(nem["deger"].startswith("%"))
 
-    def test_cubuk_ortak_olcekte(self):
-        """17-31 ile 21-25 aynı boyda çıkarsa çubuk hiçbir şey anlatmaz.
+    def test_eksik_sicaklik_bos_geciyor(self):
+        """Ölçülemeyen sıcaklık uydurulmaz; satır dereceleri boş basar.
 
-        Ortak aralık 17-31 (14 derece); ilk gün tam genişlik, ikinci gün
-        dörtte biri kadar olmalı.
+        Çubuk grafiği 6 Eylül 2026'da kalktı (kullanıcı isteği), ama
+        eksik veri hâlâ sessizce geçmeli — şablon o hücreyi boş yazar.
         """
-        panel = hava_paneli(self._paket())
-        ilk, ikinci = panel["gunler"][0]["cubuk"], panel["gunler"][1]["cubuk"]
-        self.assertEqual(ilk["sol"], 0.0)
-        self.assertEqual(ilk["genislik"], 100.0)
-        self.assertGreater(ikinci["sol"], 0)
-        self.assertLess(ikinci["genislik"], 50)
-
-    def test_eksik_sicaklik_cubugu_cizdirmiyor(self):
         paket = self._paket(gunler=[{"tarih": "2026-08-30", "en_dusuk": None,
                                      "en_yuksek": None, "hadise": {}}])
-        self.assertIsNone(hava_paneli(paket)["gunler"][0]["cubuk"])
+        gun = hava_paneli(paket)["gunler"][0]
+        self.assertIsNone(gun["en_dusuk"])
+        self.assertIsNone(gun["en_yuksek"])
 
     def test_gecmis_saatler_seride_yok(self):
         gecmis = "2020-01-01T06:00:00+03:00"

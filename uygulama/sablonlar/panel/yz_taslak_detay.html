@@ -1,0 +1,141 @@
+{% extends "panel/taban.html" %}
+
+{% comment %}Taslağın yanında kaynak ve ham malzeme — `icerik/yz_kopru.py`.
+
+Kabuk panelin kendi kayıt düzeni (`kayit-duzen` + `kutu-kart` + `yan-kart`);
+ilk sürümde kendi iki sütunu vardı ve ekran panelin geri kalanına
+benzemiyordu.
+
+**Aynı cümleler üç kez görünüyordu:** kaynağın spotu, kaynağın metni ve ham
+malzeme. Metin ana sütunda bir kez duruyor; ham malzeme (aynı cümlelerin
+puanlanmış hâli) katlanmış bir kutuda bekliyor. Tezgah kaynağın cümlelerini
+TAŞIMAK için değil, neyin önemli olduğunu göstermek için var — gövdeyi
+editör kendi cümleleriyle yazar.{% endcomment %}
+
+{% block icerik %}
+  <div class="kayit-duzen">
+    <div class="kayit-ana">
+      {% if not paket_var %}
+        <div class="kutu uyari" role="status">
+          Bu haberin araç paketi diskte bulunamadı
+          (<code>arac/cikti/haber-{{ haber.pk }}.json</code>). Kaynak metni ve
+          ham malzeme gösterilemiyor; haber kaydı yerinde duruyor.
+        </div>
+      {% endif %}
+
+      {% if hassas.var_mi %}
+        <div class="kutu tehlike" role="alert">
+          <b>Hassas konu — {{ hassas.turu }}.</b> {{ hassas.uyari }}
+        </div>
+      {% endif %}
+
+      <div class="kutu-kart">
+        <h2>Kaynak
+          <span class="sag-not">{{ kaynak.ayiklama_guveni|default:"?" }} ·
+            {{ kaynak.kelime_sayisi|default:0 }} kelime</span>
+        </h2>
+        <div class="kutu-govde">
+          <dl class="kunye-liste">
+            <dt>Yayın</dt>
+            <dd>{% firstof kaynak.asil_kaynak kaynak.kaynak_adi "—" %}</dd>
+            <dt>Yazar</dt>
+            <dd>{{ kaynak.yazar|default:"—" }}</dd>
+            <dt>Tarih</dt>
+            <dd>{{ kaynak.yayin_tarihi|default:"—" }}</dd>
+            <dt>Adres</dt>
+            {% comment %}`default` filtresine DEĞİŞKEN verilmiyor: paket yoksa
+               `kaynak` boş sözlük ve Django argümanı çözemeyip sayfayı
+               düşürüyor.{% endcomment %}
+            <dd><a href="{{ kaynak.kaynak_url }}" rel="noreferrer nofollow"
+                   target="_blank">{% firstof kaynak.kaynak_alan kaynak.kaynak_url "—" %}</a></dd>
+          </dl>
+
+          <div class="yz-metin">
+            <h3 class="yz-alt-bas">Kaynağın başlığı</h3>
+            <p class="yz-kaynak-baslik">{{ kaynak.orijinal_baslik|default:"—" }}</p>
+            <h3 class="yz-alt-bas">Kaynağın metni</h3>
+            {{ kaynak.orijinal_govde|linebreaks }}
+          </div>
+
+          {% if tezgah %}
+            <details class="acilir-alan yz-katlanir">
+              <summary>Ham malzeme — kaynağın {{ tezgah|length }} ağırlıklı cümlesi</summary>
+              <p class="sag-not">Kopyalamak için değil, neyin önemli olduğunu
+                 görmek için. Gövdeyi kendi cümlelerinizle yazın.</p>
+              <ol class="yz-tezgah">
+                {% for satir in tezgah %}<li>{{ satir.metin|linebreaksbr }}</li>{% endfor %}
+              </ol>
+            </details>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <aside class="kayit-yan" aria-label="Taslak künyesi">
+      <div class="yan-kart">
+        <h2>Taslak <span class="oran-yazi">#{{ haber.pk }}</span></h2>
+        <p class="yz-damgalar">
+          <span class="durum-etiket taslak">{{ haber.get_hazirlik_display|default:"Taslak" }}</span>
+          <span class="durum-etiket pasif">{{ haber.get_durum_display }}</span>
+          {% if uretim.saglayici %}<span class="durum-etiket">{{ uretim.saglayici }}</span>{% endif %}
+        </p>
+        <dl class="kunye-liste">
+          <dt>Başlık</dt>
+          <dd>{{ haber.baslik|default:"—" }}</dd>
+          <dt>Spot</dt>
+          <dd>{{ haber.spot|default:"— (yayın için zorunlu)" }}</dd>
+          <dt>Gövde</dt>
+          <dd>{% if haber.govde %}{{ haber.kelime_sayisi }} kelime{% else %}— (siz yazacaksınız){% endif %}</dd>
+          <dt>Kategori</dt>
+          <dd>{{ haber.kategori.ad }}{% if haber.ilce %} · {{ haber.ilce.ad }}{% endif %}</dd>
+          <dt>Kaynak</dt>
+          <dd>{% for k in haber.kaynaklar.all %}{{ k.ad }}{% empty %}—{% endfor %}</dd>
+          <dt>Etiket</dt>
+          <dd>{{ etiketler|join:", "|default:"—" }}</dd>
+        </dl>
+        <div class="eylem">
+          <a class="dugme dolu" href="{% url 'panel-haber-duzenle' haber.pk %}">Haberi yaz</a>
+          <a class="dugme ufak" href="{% url 'panel-yz-taslak-ekle' %}">Yeni taslak</a>
+        </div>
+      </div>
+
+      {% if dogrulanacaklar %}
+        <div class="yan-kart">
+          <h2>Yayından önce</h2>
+          <ul class="yz-liste">
+            {% for madde in dogrulanacaklar %}<li>{{ madde }}</li>{% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <div class="yan-kart">
+        <h2>Görsel</h2>
+        {% if haber.gorsel_var %}
+          <img class="yz-gorsel" src="{{ haber.gorsel_yolu }}" alt="{{ haber.gorsel_alt }}">
+          <p class="sag-not">İndirildi: <code>{{ haber.gorsel_dosya }}</code></p>
+        {% elif haber.gorsel_url %}
+          <img class="yz-gorsel" src="{{ haber.gorsel_url }}" alt=""
+               referrerpolicy="no-referrer">
+          <p class="sag-not">Kaynağın fotoğrafı <b>indirilmedi</b>. İndirmeden
+             önce hak durumunu doğrulayın.</p>
+          <form method="post" action="{% url 'panel-yz-gorsel' haber.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="dugme ufak">İndir ve habere bağla</button>
+          </form>
+        {% else %}
+          <p class="sag-not">Kaynakta görsel adresi bulunamadı.</p>
+        {% endif %}
+      </div>
+
+      {% if notlar %}
+        <div class="yan-kart">
+          <h2>Araç ne yaptı</h2>
+          <ul class="yz-liste">
+            {% for satir in notlar %}<li>{{ satir }}</li>{% endfor %}
+          </ul>
+          <p class="sag-not">Paket: <code>arac/cikti/haber-{{ haber.pk }}.json</code></p>
+        </div>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

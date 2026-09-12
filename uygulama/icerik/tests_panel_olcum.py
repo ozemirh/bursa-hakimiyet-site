@@ -104,11 +104,23 @@ OLCUM_BETIGI = r"""
   if (document.activeElement) document.activeElement.blur();
 
   const altsiz = [...document.images].filter(g => !g.alt).length;
-  const disKaynak = [...document.querySelectorAll('[src],[href]')]
-    .map(e => e.getAttribute('src') || e.getAttribute('href'))
-    .filter(u => u && /^https?:\/\//.test(u) &&
+  /* DIS KAYNAK ile DIS BAGLANTI ayri seyler (5 Eylul 2026).
+     Kural "panel disaridan kaynak YUKLEMEZ" demek icin var: font, gorsel,
+     betik, stil. `<a href>` hicbir sey yuklemez; tiklanmadikca sayfaya
+     dokunmaz. Secici `[href]` dedigi icin sosyal paylasim ekranindaki
+     "X penceresini ac" baglantisi kaynak sayiliyordu -- olculen kusur
+     sayfada degil, olcumdeydi. Baglantilar ayrica sayiliyor ve rapora
+     yaziliyor; bulgu sayilmiyor. */
+  const disMi = (u) => u && /^https?:\/\//.test(u) &&
                  !u.startsWith('https://fonts.googleapis.com') &&
-                 !u.startsWith('https://fonts.gstatic.com')).length;
+                 !u.startsWith('https://fonts.gstatic.com');
+  const disKaynak = [...document.querySelectorAll(
+    '[src], link[href], form[action], iframe, object, embed')]
+    .map(e => e.getAttribute('src') || e.getAttribute('href') ||
+              e.getAttribute('action'))
+    .filter(disMi);
+  const disBaglanti = [...document.querySelectorAll('a[href]')]
+    .map(e => e.getAttribute('href')).filter(disMi).length;
 
   const kenar = document.querySelector('.kenar');
   const h1 = document.querySelector('h1');
@@ -119,7 +131,7 @@ OLCUM_BETIGI = r"""
     h1metin: h1 ? h1.textContent.trim() : '',
     odaklanabilir: odaklanabilir.length,
     halkasiz,
-    altsiz, disKaynak,
+    altsiz, disKaynak, disBaglanti,
     genislik: de.clientWidth,
     // --- ölçüm aracının kendi doğrulaması ---
     // CSS yüklenmediyse sayfa çıplak akar, taşma da olmaz ve ölçüm
@@ -233,6 +245,8 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
     from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
     from taksonomi.models import Etiket, Kategori, KategoriTur, Kaynak
 
+    from sosyal.models import SosyalGonderi, SosyalHesap
+
     from .models import (Bildirim, Gazete, Haber, LogKaydi,
                          ReklamKampanyasi, ReklamYuvasi, ResmiIlan,
                          SonDakika, Yorum)
@@ -341,6 +355,18 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
                 oncesi={"durum": 2}, sonrasi={"durum": 1},
                 ip="10.0.0.1", tarayici="Mozilla/5.0 olcum")
 
+            # Sosyal paylaşım (§25): bir hesap ve bir kuyruk satırı.
+            # Hesap anahtarsız bırakıldı — ekranın ölçülmesi gereken hâli
+            # bu: uyarı kutusu ve "elle paylaş" düğmeleri o zaman çiziliyor.
+            self.sosyal_hesap = SosyalHesap.objects.create(
+                platform=SosyalHesap.X, ad="Bursa Hakimiyet — X",
+                kullanici_adi="bursahakimiyet")
+            self.sosyal_gonderi = SosyalGonderi.objects.create(
+                haber_id=990000, hesap=self.sosyal_hesap,
+                metin=(uzun + " "
+                       "https://www.bursahakimiyet.com.tr/gundem/x-1"),
+                durum=SosyalGonderi.ELLE)
+
             self.kategori = kategori
             self.spor = KategoriTur.objects.get(
                 tur=Kategori.TUR_HABER, slug="spor").kategori
@@ -366,6 +392,10 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
                 ("Bugün", "/panel/", "Bugün", 0),
                 ("Tüm Haberler", "/panel/akis", "Tüm haberler", 12),
                 ("Haber ekle", "/panel/haber/ekle", "Haber ekle", 0),
+                ("Adresten Taslak", "/panel/yz-taslak",
+                 "Yapay zekâ ile haber al", 0),
+                ("YZ taslak detayi", f"/panel/yz-taslak/{self.haber.pk}",
+                 f"Taslak #{self.haber.pk}", 0),
                 ("Haber düzenle", f"/panel/haber/{self.haber.pk}",
                  self.haber.baslik, 0),
                 ("Manşetler", "/panel/mansetler", "Manşetler", 3),
@@ -414,6 +444,14 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
                 ("Log Kayitlari", "/panel/log", "Log kayıtları", 1),
                 ("Log detay", f"/panel/log/{self.log.pk}",
                  f"Log #{self.log.pk}", 0),
+                ("Sosyal Paylasim", "/panel/sosyal", "Sosyal paylaşım", 1),
+                ("Sosyal gonderi", f"/panel/sosyal/{self.sosyal_gonderi.pk}",
+                 f"{self.sosyal_hesap.ad} — [990000]", 0),
+                ("Sosyal gonderi ac", "/panel/sosyal/ekle", "Elle gönderi aç", 0),
+                ("Sosyal Hesaplar", "/panel/sosyal/hesaplar", "Sosyal hesaplar", 1),
+                ("Sosyal hesap duzenle",
+                 f"/panel/sosyal/hesap/{self.sosyal_hesap.pk}",
+                 self.sosyal_hesap.ad, 0),
                 ("Iki Adimli", "/panel/iki-adimli", "İki adımlı doğrulama", 0),
                 ("Roller", "/panel/roller", "Roller", 0),
                 ("Şifre", "/panel/sifre", "Şifre", 0),
@@ -771,6 +809,7 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
             satirlar, hatalar = [], []
             toplam_odak = 0
             yuzler = set()
+            dis_baglar = {}
             for ad, yol, beklenen_h1, en_az_satir in self._sayfalar():
                 if ad != "Giriş":
                     self._oturum_ac()
@@ -820,8 +859,14 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
                         hatalar.append(f"{ad} @{genislik}: alt'sız img "
                                        f"{o['altsiz']}")
                     if o["disKaynak"]:
+                        # Sayı değil ADRES yazılıyor: "dış kaynak 1" bulguyu
+                        # elle aratıyordu (halkasız öğelerde aynı ders).
                         hatalar.append(f"{ad} @{genislik}: dış kaynak "
-                                       f"{o['disKaynak']}")
+                                       f"{o['disKaynak'][:3]}")
+                    # Dış BAĞLANTI bulgu değil; sayısı raporda görünür ki
+                    # panele sessizce dışarı açılan bir bağ eklenmesin.
+                    if o["disBaglanti"]:
+                        dis_baglar[ad] = o["disBaglanti"]
                 satirlar.append(
                     f"{ad:<24} taşma " +
                     " ".join(f"{g}:{t}" for g, t in zip(GENISLIKLER, olculen)) +
@@ -835,6 +880,9 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
             for satir in satirlar:
                 print(satir)
             print(f"yüklenen yazı tipi aileleri: {sorted(yuzler)}")
+            print("dış bağlantı taşıyan ekranlar: "
+                  + (", ".join(f"{a}:{s}" for a, s in dis_baglar.items())
+                     or "yok"))
             print(f"odaklanabilir öğe (toplam): {toplam_odak}")
             print(f"bulgu: {len(hatalar)}")
             for hata in hatalar[:40]:

@@ -1,0 +1,140 @@
+{% load site_etiket %}
+{% comment %}BÖLÜMÜN SERVİS PANELİ — 7 Eylül 2026 (§62).
+
+6 Eylül'de (§59) bu blok TEK SATIRLIK BİR ŞERİTTİ. Kullanıcı kararı:
+*"sadece sayfanın üst kısmına konulmuş tek satırlık şerit hoş bir görüntü
+değil, bu alanları kategori sayfalarına koyacaksak düzgün bir alan olarak
+koymalıyız"*. Doğru — şerit veriyi taşıyordu ama sunmuyordu: döviz beş
+kalemi yan yana sıkıştırıyor, puan yalnız bir satır söylüyor, eczane
+adresi ve haritayı hiç göstermiyordu.
+
+Panel artık sitenin kendi `.kutu` bileşeni: başlık çubuğu, gövde, künye.
+Anasayfadaki panellerin KOPYASI değil — orada "ŞEHİR SERVİSLERİ" hepsini
+bir arada veren bir pano, burada bölümün kendi verisi ve yalnız o.
+
+YERİ DEĞİŞMEDİ: kırıntının altında, haber kutusunun üstünde. Bölümün canlı
+verisi o bölümün kimliğidir ve okur sayfayı onun için de açıyor; ekonomi
+bölümünde kur, spor bölümünde puan durumu ilk ekranda olmalı. Bloomberg
+/markets ve ESPN takım sayfaları da aynı yeri kullanıyor.
+
+Hangi bölümün hangi paneli gördüğü ŞABLONDA DEĞİL görünümde
+(`icerik/views.py`, `_bolum_servisi`): kural veriye bakıyor ve veri yoksa
+`servis` None gelir, panel hiç çizilmez. Sahte satır, "veri alınamadı"
+kutusu ya da boş çerçeve basılmaz.{% endcomment %}
+{% if servis %}
+<section class="kutu bolum-servis s-{{ servis.tur }}" aria-labelledby="servis-bas">
+
+  {% if servis.tur == "doviz" %}
+    <div class="kutu-bas">
+      <h2 id="servis-bas">PİYASA</h2>
+      <span class="tumu">
+        {% if servis.doviz.bulten.tarih %}TCMB bülteni {{ servis.doviz.bulten.tarih }}{% if servis.doviz.bulten.no %} &middot; {{ servis.doviz.bulten.no }}{% endif %} &middot; {% endif %}<a href="/veri-kaynaklari">Veri kaynakları &rarr;</a>
+      </span>
+    </div>
+    <div class="kutu-ic">
+      {% comment %}Beş kalem sabittir (URUN-PLANI.md §1, bileşen 9).
+      Kaynağı bulunamayan kalem çizgiyle gösterilir — uydurma değer
+      basmaktansa "veri yok" demek doğru. Alış/satış YALNIZ TCMB'nin
+      verdiği üç kalemde var; gram altın ve BIST'te alan hiç basılmaz,
+      boş bir "Alış –" satırı okura yanlış bir eksiklik duygusu verirdi.{% endcomment %}
+      <div class="piyasa-izgara">
+        {% for k in servis.doviz.kalemler %}
+        <div class="piyasa-kalem{% if k.yon == 'yukari' %} artiyor{% elif k.yon == 'asagi' %} azaliyor{% endif %}">
+          <span class="ad">{{ k.ad }}</span>
+          <b class="deger">{% if k.deger %}{{ k.deger|floatformat:2 }}{% if k.birim == "TL" %} <span class="birim">&#8378;</span>{% else %} <span class="birim">{{ k.birim }}</span>{% endif %}{% else %}<span class="veri-yok" title="Kaynak bulunamadı, panelden elle girilir">&ndash;</span>{% endif %}</b>
+          {% if k.degisim_yuzde %}
+          <span class="fark" aria-label="yüzde {{ k.degisim_yuzde|mutlak|floatformat:2 }} {% if k.yon == 'yukari' %}yükseldi{% else %}geriledi{% endif %}">
+            <span aria-hidden="true">{% if k.yon == 'yukari' %}&#9650;{% else %}&#9660;{% endif %}</span> %{{ k.degisim_yuzde|mutlak|floatformat:2 }}
+          </span>
+          {% endif %}
+          {% if k.alis and k.satis %}<span class="alis-satis">Alış {{ k.alis|floatformat:2 }} &middot; Satış {{ k.satis|floatformat:2 }}</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <p class="servis-kunye">
+        {% if servis.doviz.kaynak.kunye %}{{ servis.doviz.kaynak.kunye }}{% endif %}
+        {% if servis.doviz.guncelleme %}Son güncelleme {{ servis.doviz.guncelleme|slice:"11:16" }}{% if servis.doviz.bayat %} &middot; <b>güncel değil</b>{% endif %}.{% endif %}
+      </p>
+    </div>
+
+  {% elif servis.tur == "puan" %}
+    <div class="kutu-bas">
+      <h2 id="servis-bas">{{ servis.takip.lig_adi|default:"PUAN DURUMU" }}{% if servis.takip.grup_adi %} &middot; {{ servis.takip.grup_adi }}{% endif %}</h2>
+      <span class="tumu">{% if servis.takip.hafta %}{{ servis.takip.hafta }}. hafta &middot; {% endif %}<a href="/bursaspor">Tüm tablo &rarr;</a></span>
+    </div>
+    <div class="kutu-ic">
+      <div class="puan-panel">
+
+        {% comment %}HAFTANIN MAÇI. Skor yalnız maç oynandıysa basılır;
+        oynanmadıysa tarih ve saat gösterilir — kaynakta olmayan sonuç
+        uydurulmaz (anasayfadaki kutuyla aynı kural).{% endcomment %}
+        {% if servis.takip.mac %}{% with mac=servis.takip.mac %}
+        <div class="mac-karti">
+          <span class="mac-bas">{% if mac.skor_var %}SONUÇ{% else %}HAFTANIN MAÇI{% endif %}</span>
+          <div class="mac-takimlar">
+            <b{% if mac.ev_kulup_id == servis.takip.kulup_id %} class="bizim"{% endif %}>{{ mac.ev|baslikla }}</b>
+            {% if mac.skor_var %}<span class="mac-skor">{{ mac.ev_gol }}&ndash;{{ mac.deplasman_gol }}</span>
+            {% else %}<span class="mac-skor bekliyor">{{ mac.saat|default:"&ndash;" }}</span>{% endif %}
+            <b{% if mac.deplasman_kulup_id == servis.takip.kulup_id %} class="bizim"{% endif %}>{{ mac.deplasman|baslikla }}</b>
+          </div>
+          <span class="mac-zaman">{% if mac.tarih_g %}<time datetime="{{ mac.tarih_g|date:"Y-m-d" }}">{{ mac.tarih_g|date:"j F Y, l" }}</time>{% else %}{{ mac.tarih }}{% endif %}</span>
+        </div>
+        {% endwith %}{% endif %}
+
+        {% comment %}PENCERE: tablonun tamamı değil, Bursaspor'un etrafındaki
+        beş satır (`_puan_penceresi`). Okurun burada sorduğu şey "kiminle
+        yarışıyoruz"; tam tablo anasayfada ve `/bursaspor`ta duruyor.{% endcomment %}
+        {% if servis.pencere %}
+        <div class="puan-pencere" role="region" tabindex="0" aria-label="{{ servis.takip.lig_adi }} puan durumu, {{ servis.takip.ad|baslikla }} ve rakipleri">
+          <table class="puan">
+            <caption class="gorsel-gizli">{{ servis.takip.ad|baslikla }} ve tablodaki komşuları</caption>
+            <thead><tr><th scope="col">#</th><th scope="col">Takım</th><th scope="col"><abbr title="Oynadığı maç">O</abbr></th><th scope="col"><abbr title="Averaj">Av</abbr></th><th scope="col"><abbr title="Puan">P</abbr></th></tr></thead>
+            <tbody>
+              {% for t in servis.pencere %}
+              <tr{% if t.bizim %} class="bizim"{% elif t.bursa %} class="bursali"{% endif %}><td class="sira-no">{{ t.sira }}</td><td class="ad">{{ t.ad|baslikla }}</td><td>{{ t.oynadi }}</td><td>{{ t.averaj }}</td><td class="p">{{ t.puan }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+
+      </div>
+      <p class="servis-kunye">
+        {{ servis.takip.ad|baslikla }} &middot; {{ servis.takip.sira }}. sıra &middot; {{ servis.takip.puan }} puan &middot;
+        O{{ servis.takip.oynadi }} G{{ servis.takip.galibiyet }} B{{ servis.takip.beraberlik }} M{{ servis.takip.maglubiyet }} &middot;
+        {{ servis.takip.attigi }} attı, {{ servis.takip.yedigi }} yedi.
+      </p>
+    </div>
+
+  {% elif servis.tur == "nobet" %}
+    <div class="kutu-bas">
+      <h2 id="servis-bas">{% if servis.yer %}{{ servis.yer|buyult }} NÖBETÇİ ECZANELERİ{% else %}NÖBETÇİ ECZANELER{% endif %}</h2>
+      {% comment %}Adet PANELİN GÖSTERDİĞİ değil, bugünkü TOPLAMDIR:
+      "düğmedeki sayı, basınca geleni sayar" (URUN-PLANI.md §32.2).{% endcomment %}
+      <span class="tumu"><a href="{{ servis.yol }}">{{ servis.adet }} eczanenin tamamı &rarr;</a></span>
+    </div>
+    <div class="kutu-ic">
+      <ul class="eczane-izgara">
+        {% for e in servis.eczaneler %}
+        <li>
+          <b>{{ e.ad|baslikla }}</b>
+          {% if e.ilce and not servis.yer %}<span class="yer">{{ e.ilce|baslikla }}</span>{% endif %}
+          {% if e.adres %}<span class="adres">{{ e.adres|baslikla }}</span>{% endif %}
+          <span class="baglar">
+            {% if e.telefon_baglanti %}<a class="tel" href="tel:{{ e.telefon_baglanti }}">{{ e.telefon }}</a>{% endif %}
+            {% comment %}Harita bağlantısı DIŞ adrestir ve yeni sekmede
+            açılır; `rel` olmadan açılan sekme bu sayfaya erişebilirdi.{% endcomment %}
+            {% if e.harita %}<a class="harita" href="{{ e.harita }}" target="_blank" rel="noopener noreferrer">Haritada göster</a>{% endif %}
+          </span>
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="servis-kunye">
+        {% if servis.gun %}{{ servis.gun|date:"j F Y, l" }}{% endif %}{% if servis.pencere %} &middot; nöbet {{ servis.pencere }}{% endif %}.
+        {% if servis.kaynak.ad %} Kaynak: {{ servis.kaynak.ad }}.{% endif %}
+      </p>
+    </div>
+  {% endif %}
+
+</section>
+{% endif %}

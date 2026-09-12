@@ -31,6 +31,14 @@ DIL_ALANLARI = ("spot", "seo_baslik", "seo_aciklama", "url_slug", "gorsel_alt")
 # K1 icin: bu uzunlukta birebir ortusme kopyalama sayilir
 ORTUSME_KELIME = 8
 
+# Uzunluk sinirlari PANELIN sozlesmesinden gelir (`uygulama/icerik/formlar.py`
+# BASLIK_SINIR / SPOT_SINIR). Sabit olarak duruyorlar ki urun tarafi degisince
+# hizanin bozuldugu testle yakalansin (`icerik/tests_yz.py`). Spot ustu 300:
+# panelin siniri 320, arada pay birakiliyor.
+BASLIK_SINIR = 60
+SPOT_ALT = 160
+SPOT_UST = 300
+
 HUKUM_DILI = (
     "öldürdü", "öldürmüş", "zimmetine geçirdi", "dolandırdı", "çaldı",
     "rüşvet aldı", "istismar etti", "katletti", "suçu işledi",
@@ -120,10 +128,12 @@ def mekanik(t: dict, hal: str) -> list[str]:
     for i, s in enumerate(t["baslik_secenekleri"]):
         if not s["metin"]:
             b.append("ALAN baslik[%d] bos" % i)
-        elif len(s["metin"]) > 70:
-            b.append("ALAN baslik[%d] %d karakter (sinir 70)" % (i, len(s["metin"])))
-    if not 160 <= len(t["spot"]) <= 260:
-        b.append("ALAN spot %d karakter (160-260)" % len(t["spot"]))
+        elif len(s["metin"]) > BASLIK_SINIR:
+            b.append("ALAN baslik[%d] %d karakter (sinir %d)"
+                     % (i, len(s["metin"]), BASLIK_SINIR))
+    if not SPOT_ALT <= len(t["spot"]) <= SPOT_UST:
+        b.append("ALAN spot %d karakter (%d-%d)"
+                 % (len(t["spot"]), SPOT_ALT, SPOT_UST))
     if any(not m.strip() for m in t["uc_madde"]):
         b.append("ALAN uc_madde icinde bos madde var")
     if any(not g["metin"].strip() for g in t["govde"]):

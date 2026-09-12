@@ -209,9 +209,14 @@ def puan_ligleri(puan: dict | None) -> list[dict]:
 
     1. **Açık sekme Bursaspor'un ligidir**, listenin ilki değil — okur
        gazeteyi Bursaspor için açıyor. Lig `takip.lig` alanından gelir.
-    2. **Grup körlemesine seçilmez.** Bursaspor'un grubu, yoksa Bursa kulübü
-       barındıran grup öne alınır; birden çok grup varsa okur değiştirebilsin
-       diye hepsi çizilir.
+    2. **Grup körlemesine seçilmez.** Bursaspor'un grubu öne alınır; birden
+       çok grup varsa okur değiştirebilsin diye hepsi çizilir. Kalan gruplar
+       KAYNAKTAKİ sırayla dizilir — 3. Lig'de sekmeler 1. Grup'tan başlar
+       (6 Eylül 2026, kullanıcı isteği). Eskiden ikinci ölçüt "en çok Bursa
+       kulübü olan grup" idi ve 3. Lig, tek Bursa takımı (Bursa Yıldırım)
+       2. Grup'ta olduğu için oradan açılıyordu. Bursa kulüpleri satır
+       renginden zaten seçiliyor (`.bursali`), sekme sırasını bozmaya gerek
+       yok; Bursaspor'un KENDİ grubu önde kalmaya devam eder.
     3. **Tablo kırpılmaz** — grubun bütün takımları gelir.
     """
     if not puan:
@@ -225,23 +230,20 @@ def puan_ligleri(puan: dict | None) -> list[dict]:
         for grup in lig.get("gruplar") or []:
             takimlar = []
             bizim_grup = False
-            bursali = 0
             for t in grup.get("takimlar") or []:
                 bizim = bool(bizim_id and t.get("kulup_id") == bizim_id)
                 bursa = bizim or _bursa_kulubu(t.get("ad", ""))
                 bizim_grup = bizim_grup or bizim
-                bursali += 1 if bursa else 0
                 takimlar.append(dict(t, bizim=bizim, bursa=bursa))
             gruplar.append({
                 "grup_id": grup.get("grup_id"),
                 "ad": grup.get("ad") or "",
                 "takimlar": takimlar,
                 "bizim_grup": bizim_grup,
-                "bursali": bursali,
             })
-        # Bursaspor'un grubu en önde; sonra en çok Bursa kulübü olan grup.
-        # `sort` kararlı olduğu için eşitlikte kaynağın sırası korunur.
-        gruplar.sort(key=lambda g: (not g["bizim_grup"], -g["bursali"]))
+        # Yalnız Bursaspor'un grubu öne alınır; `sort` kararlı olduğu için
+        # kalan gruplar kaynaktaki sırayı (1. Grup, 2. Grup, 3. Grup) korur.
+        gruplar.sort(key=lambda g: not g["bizim_grup"])
         for sira, grup in enumerate(gruplar):
             grup["acik"] = sira == 0
         ligler.append({
@@ -307,6 +309,44 @@ HAVA_AILE = {
     "hv-yagmur": "yagis", "hv-saganak": "yagis", "hv-firtina": "yagis",
     "hv-dolu": "kar", "hv-kar": "kar", "hv-soguk": "kar",
 }
+
+
+# Rüzgâr yönünün kısaltması. MGM on altı yönün adını TAM yazıyla veriyor
+# ("doğu-kuzeydoğu"); beş günlük tablonun sütunu o kadar geniş değil.
+# Kısaltma parça parça kuruluyor — on altı yönü tek tek listelemeye gerek
+# yok, tireyle ayrılan her parçanın karşılığı zaten aşağıdaki sekiz satırda.
+# Tanınmayan parça sessizce atlanır; uydurma harf üretilmez, en kötü hâlde
+# kısaltma boş kalır ve tabloda yalnız hız görünür.
+_YON_HARF = {
+    "kuzeydogu": "KD", "kuzeybati": "KB",
+    "guneydogu": "GD", "guneybati": "GB",
+    "kuzey": "K", "guney": "G", "dogu": "D", "bati": "B",
+}
+_YON_SADE = str.maketrans("çğıöşüâî", "cgiosuai")
+
+
+def _yon_kisalt(ad: str | None) -> str:
+    """"doğu-kuzeydoğu" -> "DKD"."""
+    if not ad:
+        return ""
+    sade = ad.strip().lower().translate(_YON_SADE)
+    return "".join(_YON_HARF.get(parca, "") for parca in sade.split("-"))
+
+
+def _ok_acisi(derece) -> int | None:
+    """Rüzgâr okunun döneceği açı.
+
+    MGM'nin `ruzgar_yon_derece` alanı rüzgârın GELDİĞİ yönü söyler
+    (meteoroloji sözleşmesi). Tablodaki ok ise rüzgârın GİTTİĞİ yönü
+    gösterir — gazete grafiğinin sözleşmesi bu. Aradaki fark 180 derece.
+    Simge yukarı bakarak çizildi, yani 0 derece kuzeyi gösteriyor.
+    """
+    if derece is None:
+        return None
+    try:
+        return (int(derece) + 180) % 360
+    except (TypeError, ValueError):
+        return None
 
 
 def hava_simgesi(hadise: dict | None, gece: bool = False) -> str:
@@ -389,14 +429,15 @@ def hava_paneli(hava: dict | None, namaz: dict | None = None,
     """Tam genişlikteki hava panelinin bütün parçalarını hazırlar.
 
     Dönen sözlük: `simdi` (anlık blok), `olcumler`, `saatlik`, `gunler`.
-    Ayrıca `manzara` — anlık bloğun arkasındaki Uludağ çiziminin paleti.
-    Renk BEZEME DEĞİL, bilgi taşır: gökyüzü havaya ve günün saatine göre
-    değişir, okur sayfaya bakar bakmaz "açık mı, yağışlı mı, gece mi"
+    Ayrıca `manzara` — anlık bloğun arkasındaki fotoğrafın paleti.
+    Renk BEZEME DEĞİL, bilgi taşır: panelin tonu havaya ve günün saatine
+    göre değişir, okur sayfaya bakar bakmaz "açık mı, yağışlı mı, gece mi"
     sorusunu okumadan yanıtlar.
-    Beş günün sıcaklık çubuğu için ortak bir ölçek kullanılır — her satır
-    kendi ölçeğinde çizilseydi 17-31° ile 17-33° aynı boyda görünür, çubuk
-    hiçbir şey anlatmazdı. `sol` ve `genislik` yüzdeleri beş günün ortak
-    en düşük/en yüksek aralığına göre hesaplanır.
+
+    Beş günün sıcaklığı 6 Eylül 2026'ya kadar ortak ölçekli bir ÇUBUKLA da
+    çiziliyordu (`cubuk`: `sol` ve `genislik` yüzdeleri). Kullanıcı grafiği
+    beğenmedi; en düşük/en yüksek artık yalnız yazıyla veriliyor ve
+    yüzdeler hesaplanmıyor.
     """
     if not hava:
         return None
@@ -405,20 +446,8 @@ def hava_paneli(hava: dict | None, namaz: dict | None = None,
     gunler_ham = hava.get("gunler") or []
 
     gunler = []
-    sicakliklar = [d for g in gunler_ham
-                   for d in (g.get("en_dusuk"), g.get("en_yuksek"))
-                   if d is not None]
-    taban = min(sicakliklar) if sicakliklar else 0
-    tavan = max(sicakliklar) if sicakliklar else 0
-    aralik = (tavan - taban) or 1
     for sira, g in enumerate(gunler_ham):
         dusuk, yuksek = g.get("en_dusuk"), g.get("en_yuksek")
-        cubuk = None
-        if dusuk is not None and yuksek is not None:
-            cubuk = {
-                "sol": round((dusuk - taban) / aralik * 100, 1),
-                "genislik": max(round((yuksek - dusuk) / aralik * 100, 1), 4),
-            }
         gunler.append({
             "tarih": _tarihe_cevir(g.get("tarih")),
             "bugun": sira == 0,
@@ -429,7 +458,13 @@ def hava_paneli(hava: dict | None, namaz: dict | None = None,
             "en_yuksek": yuksek,
             "ruzgar_hiz": g.get("ruzgar_hiz"),
             "ruzgar_yon": g.get("ruzgar_yon") or "",
-            "cubuk": cubuk,
+            # 6 Eylül 2026, kullanıcı isteği ("panel çok boş"): bu üç alan
+            # MGM paketinde ZATEN vardı, beş günlük listede basılmıyordu.
+            # Yeni bir kaynağa gidilmedi, açılan tek şey sunum.
+            "ruzgar_kisa": _yon_kisalt(g.get("ruzgar_yon")),
+            "ruzgar_ok": _ok_acisi(g.get("ruzgar_yon_derece")),
+            "nem_dusuk": g.get("en_dusuk_nem"),
+            "nem_yuksek": g.get("en_yuksek_nem"),
         })
 
     # Saatlik dizi geçmiş saatleri de taşıyabiliyor; okura yalnız ÖNÜNDEKİ

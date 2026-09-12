@@ -132,9 +132,9 @@ ise kaynağı elle kontrol edin; muhtemelen sayfa JavaScript ile kuruluyordur.
 
 | Alan | Açıklama |
 |---|---|
-| `baslik_secenekleri` | 3 seçenek, her biri gerekçeli (düz / etki odaklı / kısa) |
+| `baslik_secenekleri` | 3 seçenek, her biri gerekçeli (düz / etki odaklı / kısa). **En fazla 60 karakter** — panelin `BASLIK_SINIR`ı |
 | `onerilen_baslik_indeksi` | Modelin önerdiği seçenek |
-| `spot` | 1-2 cümle, 160-260 karakter |
+| `spot` | 1-2 cümle, **160-300 karakter** — panelin `SPOT_SINIR`ı 320, altında pay bırakılıyor |
 | `uc_madde` | "3 maddede ne oldu" kutusu |
 | `govde` | `paragraf` / `ara_baslik` / `alinti` blokları |
 | `kategori`, `ilce`, `onem` | Kapalı listelerden seçilir |
@@ -161,6 +161,24 @@ iki alan bulunur:
 | `konu_onerisi` | Hiç aday yoksa yeni dosya için ad/slug/anahtar önerisi |
 
 ---
+
+## Ürün: panelden taslak (5 Eylül 2026)
+
+Araç artık gazetenin kendi paneline bağlı. `/panel/yz-taslak` ekranı bir
+haber adresi alır, buradaki ayıklayıcı ve sağlayıcıları çalıştırır ve
+veritabanında **taslak** bir haber açar; yayına alma panelin kendi
+formundan, kendi yetkisi ve eşiğiyle olur. Köprü `uygulama/icerik/yz_kopru.py`,
+karar kaydı `URUN-PLANI.md` §50.
+
+Komut satırı yolu da var (uzun süren model yolları için):
+
+```bash
+cd uygulama
+python manage.py taslak_al "https://…" --saglayici kural --kullanici editor
+```
+
+Aşağıdaki `yayin.py` yolu **demo dönemine aittir**: üç tasarım dosyasına
+yazar, üründe kullanılmaz.
 
 ## Yayın (yerel)
 

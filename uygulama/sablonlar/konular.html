@@ -1,0 +1,41 @@
+{% extends "taban.html" %}
+{% load site_etiket %}
+
+{% block baslik %}Konu Dosyaları — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}Bursa Hakimiyet'in takip ettiği konu dosyaları: birbirini izleyen haberler, gelişme sırasıyla.{% endblock %}
+
+{% comment %}KONU DİZİNİ (5 Eylül 2026). Onaylı dosyalar, son gelişmesi en
+yeni olan önde. Sürenler rozetle işaretli. Sayfalama bölüm sayfasıyla
+aynı parçadan.{% endcomment %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Konu Dosyaları</span>
+      </nav>
+
+      <section class="kutu bolum">
+        <div class="kutu-bas vurgu">
+          <h1>KONU DOSYALARI</h1>
+          <span class="tumu">{{ sayfa.paginator.count }} dosya{% if surenler %} · {{ surenler }} sürüyor{% endif %}</span>
+        </div>
+        <div class="kutu-ic">
+          {% if sayfa %}
+          <ul class="konu-dizin">
+            {% for k in sayfa %}
+            <li>
+              <div class="ust">
+                <time datetime="{{ k.bitis|date:'c' }}">{{ k.baslangic|date:"j M Y" }} – {{ k.bitis|date:"j M Y" }}</time>
+                {% if k.acik %}<span class="suruyor">SÜRÜYOR</span>{% endif %}
+              </div>
+              <h2><a href="{{ k.get_absolute_url }}">{{ k.ad }}</a></h2>
+              <p>{{ k.haber_sayisi }} haber{% if k.ozet %} · {{ k.ozet|truncatechars:140 }}{% endif %}</p>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}<p class="bos">Henüz onaylı konu dosyası yok.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      {% include "parca/sayfalama.html" %}
+{% endblock %}

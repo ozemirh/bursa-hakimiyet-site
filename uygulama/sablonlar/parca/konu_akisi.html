@@ -1,0 +1,32 @@
+{% load site_etiket %}
+{% comment %}KONUNUN AKIŞI — haber sayfasında, gövdenin altında (5 Eylül 2026).
+
+Haberin bağlı olduğu ONAYLI konu dosyasının önceki ve sonraki haberleri.
+Okur "bu haber nereden geldi, sonra ne oldu" sorusunu sayfadan ayrılmadan
+görür. Pencere dar: okunanla birlikte en çok 5 satır (icerik/konu.py,
+kullanıcı kararı); dosyanın
+tamamı `/konu/<slug>` sayfasında. Okunan haber listede işaretli ve bağlantı
+DEĞİL — kendine bağlanan satır klavye için ölü durak olurdu.
+
+Hassas dosya uyarısı burada BASILMAZ: uyarı editöre yöneliktir, panelde
+konu sütununun ilk öğesi olarak durur (PANEL-NOTLARI.md §15). Okura
+düşen, haberin kendi dilidir.{% endcomment %}
+<section class="konu-akis" aria-labelledby="konu-akis-bas">
+  <div class="konu-bas">
+    <span class="rozet-k">KONUNUN AKIŞI</span>
+    <h2 id="konu-akis-bas"><a href="{{ a.konu.get_absolute_url }}">{{ a.konu.ad }}</a></h2>
+    <span class="konu-ozet">{{ a.toplam }} haber · {{ a.konu.baslangic|date:"j M Y" }} – {{ a.konu.bitis|date:"j M Y" }}{% if a.konu.acik %} · <b>sürüyor</b>{% endif %}</span>
+  </div>
+  <ol class="konu-zaman">
+    {% if a.gizli_once %}<li class="daha"><a href="{{ a.konu.get_absolute_url }}">{{ a.gizli_once }} önceki haber</a></li>{% endif %}
+    {% for h in a.oncekiler %}
+    <li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|date:"j M Y" }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
+    {% endfor %}
+    <li class="simdi" aria-current="page"><time datetime="{{ haber.yayin_zamani|date:'c' }}">{{ haber.yayin_zamani|date:"j M Y" }}</time><span>{{ haber.baslik }}</span></li>
+    {% for h in a.sonrakiler %}
+    <li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|date:"j M Y" }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
+    {% endfor %}
+    {% if a.gizli_sonra %}<li class="daha"><a href="{{ a.konu.get_absolute_url }}">{{ a.gizli_sonra }} sonraki haber</a></li>{% endif %}
+  </ol>
+  <p class="konu-tumu"><a href="{{ a.konu.get_absolute_url }}">Dosyanın tamamı &rarr;</a></p>
+</section>

@@ -190,9 +190,18 @@ def _jsonld_haber(bloklar: list[str]) -> dict:
 
 
 def _duz(deger) -> str:
-    """JSON-LD alanlarindaki degisken sekilleri tek bir metne indirger."""
+    """JSON-LD alanlarindaki degisken sekilleri tek bir metne indirger.
+
+    VARLIK KACISLARI BURADA COZULUYOR (5 Eylul 2026). JSON-LD bir <script>
+    blogunun icinde durur ve HTMLParser script govdesini CDATA sayip
+    `convert_charrefs`i kapatir -- yani meta etiketlerinden gelen deger
+    cozulmusken JSON-LD'den gelen deger HAM kalir. Olculdu: olay.com.tr
+    basligi `OECD&#039;den Turkiye&#039;nin...` diye geliyordu ve panelde
+    de oyle gorunuyordu. Tek gecis yapiliyor; cift kodlanmis metni ikinci
+    kez cozmek `&amp;lt;` gibi bilerek yazilmis metni bozardi.
+    """
     if isinstance(deger, str):
-        return deger.strip()
+        return unescape(deger).strip()
     if isinstance(deger, dict):
         for anahtar in ("name", "url", "@id", "contentUrl", "headline"):
             if deger.get(anahtar):
@@ -240,6 +249,25 @@ def _gorsel_adayi(deger) -> str:
     if not d or "#" in d:          # "...html#primaryimage" gibi @id degerleri
         return ""
     return d if re.search(r"\.(jpe?g|png|webp|avif|gif)(\?|$)", d, re.I) else ""
+
+
+def _yayin_kuyrugu_at(baslik: str, kaynak_adi: str, alan: str) -> str:
+    """Basligin sonundaki YAYIN ADINI atar.
+
+    JSON-LD `headline` alani cogu sitede sayfa <title>'inin kopyasidir ve
+    yayin adini tasir: "...destek - Olay Gazetesi Bursa". <title> yolunda
+    bu kuyruk zaten kesiliyordu, JSON-LD yolunda kesilmiyordu.
+
+    Ayiriciya bakip korlemesine kesmek yanlis olurdu -- haber basliginda
+    tire bulunabilir ("Bursa - Ankara hatti"). Bu yuzden kuyruk yalnizca
+    YAYIN ADIYLA ya da ALAN ADIYLA eslesiyorsa kesiliyor.
+    """
+    for ad in filter(None, (kaynak_adi, alan)):
+        yeni = re.sub(r"\s*[|\-–—:·]\s*" + re.escape(ad) + r"\s*$", "",
+                      baslik, flags=re.IGNORECASE)
+        if yeni.strip() and yeni != baslik:
+            return yeni.strip()
+    return baslik
 
 
 def _etiketsiz(metin: str) -> str:
@@ -376,6 +404,7 @@ def ayikla(html: str, url: str) -> dict:
     )
     guncelleme = _duz(ld.get("dateModified")) or meta.get("article:modified_time", "")
     kaynak_adi = _isim(ld.get("publisher")) or meta.get("og:site_name", "") or alan
+    baslik = _yayin_kuyrugu_at(baslik, kaynak_adi, alan)
 
     kelime = len(govde.split()) if govde else 0
     return {

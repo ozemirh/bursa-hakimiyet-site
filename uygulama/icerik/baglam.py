@@ -103,11 +103,37 @@ def site(request):
         "kunye_arsiv": _kunye_arsiv(),
         "son_dakika": Haber.yayindakiler().select_related("kategori")[:SON_DAKIKA_ADET],
         "ilceler": Ilce.objects.all(),
-        "reklam_dugmesi": _reklam_dugmesi(request),
+        "reklam_dugmesi": sunum_araci_mi(request),
         # Reklam demo agi. Bayrak kapaliyken taban.html hicbir dis betik
         # basmaz; yuvalar gri yer tutucu olarak kalir.
         "reklam_demo": settings.REKLAM_DEMO,
         "reklam_yolu": settings.REKLAM_DEMO_YOLU,
+        # Yerel test reklam hizmeti (7 Eylul 2026). Dis ag DEGIL: yaratici
+        # sunucuda uretilir, istenen olcude ve internetsiz. Yalniz sunum
+        # oturumunda cizilir; siradan ziyaretci ne dugmeyi ne betigi gorur.
+        "reklam_test": settings.REKLAM_TEST and sunum_araci_mi(request),
+        # AdSense — gazetenin kendi yayinci kimligi. TEST MODUNDA yalniz
+        # sunum oturumuna cizilir: test yaraticisi okura gosterilecek sey
+        # degil. Test kapatildiginda (gercek yayin) herkese cizilir.
+        "adsense_ayar": _adsense_ayar(request),
+    }
+
+
+def _adsense_ayar(request):
+    """`<ins>` kurmak icin gereken her sey ya da None.
+
+    Kimlik verilmediyse None doner ve taban.html hicbir dis betik basmaz;
+    site disaridan yalniz Google Fonts ceker.
+    """
+    if not settings.ADSENSE_ID:
+        return None
+    if settings.ADSENSE_TEST and not sunum_araci_mi(request):
+        return None
+    return {
+        "kimlik": settings.ADSENSE_ID,
+        "test": settings.ADSENSE_TEST,
+        "varsayilan": settings.ADSENSE_SLOT,
+        "yuvalar": settings.ADSENSE_YUVALAR,
     }
 
 
@@ -122,7 +148,7 @@ def site(request):
 YEREL_SUNUCULAR = {"127.0.0.1", "localhost", "[::1]"}
 
 
-def _reklam_dugmesi(request):
+def sunum_araci_mi(request):
     kullanici = getattr(request, "user", None)
     if kullanici is not None and kullanici.is_authenticated and kullanici.is_staff:
         return True

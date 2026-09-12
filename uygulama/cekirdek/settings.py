@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import json
 import os
 from pathlib import Path
 
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     "icerik",
     "medya",
     "besleme",
+    "sosyal",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -177,6 +179,50 @@ REKLAM_DEMO = os.environ.get("BH_REKLAM_DEMO", "0") == "1"
 # doner. Ust seridin cok olculu tanimi (970x250 + 728x90) bu yuzden var.
 REKLAM_DEMO_YOLU = os.environ.get(
     "BH_REKLAM_YOLU", "/6355419/Travel/Europe/France/Paris")
+
+# --- yerel test reklam hizmeti (7 Eylul 2026, kullanici istegi) ----------
+#
+# Demo aginin yapamadigi uc sey: istenen OLCUDE yaratici (ag yalniz
+# 300x250, 160x600, 728x90 dolduruyor), CEREZSIZ calismak ve INTERNETSIZ
+# calismak. Bu hizmet yaraticiyi sunucuda uretir (`icerik/reklam.py`),
+# disariya hicbir istek atmaz.
+#
+# VARSAYILAN ACIK ama bu bayrak tek basina hicbir sey gostermez: hem
+# adres hem de sayfadaki dugme `baglam.sunum_araci_mi` kapisindan gecer
+# (gelistirme makinesi ya da panele girmis kullanici) ve dolgu ancak
+# dugmeye basilinca baslar. Siradan ziyaretciye test gorseli DUSMEZ.
+# Bayragi 0 yapmak hizmeti tumden kapatir.
+REKLAM_TEST = os.environ.get("BH_REKLAM_TEST", "1") == "1"
+
+# --- AdSense: gazetenin KENDI yayinci kimligi (7 Eylul 2026) ------------
+#
+# Demo agi (yukarida) baskasinin envanteri; burasi gazetenin kendi hesabi.
+# Kimlik VERILMEDIKCE hicbir sey basilmaz — varsayilan bos, yani kapali.
+#
+#   BH_ADSENSE_ID       "ca-pub-0000000000000000"
+#   BH_ADSENSE_TEST     "1" (varsayilan) test yaraticisi ister; gosterim
+#                       sayilmaz, gecersiz trafik uretmez. Gercek yayina
+#                       gecerken "0" yapilir.
+#   BH_ADSENSE_SLOT     tum yuvalar icin varsayilan reklam birimi kimligi
+#   BH_ADSENSE_YUVALAR  yuva adi -> birim kimligi eslesmesi, JSON.
+#                       Yuva adi panelin `ReklamYuvasi.ad` sozlesmesiyle
+#                       ayni: {"Manset yani": "1234567890", ...}
+#
+# TEST MODU YALNIZ SUNUM OTURUMUNA CIZILIR (bkz. icerik/baglam.py): test
+# yaraticisi okura gosterilecek sey degil. Test kapatilinca — yani gercek
+# yayin — herkese cizilir. O ana kadar iki is daha var: cerez aydinlatmasi
+# (adsbygoogle ucuncu taraf cerezi birakir) ve /ads.txt, ki o kimlik
+# verilince kendiliginden yayimlaniyor (icerik/reklam.py).
+ADSENSE_ID = os.environ.get("BH_ADSENSE_ID", "").strip()
+ADSENSE_TEST = os.environ.get("BH_ADSENSE_TEST", "1") == "1"
+ADSENSE_SLOT = os.environ.get("BH_ADSENSE_SLOT", "").strip()
+
+try:
+    ADSENSE_YUVALAR = json.loads(os.environ.get("BH_ADSENSE_YUVALAR", "{}"))
+except json.JSONDecodeError:
+    # Bozuk JSON sunucuyu dusurmesin; eslesme yoksa varsayilan birim
+    # kullanilir ve bu gorunur bir davranis (yuvalar ayni reklami alir).
+    ADSENSE_YUVALAR = {}
 
 LOGIN_URL = "/panel/giris"
 LOGIN_REDIRECT_URL = "/panel/"
