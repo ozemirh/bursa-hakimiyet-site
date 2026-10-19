@@ -36,7 +36,7 @@
             küçük sayılır (ölçüldü: 820'de 3. kart LCP oldu). Bu yüzden ilk
             iki satırın dördü de eager; ilk satırın ikisi fetchpriority=high.
             Kalanı tembel.{% endcomment %}
-            <div class="kutu-izgara">
+            <div class="kutu-izgara liste-izgara arama-izgara">
               {% for h in sayfa %}{% if forloop.counter <= 2 %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 gorsel_oncelikli=1 %}{% elif forloop.counter <= 4 %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 gorsel_hemen=1 %}{% else %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 %}{% endif %}
               {% empty %}<p class="bos">“{{ sorgu }}” için sonuç bulunamadı.</p>
               {% endfor %}

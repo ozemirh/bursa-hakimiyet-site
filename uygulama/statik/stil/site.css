@@ -180,22 +180,14 @@
      yazıları, ekonomi, teknoloji). Ham renkler BURADA; temalar bunları
      yalnız aşağıdaki rol değişkenleri üstünden kullanır. Ölçülen kontrast
      (WCAG; metin 4,5, grafik ve odak 3):
-       ekonomi    --somon #FCF1E7 üstünde --gri 4,95 · --artis 4,89 ·
-                  --kirmizi-koyu 5,95 · --lacivert 11,87
-                  --somon-zemin #F8EADF üstünde --gri 4,67 · --artis 4,62
-                  --somon-koyu #F0AE85 fitil, lacivert üstünde 6,98
-       köşe       --fildisi #FBF7EF üstünde --gri 5,15 · --kirmizi-koyu
-                  6,20 · --lacivert 12,36 · --murekkep 16,68
-                  (--kirmizi burada 4,31 — fildişinde VURGU YAZISI OLMAZ,
-                  vurgu --kirmizi-koyu)
-                  --fildisi-zemin #F2ECE1 üstünde --gri 4,68
+       ekonomi ve köşe kâğıdı sitenin beyazıdır (--kagit / --zemin); somon
+                  ve fildişi tonlar 19 Ekim 2026 akşamı kullanıcı kararıyla
+                  kaldırıldı ("sarı tonu beğenmedim"). Yeniden önerme.
        teknoloji  --grafit #2A3038 üstünde beyaz 13,31 · --ust-yazi 7,66
                   --grafit-koyu #16191E üstünde beyaz 17,62
                   --grafit-ak #F0F2F4 üstünde --gri 4,90 · --grafit 11,86
                   --grafit-zemin #E8EBEE üstünde --gri 4,60
      Çizgi renkleri (-cizgi) metin taşımaz. */
-  --somon:#FCF1E7; --somon-zemin:#F8EADF; --somon-cizgi:#E6CBB6; --somon-koyu:#F0AE85;
-  --fildisi:#FBF7EF; --fildisi-zemin:#F2ECE1; --fildisi-cizgi:#E0D6C4;
   --grafit:#2A3038; --grafit-koyu:#16191E; --grafit-ak:#F0F2F4; --grafit-zemin:#E8EBEE;
   --grafit-cizgi:#D2D7DD;
 
@@ -761,6 +753,15 @@ main{display:block;padding-top:14px}
    orada çapraz eksen YATAY, `start` fotoğrafı içeriği kadar daraltırdı. */
 .liste-izgara .kart.genis .foto{align-self:start;height:auto;min-height:0;
   aspect-ratio:3/2}
+/* ARAMA SONUÇLARI: fotoğraf TAM görünür (19 Ekim 2026, kullanıcı: "arama
+   sonuçlarında resimler tam değil, kötü kırpılmış; tam çıkmalı, ona göre
+   ölçekle"). Kart iki sütunda 150 px'lik şeritteydi, `cover` 3:2 kareyi
+   üstten ve alttan kesiyordu. Çerçeve `liste-izgara` ile arşivin 3:2
+   oranına çekildi (arşivde kırpma sıfır); 3:2 olmayan görsel (panel
+   yüklemesi, kaynak fotoğrafı) de kesilmesin diye burada `contain`:
+   fotoğraf çerçeveye sığacak kadar ölçeklenir, kalan pay düz zemin. */
+.arama-izgara .kart .foto:has(img){background:var(--zemin)}
+.arama-izgara .kart .foto img{object-fit:contain}
 
 /* --- İLÇE SAYFASI: hızlı geçiş şeridi (2 Eylül 2026, §46) -----------
    YALNIZ ilçe sayfasında çizilir. Kategori sayfasında da denendi ve
@@ -3161,31 +3162,28 @@ body[data-bolum="bursaspor"] main{
   --tema-baslik-aile:var(--display); --tema-kirinti-agirlik:700;
 }
 
-/* --- Ekonomi: somon kâğıt, lacivert cetvel ---------------------------
-   Çözüm basılı ekonomi sayfasından: kâğıdın TONU bölümü söyler, okur
-   sayfayı açtığı anda "piyasa sayfasındayım" diye bilir — rengi bezemeye
-   harcamadan. Somon gazetenin kendi kırmızısından açılmış bir kâğıt;
-   çubuklar lacivert.
+/* --- Ekonomi: beyaz kâğıt, lacivert cetvel ---------------------------
+   Kâğıt sitenin beyazı: somon ton 19 Ekim 2026 akşamı kullanıcı kararıyla
+   kaldırıldı. Bölümü piyasa cetveli (düzen parçası) ve lacivert çubuklar
+   söylüyor.
    KIRMIZI BU SAYFADA BEZEME OLMAZ. Piyasa cetvelinde kırmızı "düşüş",
    yeşil "yükseliş" demek; kırmızı fitil ve kırmızı etiket o sözlüğü
-   bulandırırdı. Vurgu ve işaret lacivert, fitil somonun koyusu. Marka
-   kırmızısı üst kabukta (bant, künye) aynen duruyor.
-   §35'in `--isaret-ekonomi` amberi (#7A5200) bu dille uyumsuzdu: somon
-   kâğıtta kahve bir etiket, piyasa tablosunun yanında "uyarı" gibi
-   okunuyordu. Bu sayfada etiket rengini tema verir (lacivert);
-   anasayfadaki karttaki deneme ayrıca değerlendirilmeli (rapor). */
+   bulandırırdı. Vurgu ve işaret lacivert, fitil beyaz. Marka kırmızısı
+   üst kabukta (bant, künye) aynen duruyor.
+   §35'in `--isaret-ekonomi` amberi (#7A5200) bu dille uyumsuzdu; bu
+   sayfada etiket rengini tema verir (lacivert). */
 body[data-bolum="ekonomi"] main{
   --tema-bant:var(--lacivert); --tema-bant-vurgu:var(--lacivert-koyu);
   --tema-bant-yazi:var(--kagit); --tema-bant-ikincil:var(--ust-yazi);
   --tema-bant-vurgu-ikincil:var(--ust-yazi);
-  --tema-fitil:var(--somon-koyu); --tema-fitil-ak:var(--lacivert);
+  --tema-fitil:var(--kagit); --tema-fitil-ak:var(--lacivert);
   --tema-koyu:var(--lacivert); --tema-dolgu:var(--lacivert);
   --tema-vurgu:var(--lacivert); --tema-vurgu-koyu:var(--lacivert-koyu);
   --tema-isaret:var(--lacivert); --tema-murekkep:var(--murekkep);
   --tema-sutun-bas:var(--gri);
-  --tema-cizgi:var(--somon-cizgi); --tema-yuzey-cizgi:var(--somon-cizgi);
+  --tema-cizgi:var(--cizgi); --tema-yuzey-cizgi:var(--cizgi);
   --tema-hafif-cizgi:var(--lacivert);
-  --tema-kagit:var(--somon); --tema-zemin:var(--somon-zemin); --tema-ak:var(--somon-zemin);
+  --tema-kagit:var(--kagit); --tema-zemin:var(--zemin); --tema-ak:var(--yumusak);
   --tema-odak:var(--lacivert); --tema-odak-koyu:var(--kagit);
   --tema-etiket-bursa:var(--lacivert); --tema-etiket-ekonomi:var(--lacivert);
   --tema-baslik-aile:var(--display); --tema-kirinti-agirlik:700;
@@ -3214,13 +3212,13 @@ body[data-bolum="teknoloji"] main{
   --tema-baslik-aile:var(--govde); --tema-kirinti-agirlik:700;
 }
 
-/* --- Köşe yazıları: fildişi kâğıt, serif başlık ----------------------
+/* --- Köşe yazıları: beyaz kâğıt, serif başlık ------------------------
    Görüş sayfası haber sayfasından AYRIŞMALI: okur bir yorumu haber diye
    okumamalı (basın ahlakının "haber ile yorum ayrı" kuralının sayfadaki
-   karşılığı). Ayrışma üç yerden geliyor: fildişi kâğıt, serif başlık,
-   yazar kimliğinin başta durması (şablon). Marka kaybolmuyor: çubuklar
-   lacivert, vurgu kırmızının koyusu (fildişinde parlak kırmızı 4,31:1 ile
-   AA'nın altında kalıyor, o yüzden vurgu yazısı --kirmizi-koyu). */
+   karşılığı). Ayrışma iki yerden geliyor: serif başlık ve yazar
+   kimliğinin başta durması (şablon). Fildişi kâğıt 19 Ekim 2026 akşamı
+   kullanıcı kararıyla kaldırıldı; kâğıt sitenin beyazı. Marka
+   kaybolmuyor: çubuklar lacivert, vurgu kırmızının koyusu. */
 body[data-bolum="kose"] main{
   --tema-bant:var(--lacivert); --tema-bant-vurgu:var(--kirmizi-koyu);
   --tema-bant-yazi:var(--kagit); --tema-bant-ikincil:var(--ust-yazi);
@@ -3230,9 +3228,9 @@ body[data-bolum="kose"] main{
   --tema-vurgu:var(--kirmizi-koyu); --tema-vurgu-koyu:var(--kirmizi-koyu);
   --tema-isaret:var(--kirmizi-koyu); --tema-murekkep:var(--murekkep);
   --tema-sutun-bas:var(--gri);
-  --tema-cizgi:var(--fildisi-cizgi); --tema-yuzey-cizgi:var(--fildisi-cizgi);
+  --tema-cizgi:var(--cizgi); --tema-yuzey-cizgi:var(--cizgi);
   --tema-hafif-cizgi:var(--lacivert);
-  --tema-kagit:var(--fildisi); --tema-zemin:var(--fildisi-zemin); --tema-ak:var(--fildisi-zemin);
+  --tema-kagit:var(--kagit); --tema-zemin:var(--zemin); --tema-ak:var(--yumusak);
   --tema-odak:var(--kirmizi-koyu); --tema-odak-koyu:var(--kagit);
   --tema-etiket-bursa:var(--kirmizi-koyu); --tema-etiket-ekonomi:var(--kirmizi-koyu);
   --tema-baslik-aile:var(--serif); --tema-kirinti-agirlik:700;
