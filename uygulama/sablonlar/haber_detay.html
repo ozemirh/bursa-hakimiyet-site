@@ -30,10 +30,16 @@ JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
           <article class="detay">
             <span class="rozet-k">{{ haber.kategori.ad }}</span>
             <h1>{{ haber.baslik }}</h1>
+            {% comment %}İkinci başlık (Paket H): panelin §4 alan 3'ü, başlıkla
+               spot arasında. Boşsa hiç basılmaz.{% endcomment %}
+            {% if haber.ikinci_baslik %}<p class="ikinci-baslik">{{ haber.ikinci_baslik }}</p>{% endif %}
             {% if haber.spot %}<p class="spot">{{ haber.spot }}</p>{% endif %}
 
             <div class="detay-kunye">
-              <span>Haber Merkezi</span>
+              {% comment %}İmza (Paket H): muhabir · ajans · "Kaynak: X" · Haber
+                 Merkezi — `Haber.imza`. Meta Yazar Bilgisi okura basılmaz
+                 (hukuki teyit bekliyor).{% endcomment %}
+              {% with imza=haber.imza %}<span class="imza" data-imza="{{ imza.tur }}">{{ imza.metin }}</span>{% endwith %}
               {% if haber.yayin_zamani %}<span><time datetime="{{ haber.yayin_zamani|date:'c' }}">{{ haber.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
               {% comment %}Güncelleme damgası tarih + saat (5187 md. 4, Paket G); yalnız
               yayından en az bir dakika sonraysa — arşivde iki alan çoğunlukla eşit.{% endcomment %}
@@ -75,12 +81,31 @@ JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
 
             <div class="metin">{{ haber.govde_guvenli }}</div>
 
+            {% comment %}Gömülü kod (Paket H): ham kod ASLA basılmaz. Tanınan
+               YouTube / X / Instagram bağlantısı kimliğinden yeniden kurulur
+               ve kart olarak çizilir; dış çerçeve ya da betik yüklenmez
+               (icerik/temizle.py `gomulu_kartlari`).{% endcomment %}
+            {% with kartlar=haber.gomulu_kartlari %}{% if kartlar %}
+              <ul class="gomulu-kartlar" aria-label="Habere eklenen dış içerik">
+                {% for k in kartlar %}<li class="gomulu-kart" data-tur="{{ k.tur }}"><a href="{{ k.adres }}" rel="noopener nofollow external">{{ k.etiket }} &rarr;</a></li>{% endfor %}
+              </ul>
+            {% endif %}{% endwith %}
+
             {% if haber.kaynaklar.all %}
               <div class="kaynak-bolmesi">
                 <b>KAYNAK</b>
                 {% for k in haber.kaynaklar.all %}<p>{{ k.ad }}</p>{% endfor %}
               </div>
             {% endif %}
+
+            {% comment %}Etiketler (Paket H): etiket sayfası YOK, bu yüzden
+               bağlantısız liste — ölü adrese bağlantı verilmez.{% endcomment %}
+            {% with etiketler=haber.etiketler.all %}{% if etiketler %}
+              <div class="etiket-listesi">
+                <b>ETİKETLER</b>
+                <ul>{% for e in etiketler %}<li>{{ e.ad }}</li>{% endfor %}</ul>
+              </div>
+            {% endif %}{% endwith %}
 
             {% comment %}KONUNUN AKIŞI (5 Eylül 2026): haber onaylı bir konu
             dosyasındaysa dosyanın önceki ve sonraki haberleri. Motor önerisi

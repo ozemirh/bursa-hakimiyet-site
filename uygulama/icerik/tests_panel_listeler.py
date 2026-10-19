@@ -223,7 +223,11 @@ class PanelListeleri(TestCase):
         yanit = self.client.get("/panel/mansetler")
         self.assertEqual(yanit.context["sayfa"].paginator.count, 2)
         self.assertContains(yanit, "Ana manşetteki")
-        self.assertNotContains(yanit, "Manşetsiz")
+        # Bayrak LİSTESİ yalnız işaretlileri taşır. Üstteki "Anasayfada şu
+        # an" bloğu (Paket H) düşüş kuralıyla gelen manşetsiz haberi de
+        # gösterir — o blok anasayfanın kendisidir.
+        satirlar = [s["hucreler"][0]["metin"] for s in yanit.context["satirlar"]]
+        self.assertNotIn("Manşetsiz", satirlar)
         self.assertIn("Slot doluluğu", yanit.context["ust_bilgi"])
 
         # slot süzgeci

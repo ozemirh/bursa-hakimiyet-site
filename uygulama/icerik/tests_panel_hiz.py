@@ -304,8 +304,12 @@ class MansetTekTarama(TestCase):
         self.client.force_login(self.sekreter)
         with CaptureQueriesContext(connection) as yakala:
             self.client.get("/panel/mansetler")
+        # KOŞULDA manşet alanı taşıyan sorgular. 19 Ekim 2026 (Paket H):
+        # ekran anasayfa dizilimini de çiziyor ve haber seçen her sorgu
+        # `manset_ana` SÜTUNUNU listeliyor; ölçülen şey tarama, sütun değil.
         manset = [q["sql"] for q in yakala.captured_queries
-                  if "manset_ana" in q["sql"]]
+                  if "manset_ana" in q["sql"].split(" WHERE ", 1)[-1]
+                  and " WHERE " in q["sql"]]
         self.assertLessEqual(len(manset), 3,
                              f"Manşet taraması {len(manset)} sorguya çıktı; "
                              "en çok 3 olmalı (küme + sayım + dilim)")

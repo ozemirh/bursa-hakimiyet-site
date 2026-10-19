@@ -74,7 +74,7 @@ def haber(request, kategori, slug, kimlik):
     # (taksonomi/slug_eslemesi.py), sayfa başına bir sorgu daha az.
     kayit = (Haber.yayindakiler()
              .select_related("kategori", "ilce")
-             .prefetch_related("kaynaklar")
+             .prefetch_related("kaynaklar", "etiketler")
              .filter(pk=kimlik).first())
     if kayit is None:
         raise Http404("Haber yok")
@@ -113,12 +113,33 @@ ILGILI_ADET = 6   # iki sütunlu ızgara; 5'te son satır tek kalıyordu
 
 
 def _ilgili(kayit, akis=None):
-    """Başlıkça ilgili haberler (icerik/ilgili.py); akışta görünenler hariç.
-    Eskiden "aynı kategoriden en yeni 5" idi — o kural artık yalnız dolgu."""
+    """İlgili haberler kutusu: önce EDİTÖRÜN SEÇTİKLERİ, sonra otomatik.
+
+    Paket H (19 Ekim 2026): panelin "İlgili haberler" alanı (§4 alan 28)
+    sitede okunmuyordu. Editörün seçtiği haberler yayındaysa seçim
+    sırasıyla (ara tablonun satır sırası; ayrı sıra alanı yok) önde gelir;
+    kutu `ILGILI_ADET`e kadar başlık benzerliğiyle (icerik/ilgili.py)
+    tamamlanır. Konu akışında zaten görünenler iki listeden de çıkar.
+    """
     haric = []
     if akis:
         haric = [h.pk for h in akis["oncekiler"]] + [h.pk for h in akis["sonrakiler"]]
-    return ilgili_yardimci.bul(kayit, adet=ILGILI_ADET, haric=haric)
+    # Seçim sırası ara tablonun satır sırasıdır. Seçim yoksa (arşivin
+    # tamamı) tek, ucuz bir sorgu: `from_haber_id` ara tabloda indeksli.
+    sira = [k for k in Haber.ilgili_haberler.through.objects
+            .filter(from_haber_id=kayit.pk).order_by("id")
+            .values_list("to_haber_id", flat=True)
+            if k not in haric and k != kayit.pk]
+    secilen = []
+    if sira:
+        bulunan = {h.pk: h for h in Haber.yayindakiler()
+                   .select_related("kategori", "ilce").filter(pk__in=sira)}
+        secilen = [bulunan[k] for k in sira if k in bulunan][:ILGILI_ADET]
+    if len(secilen) >= ILGILI_ADET:
+        return secilen
+    otomatik = ilgili_yardimci.bul(kayit, adet=ILGILI_ADET - len(secilen),
+                                   haric=haric + [h.pk for h in secilen])
+    return secilen + otomatik
 
 
 EN_COK = 5
