@@ -96,10 +96,14 @@ WSGI_APPLICATION = 'cekirdek.wsgi.application'
 def _veritabani():
     adres = os.environ.get("BH_VERITABANI", "").strip()
     if not adres:
+        yol = os.environ.get("BH_SQLITE_YOLU", "")
+        if yol.startswith("file:"):
+            # Salt okunur olcum icin: "file:C:/.../db.sqlite3?mode=ro"
+            return {"ENGINE": "django.db.backends.sqlite3", "NAME": yol,
+                    "OPTIONS": {"uri": True}}
         return {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": Path(os.environ.get("BH_SQLITE_YOLU",
-                                        BASE_DIR / "db.sqlite3")),
+            "NAME": Path(yol or BASE_DIR / "db.sqlite3"),
         }
     from urllib.parse import unquote, urlsplit
     p = urlsplit(adres)
