@@ -115,6 +115,8 @@ jobs:
       # Gerçek anahtar DEĞİL; yalnız CI'da üretim ayarlarını yüklemek için,
       # her koşuda yeniden üretilir.
       BH_SUNUCU_ADLARI: www.bursahakimiyet.com.tr,bursahakimiyet.com.tr
+      # Üretimde zorunlu (bh.E001, cekirdek/denetimler.py): nginx aynı makinede.
+      BH_GUVENILIR_VEKIL: 127.0.0.1,::1
       BH_STATIK_KOK: ${{ github.workspace }}/.ci-statik
     steps:
       - uses: actions/checkout@v4

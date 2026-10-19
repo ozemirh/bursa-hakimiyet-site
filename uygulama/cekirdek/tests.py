@@ -52,6 +52,8 @@ URETIM_ORTAMI = {
     "BH_ORTAM": "uretim",
     "BH_GIZLI_ANAHTAR": GUCLU_ANAHTAR,
     "BH_SUNUCU_ADLARI": "www.bursahakimiyet.com.tr,bursahakimiyet.com.tr",
+    # Üretimde zorunlu (bh.E001, cekirdek/denetimler.py).
+    "BH_GUVENILIR_VEKIL": "127.0.0.1,::1",
 }
 
 
