@@ -8,9 +8,47 @@
   </div>
 
   <p class="alt-not">
-    Kuyruk tanımı: durum <b>Pasif</b> ve hazırlık <b>Taslak</b> ya da
-    <b>İncelemede</b>. Yayına alınan haberin hazırlığı örtük olarak hazırdır.
+    Kuyruk tanımı: durum <b>Pasif</b> ve hazırlık <b>Taslak</b>,
+    <b>İncelemede</b> ya da <b>Yayına hazır</b>. Yayına alınan haberin
+    hazırlığı örtük olarak hazırdır.
   </p>
+
+  {% comment %}Yayına hazır kuyruğu (Paket H, 19 Ekim 2026). Muhabirin masaya
+     bıraktığı haber önceden hiçbir ekranda görünmüyordu. Düğme yalnız yayın
+     yetkisi olan role ve yalnız eşiği geçen habere çizilir; eksik varsa
+     eksik listesi yazılır. Sunucu yine de iki soruyu ayrıca sorar
+     (`panel.haber_yayinla`).{% endcomment %}
+  <div class="kutu-kart">
+    <div class="bas"><h2>Yayına hazır</h2><span class="damga">{{ hazir_sayisi }}</span></div>
+    <div class="kutu-govde">
+      {% if hazirlar %}
+        <ul class="sira-liste">
+          {% for h in hazirlar %}
+            <li class="is-kart">
+              <span class="ad"><a href="{% url 'panel-haber-duzenle' kimlik=h.pk %}">{{ h.baslik }}</a></span>
+              <span class="kim-not">
+                {{ h.kategori.ad }}
+                {% if h.olusturan %} · {{ h.olusturan.get_full_name|default:h.olusturan.get_username }}{% endif %}
+                {% if h.yayin_zamani %} · {{ h.yayin_zamani|date:"d.m.Y H:i" }}{% endif %}
+              </span>
+              {% if h.yayinlanabilir %}
+                {% if h.eksikler %}
+                  <span class="kim-not">Yayına alınamaz — eksik: {{ h.eksikler|join:", " }}</span>
+                {% else %}
+                  <form method="post" action="{% url 'panel-haber-yayinla' kimlik=h.pk %}" class="satir-ici">
+                    {% csrf_token %}
+                    <button type="submit" class="dugme ufak dolu">Yayına al</button>
+                  </form>
+                {% endif %}
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="alt-not">Yayına hazır haber yok.</p>
+      {% endif %}
+    </div>
+  </div>
 
   <div class="kutu-kart">
     <div class="bas"><h2>Taslaklar</h2><span class="damga">{{ taslaklar|length }}</span></div>

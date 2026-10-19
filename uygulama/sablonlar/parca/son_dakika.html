@@ -23,7 +23,12 @@ hepsi arama motoruna metin olarak görünür.
 
 `id="son-dakika"` KORUNUYOR: mega menüdeki "Son dakika" bağlantısının
 hedefi bu. Kutu rayda olduğu için ray taşıyan sayfalarda (anasayfa, haber
-detay, köşe yazısı) çizilir.{% endcomment %}
+detay, köşe yazısı) çizilir.
+
+19 Ekim 2026 (Paket H): kalemler `baglam.son_dakika_bandi`nden gelir —
+masanın `SonDakika` kayıtları varsa onlar ("SON DAKİKA", CANLI pili),
+yoksa son haberler ("SON HABERLER", pil YOK: masanın vermediği "son
+dakika" kararını site vermez). Kalemin üç alanı var: baslik · yol · zaman.{% endcomment %}
 {% load site_etiket %}{% comment %}`genis`: anasayfada manşetin altında, reklam
  panosunun yanında iki sütunlu; raylarda (haber detay, köşe yazısı) bayraksız
  ve tek sütun.{% endcomment %}
@@ -33,23 +38,23 @@ detay, köşe yazısı) çizilir.{% endcomment %}
   parçası gibi okunuyordu.{% endcomment %}
   <div class="sondakika-serit">
     <span class="sondakika-plaka">
-      <span class="sondakika-canli"><span class="nokta" aria-hidden="true"></span>CANLI</span>
-      <h2>SON DAKİKA</h2>
+      {% if son_dakika.canli %}<span class="sondakika-canli"><span class="nokta" aria-hidden="true"></span>CANLI</span>{% endif %}
+      <h2>{{ son_dakika.etiket|default:"SON HABERLER" }}</h2>
     </span>
     {% with bas=son_dakika.0 %}{% if bas %}
     {% comment %}Başlık BÜYÜK harfe `buyult` ile çevriliyor, CSS
     `text-transform` ile değil: tarayıcının büyütmesi Türkçe'de "i" harfini
     "I" yapıyor ("İzmir" -> "IZMIR"). Süzgeç i/İ ve ı/I çiftlerini elle
     çevirir.{% endcomment %}
-    <a class="sondakika-manset" href="{{ bas.get_absolute_url }}">
-      <time datetime="{{ bas.yayin_zamani|date:'c' }}">{{ bas.yayin_zamani|goreli_zaman }}</time>
+    <a class="sondakika-manset" href="{{ bas.yol }}">
+      <time datetime="{{ bas.zaman|date:'c' }}">{{ bas.zaman|goreli_zaman }}</time>
       <span class="baslik">{{ bas.baslik|buyult }}</span>
     </a>
     {% endif %}{% endwith %}
     {% comment %}"TÜMÜ" şeridin sağ ucunda, kendi ayracının arkasında: kutunun
     dibinde ayrı satır olduğunda panel yandaki 300x250 panodan 55 px uzuyordu
     (1400 px ölçümü).{% endcomment %}
-    <a class="sondakika-tumu" href="/gundem">TÜMÜ &rarr;</a>
+    <a class="sondakika-tumu" href="/son-haberler">TÜMÜ &rarr;</a>
   </div>
   <div class="kutu-ic">
     <ul class="sondakika-liste">
@@ -59,8 +64,8 @@ detay, köşe yazısı) çizilir.{% endcomment %}
       hepsi saat olarak basılınca liste sırasız görünüyordu.{% endcomment %}
       {% for h in son_dakika|slice:"1:" %}
       <li>
-        <time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|goreli_zaman }}</time>
-        <a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>
+        <time datetime="{{ h.zaman|date:'c' }}">{{ h.zaman|goreli_zaman }}</time>
+        <a href="{{ h.yol }}">{{ h.baslik }}</a>
       </li>
       {% endfor %}
     </ul>

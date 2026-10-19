@@ -15,7 +15,7 @@ Test KENDİ sunucusunu açar ve kapatır (`manage.py runserver --noreload`,
 "eski süreç portu tutuyordu", "önbellek eski CSS'i verdi" tuzakları
 (URUN-PLANI §12, §14) burada kapanır. Port doluysa test başlamaz.
 
-## Ölçülenler (11 sayfa × 7 genişlik)
+## Ölçülenler (11 sayfa × 8 genişlik)
 
 * yatay taşma 0 (`scrollWidth - clientWidth`);
 * `h1` = 1;
@@ -53,7 +53,9 @@ import time
 import urllib.request
 from pathlib import Path
 
-GENISLIKLER = [390, 430, 600, 820, 1000, 1200, 1440]
+#: 1024 (19 Ekim 2026, L1): 1001-1190 bandında künyenin ilçe sütunu 7 px
+#: taşıyordu ve 1000 ile 1200 arasında ölçüm noktası yoktu.
+GENISLIKLER = [390, 430, 600, 820, 1000, 1024, 1200, 1440]
 ODAK_GENISLIKLERI = (390, 1440)
 TAB_SAYISI = 40
 CLS_TAVAN = 0.02

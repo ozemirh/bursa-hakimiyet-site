@@ -47,7 +47,7 @@
         <p class="sag-not">Adres deseni <code>/{kategori-slug}/{slug}-{id}</code>.
           Kimlik kayıtta verilir; slug'ı sunucu üretir.</p>
       </div>
-      {% include "panel/parca/alan.html" with alan=form.ilce ipucu="İsteğe bağlı, tek seçim." %}
+      {% include "panel/parca/alan.html" with alan=form.ilce ipucu="İsteğe bağlı, tek seçim. Dolu ilçe haberi anasayfa düşüş kuralında Bursa haberi sayar." %}
       {% include "panel/parca/alan.html" with alan=form.etiketler ipucu="Virgülle ayırın. Olmayan etiket kaydederken açılır; yayına almak için en az bir tane şart." %}
       {% comment %}Öneri listesi: betiksiz çalışır, tarayıcı kendisi tamamlar.
       Boşken de zararsız — etiket tablosu dolduça listeye düşer.{% endcomment %}
@@ -61,7 +61,7 @@
       {% include "panel/parca/alan.html" with alan=form.kaynak_turu ipucu="Meta Yazar Bilgisi bundan türetilir. Boş bırakılırsa ölçülmüş değer korunur." %}
       {% include "panel/parca/alan.html" with alan=form.muhabir ipucu="Kaynak türü 'Kendi muhabirimiz' ise zorunlu." %}
       {% include "panel/parca/alan.html" with alan=form.kaynaklar %}
-      {% include "panel/parca/alan.html" with alan=form.meta_yazar ipucu="Yasal sonuç doğurur. Boş bırakırsanız kaynak türünden türetilir." %}
+      {% include "panel/parca/alan.html" with alan=form.meta_yazar ipucu="Yasal sonuç doğurur. Boş bırakırsanız kaynak türünden türetilir." kullanilmiyor="Okura basılmaz; yasal sonucu hukuki teyit bekliyor. Sitedeki imza satırı muhabir, ajans ya da dış yayın kaynağından kurulur." %}
     </fieldset>
 
     <fieldset>
@@ -104,18 +104,19 @@
       <fieldset>
         <legend>Manşet</legend>
         <p class="alt-not">Manşete alma ayrı yetkidir: anasayfanın sırasını değiştirmek yayımlamaktan farklı bir karardır.</p>
-        {% include "panel/parca/alan.html" with alan=form.manset_ana %}
-        {% include "panel/parca/alan.html" with alan=form.manset_tepe %}
-        {% include "panel/parca/alan.html" with alan=form.manset_kare %}
+        <p class="alt-not">Bayraklı haber yuvasında en öne, en yeni bayrak önde girer; bayrağın önceliği bayrak verildikten sonra 48 saat sürer (ayar: BH_MANSET_BAYRAK_SAAT). Boş kalan yuvaları “önce Bursa” kuralı doldurur. Anasayfanın güncel dizilimi <a href="{% url 'panel-mansetler' %}">Manşetler</a> ekranında.</p>
+        {% include "panel/parca/alan.html" with alan=form.manset_ana ipucu="Manşet slaytı (15); taşarsa altındaki “Günün manşetleri” listesi (10)." %}
+        {% include "panel/parca/alan.html" with alan=form.manset_tepe ipucu="Manşetin üstündeki dörtlü kutucuk (4)." %}
+        {% include "panel/parca/alan.html" with alan=form.manset_kare ipucu="Manşetin yanındaki küçük slayt (5)." %}
       </fieldset>
     {% endif %}
 
     <fieldset>
       <legend>Seçenekler ve SEO</legend>
       {% include "panel/parca/alan.html" with alan=form.rss %}
-      {% include "panel/parca/alan.html" with alan=form.yorumlar_acik %}
-      {% include "panel/parca/alan.html" with alan=form.yonlendirme_url %}
-      {% include "panel/parca/alan.html" with alan=form.gomulu_kod %}
+      {% include "panel/parca/alan.html" with alan=form.yorumlar_acik kullanilmiyor="Sitede okur yorumu bölümü henüz yok." %}
+      {% include "panel/parca/alan.html" with alan=form.yonlendirme_url kullanilmiyor="Güvenlik gereği kapalı: haber sayfası bu adrese yönlendirmez. Taşınan haber için kategori/adres değişimi kendi 301 yönlendirmesini yazar." %}
+      {% include "panel/parca/alan.html" with alan=form.gomulu_kod ipucu="Kod olduğu gibi BASILMAZ. YouTube, X ve Instagram bağlantıları tanınır ve haberin altında bağlantı kartı olarak gösterilir; diğer her şey düşer." %}
       {% include "panel/parca/alan.html" with alan=form.odak_kelime %}
       {% include "panel/parca/alan.html" with alan=form.seo_baslik %}
       {% comment %}İlgili haberler — arama tabanlı seçim.
@@ -138,7 +139,7 @@
       <div class="alan ilgili-alan" data-ilgili-kap
            data-secim="select[data-galeri]"
            data-ara-adres="{% url 'panel-galeri-ara' %}">
-        {% include "panel/parca/alan.html" with alan=form.bagli_galeriler %}
+        {% include "panel/parca/alan.html" with alan=form.bagli_galeriler kullanilmiyor="Haber sayfasında bağlı galeri bölümü henüz yok." %}
       </div>
     </fieldset>
 

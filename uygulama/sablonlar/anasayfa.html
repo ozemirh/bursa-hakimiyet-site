@@ -495,8 +495,10 @@ yaşanmıştı.{% endcomment %}
             yüklenmezse okur ölü bir denetim görmez, listenin tamamı zaten
             basılı durur.{% endcomment %}
             <div class="servis-dilim" id="panel-eczane">
-              <h3>NÖBETÇİ ECZANE{% if eczane_panel %}<span class="yer">{{ eczane_panel.sayi }} eczane &middot; {{ eczane_panel.ilceler|length }} ilçe</span>{% endif %}</h3>
-              {% if eczane_panel %}
+              <h3>NÖBETÇİ ECZANE{% if eczane_panel and not eczane_panel.gecersiz %}<span class="yer">{{ eczane_panel.sayi }} eczane &middot; {{ eczane_panel.ilceler|length }} ilçe</span>{% endif %}</h3>
+              {% if eczane_panel.gecersiz %}{% include "parca/eczane_gecersiz.html" with p=eczane_panel %}
+                <p class="eczane-tumu"><a href="/nobetci-eczane">Nöbetçi eczane sayfası &rarr;</a></p>
+              {% elif eczane_panel %}
                 <div class="eczane">
                   {% comment %}`gun` kaynakta ISO metin ("2026-08-29");
                   panel onu `date` nesnesine çevirip veriyor.{% endcomment %}

@@ -29,8 +29,15 @@
             <p class="bos" role="status">{{ uyari }}</p>
           {% elif sorgu %}
             <h2 class="gorsel-gizli">Haberler</h2>
+            {% comment %}İlk ekran (19 Ekim 2026, ölçüm: LCP görseli 7 genişliğin
+            7'sinde lazy idi). Izgara iki sütunlu, 900 px yüksekliğinde iki
+            satır (dört kart) ilk ekranda. LCP her zaman ilk kart DEĞİL:
+            görselsiz haber SVG çizer, doğal boyu küçük görsel LCP'de
+            küçük sayılır (ölçüldü: 820'de 3. kart LCP oldu). Bu yüzden ilk
+            iki satırın dördü de eager; ilk satırın ikisi fetchpriority=high.
+            Kalanı tembel.{% endcomment %}
             <div class="kutu-izgara">
-              {% for h in sayfa %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 %}
+              {% for h in sayfa %}{% if forloop.counter <= 2 %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 gorsel_oncelikli=1 %}{% elif forloop.counter <= 4 %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 gorsel_hemen=1 %}{% else %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 %}{% endif %}
               {% empty %}<p class="bos">“{{ sorgu }}” için sonuç bulunamadı.</p>
               {% endfor %}
             </div>

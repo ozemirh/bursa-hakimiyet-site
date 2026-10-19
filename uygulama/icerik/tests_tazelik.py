@@ -376,8 +376,21 @@ class HavaVeEczane(KlasorluTest):
                                "nobet_baslangic": "2026-09-12T18:30",
                                "nobet_bitis": "2026-09-13T08:30"}]}
 
+    @staticmethod
+    def _dun_sabah():
+        """Dün 00:01 (yerel): eşik (1.440 dk) aşılmış ama liste DÜNÜN.
+
+        19 Ekim 2026'dan beri dünden eski liste hiç basılmıyor
+        (`canli.GECERLIK_GUN`, tests_nobet_gecerlik); "bayat ama uyarıyla
+        gösterilir" hâli yalnız dünkü listede kaldı.
+        """
+        bugun = timezone.localdate()
+        an = timezone.make_aware(datetime.combine(bugun - timedelta(days=1),
+                                                  datetime.min.time()))
+        return (an + timedelta(minutes=1)).isoformat()
+
     def test_bayat_eczane_uyarili(self):
-        self.yaz("nobetci-eczane", self._eczane("2026-09-12T22:12:11+03:00"))
+        self.yaz("nobetci-eczane", self._eczane(self._dun_sabah()))
         self.assertIn("liste tazelenemedi", self.sayfa())
         self.assertIn("liste tazelenemedi", self.sayfa("/nobetci-eczane"))
 
@@ -388,7 +401,7 @@ class HavaVeEczane(KlasorluTest):
         self.assertNotIn("liste tazelenemedi", metin)
 
     def test_ilce_servis_panelinde_de_uyari(self):
-        self.yaz("nobetci-eczane", self._eczane("2026-09-12T22:12:11+03:00"))
+        self.yaz("nobetci-eczane", self._eczane(self._dun_sabah()))
         self.assertIn("Liste tazelenemedi", self.sayfa("/ilce/nilufer"))
 
 
