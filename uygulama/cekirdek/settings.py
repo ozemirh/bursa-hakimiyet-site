@@ -18,20 +18,54 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# --- ortam ve guvenlik (19 Ekim 2026, fail-closed) -----------------------
+#
+# Ayrintili gerekce `cekirdek/ortam.py` basinda. Ozet: BH_ORTAM verilmezse
+# URETIM sayilir; uretimde anahtar ve sunucu adlari zorunlu, DEBUG acilamaz.
+# Gelistirme makinesi `gelistir.ps1` ile BH_ORTAM=gelistirme alir; testler
+# (`manage.py test`) degisken olmadan da test ortamini secer.
+# Eski sabit ("insecure" onekli) anahtar koddan kalkti: depo herkese acik.
+from . import ortam as _ortam
 
-# Gizli anahtar, hata ayiklama ve izinli sunucu adlari ortamdan okunur.
-# Gelistirmede varsayilanlar isler; yayinda BH_GIZLI_ANAHTAR ve BH_HATA_AYIKLA
-# ortam degiskenleri verilmek zorundadir (F8 kesim listesi).
-SECRET_KEY = os.environ.get(
-    "BH_GIZLI_ANAHTAR",
-    "django-insecure-9v%)%ub9qz=p(%nc&d7f=&0^9c!l34av2r-)22@c4cn7i@bzfa")
+ORTAM = _ortam.ortam_adi()
+URETIM = ORTAM == "uretim"
 
-DEBUG = os.environ.get("BH_HATA_AYIKLA", "1") == "1"
+SECRET_KEY = _ortam.gizli_anahtar(
+    ORTAM, yerel_dosya=BASE_DIR / ".yerel-gizli-anahtar")
 
-ALLOWED_HOSTS = [a for a in os.environ.get(
-    "BH_SUNUCU_ADLARI", "127.0.0.1,localhost").split(",") if a]
+DEBUG = _ortam.hata_ayiklama(ORTAM)
+
+ALLOWED_HOSTS = _ortam.sunucu_adlari(ORTAM)
+
+CSRF_TRUSTED_ORIGINS = _ortam.guvenilir_kokenler(ALLOWED_HOSTS)
+
+# Okura giden baglantilarda yalniz koken gider, tam adres gitmez; kaynak
+# sitelere ve olcum araclarina "trafik bizden" bilgisi yine ulasir.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SESSION_COOKIE_HTTPONLY = True
+
+if URETIM:
+    # nginx TLS'i sonlandirir ve `X-Forwarded-Proto` basligini HER istekte
+    # kendisi yazar (dagitim/nginx/bursahakimiyet.conf). Baslik istemciden
+    # gecirilseydi bu ayar guvenlik acigi olurdu; vekilsiz kurulumda
+    # BH_VEKIL_ARKASI=0 verilir.
+    if _ortam.bayrak(os.environ, "BH_VEKIL_ARKASI", True):
+        SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = _ortam.bayrak(os.environ, "BH_SSL_YONLENDIR", True)
+    # Saglik ucu makinenin icinden duz HTTP ile de yoklanabilsin.
+    SECURE_REDIRECT_EXEMPT = [r"^_durum$"]
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # HSTS kademeli acilir: kesim gunu 1 gun, geri donus penceresi (14 gun)
+    # kapaninca 1 yil (31536000). Alt alan ve on yukleme listesi GERI
+    # ALINMASI ZOR kararlardir: alan adinin diger alt alanlari (posta,
+    # eski panel) bilinmeden acilmaz -> kullanici karari, KURULUM.md.
+    SECURE_HSTS_SECONDS = _ortam.sayi(os.environ, "BH_HSTS_SANIYE", 86400)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = _ortam.bayrak(
+        os.environ, "BH_HSTS_ALT_ALANLAR", False)
+    SECURE_HSTS_PRELOAD = _ortam.bayrak(os.environ, "BH_HSTS_ON_YUKLEME", False)
 
 
 # Application definition
@@ -50,15 +84,35 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+# Sira baglayici (19 Ekim 2026, teslim katmani - cekirdek/ara_katman.py):
+#   SecurityMiddleware   en ustte: SSL yonlendirmesi ve HSTS her yanita.
+#   SeciciGZip           WhiteNoise'un USTUNDE: dosyadan verilen site
+#                        haritalari da sikissin; hazir .br/.gz'ye dokunmaz.
+#   WhiteNoise           /statik/ altini oturum ve URL cozumune girmeden verir.
+#   SiteHaritasiDosyalari /static/sitemap/ uretilmis dosyadan (uretimde).
+#   IcerikPolitikasi     CSP; en altta, gorunumun yanitina eklenir.
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'cekirdek.ara_katman.SeciciGZip',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'cekirdek.ara_katman.SiteHaritasiDosyalari',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'cekirdek.ara_katman.IcerikPolitikasi',
 ]
+
+# Panel ve yonetim sayfalari sikistirilmaz (BREACH; gerekce ara_katman.py).
+SIKISTIRMA_HARIC_ONEKLER = ("/panel/", "/yonetim/")
+
+# CSP kipi: uygula | rapor | kapali.
+CSP_KIP = os.environ.get("BH_CSP", "uygula").strip().lower() or "uygula"
+if CSP_KIP not in ("uygula", "rapor", "kapali"):
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured(f"BH_CSP={CSP_KIP!r}: uygula, rapor ya da kapali")
 
 ROOT_URLCONF = 'cekirdek.urls'
 
@@ -176,6 +230,46 @@ STATICFILES_DIRS = [
     ("gorseller", BASE_DIR.parent / "gorseller"),
 ]
 
+# --- statik teslim (19 Ekim 2026) -----------------------------------------
+#
+# `collectstatic` buraya toplar; WhiteNoise ve nginx buradan verir. Depo
+# icindeki varsayilan .gitignore'da; uretimde /srv altinda bir yol verilir.
+STATIC_ROOT = Path(os.environ.get("BH_STATIK_KOK") or BASE_DIR / "statik-yayin")
+
+# Site haritasi klasoru (statik/sitemap/) toplanmaz: adresi /static/sitemap/
+# ve ozetsiz kalmak zorunda (cekirdek/depolama.py).
+STATICFILES_FINDERS = [
+    "cekirdek.depolama.KlasorBulucu",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+]
+
+# Uretimde: ozetli adlar (site.3f9c1a2b7d4e.css) + .gz/.br + CSS yorum
+# ayiklama. Gelistirme ve testte duz depolama: ozetli ad `collectstatic`
+# ister, her test kosusundan once toplamak anlamsiz. Uretim depolamasinin
+# kendisi `cekirdek.tests` icinde gecici klasorde sinaniyor.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": (
+        "cekirdek.depolama.TeslimDepolamasi" if URETIM
+        else "django.contrib.staticfiles.storage.StaticFilesStorage")},
+}
+
+# Ozetli dosyalar WhiteNoise'ta kendiliginden "max-age=315360000, immutable"
+# alir. Bu deger yalniz ozetsiz adla istenen dosyalar icin.
+WHITENOISE_MAX_AGE = 3600
+
+if not URETIM:
+    # Gelistirme ve testte STATIC_ROOT cogu zaman yok (collectstatic
+    # calistirilmadi); statigi runserver kendisi verir. WhiteNoise'un her
+    # acilistaki "No directory at" uyarisi bu durumda gurultudur.
+    import warnings
+    warnings.filterwarnings("ignore", message="No directory at")
+
+# /static/sitemap/ uretilmis dosyadan mi verilsin (cekirdek/ara_katman.py)?
+# Varsayilan: yalniz uretimde. Dosya yoksa istek gorunume duser.
+SITE_HARITASI_DOSYADAN = _ortam.bayrak(os.environ, "BH_SITE_HARITASI_DOSYADAN", URETIM)
+SITE_HARITASI_ONBELLEK_SANIYE = 300
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -197,9 +291,10 @@ SITE_KOKU = os.environ.get("BH_SITE_KOKU", "https://www.bursahakimiyet.com.tr")
 #
 # VARSAYILAN KAPALI ve bu bilincli. GPT dis bir betiktir
 # (securepubads.g.doubleclick.net), ucuncu taraf cerezi birakir ve canlida
-# KVKK tarafinda cerez aydinlatmasi gerektirir. Site su an disaridan yalniz
-# Google Fonts cekiyor; bayrak kapaliyken bu duzen bozulmaz ve sayfa
-# internetsiz de aynen acilir.
+# KVKK tarafinda cerez aydinlatmasi gerektirir. Site disaridan hicbir sey
+# cekmiyor (19 Ekim 2026'dan beri yazi tipleri de yerel); bayrak kapaliyken
+# bu duzen bozulmaz, sayfa internetsiz de aynen acilir ve CSP disari izin
+# vermez. Bayrak acilinca CSP Google reklam kokenlerini acar (ara_katman.py).
 REKLAM_DEMO = os.environ.get("BH_REKLAM_DEMO", "0") == "1"
 
 # Olculdu (31 Agustos 2026, bassiz Chrome, canli demo agina karsi): bu yol
