@@ -41,8 +41,8 @@ SAYFA_ACIK = override_settings(
 # Sayfa adı → önbelleksiz istekteki sorgu tavanı (yollar: `Temel.yollar`).
 #             ölçülen az kayıt / 4 kat kayıt
 TAVAN = {
-    "anasayfa": 30,             # 22 / 22 (L2: yazar kuşağı tek sorgu)
-    "haber_detay": 12,          # 11 / 11 (PG 12: ilgili habere kimlik aralığı, L2)
+    "anasayfa": 30,             # 24 / 24 (L2: yazar kuşağı tek sorgu)
+    "haber_detay": 12,          # 12 / 12 (H: editörün ilgili seçimi + etiketler)
     "kategori_bursa": 12,       #  7 / 7
     "kategori_ekonomi": 12,     #  9 / 7
     "kategori_bursaspor": 12,   #  7 / 7
@@ -50,11 +50,22 @@ TAVAN = {
     # 11 / 14 idi — BÜYÜYORDU: "yazarın diğer yazıları" her kalem için
     # yazarı ayrıca çekiyordu. Paket L2: `select_related("yazar")` +
     # raydaki yazarların son yazısı tek sorguda (`Yazar.son_yazisiyla`).
-    "kose_yazisi": 12,          #  8 / 8
+    "kose_yazisi": 12,          #  7 / 7
     #  1 / 1 — yazar başına "son yazı" sorgusu kalktı (Paket L2; PG'de 38 idi).
     "yazarlar": 4,
     "konular": 4,               #  2 / 2
 }
+
+#: PostgreSQL'de motora özgü EK sorgular (Paket L2). İlgili haberin PG yolu
+#: iki sorgu daha açar: pencere uçlarının kimlik yoklaması (istek başına) ve
+#: ağır çapa istatistiği (`pg_stats`; süreç başına günde BİR kez, burada
+#: soğuk süreç ölçüldüğü için sayılıyor). Sabit bedeldir, kayıtla büyümez —
+#: çok kayıt turu bunu ayrıca denetler.
+PG_EK = {"haber_detay": 2}
+
+
+def tavan(ad: str) -> int:
+    return TAVAN[ad] + (PG_EK.get(ad, 0) if connection.vendor == "postgresql" else 0)
 
 #: Anasayfa HTML'i (sıkıştırmasız) en çok bu kadar.
 ANASAYFA_HTML_TAVAN = 200 * 1024
@@ -144,7 +155,7 @@ class SorguTavani(Temel):
             with self.subTest(ad):
                 n, _ = self.sorgu_say(yol)
                 olcum[ad] = n
-                self.assertLessEqual(n, TAVAN[ad], f"{ad} {yol}: {n} sorgu")
+                self.assertLessEqual(n, tavan(ad), f"{ad} {yol}: {n} sorgu")
         if os.environ.get("BH_BUTCE_RAPOR") == "1":
             print(type(self).__name__, olcum)
 
