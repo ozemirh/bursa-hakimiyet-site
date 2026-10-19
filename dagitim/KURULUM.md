@@ -111,6 +111,7 @@ sudoedit /etc/bursahakimiyet/ortam
 #   BH_VERITABANI=postgresql://…
 #   BH_STATIK_KOK=/srv/bursahakimiyet/statik
 #   BH_ARSIV_KOK=/srv/bursahakimiyet/arsiv
+#   BH_TUREV_KOK=/srv/bursahakimiyet/turev   (nginx /gorsel/ root'u ile aynı)
 #   BH_CANLI_VERI_KOK=/srv/bursahakimiyet/canli-veri   BH_CANLI_KOK=(aynısı)
 #   BH_SITE_HARITASI_KOK=/srv/bursahakimiyet/sitemap
 #   BH_REKLAM_TEST=0
