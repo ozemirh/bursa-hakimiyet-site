@@ -1,4 +1,4 @@
-{% load site_etiket %}
+{% load site_etiket gorsel_etiket %}
 {% comment %}
 Galeri kartı — tasarımdaki `.galeri-kart` yapısı birebir.
 
@@ -22,7 +22,7 @@ okunan bağlantı olmasın diye. Erişilen bağlantı başlıktaki `<h3><a>`.
   <div class="foto {{ g|kart_rengi }}">
     <a class="foto-bag" href="{{ g.get_absolute_url }}" tabindex="-1" aria-hidden="true">
       {% if g.gorsel_yolu %}
-        <img src="{{ g.gorsel_yolu }}" alt="{{ g.gorsel_alt|default:g.baslik }}" loading="lazy">
+        {% gorsel g "galeri" %}
       {% else %}
         <svg role="img" aria-label="{{ g.baslik }} galerisini temsil eden çizim"><use href="#{{ g.kategori|simge_adi }}"/></svg>
       {% endif %}

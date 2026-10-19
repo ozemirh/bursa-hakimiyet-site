@@ -38,12 +38,18 @@ tıklamak hiçbir şey yapmıyordu.
 Erişilebilirlikte kayıp yok: haberin klavyeyle ve ekran okuyucuyla
 erişilen bağlantısı başlıktaki `<h3><a>` olarak duruyor. Bu ikisini
 silersen kart erişilebilirlik açısından bozulur — silme.
-{% endcomment %}
+
+Görsel `{% gorsel %}` etiketiyle basılır (19 Ekim 2026, icerik/templatetags/
+gorsel_etiket.py): srcset/sizes, width/height, alt temizliği. Çağıran şablon
+üç bayrakla yerini söyler: `gorsel_yuva` (sizes anahtarı; yoksa "kart"),
+`gorsel_oncelikli` (LCP: eager + fetchpriority=high), `gorsel_hemen` (ilk
+ekran: eager). Bayrak yollanmazsa görsel tembel yüklenir.
+{% endcomment %}{% load gorsel_etiket %}
 <article class="kart{% if genis %} genis{% endif %}">
   {% if goster_foto %}
     <a class="foto {{ h|kart_rengi }}" href="{{ h.get_absolute_url }}" tabindex="-1" aria-hidden="true">
       {% if h.gorsel_yolu %}
-        <img src="{{ h.gorsel_yolu }}" alt="{{ h.gorsel_alt|default:h.baslik }}" loading="lazy">
+        {% gorsel h gorsel_yuva|default:"kart" genis=genis oncelikli=gorsel_oncelikli hemen=gorsel_hemen %}
       {% else %}
         <svg role="img" aria-label="{{ h.kategori.ad|baslikla }} haberini temsil eden çizim"><use href="#{{ h.kategori|simge_adi }}"/></svg>
       {% endif %}

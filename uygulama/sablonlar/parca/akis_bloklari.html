@@ -16,6 +16,6 @@ TARİH AYRACI YOK. Bilgi kaybolmuyor: kartın kendi zaman damgası duruyor ve
 `kisa_zaman` süzgeci aynı günün haberinde saat, eskisinde tarih basıyor
 ("31 Eki 2025") — ayracın söylediğini kart tek başına söylüyor.{% endcomment %}
 {% for blok in akis %}<div class="akis-blok {{ blok.tur }}">
-{% for h in blok.kalemler %}  {% include "parca/kart.html" with h=h goster_foto=1 goster_spot=blok.spot kategori_gizle=kategori %}
+{% for h in blok.kalemler %}  {% include "parca/kart.html" with h=h goster_foto=1 goster_spot=blok.spot kategori_gizle=kategori gorsel_yuva=blok.tur %}
 {% endfor %}</div>
 {% endfor %}
