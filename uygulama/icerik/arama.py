@@ -64,6 +64,21 @@ def yaz(satirlar) -> int:
     return len(satirlar)
 
 
+def tazele(kimlikler, parti: int = 5000) -> int:
+    """Verilen haberlerin arama satırını veritabanındaki başlık/spottan
+    yeniden yazar; olmayan kimlik sessizce atlanır. Kancayı atlayan toplu
+    yazımlardan (`bulk_create`, `bulk_update`, `update()`) sonra çağrılır
+    — `goc_al`, `metin_temizle`, `arama_doldur --kimlikler` (Paket L2)."""
+    from .models import Haber
+    kimlikler = sorted(set(kimlikler))
+    toplam = 0
+    for bas in range(0, len(kimlikler), parti):
+        satirlar = (Haber.objects.filter(pk__in=kimlikler[bas:bas + parti])
+                    .values_list("id", "baslik", "spot"))
+        toplam += yaz(satir_kur(i, b, s) for i, b, s in satirlar)
+    return toplam
+
+
 ILGILI_ALANLAR = frozenset({"baslik", "spot"})
 
 
