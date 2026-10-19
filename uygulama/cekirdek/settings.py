@@ -455,6 +455,10 @@ SAYFA_ONBELLEK_SANIYE = int(os.environ.get("BH_SAYFA_ONBELLEK", "30"))
 # Adres ya da ağ (CIDR) yazılabilir, virgülle ayrılır.
 GUVENILIR_VEKILLER = [a.strip() for a in os.environ.get(
     "BH_GUVENILIR_VEKIL", "").split(",") if a.strip()]
+# Üretimde vekil arkasındaysak (varsayılan) liste ZORUNLU: boşsa nginx
+# arkasındaki bütün okurlar tek IP sayılır. Denetim `cekirdek/denetimler.py`
+# (bh.E001); `check --deploy` yayın betiğinde hata düzeyinde koşar.
+VEKIL_ARKASI = URETIM and _ortam.bayrak(os.environ, "BH_VEKIL_ARKASI", True)
 
 # Okunma tamponunun nereye boşaltılacağı (icerik/okunma.py):
 #   "istek" (varsayılan) — istek yolu 30 sn'de bir TEK işlemle yazar.
@@ -480,6 +484,10 @@ DATABASES["default"].setdefault("CONN_HEALTH_CHECKS", True)
 # takılır (icerik/yavas_sorgu.py) ve eşiği aşan sorgu `bh.yavas_sorgu`ya
 # düşer. Dosya verilmezse konsola.
 YAVAS_SORGU_MS = int(os.environ.get("BH_YAVAS_SORGU_MS", "200"))
+# Toplu yönetim komutlarında (arama_doldur, pg_goc, goc_al…) eşik; 0 =
+# kapalı (varsayılan). Bu komutlar bilerek uzun sorgu çalıştırır ve
+# günlük raporlarını boğuyordu (Paket L2). Ayrıntı: icerik/yavas_sorgu.py.
+YAVAS_SORGU_KOMUT_MS = int(os.environ.get("BH_YAVAS_SORGU_KOMUT", "0"))
 _YAVAS_DOSYA = os.environ.get("BH_YAVAS_SORGU_DOSYASI", "").strip()
 
 LOGGING = {

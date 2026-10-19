@@ -93,6 +93,10 @@ sudo -u postgres createdb -O bh -E UTF8 -l tr_TR.UTF-8 -T template0 bursahakimiy
 
 `BH_VERITABANI=postgresql://bh:PAROLA@127.0.0.1:5432/bursahakimiyet`.
 
+Sunucu ayarları (bellek, planlayıcı, JIT kapalı; her satır gerekçeli):
+`dagitim/postgresql/bursahakimiyet.conf` → `/etc/postgresql/16/main/conf.d/`,
+sonra `systemctl restart postgresql` (Paket L2).
+
 ## 5. Kod, ortam, ilk derleme
 
 ```bash

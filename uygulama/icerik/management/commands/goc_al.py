@@ -31,6 +31,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
+from icerik import arama
 from icerik.goc_ilce import ilce_bul, kaliplar as ilce_kaliplari
 from icerik.goc_kaynak import kaynak_kabul
 from icerik.models import Haber
@@ -150,6 +151,10 @@ class Command(BaseCommand):
                                    "eski_url", "goc_guveni"],
                     unique_fields=["id"],
                 )
+                # `bulk_create` kayıt kancasını (`arama.haber_kaydedildi`)
+                # çağırmaz: başlık/spot değişen kaydın arama satırı AYNI
+                # işlemde, bellekteki değerden tazelenir (Paket L2).
+                arama.yaz(arama.satir_kur(h.id, h.baslik, h.spot) for h in yigin)
             yigin.clear()
 
         for yol in dosyalar:

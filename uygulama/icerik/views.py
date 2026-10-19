@@ -174,7 +174,8 @@ def anasayfa(request):
 
     # Yazar kuşağı (§35): sağ raydaki beş satırlık silik liste, tam
     # genişlikte portreli bir şeride dönüştü — 10 yazar sığıyor.
-    yazarlar = list(Yazar.listedekiler()[:10])
+    # Son yazı başlığı aynı sorguda (Paket L2; yazar başına sorgu açıyordu).
+    yazarlar = list(Yazar.son_yazisiyla()[:10])
 
     # Resmî ilan bölümü ELLE YAZILMIŞTI (altı sabit <li>). Kayıtlar
     # veritabanında duruyordu; artık oradan çiziliyor. Süzgeç şeridindeki

@@ -106,14 +106,17 @@ def kose_yazisi(request, dilim_slug, dilim_id, slug, kimlik):
         "yazi": kayit,
         "yazar": kayit.yazar,
         "baslik": kayit.baslik,
-        # Aynı yazarın diğer yazıları; kendisi hariç.
-        "digerleri": kayit.yazar.yazilari().exclude(pk=kayit.pk)[:5],
+        # Aynı yazarın diğer yazıları; kendisi hariç. `select_related`:
+        # satırın adresi yazarın dilimini ister (`get_absolute_url`) ve
+        # yazar her kalem için ayrıca çekiliyordu (N+1, Paket L2).
+        "digerleri": kayit.yazar.yazilari().select_related("yazar")
+                          .exclude(pk=kayit.pk)[:5],
         # Sağ ray (29 Ağustos görsel denetimi): makale ızgarasının ikinci
         # sütunu boş kalıyordu — sayfa genişliğinin %31'i (342 px, ölçüldü).
         "en_cok": Haber.yayindakiler()
                        .select_related("kategori")
                        .prefetch_related("kategori__turler")[:5],
-        "ray_yazarlar": Yazar.listedekiler()[:5],
+        "ray_yazarlar": Yazar.son_yazisiyla()[:5],
         "tema": temalar.kose_temasi(),
     })
 
@@ -125,7 +128,7 @@ def yazar_listesi(request):
     karşılanıyor, böylece kök adres tablosunda bekleme sayfasıyla yer
     değiştirmek tek satırlık bir iş.
     """
-    yazarlar = list(Yazar.listedekiler())
+    yazarlar = list(Yazar.son_yazisiyla())
     return render(request, "medya/yazar_listesi.html", {
         "baslik": "Yazarlar",
         "yazarlar": yazarlar,

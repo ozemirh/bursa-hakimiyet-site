@@ -87,32 +87,61 @@ class SaldiriTablosu(SimpleTestCase):
 
 
 class IkiEgikCizgi(SimpleTestCase):
-    """`//kotu.example` ve `/\\kotu.example` — "/" ile başlıyor, yani
-    temizleyicinin iç bağlantı dalına (`hedef.startswith("/")`) düşüyor; ama
-    tarayıcı ikisini de DIŞ adrese çözer (`/\\` WHATWG URL ayrıştırıcısında
-    `//` sayılır). Bugünkü davranış ölçüldü: bağlantı korunur, `rel="noopener
-    nofollow"` alır — yani `https://` dış bağlantıyla aynı muamele. Bu bir
-    yetki açığı değil (editör zaten dış bağlantı ekleyebiliyor), ama iç
-    bağlantı gibi GÖRÜNEN bir dış bağlantı. Kilitlenen değişmez: ya düz
-    metne iner ya da dış bağlantı muamelesi görür; asla nofollow'suz,
-    "iç" bir bağlantı olarak basılmaz. (Biçim düzeltmesi — `https://`ye
-    çevirmek ya da reddetmek — sahibinde; bu test ikisine de izin verir.)
+    r"""`//kotu.example` ve `/\kotu.example` — "/" ile başlıyor ama tarayıcı
+    ikisini de DIŞ adrese çözer (`/\` WHATWG URL ayrıştırıcısında `//`
+    sayılır; sekme ve satır sonu adresin her yerinden silinir).
+
+    Eski davranış (Paket K'da ölçülüp kilitlenmişti): iç bağlantı dalına
+    düşüp olduğu gibi basılıyordu — iç bağlantı gibi GÖRÜNEN dış bağlantı.
+    Yeni davranış (Paket L2, 19 Ekim 2026): açık `https://` adresine
+    çevrilir, yani dış bağlantıyla birebir aynı muameleyi görür; ana
+    makinesi olmayan biçim düz metne iner. Asla "/" ile başlayan bir dış
+    adres basılmaz.
     """
 
-    YUKLER = ['<a href="//kotu.example/yol">x</a>',
-              '<a href="/\\kotu.example/yol">x</a>',
-              '<a href="/\\/kotu.example">x</a>',
-              '<a href=" //kotu.example">x</a>']
+    CEVRILEN = [
+        ('<a href="//kotu.example/yol">x</a>', "https://kotu.example/yol"),
+        ('<a href="/\\kotu.example/yol">x</a>', "https://kotu.example/yol"),
+        ('<a href="/\\/kotu.example">x</a>', "https://kotu.example"),
+        ('<a href=" //kotu.example">x</a>', "https://kotu.example"),
+        ('<a href="\\\\kotu.example">x</a>', "https://kotu.example"),
+        ('<a href="/\t/kotu.example">x</a>', "https://kotu.example"),
+        ('<a href="/\n/kotu.example/a?b=1#c">x</a>', "https://kotu.example/a?b=1#c"),
+    ]
 
-    def test_dis_baglanti_muamelesi(self):
-        for yuk in self.YUKLER:
+    def test_https_adresine_cevrilir(self):
+        for yuk, beklenen in self.CEVRILEN:
             with self.subTest(yuk):
-                cikti = str(govde_temizle(yuk))
-                self.assertIn("x", cikti)
-                baglantilar = re.findall(r"<a\b[^>]*>", cikti)
-                for a in baglantilar:
-                    self.assertIn('rel="noopener nofollow"', a, cikti)
-                    self.assertNotIn("javascript", a)
+                self.assertEqual(
+                    str(govde_temizle(yuk)),
+                    f'<a href="{beklenen}" rel="noopener nofollow">x</a>')
+
+    def test_ana_makinesiz_bicim_duz_metne_iner(self):
+        for yuk in ('<a href="///">x</a>', '<a href="/\\/">x</a>', '<a href="//">x</a>'):
+            with self.subTest(yuk):
+                self.assertEqual(str(govde_temizle(yuk)), "x")
+
+    def test_hicbir_baglanti_egik_cizgiyle_dis_adrese_gitmez(self):
+        """Değişmez: "/" ya da ters bölüyle başlayan basılmış href, tarayıcının
+        gözünde de iç adres olmalı (ikinci karakteri "/" ya da ters bölü değil)."""
+        for yuk, _ in self.CEVRILEN:
+            cikti = str(govde_temizle(yuk))
+            for href in re.findall(r'href="([^"]*)"', cikti):
+                if href[:1] in ("/", "\\"):
+                    self.assertNotIn(href[1:2], ("/", "\\"), cikti)
+
+    def test_tarayicinin_sildigi_karakter_semayi_gizleyemez(self):
+        for yuk in ('<a href="java\tscript:alert(1)">x</a>',
+                    '<a href="java\nscript:alert(1)">x</a>'):
+            with self.subTest(yuk):
+                self.assertEqual(str(govde_temizle(yuk)), "x")
+
+    def test_ic_baglantidaki_ters_bolu_tarayici_bicimine_iner(self):
+        """Tek eğik çizgili iç adresteki ters bölü tarayıcıda "/" olur;
+        basılan biçim de odur (adres iç kalır)."""
+        self.assertEqual(
+            str(govde_temizle('<a href="/bursa\\haber-12">x</a>')),
+            '<a href="/bursa/haber-12" rel="noopener nofollow">x</a>')
 
     def test_gercek_ic_baglanti_korunur(self):
         self.assertEqual(
