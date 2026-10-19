@@ -51,6 +51,7 @@ SOZLESME = {
     "panel-yz-taslak-ekle": "haber_girme",
     "panel-yz-taslak": "haber_girme",
     "panel-yz-gorsel": "haber_girme",
+    "panel-yz-bulgu-kapat": "haber_girme",     # Paket M: K2 bulgusu tek tek
     "panel-galeriler": "haber_girme",
     "panel-galeri-duzenle": "haber_girme",
     "panel-videolar": "haber_girme",

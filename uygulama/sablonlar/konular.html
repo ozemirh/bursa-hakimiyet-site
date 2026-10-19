@@ -25,7 +25,7 @@ aynı parçadan.{% endcomment %}
             <li>
               <div class="ust">
                 <time datetime="{{ k.bitis|date:'c' }}">{{ k.baslangic|date:"j M Y" }} – {{ k.bitis|date:"j M Y" }}</time>
-                {% if k.acik %}<span class="suruyor">SÜRÜYOR</span>{% endif %}
+                {% if k.suruyor %}<span class="suruyor">SÜRÜYOR</span>{% endif %}
               </div>
               <h2><a href="{{ k.get_absolute_url }}">{{ k.ad }}</a></h2>
               <p>{{ k.haber_sayisi }} haber{% if k.ozet %} · {{ k.ozet|truncatechars:140 }}{% endif %}</p>

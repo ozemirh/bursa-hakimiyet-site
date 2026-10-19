@@ -80,6 +80,16 @@ KAPSAMA_EN_AZ = 0.6       # çekirdek kökün üyelerdeki payı
 YOGUNLUK_GUN = 30         # "patlama" ölçülen pencere
 YOGUNLUK_EN_AZ = 0.5      # üyelerin bu payı tek pencereye düşmeli (n ≥ 12)
 KUCUK_ZINCIR = 12         # bunun altında ikinci çekirdek YA DA yoğunluk 0.6
+# Yapısal periyodiklik (19 Ekim 2026, Paket M): başlık kalıbına girmeyen
+# periyodik türü zincirin biçiminden tanır. Üçü birden tutarsa dosya değil
+# dizidir: en az 15 haber, haberlerin %80'inden fazlası ayrı günde (her gün
+# bir tane), gelişme dili %5'in altında (süreç ilerlemiyor, aynı şey
+# tekrarlanıyor). "New York borsası" 300 haber, 0.84 gün/haber, gelişme 0;
+# "Ece Gürel" 6 haber — eşiğin altında, hiç bakılmaz. Bir transfer sağası
+# ("anlaştı", "imzaladı", "görüşme") gelişme diliyle bu süzgeçten geçer.
+PERIYODIK_EN_AZ_UYE = 15
+PERIYODIK_GUN_ORANI = 0.8
+PERIYODIK_GELISME = 0.05
 
 # ---------------------------------------------------------------- sözlük
 #
@@ -155,42 +165,181 @@ temel açılış
 #
 # Periyodik, "takip edilmesi gerekmeyen" haber türleri. Her kalıp kullanıcı
 # örnekleriyle (TÜİK enflasyonu) ve arşivin kendi başlıklarıyla seçildi.
-RUTIN_KALIPLARI = [re.compile(k, re.IGNORECASE) for k in [
-    r"hava durumu", r"meteoroloji", r"sıcaklık", r"yağış",
-    r"namaz vakit", r"iftar (saat|vakt)", r"sahur (saat|vakt)", r"imsak",
-    r"nöbetçi eczane",
-    r"\b(dolar|euro|sterlin|altın|gram altın|çeyrek altın|döviz)\b.*"
-    r"(fiyat|kur|ne kadar|kaç (tl|lira)|güncel|bugün|son durum)",
-    r"(fiyat|kur|ne kadar|kaç (tl|lira)|güncel).*"
-    r"\b(dolar|euro|sterlin|altın|döviz)\b",
-    r"(benzin|motorin|mazot|lpg|akaryakıt).*(fiyat|zam|indirim|litre)",
-    r"sigara fiyat", r"güncel .*fiyatlar", r"fiyat listesi",
-    r"\b(borsa|bist ?100)\b.*(güne|haftaya|kapan|açıl|yükseliş|düşüş)",
-    r"\btüik\b", r"enflasyon.*(açıklandı|belli oldu|rakam|oran|yüzde)",
-    r"(sanayi üretimi|işsizlik oranı|cari (açık|fazla)|dış ticaret)",
-    r"faiz kararı", r"\bppk\b",
-    r"burç", r"günlük burç", r"astroloji",
-    r"\(\d{1,2} \w+ \d{4}", r"\d{1,2} \w+ \d{4} .*(fiyat|hava|vakit|eczane)",
-    r"canlı (izle|yayın|anlatım)", r"hangi kanalda", r"saat kaçta",
-    r"maç(ı|ın)? (özeti|sonucu|kadrosu|hakemi|11'i|ilk 11)",
-    r"muhtemel 11", r"ilk 11", r"puan durumu", r"maç sonucu",
-    r"kaç kaç", r"\d+-\d+ ?(mağlup|galip|yendi|kazandı|berabere)",
-    r"bu akşam .*(dizi|film|bölüm)", r"reyting", r"yeni bölüm fragman",
-    r"günün (menü|sözü|fotoğraf|karikatür)",
-    r"bugün ne (var|oldu)", r"trafik yoğunluk",
-    r"piyasalar(da|ı)? (bugün|güne|hafta)",
-    r"asgari ücret .*(ne kadar|kaç|zam)",
-    r"emekli (maaş|zam).*(ne kadar|kaç|hesap)",
-    r"kira artış oranı", r"vergi dilim", r"harç .*ne kadar",
-    r"can kaybı .*(yükseldi|çıktı|arttı)",   # günlük sayaç, gelişme değil
-    r"etkisiz h[aâ]le getirildi",             # haftalık bilanço
-    r"meclisi? (toplan|gündem)", r"meclis toplantısı",   # aylık meclis
-    r"(ile|’la|’le|'la|'le) (telefonda |telefonla )?görüştü\W*$",  # protokol görüşmesi
-    r"telefonda görüştü", r"emsal karar",                # dizi biçimli köşe
-    r"#\d+", r"\| [A-ZÇĞİÖŞÜ ]{4,}$",                # video dizisi numarası
-    r"(hafta|ay|yıl)(lık|ın) (bilanço|özet)",
-    r"kolonya|çay demleme|tarif",  # yaşam köşesi
-]]
+# Başlık `kucuk()` ile küçültülüp aranır; kesme işareti korunur.
+#
+# 19 Ekim 2026 (Paket M): 5 Eylül taraması bu listenin dar kaldığı türleri
+# ONAYLI dosya olarak yayına çıkarmıştı. Her yeni grubun yanında o türün
+# sitede onaylı duran tek bir örnek dosyası yazılı (kimlik · ad · haber
+# sayısı · örnek başlık); grup o dosya yüzünden var. Ölçüt "gerçekten
+# periyodik mi": takvimle, sayaçla ya da kurumun düzenli duyurusuyla gelen
+# başlık. Bir kişinin, kulübün ya da ligin adı tek başına kalıp DEĞİLDİR —
+# "Süper Lig" ya da "Bursaspor" başlığı bir transfer dosyasının parçası
+# olabilir; o ayrımı başlık değil yapı yapar (`Motor._periyodik_mi`).
+RUTIN_GRUPLARI: list[tuple[str, str, list[str]]] = [
+    ("hava durumu", "5 Eylül listesi + #85528 'Marmara Denizi' 28 haber: "
+     "\"Marmara Denizi'nde fırtına uyarısı\"", [
+        r"hava durumu", r"meteoroloji", r"sıcaklık", r"yağış",
+        r"(fırtına|lodos|kuvvetli rüzgar|sağanak|kar yağışı|zirai don|sis|"
+        r"toz taşınımı) (uyarı|alarm|engeli)", r"(sarı|turuncu|kırmızı) kod",
+    ]),
+    ("namaz ve oruç vakti", "5 Eylül listesi", [
+        r"namaz vakit", r"iftar (saat|vakt)", r"sahur (saat|vakt)", r"imsak",
+        r"bayram namazı (saat|kaçta|vakt)",
+    ]),
+    ("nöbetçi eczane", "5 Eylül listesi", [r"nöbetçi eczane"]),
+    ("döviz ve altın", "5 Eylül listesi", [
+        r"\b(dolar|euro|sterlin|altın|gram altın|çeyrek altın|döviz)\b.*"
+        r"(fiyat|kur|ne kadar|kaç (tl|lira)|güncel|bugün|son durum)",
+        r"(fiyat|kur|ne kadar|kaç (tl|lira)|güncel).*"
+        r"\b(dolar|euro|sterlin|altın|döviz)\b",
+        r"ons altın",
+    ]),
+    ("kripto para durumu",
+     "#79737 'Bitcoin Ethereum' 35 haber: \"Bitcoin, Ethereum ve Altcoin'lerde "
+     "son durum ne?\"", [
+        r"\b(bitcoin|btc|ethereum|altcoin|kripto ?para)\w*['’]?\w*\b.*"
+        r"(son durum|fiyat|kaç (dolar|tl)|yükseliş|düşüş|değer (kazan|kaybet))",
+    ]),
+    ("akaryakıt ve fiyat listesi", "5 Eylül listesi", [
+        r"(benzin|motorin|mazot|lpg|akaryakıt).*(fiyat|zam|indirim|litre)",
+        r"sigara fiyat", r"güncel .*fiyatlar", r"fiyat listesi",
+    ]),
+    # 5 Eylül'deki `\b(borsa|bist ?100)\b` kalıbı "borsası"nı tanımıyordu
+    # (\b ekin önünde kesilmez); 300 haberlik dosya bu yüzden geçti.
+    ("borsa açılış ve kapanışı",
+     "#75138 'New York' 300 haber: \"New York borsası yükselişle açıldı\"", [
+        r"\b(borsa(sı|ları|lar)?|bist ?(100|30)?|nasdaq|dow jones|nikkei|dax)\b"
+        r".{0,40}(güne|haftaya|kapan|açıl|yükseliş|düşüş|karışık seyir|"
+        r"değer (kazan|kaybet))",
+        r"piyasalar(da|ı)? (bugün|güne|hafta)",
+    ]),
+    ("petrol ve emtia fiyatı",
+     "#74536 'Brent · petrolün' 91 haber: \"Brent petrolün varili 68,50 dolar oldu\"", [
+        r"\bbrent\b", r"petrol(ün)? (varil|fiyat)", r"varil(i|ine)? \d",
+        # #75152 'Kulesi · sondaj' 37 haber: haftalık sondaj kulesi sayımı
+        r"sondaj kulesi sayısı",
+    ]),
+    ("şans oyunu sonucu",
+     "#73225 'Loto · sonuçları' 69 haber: \"Süper Loto sonuçları açıklandı\"", [
+        r"\bloto(su)?\b", r"şans topu", r"on numara", r"milli piyango",
+    ]),
+    ("tarihte bugün",
+     "#93089 'Hakimiyet Gazetesi' 160 haber: \"Bursa Hakimiyet Gazetesi'nin "
+     "arşivinden tarihte bugün | 1 Mart\"", [
+        r"tarihte bugün", r"arşivinden",
+    ]),
+    ("planlı kesinti ve kurum duyurusu",
+     "#92310 'BUSKİ · kesintisi' 66 haber: \"BUSKİ'den o mahallelere kötü "
+     "haber! Bursa'da 10 saatlik su kesintisi\"", [
+        r"(su|elektrik|doğal ?gaz|enerji)(ler)? kesinti",
+        r"(su|elektrik)(ler)? (verilemeyecek|kesilecek)",
+        r"\b(buski|uedaş|bursagaz)\b.{0,40}(duyuru|uyarı|kesinti|kötü haber)",
+        # #74312 'Müdürlüğü · duyuru' 37: "BURSA İL SAĞLIK MÜDÜRLÜĞÜ'nden duyuru!"
+        r"['’]n?(den|dan) duyuru\W*$",
+    ]),
+    ("sefer iptali duyurusu",
+     "#74059 'BUDO · iptal' 45 haber: \"Bursalılar dikkat! BUDO seferleri iptal\"", [
+        r"sefer(ler)?(i|ine)? (iptal|yapılamayacak)",
+        r"\b(budo|ido|feribot|deniz otobüsü)\w*['’]?\w*\b.{0,40}(iptal|engel)",
+    ]),
+    ("tüik ve ekonomik gösterge", "5 Eylül listesi + #75613 'Fiyat Endeksi' 41 "
+     "haber: \"Konut Fiyat Endeksi mart ayında arttı\"", [
+        r"\btüik\b", r"enflasyon.*(açıklandı|belli oldu|rakam|oran|yüzde)",
+        r"(sanayi üretimi|işsizlik oranı|cari (açık|fazla)|dış ticaret)",
+        r"faiz kararı", r"\bppk\b",
+        r"\bendeks(i|leri)?\b",
+        # #90255 'KKM · düşüş' 29 haber: haftalık bakiye açıklaması
+        r"\bkkm\b.*(bakiye|hesap|çıkış|düşüş)",
+        r"rezerv(ler)?i? (arttı|azaldı|geriledi|yükseldi)",
+    ]),
+    ("dini gün ve resmi tatil",
+     "takvim türü: kandil, arefe ve bayram tatili her yıl aynı başlıkla döner", [
+        r"kandil(i|in|iniz)?\b.*(ne zaman|mesaj|hangi gün|kutlu)",
+        r"kandil mesaj",
+        r"(bayram|arefe|yılbaşı|resmi) .{0,20}tatil",
+        r"(bayram|arefe|tatil).{0,20}(kaç gün|ne zaman|uzatıl)",
+        r"arefe günü",
+    ]),
+    ("burç ve yaşam köşesi", "5 Eylül listesi", [
+        r"burç", r"günlük burç", r"astroloji",
+        r"kolonya|çay demleme|tarif",
+        r"günün (menü|sözü|fotoğraf|karikatür)",
+    ]),
+    ("tarihli servis başlığı", "5 Eylül listesi", [
+        r"\(\d{1,2} \w+ \d{4}", r"\d{1,2} \w+ \d{4} .*(fiyat|hava|vakit|eczane)",
+        r"bugün ne (var|oldu)", r"trafik yoğunluk",
+    ]),
+    ("maç günü rutini", "5 Eylül listesi + #76061 'Süper Lig' 34 haber: "
+     "\"Süper Lig'de 27. haftanın hakemleri açıklandı\"", [
+        r"canlı (izle|yayın|anlatım)", r"hangi kanalda", r"saat kaçta",
+        r"maç(ı|ın)? (özeti|sonucu|kadrosu|hakemi|11'i|ilk 11)",
+        r"muhtemel 11", r"ilk 11", r"puan durumu", r"maç sonucu",
+        r"kaç kaç", r"\d+-\d+ ?(mağlup|galip|yendi|kazandı|berabere)",
+        r"hakem(ler)?i (açıklandı|belli oldu)", r"haftanın hakem",
+        r"hazırlık(lar)?(ı|ını) sürdür", r"\bantrenman", r"hazırlık maçı",
+    ]),
+    ("televizyon programı", "5 Eylül listesi + #77159 'İbo Show' 34 haber: "
+     "\"İbo Show'un bu haftaki konukları belli oldu\"", [
+        r"bu akşam .*(dizi|film|bölüm)", r"reyting", r"yeni bölüm fragman",
+        r"konukları (belli oldu|kimler|açıklandı)",
+    ]),
+    ("ücret ve vergi tablosu", "5 Eylül listesi", [
+        r"asgari ücret .*(ne kadar|kaç|zam)",
+        r"emekli (maaş|zam).*(ne kadar|kaç|hesap)",
+        r"kira artış oranı", r"vergi dilim", r"harç .*ne kadar",
+    ]),
+    ("sayaç ve bilanço",
+     "#75548 'Asya · bilançosu' 37 haber: \"Asya ülkelerinde koronavirüs "
+     "bilançosu açıklandı\"", [
+        r"can kaybı .*(yükseldi|çıktı|arttı)",   # günlük sayaç, gelişme değil
+        r"etkisiz h[aâ]le getirildi",             # haftalık bilanço
+        r"(vaka|ölü|iyileşen|aşı dozu)(lar|ların|lerin)? sayısı",
+        r"(koronavirüs|kovid|covid)[\w'’-]* (bilanço|ile ilgili gelişme|"
+        r"salgınına ilişkin gelişme)",
+        r"son 24 saatte", r"testi pozitif",
+        # #73273 'TSK · terörist' 26: "İşte öldürülen terörist sayısı"
+        r"terörist sayısı",
+        r"(hafta|ay|yıl)(lık|ın) (bilanço|özet)",
+    ]),
+    ("asayiş bülteni",
+     "#91447 'Kayseri · yakalandı' 46 haber: \"Kayseri'de kesinleşmiş cezası "
+     "bulunan ihraç müdür yakalandı\"", [
+        r"kesinleşmiş (hapis )?ceza",
+        r"aranan (hükümlü|şahıs|firari)",
+        # #89476 'Çanakkale Ayvacık' 24: "Ayvacık açıklarında 29 kaçak göçmen kurtarıldı"
+        # Yalnız yakalama/kurtarma bülteni: "göçmen teknesi battı" bir olaydır.
+        r"(kaçak|düzensiz) göçmen\w* .{0,25}(yakalandı|kurtarıldı|yakalanırken|"
+        r"gözaltına|sınır dışı)",
+        r"açıklarında .{0,25}göçmen",
+        # #75351 'MSB · imha' 34: "Barış Pınarı bölgesinde EYP imha edildi"
+        r"\b(eyp|mayın)\w*['’]?\w* .{0,20}imha",
+    ]),
+    ("gemi geçişi",
+     "#74894 'Boğazı · gemisi' 105 haber: \"Rus savaş gemisi Çanakkale "
+     "Boğazı'ndan geçti\"", [
+        r"boğaz\w*['’]?\w* (geçti|geçiş)",
+    ]),
+    ("ilan ve kadro duyurusu",
+     "#78172 'Üniversitesi · alacak' 71 haber: \"Koç Üniversitesi 2 öğretim "
+     "üyesi alacak!\"", [
+        r"icradan satılık",
+        r"(öğretim üyesi|akademik personel|personel|sözleşmeli|işçi|memur) "
+        r"al(acak|ınacak|ımı)",
+        r"istihdam edecek",
+    ]),
+    ("meclis ve protokol", "5 Eylül listesi", [
+        r"meclisi? (toplan|gündem)", r"meclis toplantısı",   # aylık meclis
+        r"(ile|’la|’le|'la|'le) (telefonda |telefonla )?görüştü\W*$",  # protokol
+        r"telefonda görüştü", r"emsal karar",                # dizi biçimli köşe
+    ]),
+    ("numaralı dizi", "5 Eylül listesi", [
+        r"#\d+", r"\| [A-ZÇĞİÖŞÜ ]{4,}$",                # video dizisi numarası
+    ]),
+]
+RUTIN_KALIPLARI = [re.compile(k, re.IGNORECASE)
+                   for _, _, kaliplar in RUTIN_GRUPLARI for k in kaliplar]
+_RUTIN_GRUP = [(ad, re.compile("|".join(f"(?:{k})" for k in kaliplar), re.IGNORECASE))
+               for ad, _, kaliplar in RUTIN_GRUPLARI]
 
 _KUCUK_ESLEME = str.maketrans("IİÇĞÖŞÜ", "ıiçğöşü")
 _HARF = "\\wçğıöşüÇĞİÖŞÜ"
@@ -219,10 +368,84 @@ def kokle(kelime: str, tur: int = 2) -> str:
 
 YERLER = frozenset(kokle(y) for y in _YERLER)
 
+# Kurum adlarının baş sözcüğü: cümle ortasında hep büyük yazıldığı için
+# varlık sayılır ama tek başına ad değildir ("Üniversitesi", "Festivali").
+# Dosya adında önündeki özel adla genişletilir (`Motor._kurum_genislet`).
+KURUM_BASI = frozenset(kokle(k) for k in """
+üniversitesi üniversite lisesi lise okulu festivali festival müdürlüğü
+belediyesi bakanlığı hastanesi mahallesi caddesi bulvarı köyü dağı denizi
+gölü boğazı otoyolu köprüsü parkı meydanı kurulu derneği vakfı odası
+borsası partisi meclisi kulübü merkezi fakültesi valiliği emniyeti
+başkanlığı ödülleri ödülü kupası ligi şampiyonası maratonu fuarı müzesi
+sarayı camii havalimanı limanı barajı tüneli hattı organize sanayi bölgesi
+radyosu gazetesi ajansı takımı ordusu rasathanesi enstitüsü komisyonu konseyi
+birliği federasyonu bankası sendikası cezaevi adliyesi mahkemesi şirketi
+şubesi teşkilatı nehri çayı ırmağı adası körfezi ovası yaylası şelalesi
+kalesi santrali fabrikası tesisi orkestrası
+""".split())
+
+# Ad olamayacak yüzeyler: çekimli fiil (geçmiş, gelecek, şimdiki, şart,
+# ulaç) ve uzun hâl ekleri. Sözlük değil, ek kalıbı; "kesinti" gibi "-ti"
+# ile biten adlar da elenebilir — o zaman sıradaki kök denenir.
+_CEKIMLI = re.compile(
+    r"(dı|di|du|dü|tı|ti|tu|tü|dık|dik|duk|dük|tık|tik|tuk|tük|mış|miş|muş|"
+    r"müş|acak|ecek|acağı|eceği|yor|ıyor|iyor|arak|erek|ınca|ince|unca|ünce|"
+    r"yken|ken|ması|mesi|malı|meli|sa|se|"
+    r"ndan|nden|ndaki|ndeki|daki|deki|taki|teki|nda|nde|yla|yle|larla|lerle|"
+    r"nın|nin|nun|nün|ğını|ğini|ğunu|ğünü|"
+    r"ına|ine|una|üne|sına|sine|suna|süne|ya|ye)$")
+
+
+# Olay sözcüğü olarak bir şey söylemeyen sıfat ve zarflar.
+_AD_DISI = frozenset("""
+yeniden şok flaş sıcak önemli kritik acı kötü müjde sert dev tarihi resmi
+""".split())
+
+
+def _tumu_buyuk(metin: str) -> bool:
+    harfler = [c for c in metin if c.isalpha()]
+    return len(harfler) > 1 and all(c.isupper() for c in harfler)
+
+
+def _harf_bicimi(metin: str) -> str:
+    """Tümü büyük harfli öbeği başlık biçimine çevirir; kısaltmayı korur.
+
+    `site_etiket.baslikla` Türkçe İ/ı çiftini doğru çevirir ve üç harfe
+    kadar kısaltmayı (MSB, TFF) korur. Tek kelime olduğu gibi kalır: tek
+    kelimelik tümü büyük çapa çoğunlukla bir kısaltma ya da markadır
+    (BUSKİ, AFAD, ASELSAN).
+    """
+    if not _tumu_buyuk(metin) or " " not in metin.strip():
+        return metin
+    from .templatetags.site_etiket import baslikla
+    return baslikla(metin)
+
+
+def gelisme_var(baslik: str, kokler=()) -> bool:
+    """Başlıkta gelişme dili var mı? Kök YA DA yüzey `GELISME` ile başlar.
+
+    19 Ekim 2026: yalnız köke bakılıyordu ve son ek düşürme kökü kısaltınca
+    kaçıyordu — "istifa" → "istif", "ihale" → "ihal" `GELISME`deki
+    "istifa"/"ihale" ile başlamaz. Yüzeye de bakılınca "İYİ Parti'de şok
+    istifa" gibi başlıklar gelişme sayılır.
+    """
+    if any(k.startswith(GELISME) for k in kokler):
+        return True
+    return any(kucuk(k).startswith(GELISME) for k in _KELIME.findall(_KESME.sub("", baslik)))
+
 
 def rutin_mu(baslik: str) -> bool:
+    return rutin_turu(baslik) is not None
+
+
+def rutin_turu(baslik: str) -> str | None:
+    """Başlık periyodik bir türe uyuyorsa grubun adı ("borsa açılış ve
+    kapanışı"), uymuyorsa None. Gerekçe metinleri bu adı yazar."""
     b = kucuk(baslik)
-    return any(k.search(b) for k in RUTIN_KALIPLARI)
+    for ad, kalip in _RUTIN_GRUP:
+        if kalip.search(b):
+            return ad
+    return None
 
 
 @dataclass(frozen=True)
@@ -231,6 +454,7 @@ class Parca:
     yuzey: str
     buyuk: bool      # büyük harfle mi yazılmış
     orta: bool       # cümle ortasında mı (büyük harf kanıt sayılır)
+    sira: int = -1   # başlıktaki kelime sırası; atlanan kelimeler de sayılır
 
 
 def parcala(baslik: str) -> list[Parca]:
@@ -239,7 +463,7 @@ def parcala(baslik: str) -> list[Parca]:
     bulunan: list[Parca] = []
     gorulen: set[str] = set()
     konum = 0
-    for esle in _KELIME.finditer(temiz):
+    for sira, esle in enumerate(_KELIME.finditer(temiz)):
         kelime = esle.group()
         ara = temiz[konum:esle.start()]
         sinir = konum == 0 or _CUMLE_SINIRI.search(ara) is not None
@@ -252,15 +476,21 @@ def parcala(baslik: str) -> list[Parca]:
         if len(kok) < 3 or kok in DURAK or kok in gorulen:
             continue
         gorulen.add(kok)
-        bulunan.append(Parca(kok, kelime, kelime[0].isupper(), not sinir))
+        bulunan.append(Parca(kok, kelime, kelime[0].isupper(), not sinir, sira))
     return bulunan
 
 
 def ikililer(parcalar: list[Parca]) -> list[tuple[str, str]]:
-    """Yan yana iki büyük harfli kelime: (kök, yüzey). "Ece Gürel" gibi."""
+    """Yan yana iki büyük harfli kelime: (kök, yüzey). "Ece Gürel" gibi.
+
+    "Yan yana" başlıkta yan yana demek (19 Ekim 2026): unvan ve durak
+    kelimesi kökten düşüyor, araya giren kelime atlanınca "Sağlık Bakanı
+    Müezzinoğlu" → "Sağlık Müezzinoğlu", "Savunma Bakanı Katz" → "Savunma
+    Katz" diye var olmayan adlar doğuyordu.
+    """
     cikti = []
     for a, b in zip(parcalar, parcalar[1:]):
-        if a.buyuk and b.buyuk and b.orta:
+        if a.buyuk and b.buyuk and b.orta and b.sira == a.sira + 1:
             cikti.append((f"{a.kok}_{b.kok}", f"{a.yuzey} {b.yuzey}"))
     return cikti
 
@@ -321,6 +551,7 @@ class Motor:
         self.df: Counter = Counter()
         self.orta: Counter = Counter()       # cümle ortasında geçiş
         self.orta_buyuk: Counter = Counter() # ...büyük harfle
+        self.ikili_orta: Counter = Counter() # ikili, başlığın ilk kelimesinden başlamıyor
         self.toplam = 0
         self.yuzey: dict[str, Counter] = defaultdict(Counter)
         self._varlik: dict[str, bool] = {}
@@ -339,6 +570,8 @@ class Motor:
         for kok, yuzey in ikililer(parcalar):
             self.df[kok] += 1
             self.yuzey[kok][yuzey] += 1
+            if not yuzey.startswith(parcalar[0].yuzey + " ") or parcalar[0].orta:
+                self.ikili_orta[kok] += 1
 
     def hazirla(self) -> None:
         """Sayım bitince türetilen tabloları kurar; zincirle() öncesi şart."""
@@ -579,8 +812,9 @@ class Motor:
         elif not ikinci_cekirdek and yogunluk < 0.6:
             return None
 
-        gelisme = sum(1 for h in uyeler if any(
-            k.startswith(GELISME) for k in h.kokler))
+        gelisme = sum(1 for h in uyeler if gelisme_var(h.baslik, h.kokler))
+        if self._periyodik_mi(n, len(gunler), gelisme):
+            return None
 
         guven = self._guven(n, len(gunler), en_kapsayan, ana_kok, gelisme)
         # İkili ad zaten iki kelimeyi kapsıyor; parçalarını ve onunla kelime
@@ -595,15 +829,150 @@ class Motor:
             if "_" in k:
                 kapli.update(parcalar)
         anahtarlar = [self._ad(k, uyeler) for k in anahtar_kokleri[:4]]
-        ad = anahtarlar[0]
-        if len(anahtarlar) > 1 and " " not in ad:
-            ad = f"{ad} · {anahtarlar[1]}"
+        ad = self._dosya_adi(capalar, cekirdek, uyeler, anahtarlar)
+        if not ad:
+            ad = anahtarlar[0]
+            ek = [a for a in anahtarlar[1:] if not _CEKIMLI.search(kucuk(a))]
+            if ek and " " not in ad:
+                ad = f"{ad} · {ek[0]}"
         gerekce = (f"{n} haber, {len(gunler)} ayrı gün, {sure} günlük süre; "
                    f"'{anahtarlar[0]}' üyelerin %{round(en_kapsayan * 100)}'inde, "
                    f"arşivde {self.df[ana_kok]} başlıkta; "
                    f"{gelisme} başlıkta gelişme dili.")
         return Konu(ad=ad, anahtarlar=anahtarlar, uyeler=uyeler,
                     guven=guven, gerekce=gerekce)
+
+    @staticmethod
+    def _periyodik_mi(n: int, gun: int, gelisme: int) -> bool:
+        """Dizi mi, dosya mı? Bkz. `PERIYODIK_*` notu."""
+        return (n >= PERIYODIK_EN_AZ_UYE and gun / n > PERIYODIK_GUN_ORANI
+                and gelisme / n < PERIYODIK_GELISME)
+
+    # --- ad
+    def _dosya_adi(self, capalar, cekirdek, uyeler, anahtarlar=()) -> str:
+        """Okunur dosya adı: varlık çapası + olay sözcüğü.
+
+        5 Eylül adları kök listesinin ilk iki öğesiydi ve okunmuyordu:
+        "Peki Bursa" (cümle başı + yer), "Festivali" (kurum adının başı),
+        "Reina · saldırganından" (çekimli olay sözcüğü). Kural:
+
+        1. Çapa: ikili ad yalnız iki parçası da varlıksa ("Ece Gürel" evet,
+           "Peki Bursa" hayır). Kurum başı ("Üniversitesi", "Festivali")
+           üyelerde önündeki özel adla genişler ("Koç Üniversitesi"); tek
+           bir ad baskın değilse çapa sayılmaz. Yer adı ancak başka çapa
+           yoksa.
+        2. Tek kelimelik çapaya olay sözcüğü eklenir: çekirdekten, varlık
+           olmayan, çekimli fiil ya da hâl ekli biçim olmayan ilk kök.
+           Üyelerdeki en kısa yüzey alınır ("saldırgan", "saldırganından"
+           değil).
+        3. Harf biçimi `site_etiket` süzgeçleriyle (`kucult`, `baslikla`);
+           `.title()`/`.upper()` Türkçe'de İ/ı'yı bozar.
+
+        Ad bulunamazsa boş döner; çağıran eski yola (ilk anahtar) düşer.
+        """
+        adaylar: list[tuple[bool, str, str]] = []    # (yer_mi, kök, gösterim)
+        for _, k in capalar:
+            gosterim = self._capa_adi(k, uyeler)
+            if gosterim:
+                adaylar.append((self.yer_mi(k), k, gosterim))
+        if not adaylar:
+            return ""      # çağıran eski bileşime düşer
+        adaylar.sort(key=lambda a: (a[0], " " not in a[2]))   # yer sona, çok kelime öne
+        _, ana_kok, ana = adaylar[0]
+        if " " not in ana:
+            ana = self._kurum_ile(ana_kok, ana, uyeler)
+        if " " in ana:
+            return ana
+        olay = self._olay_sozcugu(cekirdek, set(ana_kok.split("_")), uyeler)
+        if olay:
+            return f"{ana} · {olay}"
+        ikinci = [g for yer, _, g in adaylar[1:] if not yer] + list(anahtarlar[1:]) \
+            + [g for yer, _, g in adaylar[1:] if yer]
+        for g in ikinci:
+            if kucuk(g) != kucuk(ana) and kucuk(g) not in kucuk(ana) \
+                    and not _CEKIMLI.search(kucuk(g)) and kucuk(g) not in _AD_DISI:
+                return f"{ana} · {g}"
+        return ana
+
+    def _ikili_ad_mi(self, kok: str) -> bool:
+        """İkili gerçek bir ad mı? İki parçası da varlıksa evet. Değilse
+        başlık başı dışında da geçmeli: "Peki Bursa" yalnız başlığın ilk
+        iki kelimesidir; "Sinan Ateş" ("ateş" küçük harfle de yazılır)
+        cümle ortasında da geçer."""
+        if not any(self._ad_degil_mi(p) for p in kok.split("_")):
+            return True
+        return self.ikili_orta.get(kok, 0) >= max(1, self.df.get(kok, 0) * 0.1)
+
+    def _ad_degil_mi(self, kok: str) -> bool:
+        """Cümle ortasında küçük harfle yazıldığı GÖRÜLMÜŞ kelime. Hiç cümle
+        ortasında görülmeyen ("LeBron" hep başlık başında) bilinmiyor
+        sayılır, ad olabilir."""
+        orta = self.orta.get(kok, 0)
+        return orta > 0 and self.orta_buyuk.get(kok, 0) / orta < VARLIK_ORANI
+
+    def _capa_adi(self, kok: str, uyeler) -> str:
+        if "_" in kok:
+            return self._ad(kok, uyeler) if self._ikili_ad_mi(kok) else ""
+        if kok in KURUM_BASI:
+            return self._kurum_genislet(kok, uyeler)
+        return self._ad(kok, uyeler)
+
+    def _kurum_genislet(self, kok: str, uyeler) -> str:
+        """"Üniversitesi" → üyelerde önünde en sık geçen özel adla birlikte."""
+        sayac: Counter = Counter()
+        for h in uyeler:
+            kelimeler = _KELIME.findall(_KESME.sub("", h.baslik))
+            for i, kelime in enumerate(kelimeler):
+                if not kelime[:1].isupper() or kokle(kelime) != kok:
+                    continue
+                onu = []
+                j = i - 1
+                while j >= 0 and len(onu) < 3 and kelimeler[j][:1].isupper() \
+                        and kucuk(kelimeler[j]) not in DURAK \
+                        and kucuk(kelimeler[j]) not in UNVAN:
+                    onu.insert(0, kelimeler[j])
+                    j -= 1
+                if onu:
+                    sayac[" ".join(onu + [kelime])] += 1
+                break
+        if not sayac:
+            return ""
+        obek, kac = sayac.most_common(1)[0]
+        if kac < max(2, len(uyeler) * 0.4):
+            return ""
+        return _harf_bicimi(obek)
+
+    def _kurum_ile(self, kok: str, ana: str, uyeler) -> str:
+        """Tek kelimelik çapanın ardından baskın bir kurum başı geliyorsa
+        birlikte: "Şampiyonlar" → "Şampiyonlar Ligi", "Nilüfer" →
+        "Nilüfer Belediyesi"."""
+        sayac: Counter = Counter()
+        for h in uyeler:
+            kelimeler = _KELIME.findall(_KESME.sub("", h.baslik))
+            for i, kelime in enumerate(kelimeler[:-1]):
+                if kokle(kelime) == kok and kelimeler[i + 1][:1].isupper() \
+                        and kokle(kelimeler[i + 1]) in KURUM_BASI:
+                    sayac[f"{kelime} {kelimeler[i + 1]}"] += 1
+                    break
+        if sayac:
+            obek, kac = sayac.most_common(1)[0]
+            if kac >= max(2, len(uyeler) * 0.5):
+                return _harf_bicimi(obek)
+        return ana
+
+    def _olay_sozcugu(self, cekirdek, haric: set[str], uyeler) -> str:
+        for _, k in cekirdek:
+            if k in haric or self.varlik_mi(k) or "_" in k or self.agirlik(k) < AGIRLIK_EN_AZ:
+                continue
+            yuzeyler = Counter()
+            for h in uyeler:
+                for p in parcala(h.baslik):
+                    if p.kok == k:
+                        yuzeyler[kucuk(p.yuzey)] += 1
+            uygun = [y for y in yuzeyler if not _CEKIMLI.search(y) and y not in _AD_DISI]
+            if uygun:
+                return min(uygun, key=lambda y: (len(y), -yuzeyler[y]))
+        return ""
 
     @staticmethod
     def _yogunluk(uyeler) -> float:
@@ -628,8 +997,15 @@ class Motor:
         yerine "davası", "beşiktaş" yerine "Beşiktaş"."""
         yuzeyler = self.yuzey.get(kok)
         if yuzeyler:
-            obek, _ = max(yuzeyler.items(), key=lambda ci: (ci[1], len(ci[0])))
-            return obek
+            # Tümü büyük harf yüzey ("MÜDÜRLÜĞÜ") çoğunluk değilse büyük
+            # harfli bir başlıktan gelmiştir; adın kendisi öyle değildir.
+            # Çoğunluksa kısaltmadır ("FETÖ", "BUSKİ") ve öyle kalır.
+            toplam = sum(yuzeyler.values())
+            buyuk = sum(n for y, n in yuzeyler.items() if _tumu_buyuk(y))
+            tercih_buyuk = buyuk * 2 >= toplam
+            obek, _ = max(yuzeyler.items(), key=lambda ci: (
+                _tumu_buyuk(ci[0]) == tercih_buyuk, ci[1], len(ci[0])))
+            return _harf_bicimi(obek) if _tumu_buyuk(obek) and not tercih_buyuk else obek
         sayac: Counter = Counter()
         for h in uyeler:
             for p in parcala(h.baslik):
@@ -652,6 +1028,41 @@ class Motor:
                         bulunan.append(k)
         bulunan.sort(key=lambda k: (k.baslangic, k.uyeler[0].kimlik))
         return bulunan
+
+
+RUTIN_COGUNLUK = 0.5     # üyelerin bu paydan FAZLASI periyodik kalıptaysa dosya bir türdür
+                         # (yarı yarıya olan bir olaydır: "buzul faciası" + iki sayaç)
+
+
+def periyodik_gerekce(uyeler) -> str:
+    """Kayıtlı bir dosya kullanıcının "konu değil" dediği türden mi?
+
+    `uyeler`: `(tarih, başlık)` çiftleri. Motorun iki ölçütü, dosyanın
+    kendisine uygulanır (5 Eylül'de onaylanmış dosyalar bu ölçütlerden
+    önce yazıldı):
+
+    1. Başlık kalıbı: üyelerin yarısından fazlası periyodik bir türde
+       (`rutin_turu`).
+    2. Yapı: `Motor._periyodik_mi` — en az 15 haber, her gün bir tane,
+       gelişme dili yok.
+
+    Dönen metin okunur gerekçedir; ölçüt tutmazsa boş metin.
+    """
+    uyeler = list(uyeler)
+    n = len(uyeler)
+    if not n:
+        return ""
+    turler = Counter(t for t in (rutin_turu(b) for _, b in uyeler) if t)
+    rutin = sum(turler.values())
+    if rutin and rutin > n * RUTIN_COGUNLUK:
+        tur, _ = turler.most_common(1)[0]
+        return f"periyodik tür '{tur}': {rutin}/{n} başlık kalıba uyuyor"
+    gun = len({t for t, _ in uyeler})
+    gelisme = sum(1 for _, b in uyeler if gelisme_var(b))
+    if Motor._periyodik_mi(n, gun, gelisme):
+        return (f"dizi görünümü: {n} haber, {gun} ayrı gün "
+                f"(gün/haber {gun / n:.2f}), gelişme dili {gelisme}/{n}")
+    return ""
 
 
 def tara(kayitlar) -> list[Konu]:
