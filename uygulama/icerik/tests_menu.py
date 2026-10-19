@@ -29,13 +29,13 @@ class MenuYapisi(TestCase):
 
     def setUp(self):
         from icerik import baglam
-        baglam._menu_bellek = None
+        baglam.onbellek.sil(baglam.MENU_ANAHTARI)
         self.govde = self.client.get("/").content.decode()
         self.menu = menu_blogu(self.govde)
 
     def tearDown(self):
         from icerik import baglam
-        baglam._menu_bellek = None
+        baglam.onbellek.sil(baglam.MENU_ANAHTARI)
 
     def test_bolumler_details_ile_katlaniyor(self):
         self.assertEqual(len(re.findall(r"<details", self.menu)), 5)
@@ -208,11 +208,11 @@ class ReklamAnahtari(TestCase):
 
     def setUp(self):
         from icerik import baglam
-        baglam._menu_bellek = None
+        baglam.onbellek.sil(baglam.MENU_ANAHTARI)
 
     def tearDown(self):
         from icerik import baglam
-        baglam._menu_bellek = None
+        baglam.onbellek.sil(baglam.MENU_ANAHTARI)
 
     # ALLOWED_HOSTS yalnız yerel adları taşıyor; ayar geçilmeden uzak konak
     # 400 dönüyor ve "düğme yok" ölçümü YANLIŞ NEDENLE geçiyordu — hata

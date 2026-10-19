@@ -15,7 +15,9 @@ kısılır: yayın zamanı indeksli. Ölçüm 5 Eylül 2026: ±180 günlük dili
 ±60 günde dilim üçte bire, süre onda bire iner. İlgili haber zaten yakın
 tarihlidir; üç yıl önceki aynı adlı haber "ilgili" değil, arşivdir.
 Sonuç kimlik listesi olarak 6 saat önbelleklenir; arşiv sayfasında
-ilgili liste her okurda yeniden hesaplanmaz.
+ilgili liste her okurda yeniden hesaplanmaz. 19 Ekim 2026'dan beri bu
+önbellek süreçler arasında paylaşılıyor (`settings.py` başarım bloğu);
+eskiden her işçi sürecin kendi LocMem kopyası vardı.
 
 Araştırma notu (kullanıcı isteğiyle, 5 Eylül 2026): yayıncıların yaygın
 yöntemi varlık ağırlıklı TF-IDF benzerliği + yakın tarih + çeşitlilik.
@@ -111,8 +113,7 @@ def bul(haber: Haber, adet: int = 6, haric=()) -> list[Haber]:
         # 2026'nın haberleri değil, o günlerin haberleri gelir.
         dolgu = (Haber.yayindakiler()
                  .select_related("kategori", "ilce")
-                 .prefetch_related("kategori__turler")
-                 .filter(kategori=haber.kategori)
+                 .filter(kategori_id=haber.kategori_id)
                  .exclude(pk__in=haric | set(secilen)))
         if haber.yayin_zamani:
             dolgu = dolgu.filter(yayin_zamani__lte=haber.yayin_zamani)
@@ -127,10 +128,15 @@ def _kokler(baslik: str) -> list[str]:
 
 
 def _nesneler(kimlikler: list[int]) -> list[Haber]:
+    """Önbellekteki kimliklerden kayıtlar — YALNIZ hâlâ yayında olanlar.
+
+    Liste 6 saat önbellekte duruyor (19 Ekim 2026'dan beri süreçler
+    arasında paylaşılan önbellekte); o arada yayından çekilen bir haber
+    okura bağlantı olarak gösterilmemeli.
+    """
     if not kimlikler:
         return []
     sira = {k: i for i, k in enumerate(kimlikler)}
-    nesneler = (Haber.objects.filter(pk__in=kimlikler)
-                .select_related("kategori", "ilce")
-                .prefetch_related("kategori__turler"))
+    nesneler = (Haber.yayindakiler().filter(pk__in=kimlikler)
+                .select_related("kategori", "ilce"))
     return sorted(nesneler, key=lambda h: sira[h.pk])

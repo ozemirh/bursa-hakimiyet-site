@@ -80,6 +80,12 @@ class Aile:
     # Google News sitemap'i yalnız son 48 saati alır ve tüm ailelerde
     # anlamlı değildir (yazar sayfasının yayın anı yoktur). Veren aile verir.
     son_kayitlar: Callable[[int], Iterable[Kayit]] | None = None
+    # Önbellek için (19 Ekim 2026, `besleme/bellek.py`): ailenin modeli —
+    # kaydı değişince o ayın özeti ve dosyası tazelenir — ve TEK ayın
+    # özetini veren işlev. İkisi de isteğe bağlı; vermeyen aile her
+    # istekte `aylar()`ı çağırır, önbelleksiz eski davranış.
+    model: type | None = None
+    ay_ozeti: Callable[[str], "AyOzeti | None"] | None = None
 
 
 # İndeksteki blok sırası. Deftere kaydolmamış aile atlanır.

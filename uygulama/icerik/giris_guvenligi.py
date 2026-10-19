@@ -17,9 +17,10 @@ da yapılmaz); mesaj hesabın var olup olmadığını söylemez. Kilidin başlad
 an denetim kaydına `giris_kilidi` olarak düşer. Başarılı giriş kullanıcı
 sayacını sıfırlar.
 
-Önbellek bugün süreç içi (`LocMemCache`); çok süreçli üretimde paylaşılan
-önbellek (Redis/veritabanı) şart, yoksa her işçinin sayacı ayrı tutulur
-(→ backend-gelistirici, CACHES ayarı).
+Sayaçlar `default` önbellek takma adında (başarım paketinin kurduğu
+paylaşılan önbellek: Redis ya da dosya). Dosya önbelleğinde `incr` atomik
+değildir; eşzamanlı denemede bir-iki deneme kaçabilir, sınırın amacı bozulmaz.
+IP adresi okunma sayacının güvenilir vekil kuralıyla bulunur.
 
 Ayarlar (settings, hepsi isteğe bağlı): `BH_GIRIS_KULLANICI_SINIRI` (5),
 `BH_GIRIS_IP_SINIRI` (20), `BH_GIRIS_PENCERE_SANIYE` (900),
@@ -50,6 +51,9 @@ from django.contrib.auth import logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth.views import LoginView
+# `cache` = `caches["default"]` vekili (her erişimde çözülür; ayar ezmeleri
+# ve iş parçacıkları doğru arka ucu görür). Başarım paketinin paylaşılan
+# önbelleği: Redis ya da dosya — süreçler arasında ortak.
 from django.core.cache import cache
 
 
@@ -77,7 +81,14 @@ def kilit_suresi() -> int:
 
 
 def _ip(request) -> str:
-    return (getattr(request, "META", {}) or {}).get("REMOTE_ADDR") or "-"
+    """Okunma sayacıyla AYNI güvenilir vekil kuralı (`BH_GUVENILIR_VEKIL`).
+
+    Koşulsuz `X-Forwarded-For` okunsaydı saldırgan her denemede başlığa
+    başka adres yazıp IP sayacını atlatırdı."""
+    if request is None:
+        return "-"
+    from .okunma import ziyaretci_adresi
+    return ziyaretci_adresi(request) or "-"
 
 
 def _anahtar(tur: str, *parcalar: str) -> str:

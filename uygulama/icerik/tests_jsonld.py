@@ -34,6 +34,8 @@ SAFE_IZINLI: list[tuple[str, str]] = []
 MARK_SAFE_IZINLI = {
     "icerik/temizle.py": "Gövde beyaz liste temizleyicisinin çıktısı.",
     "icerik/jsonld.py": "JSON-LD: <, >, & kaçışlı JSON.",
+    "icerik/templatetags/gorsel_etiket.py": "Görsel türev etiketi (Paket D): "
+        "yalnız format_html — argümanlar kaçışlanır.",
 }
 
 ZARARLI_AD = 'KÖTÜ</script><script>alert(1)</script> ECZANESİ'

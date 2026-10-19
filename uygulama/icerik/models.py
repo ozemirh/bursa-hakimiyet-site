@@ -75,9 +75,15 @@ class Haber(models.Model):
     spot = models.TextField(blank=True)
     govde = models.TextField(blank=True)
 
-    kategori = models.ForeignKey(Kategori, on_delete=models.PROTECT, related_name="haberler")
+    # `db_index=False` (19 Ekim 2026, 0015): Django'nun otomatik tek sütunlu
+    # yabancı anahtar indeksleri `haber_kategori_sira` / `haber_ilce_sira` /
+    # `haber_olusturan_sira` bileşiklerinin ÖNEKİ ve onlarla çakışıyordu.
+    # Koruma denetimleri (PROTECT, SET NULL) bileşik indeksten kapsayan
+    # okunuyor; ölçüm migration başında.
+    kategori = models.ForeignKey(Kategori, on_delete=models.PROTECT, related_name="haberler",
+                                 db_index=False)
     ilce = models.ForeignKey(Ilce, null=True, blank=True, on_delete=models.SET_NULL,
-                             related_name="haberler")
+                             related_name="haberler", db_index=False)
     kaynaklar = models.ManyToManyField(Kaynak, blank=True, related_name="haberler")
     etiketler = models.ManyToManyField(Etiket, blank=True, related_name="haberler")
 
@@ -97,13 +103,17 @@ class Haber(models.Model):
         help_text="Editör meta yazar değerini elle seçtiyse doğru; türetim artık ezmez.")
     olusturan = models.ForeignKey(
         "auth.User", null=True, blank=True, on_delete=models.SET_NULL,
-        related_name="haberleri",
+        related_name="haberleri", db_index=False,
         help_text="Haberi giren kullanıcı. 'Kendi haberini yayınlama' yetkisi buna bakar.")
 
     durum = models.PositiveSmallIntegerField(choices=DURUMLAR, default=DURUM_AKTIF)
     hazirlik = models.CharField(max_length=12, choices=HAZIRLIK, blank=True)
 
-    yayin_zamani = models.DateTimeField(null=True, blank=True, db_index=True)
+    # Tek sütunlu indeksi 0015'te KALKTI: `haber_siralama` ve
+    # `haber_okur_kismi` onu kapsıyor ve planlayıcı onu seçtiğinde kapsayan
+    # indeksi bırakıp her satırda tabloya gidiyordu (site haritası
+    # gruplaması 49,6 sn → indeks kalkınca 1,1 sn).
+    yayin_zamani = models.DateTimeField(null=True, blank=True)
     guncelleme_zamani = models.DateTimeField(null=True, blank=True)
 
     gorsel_url = models.URLField(max_length=600, blank=True,
@@ -176,14 +186,45 @@ class Haber(models.Model):
             # yönlü bir indeks planlayıcıya yaramıyor (3 Eylül 2026 ölçümü,
             # yukarıdaki nota bakın). Bedeli: 31,9 MB, kurulum 13,4 sn.
             models.Index(fields=["-yayin_zamani", "-id"], name="haber_siralama"),
-            models.Index(fields=["kategori", "-yayin_zamani"]),
+            # OKUR SÜZGECİ — kısmi ve kapsayan (19 Ekim 2026, 0015).
+            #
+            # `yayindakiler()`in WHERE'i (`durum = 1 AND yayin_zamani IS NOT
+            # NULL`) indeksin koşulu; `durum` ve `guncelleme_zamani` sütun
+            # olarak da içeride, çünkü SQLite kısmi indeksin koşulunu
+            # "karşılanmış" saymıyor ve `durum`u okumak için tabloya
+            # gidiyordu. Kapsayan hâliyle kopya veritabanında: site haritası
+            # ay özeti 2,8 → 1,0 ms, okur sayımı 175 → 117 ms, toplu ay
+            # gruplaması 1.796 → 865 ms. Sıralama yönü Meta.ordering ile
+            # birebir (bkz. `haber_siralama` notu).
+            models.Index(fields=["-yayin_zamani", "-id", "guncelleme_zamani", "durum"],
+                         condition=Q(durum=1, yayin_zamani__isnull=False),
+                         name="haber_okur_kismi"),
+            # Bölüm sayfası. Eski `(kategori, -yayin_zamani)` ikinci sıralama
+            # anahtarını (`-id`) taşımıyordu ve plan `USE TEMP B-TREE FOR
+            # RIGHT PART OF ORDER BY` kuruyordu: 21 satırlık sayfa 6,0 ms,
+            # sınırlı sayım (1.001 satır) 118 ms. Yenisiyle 0,9 ms / 6,3 ms.
+            models.Index(fields=["kategori", "-yayin_zamani", "-id"],
+                         name="haber_kategori_sira"),
             # Bugün ekranının kuyruğu bu iki alanla süzülüyor (§9).
             models.Index(fields=["durum", "hazirlik"]),
-            # İlçe sayfası. Göç ajanının ölçümü: `ANALYZE` sonrası sorgu
-            # 745 → 26 ms'ye indi ama sorgu planında `USE TEMP B-TREE FOR
-            # ORDER BY` kalıntısı duruyordu; bu indeks onu kaldırıyor.
+            # İlçe sayfası — aynı gerekçe: eski `(ilce, -yayin_zamani)` de
+            # `TEMP B-TREE` kalıntısı bırakıyordu (6,0 → 1,0 ms).
             # 20.366 haberin ilçesi dolu (17 ilçenin hiçbiri boş değil).
-            models.Index(fields=["ilce", "-yayin_zamani"]),
+            models.Index(fields=["ilce", "-yayin_zamani", "-id"], name="haber_ilce_sira"),
+            # Panel akışının editör süzgeci: `olusturan = ? AND durum <> 3
+            # ORDER BY yayin_zamani DESC, id DESC LIMIT 25`. Editörün 25'ten
+            # az haberi varken planlayıcı `haber_siralama`yı baştan sona
+            # yürüyordu — kopya veritabanında 67.000 ms.
+            models.Index(fields=["olusturan", "-yayin_zamani", "-id"],
+                         name="haber_olusturan_sira"),
+            # MASA KUYRUĞU — kısmi (19 Ekim 2026, 0015). Arşivin tamamı
+            # `hazirlik = ''`; yalnız panelde açılan kayıtlar indekse girer.
+            # Sorgu tarafı (`masadakiler`) `hazirlik <> ''` terimini AYNEN
+            # taşımak zorunda; ikisinden biri eksikken planlayıcı
+            # `haber_siralama`yı tarıyor (kopya veritabanında ölçüldü:
+            # terimsiz 68.300 ms, indeksiz 63.216 ms, ikisi birlikte 1,1 ms).
+            models.Index(fields=["hazirlik", "-yayin_zamani", "-id"],
+                         condition=~Q(hazirlik=""), name="haber_masa_kismi"),
             # Panel akış süzgeçleri — 29 Ağustos 2026 ölçümü.
             #
             # Django'nun otomatik tek sütunlu yabancı anahtar indeksleri bu
@@ -226,6 +267,16 @@ class Haber(models.Model):
     def __str__(self) -> str:
         return f"[{self.id}] {self.baslik[:60]}"
 
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        nesne = super().from_db(db, field_names, values)
+        # Site haritası önbelleği kaydedilen haberin ESKİ ayını da tazeler
+        # (besleme/bellek.py); değer burada saklanınca kayıt başına ek
+        # sorgu açılmaz.
+        if "yayin_zamani" in field_names:
+            nesne._yuklenen_yayin_zamani = nesne.yayin_zamani
+        return nesne
+
     def meta_yazari_turet(self) -> str:
         """Kaynak türünden meta yazar değerini türetir (§7).
 
@@ -254,8 +305,14 @@ class Haber(models.Model):
 
     @classmethod
     def masadakiler(cls):
-        return cls.objects.filter(durum=cls.DURUM_PASIF,
-                                  hazirlik__in=("taslak", "incelemede"))
+        # `hazirlik <> ''` koşulu anlamca fazladır (IN listesi onu zaten
+        # içerir) ama BİLEREK yazılıyor: SQLite kısmi indeksi ancak indeksin
+        # WHERE terimi sorguda da AYNEN geçiyorsa kullanır, IN listesinden
+        # çıkarım yapmaz (19 Ekim 2026, `haber_masa_kismi`; ölçüm
+        # `0015_basarim_indeksleri` başında).
+        return (cls.objects.filter(durum=cls.DURUM_PASIF,
+                                   hazirlik__in=("taslak", "incelemede"))
+                .exclude(hazirlik=""))
 
     @classmethod
     def yayindakiler(cls):
@@ -264,12 +321,28 @@ class Haber(models.Model):
         Göçte durum alanı eski sistemden birebir geldi; "Aktif" dışındakiler
         (Pasif · Silinmiş · Arşiv) yayına çıkmaz. Yayın zamanı olmayan kayıt
         da listelenmez — sıralama ona dayanıyor.
+
+        **Yayın zamanı gelmemiş haber de listelenmez** (19 Ekim 2026,
+        DEGERLENDIRME-2026-10 bulgu 4): ileri tarihli kayıt bu koşul
+        yokken anında yayına çıkıyordu. Sitemap, RSS, konu sayfası ve
+        ilgili haberler bu yöntemden geçtiği için hepsi aynı kuralı izler.
+        `IS NOT NULL` terimi de kalıyor: `haber_okur_kismi` indeksinin
+        WHERE terimi odur.
         """
         return cls.objects.filter(durum=cls.DURUM_AKTIF,
-                                  yayin_zamani__isnull=False)
+                                  yayin_zamani__isnull=False,
+                                  yayin_zamani__lte=timezone.now())
+
+    def yayinda_mi(self) -> bool:
+        return (self.durum == self.DURUM_AKTIF and self.yayin_zamani is not None
+                and self.yayin_zamani <= timezone.now())
 
     def get_absolute_url(self) -> str:
-        return f"/{self.kategori.slug_al()}/{self.slug}-{self.id}"
+        # Slug kategori nesnesinden değil süreç içi eşlemeden: kategori
+        # yüklenmemiş ya da ön çekimsiz kayıt da sorgu açmadan adres kurar
+        # (taksonomi/slug_eslemesi.py).
+        from taksonomi import slug_eslemesi
+        return f"/{slug_eslemesi.slug(self.kategori_id)}/{self.slug}-{self.id}"
 
     def gorsel_yolu(self) -> str:
         """Sayfada basılacak görsel adresi — **yerel**, uzak değil.
@@ -983,7 +1056,10 @@ class KonuHaber(models.Model):
     """Konu ↔ haber bağı. `tarih` haberin yayın gününün kopyasıdır: akış
     sıralaması ve konu aralığı 1 milyonluk tabloya katılmadan çıksın."""
 
-    konu = models.ForeignKey(Konu, on_delete=models.CASCADE, related_name="baglar")
+    # Tek sütunlu `konu` indeksi 0015'te kalktı: `konuhaber_sira` ve
+    # `konu_haber_tek` ikisi de onunla başlıyor.
+    konu = models.ForeignKey(Konu, on_delete=models.CASCADE, related_name="baglar",
+                             db_index=False)
     haber = models.ForeignKey(Haber, on_delete=models.CASCADE,
                               related_name="konu_baglari")
     tarih = models.DateField(db_index=True)
@@ -996,6 +1072,9 @@ class KonuHaber(models.Model):
         ordering = ["tarih", "haber_id"]
         constraints = [models.UniqueConstraint(fields=["konu", "haber"],
                                                name="konu_haber_tek")]
+        # Konu sayfasının akışı `konu = ? ORDER BY tarih, haber_id`: eski
+        # planda `USE TEMP B-TREE FOR ORDER BY` vardı (300 üyelik dosya).
+        indexes = [models.Index(fields=["konu", "tarih", "haber"], name="konuhaber_sira")]
 
     def __str__(self) -> str:
         return f"{self.konu_id} ← {self.haber_id}"

@@ -19,3 +19,7 @@ class BeslemeConfig(AppConfig):
         # yerden bağlanır. Uygulama hazır olmadan model içe aktarılamaz,
         # bu yüzden ready() içinde.
         from . import kaynaklar  # noqa: F401
+        # Site haritası önbelleğinin sinyalleri: defter dolduktan SONRA,
+        # çünkü hangi modelin izleneceğini ailelerden öğreniyor.
+        from . import bellek
+        bellek.bagla()

@@ -14,7 +14,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('icerik', '0014_konu_takibi'),
+        ('icerik', '0015_basarim_indeksleri'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load site_etiket static %}
+{% load site_etiket static gorsel_etiket %}
 {% comment %}`l10n`: rüzgâr okunun açısı satır içi CSS'e giriyor ve Türkçe
 yerelleştirme sayıyı virgülle basabiliyor — virgüllü sayı geçersiz CSS, ok
 hiç dönmez. Aynı tuzak 30 Ağustos'ta sıcaklık çubuğunun yüzdesinde
@@ -28,7 +28,7 @@ yaşanmıştı.{% endcomment %}
 
       <section class="dortlu" aria-label="Öne çıkan haberler">
         <h2 class="gorsel-gizli">Öne çıkanlar</h2>
-        {% for h in dortlu %}{% include "parca/kart.html" with h=h goster_foto=1 %}{% endfor %}
+        {% for h in dortlu %}{% include "parca/kart.html" with h=h goster_foto=1 gorsel_yuva="dortlu" gorsel_hemen=1 %}{% endfor %}
       </section>
 
       <div class="manset-alani">
@@ -37,7 +37,7 @@ yaşanmıştı.{% endcomment %}
           <div class="slayt-pencere">
 {% for h in manset %}
             <article class="slayt" role="group" aria-roledescription="slayt" aria-label="{{ forloop.counter }} / {{ manset|length }}"{% if forloop.first %} data-aktif="true"{% endif %}>
-              {% include "parca/slayt_foto.html" with h=h %}
+              {% include "parca/slayt_foto.html" with h=h gorsel_yuva="manset" gorsel_oncelikli=forloop.first gorsel_ertele=forloop.first|yesno:",1" %}
               <div class="yazi">
                 <span class="rozet-k">{{ h.kategori.ad }}</span>
                 <h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3>
@@ -62,7 +62,7 @@ yaşanmıştı.{% endcomment %}
             <div class="slayt-pencere">
 {% for h in ikincil %}
               <article class="slayt" role="group" aria-roledescription="slayt" aria-label="{{ forloop.counter }} / {{ ikincil|length }}"{% if forloop.first %} data-aktif="true"{% endif %}>
-                {% include "parca/slayt_foto.html" with h=h %}
+                {% include "parca/slayt_foto.html" with h=h gorsel_yuva="mini" gorsel_hemen=forloop.first gorsel_ertele=forloop.first|yesno:",1" %}
                 <div class="yazi">
                   <span class="rozet-k">{{ h.kategori.ad }}</span>
                   <h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3>
@@ -119,7 +119,7 @@ yaşanmıştı.{% endcomment %}
                 solda, yüz sağ üçte birde) ve yüzü yakınlaştırarak kırpmak
                 gerekiyor. `alt=""` bilinçli: ad zaten yanında <b> olarak
                 duruyor, portre dekoratif.{% endcomment %}
-                {% if y.gorsel_yolu %}<span class="portre"><img src="{{ y.gorsel_yolu }}" alt="" loading="lazy"></span>
+                {% if y.gorsel_yolu %}<span class="portre">{% gorsel y "portre" alt="" %}</span>
                 {% else %}<span class="portre vesika" aria-hidden="true">{{ y.basharfler }}</span>{% endif %}
                 <b>{{ y.ad }}</b>
                 <span class="yazi-bas">{{ y.son_yazi }}</span>
@@ -314,8 +314,8 @@ yaşanmıştı.{% endcomment %}
                 hemen altında yazıyla duruyor; ekran okuyucuya iki kez
                 söylenmemeli. `width`/`height` yer ayırmak için.{% endcomment %}
                 <div class="hava-simdi m-{{ hava_panel.manzara }}">
-                  <img class="hava-foto" src="{% static 'gorseller/genis/uludag.jpg' %}"
-                       alt="" aria-hidden="true" width="1280" height="720"
+                  <img class="hava-foto" {% gorsel_ozellik "site/uludag.jpg" "panel" %}
+                       alt="" aria-hidden="true"
                        decoding="async" fetchpriority="low">
                   <div class="hava-simdi-ic">
                     <svg class="hava-ikon buyuk" aria-hidden="true"><use href="#{{ hava_panel.simdi.simge }}"></use></svg>
@@ -449,8 +449,8 @@ yaşanmıştı.{% endcomment %}
                   ve tepeler. Alt üçte biri ağaçlarla koyu, yani karartma
                   perdesinin ve "ŞİMDİ" satırının oturduğu yer zaten
                   karanlık.{% endcomment %}
-                  <img src="{% static 'gorseller/genis/yesil-cami.jpg' %}" alt="" aria-hidden="true"
-                       width="1280" height="852" loading="lazy" decoding="async">
+                  <img {% gorsel_ozellik "site/yesil-cami.jpg" "panel" %} alt="" aria-hidden="true"
+                       loading="lazy" decoding="async">
                   <span class="foto-hak">Yeşil Cami · Dosseman, CC BY-SA 4.0</span>
                   {% if namaz_simdiki %}
                   <figcaption class="vakit-simdi">

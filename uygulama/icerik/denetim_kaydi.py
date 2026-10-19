@@ -22,9 +22,9 @@ sorusunu yanıtlar ama kişiyi tek başına belirlemez. Ayar:
 `yok` IP ve tarayıcı bilgisini hiç yazmaz. Tarayıcı satırı 200 karakterle
 kesilir. Saklama önerisi modelde: oturum kayıtları 12 ay, eylemler süresiz.
 
-IP `REMOTE_ADDR`dan okunur; `X-Forwarded-For` bilerek okunmaz — vekil
-sunucu arkasında güvenilir vekil yapılandırması gelmeden o başlık okurun
-yazdığı bir metindir (→ devops-altyapi-muhendisi).
+IP `okunma.ziyaretci_adresi` ile okunur: `X-Forwarded-For` yalnız
+`BH_GUVENILIR_VEKIL` listesindeki vekilden gelen istekte dikkate alınır;
+liste boşsa `REMOTE_ADDR`. Ayrı bir başlık ayrıştırması yazılmadı.
 
 ## Hata davranışı
 
@@ -65,7 +65,9 @@ def ip_maskele(metin: str) -> str | None:
 def _istek_izi(request) -> tuple[str | None, str]:
     if request is None or ip_kipi() == "yok":
         return None, ""
-    ham = (request.META.get("REMOTE_ADDR") or "").strip()
+    # Güvenilir vekil kuralı okunma sayacıyla AYNI işlevden (BH_GUVENILIR_VEKIL).
+    from .okunma import ziyaretci_adresi
+    ham = (ziyaretci_adresi(request) or "").strip()
     ip = ham if ip_kipi() == "tam" else ip_maskele(ham)
     try:
         ip = str(ipaddress.ip_address(ip)) if ip else None

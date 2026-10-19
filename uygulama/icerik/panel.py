@@ -29,7 +29,7 @@ from .formlar import (BildirimForm, FotoGaleriForm, GazeteForm, HaberForm,
                       KategoriForm, KaynakForm, KoseYazisiForm, KullaniciForm,
                       ReklamKampanyasiForm, ReklamYuvasiForm, ResmiIlanForm,
                       SonDakikaForm, VideoForm, YazarForm, YorumForm)
-from . import denetim_kaydi, okunma, yayin_kapisi, yz_kopru
+from . import denetim_kaydi, okunma, onbellek, yayin_kapisi, yz_kopru
 from .kimlik import yeni_kayit_kaydet
 from .arama_metni import slugla
 from .models import (YZ_BASLIK_ISARETI, Bildirim, Gazete, Haber, IkiAdimli,
@@ -1193,6 +1193,7 @@ def medya_toplu_islem(request, aile):
     else:
         sayi = sorgu.update(durum=model.DURUM_ARSIV)
         ozet = f"{sayi} kayıt arşive alındı."
+    onbellek.surumu_artir()      # update() sinyal göndermez; sayfa önbelleği
     denetim_kaydi.toplu_yaz(request, TOPLU_DENETIM_FIILI[fiil["kod"]], aile,
                             degisecek, sonrasi={"durum": hedef_durum}, gerekce=ozet)
     return _medya_don(request, liste_adresi, ozet)
@@ -1362,6 +1363,10 @@ def toplu_islem(request):
               sorgu.prefetch_related(None).order_by()
               .values_list("pk", "durum", "kategori_id")}
     ozet = islem(request, sorgu)
+    # Toplu fiiller `QuerySet.update()` kullanır, kayıt sinyali gitmez:
+    # sayfa mikro önbelleği burada açıkça geçersizleşir ki yayına alınan /
+    # çekilen haber okura ANINDA yansısın (icerik/sinyaller.py notu).
+    onbellek.surumu_artir()
     _toplu_denetim(request, fiil, onceki, ozet)
     return _toplu_don(request, ozet)
 
