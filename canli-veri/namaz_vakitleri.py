@@ -54,7 +54,6 @@ Cikis kodu: 0 taze veri - 2 uretilemedi, onceki dosya korundu -
 from __future__ import annotations
 
 import argparse
-import math
 import sys
 from datetime import date, timedelta
 from pathlib import Path
@@ -70,36 +69,13 @@ BAYAT_ESIK_DAKIKA = 2880  # 48 saat
 
 ELLE_DOSYA = "namaz-elle.json"
 
-# Bursa il merkezi. Kodda sabit degil, --enlem/--boylam ile degistirilebilir.
-BURSA = {"ad": "Bursa", "enlem": 40.1826, "boylam": 29.0665, "rakim": 155}
-
-DILIM = 3.0        # Turkiye kalici UTC+3; yaz saati uygulamasi yok
-IMSAK_ACI = 18.0   # Diyanet 1983'ten beri imsakta 18 derece kullaniyor
-YATSI_ACI = 17.0
-IKINDI_CARPAN = 1  # Safii: golge = nesne boyu + ogle golgesi
-
-VAKITLER = ["imsak", "gunes", "ogle", "ikindi", "aksam", "yatsi"]
-
-VAKIT_ADI = {
-    "imsak": "İmsak", "gunes": "Güneş", "ogle": "Öğle",
-    "ikindi": "İkindi", "aksam": "Akşam", "yatsi": "Yatsı",
-}
-
-# OLCULMUS temkin (dakika). Diyanet'in yayimladigi Bursa tablosuyla
-# karsilastirilarak bulundu; --dogrula bunu her kosuda yeniden olcer.
-# Isaret: eksi = hesaplanan vakitten once, arti = sonra.
-#
-# Degerler tam sayi taramasiyla secildi: her vakit icin -7..+7 arasindaki
-# butun temkinler denendi ve yayimlanan tabloya karsi azami sapmayi en
-# kucuk yapan alindi. Sonuc alti vakitte de azami 1 dakika (bkz. README).
-TEMKIN = {
-    "imsak": 0,
-    "gunes": -5,
-    "ogle": +5,
-    "ikindi": +4,
-    "aksam": +5,
-    "yatsi": +1,
-}
+# Hesabin kendisi (sabitler, temkin, gunes konumu, vakit) 19 Ekim 2026'dan
+# beri `namaz_hesap.py`de: site ayni modulu istek aninda yukleyip bugunun
+# vakitlerini kendisi hesapliyor. Burada yalnizca betigin isi kaldi:
+# dosyaya yazma, elle giris, dogrulama.
+from namaz_hesap import (  # noqa: E402
+    BURSA, DILIM, IKINDI_CARPAN, IMSAK_ACI, KAYNAK, TEMKIN, VAKIT_ADI,
+    VAKITLER, YATSI_ACI, gun_kaydi, vakitleri_hesapla)
 
 # Diyanet'in yayimladigi Bursa vakitleri, Agustos 2026.
 # 27 Agustos 2026'da alindi. diyanet.gov.tr bu agdan erisilemedigi icin
@@ -142,139 +118,6 @@ DOGRULAMA_REFERANSI = {
     "2026-08-30": ("04:53", "06:22", "13:10", "16:51", "19:47", "21:11"),
     "2026-08-31": ("04:54", "06:23", "13:09", "16:50", "19:45", "21:09"),
 }
-
-_DER = math.radians
-_DRC = math.degrees
-
-
-# -- gunes konumu ---------------------------------------------------------
-
-def julian_gun(g: date) -> float:
-    """Takvim gununun 00:00 UT anina karsilik gelen Julyen gun sayisi."""
-    y, a, gun = g.year, g.month, g.day
-    if a <= 2:
-        y -= 1
-        a += 12
-    yuzyil = y // 100
-    duzeltme = 2 - yuzyil + yuzyil // 4
-    return (int(365.25 * (y + 4716)) + int(30.6001 * (a + 1))
-            + gun + duzeltme - 1524.5)
-
-
-def gunes_konumu(jd: float) -> tuple[float, float]:
-    """(deklinasyon derece, denklem-i zaman dakika) dondurur.
-
-    Meeus, Astronomical Algorithms, dusuk dogruluklu gunes konumu.
-    """
-    t = (jd - 2451545.0) / 36525.0
-    ort_boylam = (280.46646 + t * (36000.76983 + t * 0.0003032)) % 360
-    ort_anomali = 357.52911 + t * (35999.05029 - 0.0001537 * t)
-    disyuvarlik = 0.016708634 - t * (0.000042037 + 0.0000001267 * t)
-    merkez = (math.sin(_DER(ort_anomali))
-              * (1.914602 - t * (0.004817 + 0.000014 * t))
-              + math.sin(_DER(2 * ort_anomali)) * (0.019993 - 0.000101 * t)
-              + math.sin(_DER(3 * ort_anomali)) * 0.000289)
-    omega = 125.04 - 1934.136 * t
-    gorunen = ort_boylam + merkez - 0.00569 - 0.00478 * math.sin(_DER(omega))
-    egiklik = 23 + (26 + (21.448 - t * (46.8150 + t * (0.00059 - t * 0.001813)))
-                    / 60) / 60
-    egiklik += 0.00256 * math.cos(_DER(omega))
-
-    deklinasyon = _DRC(math.asin(math.sin(_DER(egiklik))
-                                 * math.sin(_DER(gorunen))))
-    y = math.tan(_DER(egiklik / 2)) ** 2
-    denklem = (y * math.sin(2 * _DER(ort_boylam))
-               - 2 * disyuvarlik * math.sin(_DER(ort_anomali))
-               + 4 * disyuvarlik * y * math.sin(_DER(ort_anomali))
-               * math.cos(2 * _DER(ort_boylam))
-               - 0.5 * y * y * math.sin(4 * _DER(ort_boylam))
-               - 1.25 * disyuvarlik * disyuvarlik
-               * math.sin(2 * _DER(ort_anomali)))
-    return deklinasyon, 4 * _DRC(denklem)
-
-
-def saat_acisi(enlem: float, deklinasyon: float, irtifa: float):
-    """Gunesin verilen irtifaya geldigi saat acisi (derece). Olmuyorsa None.
-
-    Kutba yakin enlemlerde imsak/yatsi hic olusmayabilir; o durumda None
-    doner ve vakit ciktiya null yazilir - uydurulmaz.
-    """
-    pay = (math.sin(_DER(irtifa))
-           - math.sin(_DER(enlem)) * math.sin(_DER(deklinasyon)))
-    payda = math.cos(_DER(enlem)) * math.cos(_DER(deklinasyon))
-    if payda == 0:
-        return None
-    oran = pay / payda
-    if oran < -1 or oran > 1:
-        return None
-    return _DRC(math.acos(oran))
-
-
-# -- vakit hesabi ---------------------------------------------------------
-
-def ufuk_irtifasi(rakim: float) -> float:
-    """Kirilma + gunes yariçapi (-0.8333) ve rakimdan gelen ufuk alcalmasi."""
-    return -0.8333 - 0.0347 * math.sqrt(max(rakim, 0.0))
-
-
-def vakitleri_hesapla(g: date, enlem: float, boylam: float, rakim: float,
-                      dilim: float = DILIM, imsak_aci: float = IMSAK_ACI,
-                      yatsi_aci: float = YATSI_ACI,
-                      ikindi_carpan: int = IKINDI_CARPAN,
-                      yineleme: int = 2) -> dict:
-    """Bir gunun alti vaktini saat cinsinden (13.5 = 13:30) dondurur.
-
-    Deklinasyon ve denklem-i zaman her vakit icin o vaktin tahmini
-    saatinde yeniden hesaplanir; tek seferlik (ogle vakti) hesap
-    imsak ve yatsida bir dakikaya varan sapma birakiyordu.
-    """
-    jd0 = julian_gun(g)
-
-    def coz(baslangic: float, irtifa_fn, once: bool | None):
-        saat = baslangic
-        for _ in range(yineleme):
-            deklinasyon, denklem = gunes_konumu(jd0 + (saat - dilim) / 24.0)
-            ogle = 12.0 + dilim - boylam / 15.0 - denklem / 60.0
-            if once is None:
-                return ogle
-            aci = saat_acisi(enlem, deklinasyon, irtifa_fn(deklinasyon))
-            if aci is None:
-                return None
-            saat = ogle - aci / 15.0 if once else ogle + aci / 15.0
-        return saat
-
-    ufuk = lambda _dek: ufuk_irtifasi(rakim)  # noqa: E731
-
-    def ikindi_irtifasi(deklinasyon: float) -> float:
-        golge = ikindi_carpan + math.tan(abs(_DER(enlem - deklinasyon)))
-        return _DRC(math.atan(1.0 / golge))
-
-    return {
-        "imsak": coz(5.0, lambda _d: -imsak_aci, True),
-        "gunes": coz(6.0, ufuk, True),
-        "ogle": coz(12.0, ufuk, None),
-        "ikindi": coz(16.0, ikindi_irtifasi, False),
-        "aksam": coz(19.0, ufuk, False),
-        "yatsi": coz(21.0, lambda _d: -yatsi_aci, False),
-    }
-
-
-def saat_metni(saat: float | None, temkin: int = 0) -> str:
-    """Ondalik saati temkinle birlikte SS:DD metnine cevirir."""
-    if saat is None:
-        return ""
-    dakika = int(round(saat * 60)) + temkin
-    dakika %= 24 * 60
-    return f"{dakika // 60:02d}:{dakika % 60:02d}"
-
-
-def gun_kaydi(g: date, yer: dict) -> dict:
-    ham = vakitleri_hesapla(g, yer["enlem"], yer["boylam"], yer["rakim"])
-    kayit = {"tarih": g.isoformat(), "vakitler": {}}
-    for v in VAKITLER:
-        kayit["vakitler"][v] = saat_metni(ham[v], TEMKIN[v])
-    return kayit
-
 
 # -- dogrulama ------------------------------------------------------------
 
@@ -359,14 +202,7 @@ def calistir(kok: Path, kaynak_adi: str, yer: dict, gun_sayisi: int) -> int:
         else:
             gunler = [gun_kaydi(bugun + timedelta(days=n), yer)
                       for n in range(gun_sayisi)]
-            kaynak = {
-                "ad": "Diyanet İşleri Başkanlığı ölçütleriyle astronomik hesap",
-                "kisa": "hesap",
-                "adres": "",
-                "kosullar": "",
-                "kunye": ("Vakitler Diyanet İşleri Başkanlığı'nın ölçütlerine "
-                          "göre hesaplanmıştır."),
-            }
+            kaynak = dict(KAYNAK)
     except ortak.CekmeHatasi as e:
         return ortak.dusme_ile_bitir(kok, BILESEN, cikti, str(e))
     except Exception as e:
