@@ -2,8 +2,12 @@
   --artis:#0B7A3B;
   --lacivert:#1B2A6B; --lacivert-koyu:#111B47; --kirmizi:#E4222B; --kirmizi-koyu:#B8161E;
   --murekkep:#14181D; --gri:#606A75; --cizgi:#DFE3E8; --zemin:#EEF1F4; --kagit:#FFFFFF;
-  --display:"Roboto Condensed","Arial Narrow",Arial,sans-serif;
-  --govde:"Roboto",-apple-system,"Segoe UI",Arial,sans-serif;
+  /* Yedek aileler ölçü eşleştirilmiş yerel yüzlerdir (fontlar.css sonu,
+     19 Ekim 2026): yazı tipi geç gelirse satırlar yeniden kırılmasın. Düz
+     "Arial Narrow" yığından ÇIKTI — 900 ağırlıkta Windows onu Arial
+     Black'e çeviriyordu. */
+  --display:"Roboto Condensed","Roboto Condensed yedek","Roboto Condensed yedek 2",sans-serif;
+  --govde:"Roboto","Roboto yedek",-apple-system,"Segoe UI",Arial,sans-serif;
   --yumusak:#F6F8FA; --gece:#0B2A4A; --kara:#000000; --golge:0 8px 20px rgba(17,27,71,.24);
   /* Slayt karartması. 27 Ağustos ölçümü: eski gradyan (%30'a kadar saydam)
      yazının başladığı yerde neredeyse hiç karartmıyordu; beyaz başlık, açık
@@ -51,7 +55,7 @@
   --foto-bekleme:#DDE3EA;
   /* Gövde serifi (§35). Yalnız `.metin` ve `.detay .spot` kullanır;
      listeler ve başlıklar sans kalır. İnternetsizde Georgia'ya düşer. */
-  --serif:"Roboto Serif",Georgia,"Times New Roman",serif;
+  --serif:"Roboto Serif","Roboto Serif yedek",Georgia,"Times New Roman",serif;
   /* Kategori işaret rengi DENEMESİ (§35) — yalnız iki kategori, yalnız
      `.kart .ust` etiketinde, yalnız açık zeminde. Ölçülen kontrast:
        --isaret-bursa  #0E6E8C  beyaz üstünde 5,79 · --zemin üstünde 5,10
@@ -595,7 +599,7 @@ main{display:block;padding-top:14px}
 .slayt .yazi{position:absolute;left:0;right:0;bottom:0;padding:20px 24px;z-index:2;color:var(--kagit)}
 .rozet-k{display:inline-block;background:var(--kirmizi);font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:1px;padding:3px 9px;margin-bottom:9px}
 .slayt h3{font-family:var(--display);font-size:42px;line-height:1.06;font-weight:900;letter-spacing:-.3px}
-.slayt p{font-size:14.5px;color:var(--ak-yazi);margin-top:8px;max-width:62ch}
+.slayt p{font-size:14.5px;color:var(--ak-yazi);margin-top:8px;max-width:34.8em}
 .slayt .dinle-bag{display:inline-flex;align-items:center;gap:7px;margin-top:12px;border:1px solid var(--ak-cizgi);font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:1px;padding:6px 12px}
 .slayt .dinle-bag:hover{background:var(--kirmizi);border-color:var(--kirmizi)}
 /* Oklar üst sağda ikili grup (29 Ağustos 2026): dikey ortada iki yanda
@@ -1299,6 +1303,14 @@ main{display:block;padding-top:14px}
 .eczane{font-size:13.5px;line-height:1.5}
 .eczane-damga{font-size:12px;color:var(--gri);margin-bottom:9px}
 .eczane-damga.bayat{color:var(--kirmizi-koyu)}
+/* Dünden eski nöbet listesi YERİNE (19 Ekim 2026, L1; parca/eczane_gecersiz.html).
+   Anasayfa paneli, /nobetci-eczane ve ilçe servis paneli ortak. Kontrast:
+   --kirmizi-koyu beyazda 6,62 · panel zemininde (--hv-zemin-ust) 6,09;
+   --gri 5,06; --lacivert 12,15 — üçü de AA. */
+.eczane-gecersiz{font-size:14px;line-height:1.5;color:var(--murekkep);border-left:3px solid var(--kirmizi-koyu);padding:6px 0 6px 10px;margin:0 0 10px}
+.eczane-gecersiz b{color:var(--kirmizi-koyu)}
+.eczane-gecersiz a{color:var(--lacivert);font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.eczane-son-guncelleme{display:block;font-size:12px;color:var(--gri);margin-top:3px}
 .eczane-suzgec{display:flex;flex-wrap:wrap;align-items:center;gap:6px;
   background:var(--yumusak);border:1px solid var(--cizgi);padding:7px 8px;margin-bottom:8px}
 /* `display:flex` tarayıcının kendi `[hidden]` kuralını yeniyor; kutular
@@ -1601,8 +1613,8 @@ footer h2:not(.kunye-ad)::after{content:"";position:absolute;left:0;bottom:-1px;
 footer ul{list-style:none}
 footer strong{color:var(--kagit)}
 .kunye-ad{font-family:var(--display);color:var(--kagit);font-size:21px;letter-spacing:.6px;margin-bottom:7px}
-.kunye-slogan{max-width:40ch}
-.kunye-kapsam{margin-top:7px;max-width:40ch}
+.kunye-slogan{max-width:22.5em}
+.kunye-kapsam{margin-top:7px;max-width:22.5em}
 .kunye-ihbar{margin-top:11px;display:flex;flex-wrap:wrap;gap:3px 9px;align-items:baseline}
 .kunye-ihbar b{color:var(--kagit);font-family:var(--display);font-size:17px;letter-spacing:.4px}
 .kunye-ihbar span{font-size:11.5px;opacity:.72}
@@ -1612,8 +1624,13 @@ footer strong{color:var(--kagit)}
 .sosyal a{border:1px solid var(--kunye-cizgi);width:34px;height:34px;display:grid;place-items:center}
 .sosyal a:hover{background:var(--kirmizi);color:var(--kagit);border-color:var(--kirmizi);text-decoration:none}
 /* 17 ilce hucrenin ICINDE iki alt sutuna boluniyor: sutun komsulariyla ayni
-   yukseklikte kaliyor ve enine serit gerekmiyor. */
-.kunye-ilce ul{columns:2;column-gap:18px}
+   yukseklikte kaliyor ve enine serit gerekmiyor.
+   19 Ekim 2026 (L1): `columns:2 8.5em` — EN FAZLA iki sutun, her biri en az
+   8.5em (110 px). En uzun ilce adi "Mustafakemalpasa" 13 px'te 112 px;
+   1001-1190 px arasinda hucre ~203-240 px kaliyor, iki alt sutun 92 px'e
+   dusuyor ve ad hucreden 7 px tasiyordu (1024'te sayfa yatay kaydi,
+   olculdu). Dar hucrede tarayici tek sutuna iner, genis hucrede iki. */
+.kunye-ilce ul{columns:2 8.5em;column-gap:18px}
 .kunye-ilce li{break-inside:avoid}
 /* Alt satirda yalniz telif var (kullanici istegi, 3 Eylul 2026): kunye
    bilgileri ve uzun veri kaynagi beyani kunyeden kaldirildi. Iki sutunlu
@@ -1818,7 +1835,7 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .manset .foto{height:392px}
 .manset .yazi{position:absolute;left:0;right:0;bottom:0;padding:20px;z-index:2;color:var(--kagit)}
 .manset h1{font-family:var(--display);font-size:36px;line-height:1.06;font-weight:900;letter-spacing:-.4px}
-.manset p{font-size:14.5px;color:var(--ak-yazi);margin-top:8px;max-width:62ch}
+.manset p{font-size:14.5px;color:var(--ak-yazi);margin-top:8px;max-width:34.8em}
 .dar{display:flex;flex-direction:column;gap:12px}
 .dar .oge{background:var(--kagit);border:1px solid var(--cizgi);padding:11px}
 .dar .oge h3{font-family:var(--display);font-size:17px;line-height:1.18;font-weight:700}
@@ -1961,8 +1978,15 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
    7,79'dan 9,14 px'e çıktı (%17,4) ve 55ch ile satır 55,1 karaktere
    düştü. 68ch ≈ 685 px ≈ 66-70 gerçek karakter. Not: 1024 px'te makale
    sütunu 623 px olduğu için orada satır ~62'de kalır — bu ızgara
-   geometrisidir, `max-width` kusuru değil. */
-.metin{font-size:18px;line-height:1.62;max-width:68ch}
+   geometrisidir, `max-width` kusuru değil.
+   19 Ekim 2026 (L1): ölçü `ch`'den `em`'e çevrildi, piksel AYNI (68ch ×
+   0,560 = 38,08em ≈ 685 px). `ch` ilk YÜKLENMİŞ yazı tipinin "0"ına
+   bakar: Roboto Serif gelmeden yedek Georgia'nın eski üslup rakamı
+   0,709em ölçüldü, sütun 685 yerine 868 px açılıyor, yazı tipi gelince
+   bütün metin yeniden kırılıyordu (köşe yazısı @820 CLS 0,026). `em`
+   yazı tipinden bağımsızdır. Sitedeki öbür `ch` ölçüleri de aynı
+   gerekçeyle `em`'e çevrildi (Roboto "0" = 0,562em). */
+.metin{font-size:18px;line-height:1.62;max-width:38em}
 .metin[data-boyut="kucuk"]{font-size:16px;line-height:1.66}
 .metin[data-boyut="buyuk"]{font-size:20px;line-height:1.6}
 .metin p{margin-bottom:14px}
@@ -2647,7 +2671,7 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
    metninin ölçüsü (16 px) ve satır uzunluğu makale rayıyla aynı sınırda
    (54ch ≈ 68 gerçek karakter, §34 K5). Yeni renk tanımlanmadı. */
 .beyan{max-width:none}
-.beyan p{font-size:16px;line-height:1.7;max-width:54ch;margin-bottom:14px}
+.beyan p{font-size:16px;line-height:1.7;max-width:30.3em;margin-bottom:14px}
 .beyan .beyan-giris{font-size:17px;color:var(--murekkep)}
 .beyan h2{font-family:var(--display);font-size:19px;font-weight:900;
   letter-spacing:.4px;color:var(--lacivert);margin:26px 0 8px;
@@ -3324,7 +3348,7 @@ a.gorus-ad:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
 .gorus-yazar .gorus-bas{border-bottom:0;margin-bottom:0}
 .gorus-yazar .portre{width:120px;height:120px}
 .gorus-yazar h1{font-family:var(--display);font-size:32px;font-weight:900;letter-spacing:.3px;line-height:1.08;color:var(--tema-koyu)}
-.gorus-ozgecmis{font-family:var(--serif);font-size:15px;line-height:1.55;max-width:68ch;margin:0 0 14px}
+.gorus-ozgecmis{font-family:var(--serif);font-size:15px;line-height:1.55;max-width:38em;margin:0 0 14px}
 
 /* --- köşe arşivi: tarihli cetvel ---------------------------------------
    Yazarın yazıları kart ızgarası değil, tarih sütunlu liste: köşe

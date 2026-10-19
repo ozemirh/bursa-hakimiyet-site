@@ -405,8 +405,15 @@ def _bolum_gorselleri(kategori):
 
 
 def _nobet_ozeti(slug="", ad=""):
-    """Nöbetçi eczane panelinin içeriği. Kayıt yoksa None — sahte satır yok."""
-    panel = eczane_sayfa.gunun_paketi()
+    """Nöbetçi eczane panelinin içeriği. Kayıt yoksa None — sahte satır yok.
+
+    Liste dünden eskiyse (`canli.GECERLIK_GUN`, 19 Ekim 2026) eczane
+    basılmaz; panel "liste güncel değil" der ve kaynağa yönlendirir.
+    """
+    panel = eczane_sayfa.gunun_paketi(gecersizi_de=True)
+    if panel and panel.get("gecersiz"):
+        return {"tur": "nobet", "gecersiz": True, "panel": panel, "yer": ad,
+                "yol": eczane_sayfa.ilce_yolu(slug), "eczaneler": [], "adet": 0}
     tumu = panel["eczaneler"] if panel else []
     kayitlar = [e for e in tumu if e["ilce_anahtar"] == slug] if slug else tumu
     if not kayitlar:

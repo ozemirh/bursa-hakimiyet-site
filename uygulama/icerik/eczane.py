@@ -87,16 +87,24 @@ def ilce_adlari() -> dict[str, str]:
     return {i.slug: i.ad for i in Ilce.objects.all()}
 
 
-def gunun_paketi(gun: date | None = None) -> dict | None:
+def gunun_paketi(gun: date | None = None,
+                 gecersizi_de: bool = False) -> dict | None:
     """Kalıcı sayfaların ve haberin ortak veri paketi.
 
     `gun` yalnızca **denetim** içindir: dosya hangi günü taşıyorsa o
     basılır, istenen günün verisi uydurulmaz. İstenen gün dosyadakinden
     farklıysa None döner — dünün listesini bugünün haberi diye yayımlamak
     okuru kapalı eczaneye gönderir.
+
+    Dünden eski liste (`panel["gecersiz"]`, `canli.GECERLIK_GUN`) varsayılan
+    olarak None döner: haber komutu ve öbür tüketiciler onu "veri yok" diye
+    görür. Okura "liste güncel değil" diyecek sayfalar `gecersizi_de=True`
+    ile ister; o pakette eczane listesi boştur.
     """
     panel = eczane_paneli(oku("nobetci-eczane"))
     if not panel:
+        return None
+    if panel.get("gecersiz") and (gun or not gecersizi_de):
         return None
     if gun and panel["gun"] != gun:
         return None
@@ -163,9 +171,12 @@ def sayfa_baglami(slug: str = "") -> dict:
     kaçırdı diye 404 vermek, sayfayı dizinden düşürür. Veri yoksa okur
     bunu açıkça okur ve odanın kendi sayfasına yönlendirilir.
     """
-    panel = gunun_paketi()
+    panel = gunun_paketi(gecersizi_de=True)
     adlar = ilce_adlari()
     ilce_ad = adlar.get(slug, "") if slug else ""
+    # Geçersiz listenin günü başlığa ve açıklamaya YAZILMAZ: "12 Eylül
+    # nöbetçi eczaneler" başlığı arama sonucunda bugünün listesi sanılır.
+    gecerli_panel = panel if panel and not panel.get("gecersiz") else None
 
     tumu = panel["eczaneler"] if panel else []
     kayitlar = [e for e in tumu if e["ilce_anahtar"] == slug] if slug else tumu
@@ -193,8 +204,8 @@ def sayfa_baglami(slug: str = "") -> dict:
         "serit": serit,
         "adet": len(kayitlar),
         "yol": ilce_yolu(slug),
-        "baslik": sayfa_basligi(ilce_ad, panel["gun"] if panel else None),
-        "aciklama": sayfa_aciklamasi(ilce_ad, panel, len(kayitlar)),
+        "baslik": sayfa_basligi(ilce_ad, gecerli_panel["gun"] if gecerli_panel else None),
+        "aciklama": sayfa_aciklamasi(ilce_ad, gecerli_panel, len(kayitlar)),
         "kaynak_adi": KAYNAK_ADI,
         "kaynak_nitelik": KAYNAK_NITELIK,
         "kok_yol": KOK_YOL,

@@ -368,5 +368,8 @@ class BolumBloklari(TestCase):
             # Ekonomi teması (19 Ekim 2026) paneli CETVEL olarak basar; beş
             # gözlü ızgara temasız düzende (`parca/bolum_servis.html`) duruyor.
             self.assertIn("piyasa-cetveli", self.client.get("/ekonomi").content.decode())
-        self.assertIn("eczane-izgara", self.client.get("/saglik").content.decode())
+        # Panelin VARLIĞI sınanır, içeriği değil: fixture listesi 12 Eylül
+        # tarihli ve 19 Ekim 2026'dan beri dünden eski liste basılmıyor —
+        # panel "Nöbet listesi güncel değil" der (tests_nobet_gecerlik).
+        self.assertIn("bolum-servis s-nobet", self.client.get("/saglik").content.decode())
 
