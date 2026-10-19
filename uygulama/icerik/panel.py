@@ -214,7 +214,8 @@ class SinirliSayfalayici(Paginator):
 
 def _liste_ciz(request, *, baslik, bolum, ust_bolum, tablo_adi, basliklar,
                sorgu, satir_kur, suzgecler, temiz_adi, notlar=(), uyari="",
-               ust_bilgi="", ek_baglantilar=(), toplu=None, sayfa_oncesi=None):
+               ust_bilgi="", ek_baglantilar=(), toplu=None, sayfa_oncesi=None,
+               dizilim=None):
     """Süzülmüş sorguyu sayfalayıp ortak liste şablonuna verir.
 
     `sayfa_oncesi`, satırlar kurulmadan ÖNCE sayfadaki kayıtların listesiyle
@@ -270,6 +271,9 @@ def _liste_ciz(request, *, baslik, bolum, ust_bolum, tablo_adi, basliklar,
         "ust_bilgi": ust_bilgi,
         "ek_baglantilar": list(ek_baglantilar),
         "toplu": toplu,
+        # Manşet ekranının "anasayfada şu an" bloğu (Paket H); diğer
+        # ekranlarda None ve şablon bloğu çizmez.
+        "dizilim": dizilim,
         **_yetkiler(request.user),
     })
 
@@ -310,10 +314,16 @@ def bugun(request):
     Kuyruk §9'daki tanımdır: `durum = Pasif` **ve**
     `hazirlik ∈ (Taslak, İncelemede)`. Mevcut panelde bu ayrım yoktu,
     çünkü Pasif hem "bitmedi" hem "yayından çekildi" demekti.
+
+    19 Ekim 2026 (Paket H): üçüncü kuyruk **Yayına hazır** (Pasif + hazır).
+    Muhabirin masaya bıraktığı haber hiçbir ekranda görünmüyordu. Yayın
+    yetkisi olan role her satırda tek tıkla "Yayına al" düğmesi çıkar;
+    düğme tek yayın kapısından geçer (`haber_yayinla`).
     """
     kuyruk = (Haber.masadakiler()
               .select_related("kategori", "olusturan")
               .prefetch_related("kategori__turler"))
+    hazirlar_sorgu = Haber.yayina_hazirlar().select_related("kategori", "olusturan")
 
     bugun_baslangic = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -331,12 +341,21 @@ def bugun(request):
     # Kuyruk boşken liste sorgularını hiç çalıştırmıyoruz. Kuyruk doluyken
     # tarama zaten erken biter, yani bu kapı yavaşlatmıyor.
     kuyruk_sayisi = kuyruk.count()
+    hazir_sayisi = hazirlar_sorgu.count()
     if kuyruk_sayisi:
         taslaklar = list(kuyruk.filter(hazirlik="taslak")[:20])
         incelemedekiler = list(kuyruk.filter(hazirlik="incelemede")[:20])
         benim = kuyruk.filter(olusturan=request.user).count()
     else:
         taslaklar, incelemedekiler, benim = [], [], 0
+    hazirlar = list(hazirlar_sorgu.prefetch_related("etiketler", "kaynaklar")[:20]) \
+        if hazir_sayisi else []
+    for h in hazirlar:
+        # Satır başına iki ayrı soru (yayin_kapisi): yetki ve içerik eşiği.
+        # Eksik varsa düğme yerine eksik listesi çıkar — masa neyin
+        # tamamlanacağını görür, düğmeye basıp hata almaz.
+        h.yayinlanabilir = yayin_kapisi.yayin_yetkisi(request.user, h)
+        h.eksikler = yayin_kapisi.haber_eksikleri(h) if h.yayinlanabilir else []
 
     return render(request, "panel/bugun.html", {
         "baslik": "Bugün",
@@ -344,12 +363,55 @@ def bugun(request):
         "ust_bolum": "bugun",
         "taslaklar": taslaklar,
         "incelemedekiler": incelemedekiler,
-        "kuyruk_sayisi": kuyruk_sayisi,
+        "hazirlar": hazirlar,
+        "hazir_sayisi": hazir_sayisi,
+        "kuyruk_sayisi": kuyruk_sayisi + hazir_sayisi,
         "bugun_yayinlanan": Haber.yayindakiler().filter(
             yayin_zamani__gte=bugun_baslangic).count(),
         "benim_taslaklarim": benim,
         **_yetkiler(request.user),
     })
+
+
+@login_required
+@permission_required("icerik.kendi_haberini_yayinlama", raise_exception=True)
+def haber_yayinla(request, kimlik):
+    """Bugün ekranının tek tık "Yayına al" fiili — yalnız POST.
+
+    Tek yayın kapısından geçer (`yayin_kapisi`): kayıt başına yetki
+    (kendi / başkasının haberi) ve içerik eşiği (spot · iki paragraf ·
+    etiket · kaynak · başlık işareti · adres). `save()` ile kaydedilir:
+    sinyal sayfa önbelleğini düşürür, denetim kaydı yazılır; kuyrukta
+    bekleyen sosyal paylaşım satırları gönderim anında haberi yayında
+    bulur (`sosyal.kuyruk`). Yayın zamanı boşsa şimdi; doluysa korunur
+    (ileri tarihli haber zamanı gelince görünür).
+    """
+    if request.method != "POST":
+        return redirect("panel-bugun")
+    haber = get_object_or_404(
+        Haber.objects.prefetch_related("etiketler", "kaynaklar"), pk=kimlik)
+    if not yayin_kapisi.yayin_yetkisi(request.user, haber):
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied("Bu haberi yayına alma yetkiniz yok.")
+    if haber.durum == Haber.DURUM_AKTIF:
+        messages.info(request, "Haber zaten yayında.")
+        return redirect("panel-bugun")
+    if haber.durum == Haber.DURUM_SILINMIS:
+        messages.error(request, "Silinmiş haber yayına alınamaz.")
+        return redirect("panel-bugun")
+    eksik = yayin_kapisi.haber_eksikleri(haber)
+    if eksik:
+        messages.error(request, "Yayına alınamadı; eksik: " + ", ".join(eksik) + ".")
+        return redirect("panel-bugun")
+    onceki = denetim_kaydi.haber_ozeti(haber)
+    haber.durum = Haber.DURUM_AKTIF
+    haber.hazirlik = "hazir"
+    if haber.yayin_zamani is None:
+        haber.yayin_zamani = timezone.now()
+    haber.save()
+    denetim_kaydi.haber_degisimi(request, haber, onceki)
+    messages.success(request, f"“{haber.baslik}” yayına alındı.")
+    return redirect("panel-bugun")
 
 
 @login_required
@@ -1370,6 +1432,9 @@ def toplu_islem(request):
     # sayfa mikro önbelleği burada açıkça geçersizleşir ki yayına alınan /
     # çekilen haber okura ANINDA yansısın (icerik/sinyaller.py notu).
     onbellek.surumu_artir()
+    # Son dakika bandı yayından çekilen habere bağlıysa o da düşsün (Paket H).
+    from .baglam import SON_DAKIKA_ANAHTARI
+    onbellek.sil(SON_DAKIKA_ANAHTARI)
     _toplu_denetim(request, fiil, onceki, ozet)
     return _toplu_don(request, ozet)
 
@@ -1608,9 +1673,14 @@ def _fiil_kategori(request, sorgu) -> str:
 # ~1.900 kayıt birikmiş ve hiçbiri "şu anda hangisi yayında" demiyordu.
 #
 # Burada durum haberin kendi üç alanında (`manset_ana` · `manset_tepe` ·
-# `manset_kare`) duruyor, yani listenin kendisi zaten "şu an anasayfada ne
-# var" sorusunun cevabı. Ayrı bir defter tablosu YOK — olsaydı aynı hatayı
+# `manset_kare`) duruyor. Ayrı bir defter tablosu YOK — olsaydı aynı hatayı
 # tekrarlardı.
+#
+# 19 Ekim 2026 (Paket H): "şu an anasayfada ne var" sorusunun cevabı artık
+# ekranın ÜSTÜNDEKİ dizilim bloğu ve o blok anasayfayla AYNI işlevden
+# geliyor (`anasayfa_dizilimi.kur`). Bayrak listesi tek başına bu soruyu
+# cevaplamıyordu: bayraklı haber yuvayı doldurmazsa kalan yuvaları düşüş
+# kuralı dolduruyor, öncelik süresi dolan bayrak yuva ayırtmıyor.
 #
 # Ölçülen sütun sözleşmesi: Başlık · Resim · Manşet Türü · İçerik Türü ·
 # Editör · Tarih · İşlemler.
@@ -1639,12 +1709,14 @@ def mansetler(request):
     # Python'da birleşiyor. Manşetli kayıt sayısı doğası gereği küçük
     # (anasayfada üç slot), yani birleşen küme de küçük.
     kimlikler = set()
+    alan_kimlikleri = {}
     for _kod, _ad, alan in MANSET_ALANLARI:
         # `.order_by()` ŞART: Meta sıralaması (`-yayin_zamani`) planlayıcıyı
         # o indekse çekiyor ve kısmi indeks devre dışı kalıyordu (ölçüldü).
         # Kimlik toplarken sıralamanın zaten anlamı yok.
-        kimlikler.update(Haber.objects.filter(**{alan: True})
-                         .order_by().values_list("pk", flat=True))
+        alan_kimlikleri[alan] = list(Haber.objects.filter(**{alan: True})
+                                     .order_by().values_list("pk", flat=True))
+        kimlikler.update(alan_kimlikleri[alan])
     sorgu = (Haber.objects
              .select_related("kategori", "olusturan")
              .prefetch_related("kategori__turler")
@@ -1692,7 +1764,9 @@ def mansetler(request):
                           if satir[3] != Haber.DURUM_AKTIF)
     return _liste_ciz(
         request, baslik="Manşetler", bolum="mansetler", ust_bolum="icerik",
-        tablo_adi="Manşet listesi",
+        # Aynı üç kimlik sorgusu dizilime verilir; ikinci kez sorulmaz.
+        dizilim=_dizilim_ozeti(alan_kimlikleri),
+        tablo_adi="Bayraklı haberler",
         basliklar=["Başlık", "Resim", "Manşet türü", "Kategori", "Tarih",
                    "Durum", "İşlemler"],
         sorgu=sorgu, satir_kur=satir, temiz_adi="panel-mansetler",
@@ -1709,11 +1783,61 @@ def mansetler(request):
                "Arşiv). Anasayfada görünmezler ama işaret üstlerinde duruyor; "
                "manşetten çıkarılmalılar.") if yayindan_dusmus else "",
         notlar=[
-            "Manşet, ayrı bir kayıt defteri değil haberin kendi alanıdır: "
-            "liste doğrudan “şu an anasayfada ne var” sorusunu cevaplar.",
+            "Üstteki “Anasayfada şu an” bloğu anasayfayla aynı hesaptan gelir: "
+            "bayraklı haberler önce, kalan yuvalar “önce Bursa” düşüş kuralıyla.",
+            "Manşet, ayrı bir kayıt defteri değil haberin kendi alanıdır; "
+            "aşağıdaki liste bayrak taşıyan kayıtlardır.",
             "İşaret haber formundaki Manşet bölmesinden konulur ve o bölme "
             "yalnız bu yetkiye sahip rollerde görünür.",
         ])
+
+
+#: Dizilim bloğundaki yuva sırası — anasayfadaki yukarıdan aşağı sıra.
+DIZILIM_YUVALARI = ("dortlu", "manset", "ikincil", "manset_liste")
+DISARIDA_NEDENLERI = {
+    "yayinda_degil": "Yayında değil (Pasif, Arşiv ya da ileri tarihli)",
+    "suresi_doldu": "Öncelik süresi doldu — düşüş havuzunda sıradan aday",
+    "yuva_dolu": "Yuva dolu — daha yeni bayraklar önde",
+}
+
+
+def _sure_metni(zaman, simdi):
+    if not zaman:
+        return ""
+    dakika = max(0, int((simdi - zaman).total_seconds() // 60))
+    if dakika < 60:
+        return f"{dakika} dk"
+    saat, dk = divmod(dakika, 60)
+    return f"{saat} sa {dk} dk" if saat < 48 else f"{saat // 24} gün"
+
+
+def _dizilim_ozeti(bayrakli=None) -> dict:
+    """Manşet ekranının "Anasayfada şu an" bloğu — anasayfayla AYNI işlev."""
+    from . import anasayfa_dizilimi as ad
+    simdi = timezone.now()
+    d = ad.kur(simdi, bayrakli=bayrakli)
+    yuvalar = []
+    for yuva in DIZILIM_YUVALARI:
+        satirlar = []
+        for k in (k for k in d.kalemler if k.yuva == yuva):
+            satirlar.append({
+                "sira": k.sira, "haber": k.haber,
+                "neden": ("Bayrak" if k.neden == "bayrak"
+                          else "Düşüş · Bursa" if k.bursa else "Düşüş · ulusal"),
+                "bayrakli": k.neden == "bayrak", "bursa": k.bursa,
+                "yas": _sure_metni(k.bayrak_zamani, simdi),
+            })
+        yuvalar.append({"kod": yuva, "ad": ad.YUVA_ADLARI[yuva], "satirlar": satirlar})
+    return {
+        "yuvalar": yuvalar,
+        "bursa": d.bursa_sayisi(), "en_az_bursa": d.en_az_bursa,
+        "manset_adedi": ad.MANSET, "oran": d.oran,
+        "bayrak_saat": int(ad.bayrak_omru().total_seconds() // 3600),
+        "disarida": [{"haber": x.haber, "bayrak": dict(MANSET_SLOTLARI).get(x.bayrak, x.bayrak),
+                      "neden": DISARIDA_NEDENLERI.get(x.neden, x.neden),
+                      "yas": _sure_metni(x.bayrak_zamani, simdi)}
+                     for x in d.disarida],
+    }
 
 
 # ===========================================================================

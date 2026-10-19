@@ -34,6 +34,16 @@ bulgu 10). Kural artık TEK YERDE, `tazelik()`te: her bileşen
   `metin`      okura basılacak hazır cümle ("12 Eylül 2026, 21:57 tarihli,
                güncel değil"); taze veride boş
   `elle`       veri panelden elle mi girildi (`kaynak.kisa == "panel"`)
+  `gun_farki`  bugün ile güncelleme günü arasındaki takvim günü (0 = bugün)
+  `gecerli`    veri hâlâ GÖSTERİLEBİLİR mi. Yalnız `GECERLIK_GUN`daki
+               bileşenler için anlamlı; öbürlerinde her zaman True
+
+Bayat ile geçersiz ayrı şeylerdir (19 Ekim 2026, L1). Bayat veri tarih ve
+"güncel değil" damgasıyla gösterilebilir — puan tablosu, döviz. Nöbetçi
+eczane öyle değil: nöbet günde bir devrediyor, dünden eski liste okuru
+KAPALI eczaneye gönderir. Bu tür bileşenler `GECERLIK_GUN`a yazılır;
+güncellemesi o kadar takvim gününden eskiyse `gecerli` False olur ve
+şablon listeyi hiç basmaz, kaynağın kendi sayfasına yönlendirir.
 
 Okura kural: bayat veri ya açık tarih + "güncel değil" işaretiyle gösterilir
 ya da gizlenir — ASLA canlıymış gibi gösterilmez. Damgası okunamayan veri de
@@ -71,6 +81,12 @@ VARSAYILAN_ESIK = {
     "puan-durumu": 2880, "vizyon-takvimi": 10080,
 }
 
+# Güncellemesi bu kadar TAKVİM GÜNÜNDEN eski veri gösterilmez (`gecerli`
+# False). Nöbetçi eczane: dünkü liste bu sabah 08:30'a kadar geçerli
+# olabilir, daha eskisi kesin yanlış (19 Ekim 2026: 12 Eylül listesi 37 gün
+# "tazelenemedi" uyarısıyla basılmıştı). Listede olmayan bileşen hep geçerli.
+GECERLIK_GUN = {"nobetci-eczane": 1}
+
 
 def _kok() -> Path:
     return Path(getattr(settings, "CANLI_VERI_KOK",
@@ -101,7 +117,8 @@ def oku(bilesen: str) -> dict | None:
         veri = None
 
     if veri is not None:
-        veri["tazelik"] = tazelik(veri, VARSAYILAN_ESIK.get(bilesen))
+        veri["tazelik"] = tazelik(veri, VARSAYILAN_ESIK.get(bilesen),
+                                  gecerlik_gun=GECERLIK_GUN.get(bilesen))
         veri["yas_dakika"] = veri["tazelik"]["yas_dakika"]
         veri["bayat"] = veri["tazelik"]["durum"] != TAZE
 
@@ -128,11 +145,17 @@ def _aware(an: datetime) -> datetime:
 
 
 def tazelik(veri: dict | None, varsayilan_esik: int | None = None,
-            simdi: datetime | None = None) -> dict:
-    """Tek tazelik kuralı. Şablonlar yalnız bunu okur."""
+            simdi: datetime | None = None,
+            gecerlik_gun: int | None = None) -> dict:
+    """Tek tazelik kuralı. Şablonlar yalnız bunu okur.
+
+    `gecerlik_gun` verilirse güncellemesi bugünden o kadar takvim gününden
+    eski (ya da zamanı bilinmeyen) veri `gecerli: False` döner.
+    """
     if not veri:
         return {"durum": YOK, "guncelleme": None, "yas_dakika": None,
-                "bugun": False, "metin": "", "elle": False}
+                "bugun": False, "metin": "", "elle": False,
+                "gun_farki": None, "gecerli": False}
     simdi = simdi or timezone.now()
     try:
         guncelleme = _aware(datetime.fromisoformat(str(veri.get("guncelleme"))))
@@ -148,6 +171,10 @@ def tazelik(veri: dict | None, varsayilan_esik: int | None = None,
         durum = BAYAT if (esik and yas > esik) else TAZE
     yerel = timezone.localtime(guncelleme) if guncelleme else None
     bugun = bool(yerel and yerel.date() == timezone.localtime(simdi).date())
+    gun_farki = ((timezone.localtime(simdi).date() - yerel.date()).days
+                 if yerel else None)
+    gecerli = (gecerlik_gun is None
+               or (gun_farki is not None and gun_farki <= gecerlik_gun))
     if durum == BAYAT:
         metin = (f"{formats.date_format(yerel, 'j F Y, H:i')} tarihli, "
                  "güncel değil" if yerel else "güncelleme zamanı bilinmiyor, "
@@ -157,7 +184,8 @@ def tazelik(veri: dict | None, varsayilan_esik: int | None = None,
     kaynak = veri.get("kaynak")
     elle = isinstance(kaynak, dict) and kaynak.get("kisa") == "panel"
     return {"durum": durum, "guncelleme": guncelleme, "yas_dakika": yas,
-            "bugun": bugun, "metin": metin, "elle": elle}
+            "bugun": bugun, "metin": metin, "elle": elle,
+            "gun_farki": gun_farki, "gecerli": gecerli}
 
 
 # -- namaz: istek anında hesap --------------------------------------------
@@ -805,6 +833,13 @@ def hava_paneli(hava: dict | None, namaz: dict | None = None,
 # Koordinat BEO'nun kendi sayfasından geliyor, tahmin edilmiyor.
 HARITA_ADRESI = "https://www.google.com/maps/search/?api=1&query={},{}"
 
+# Liste geçersizken okuru gönderdiğimiz yer: nöbet çizelgesinin resmî
+# sahibi. Dosyanın `kaynak.adres` alanı varsa o kullanılır; bu yalnız
+# dosyada kaynak yoksa devreye giren yedek. Bağlantıdır, kaynak değil:
+# sayfa bunu yüklemez.
+ECZANE_KAYNAK_ADI = "Bursa Eczacı Odası"
+ECZANE_KAYNAK_ADRESI = "https://www.beo.org.tr/nobetci-eczaneler"
+
 # Türkçe sıralama: `sorted` varsayılanı "İ"yi "Z"den sonraya atıyor,
 # İnegöl ilçe listesinin en altında kalıyordu. Küçük bir alfabe yeter;
 # `locale` kurmak sunucunun diline bağımlılık olurdu.
@@ -862,10 +897,33 @@ def eczane_paneli(eczane: dict | None, simdi: datetime | None = None):
 
     Dosya yoksa ya da hiç eczane taşımıyorsa None döner; şablon o zaman
     "şu an alınamıyor" der, sahte satır basmaz.
+
+    Liste DÜNDEN ESKİYSE (`tazelik.gecerli` False, `GECERLIK_GUN`) eczaneler
+    hiç dönmez: `gecersiz` True, listeler boş, `guncelleme` son güncelleme
+    zamanı, `kaynak_adi`/`kaynak_adresi` okurun gideceği yer. Şablon "Nöbet
+    listesi güncel değil" der; eski satırlar uyarıyla bile basılmaz.
     """
-    if not eczane:
+    if not eczane or not any((e.get("ad") or "").strip()
+                             for e in eczane.get("eczaneler") or []):
         return None
     simdi = simdi or datetime.now()
+    taze = eczane.get("tazelik") or tazelik(
+        eczane, VARSAYILAN_ESIK["nobetci-eczane"],
+        gecerlik_gun=GECERLIK_GUN["nobetci-eczane"])
+    kaynak = eczane.get("kaynak") or {}
+    if not taze.get("gecerli", True):
+        return {
+            "gecersiz": True,
+            "gun": _tarihe_cevir(eczane.get("gun")),
+            "guncelleme": taze.get("guncelleme"),
+            "sayi": 0, "eczaneler": [], "ilceler": [],
+            "pencere": "", "pencere_adet": 0, "nobette": 0,
+            "kaynak": kaynak,
+            "kaynak_adi": kaynak.get("ad") or ECZANE_KAYNAK_ADI,
+            "kaynak_adresi": kaynak.get("adres") or ECZANE_KAYNAK_ADRESI,
+            "tazelik": taze,
+            "bayat": True,
+        }
 
     kayitlar = []
     for e in eczane.get("eczaneler") or []:
@@ -899,8 +957,6 @@ def eczane_paneli(eczane: dict | None, simdi: datetime | None = None):
     if not kayitlar:
         return None
     kayitlar.sort(key=lambda k: (_tr_sirala(k["ilce"]), _tr_sirala(k["ad"])))
-    taze = eczane.get("tazelik") or tazelik(eczane,
-                                            VARSAYILAN_ESIK["nobetci-eczane"])
 
     ilceler: list[dict] = []
     sepet: dict[str, dict] = {}
@@ -924,14 +980,18 @@ def eczane_paneli(eczane: dict | None, simdi: datetime | None = None):
     pencere = max(pencereler, key=pencereler.get) if pencereler else ""
 
     return {
+        "gecersiz": False,
         "gun": _tarihe_cevir(eczane.get("gun")),
+        "guncelleme": taze.get("guncelleme"),
         "sayi": len(kayitlar),
         "eczaneler": kayitlar,
         "ilceler": ilceler,
         "pencere": pencere,
         "pencere_adet": pencereler.get(pencere, 0),
         "nobette": sum(1 for k in kayitlar if k["nobette"]),
-        "kaynak": eczane.get("kaynak") or {},
+        "kaynak": kaynak,
+        "kaynak_adi": kaynak.get("ad") or ECZANE_KAYNAK_ADI,
+        "kaynak_adresi": kaynak.get("adres") or ECZANE_KAYNAK_ADRESI,
         "tazelik": taze,
         "bayat": taze["durum"] != TAZE,
     }

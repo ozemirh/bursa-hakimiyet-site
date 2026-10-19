@@ -90,6 +90,139 @@
   src: url("../fontlar/roboto-serif-latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
+/* Ölçü eşleştirilmiş YEREL YEDEK yüzler — 19 Ekim 2026 (Paket L1).
+
+   Neden: `font-display: swap` yazı tipi gelene kadar metni yedekle çizer,
+   sonra değiştirir. Yedeğin harf genişliği ve satır ölçüleri farklıysa
+   satırlar yeniden kırılır, bloklar uzar/kısalır: düzen kayması (CLS).
+   Ölçülen en kötü durum: eski yığında `"Arial Narrow"` 900 ağırlıkta
+   Windows'ta ARIAL BLACK'e gidiyordu (aile gruplaması; genişlik oranı
+   Roboto Condensed 900 / yedek = 0,74). Manşet bloğu bu yüzden yedekle
+   ~2 kat yüksekti. Aşağıdaki yüzler yerel dosyayı `local()` ile ADINDAN
+   sabitler, böylece 900 isteği Arial Black'e kaçamaz.
+
+   Değerler ÖLÇÜLDÜ (başsız Chrome, Windows yazı tipleri, gerçek sayfa
+   metni: anasayfa, ekonomi, bursaspor, haber detay, köşe yazısı; aile ve
+   ağırlık başına 1–8 bin karakter; büyük harf dönüşümü uygulanmış):
+     size-adjust      = web fontu genişliği / yerel yüz genişliği
+     ascent-override  = web fontu çıkıntısı / size-adjust
+     descent-override = web fontu inişi / size-adjust
+     line-gap-override = 0 (Roboto, Roboto Condensed, Roboto Serif boşluksuz)
+   Web fontlarının dikey ölçüsü (1000 px DOM ölçümü): Roboto ve Roboto
+   Condensed çıkıntı 0,950 · iniş 0,250; Roboto Serif 0,927 · 0,244.
+   Genişlik oranları (sayfalar arası aralık → seçilen):
+     Roboto 400 / Arial            0,979–0,987 → %98,5
+     Roboto 500 / Arial            0,997–1,001 → %99,8
+     Roboto 600–700 / Arial Bold   0,930–0,973 → %94
+     R. Condensed 400 / A. Narrow  1,061–1,098 → %106,5
+     R. Condensed 700 / A. Narrow Bold 1,000–1,029 → %101,5
+     R. Condensed 900 / A. Narrow Bold 1,006–1,042 → %103
+       (900'ün bandı ayrı: haber detay başlığı 34 px/900'de %102 ile
+       yedekte tek satıra sığıp web fontunda ikiye kırılıyordu)
+     R. Condensed 400 / Arial      0,870–0,901 → %87,5
+     R. Condensed 700–900 / Arial Bold 0,824–0,850 → %83,5
+     Roboto Serif 400 / Georgia    1,155       → %115,5
+     Roboto Serif 700 / Georgia Bold 1,030–1,042 → %103,5
+   Yazı tipini değiştirirsen ya da yeni ağırlık eklersen YENİDEN ÖLÇ.
+
+   Ağırlık bantları: bir bant tek `size-adjust` taşır; Roboto 500'ün oranı
+   400'den ayrı olduğu için kendi bandı var. Bant aralığı istenen ağırlığı
+   kapsadığı için tarayıcı kalın taklidi (sentetik bold) yapmaz.
+
+   Kapsam: Windows ve macOS'ta Arial, Arial Narrow (macOS'ta Office ile),
+   Georgia bulunur. Yüz bulunamazsa tarayıcı yığındaki bir sonraki aileye
+   geçer (`yedek 2`, sonra genel aile); Android'de sistem yazı tipi zaten
+   Roboto'dur. Bu yüzler hiçbir dosya indirmez. */
+@font-face {
+  font-family: "Roboto yedek";
+  font-weight: 100 449;
+  src: local("Arial"), local("ArialMT");
+  size-adjust: 98.5%;
+  ascent-override: 96.45%;
+  descent-override: 25.38%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Roboto yedek";
+  font-weight: 450 549;
+  src: local("Arial"), local("ArialMT");
+  size-adjust: 99.8%;
+  ascent-override: 95.19%;
+  descent-override: 25.05%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Roboto yedek";
+  font-weight: 550 900;
+  src: local("Arial Bold"), local("Arial-BoldMT");
+  size-adjust: 94%;
+  ascent-override: 101.06%;
+  descent-override: 26.6%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Roboto Condensed yedek";
+  font-weight: 100 549;
+  src: local("Arial Narrow"), local("ArialNarrow");
+  size-adjust: 106.5%;
+  ascent-override: 89.2%;
+  descent-override: 23.47%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Roboto Condensed yedek";
+  font-weight: 550 799;
+  src: local("Arial Narrow Bold"), local("ArialNarrow-Bold");
+  size-adjust: 101.5%;
+  ascent-override: 93.6%;
+  descent-override: 24.63%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Roboto Condensed yedek";
+  font-weight: 800 900;
+  src: local("Arial Narrow Bold"), local("ArialNarrow-Bold");
+  size-adjust: 103%;
+  ascent-override: 92.23%;
+  descent-override: 24.27%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Roboto Condensed yedek 2";
+  font-weight: 100 549;
+  src: local("Arial"), local("ArialMT");
+  size-adjust: 87.5%;
+  ascent-override: 108.57%;
+  descent-override: 28.57%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Roboto Condensed yedek 2";
+  font-weight: 550 900;
+  src: local("Arial Bold"), local("Arial-BoldMT");
+  size-adjust: 83.5%;
+  ascent-override: 113.77%;
+  descent-override: 29.94%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Roboto Serif yedek";
+  font-weight: 100 549;
+  src: local("Georgia");
+  size-adjust: 115.5%;
+  ascent-override: 80.26%;
+  descent-override: 21.13%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Roboto Serif yedek";
+  font-weight: 550 900;
+  src: local("Georgia Bold"), local("Georgia-Bold");
+  size-adjust: 103.5%;
+  ascent-override: 89.57%;
+  descent-override: 23.57%;
+  line-gap-override: 0%;
+}
 @font-face {
   font-family: "IBM Plex Mono";
   font-style: normal;

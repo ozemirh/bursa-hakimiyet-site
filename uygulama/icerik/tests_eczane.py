@@ -258,8 +258,22 @@ class EczaneHaberi(EczaneTabani):
         self.assertIn("eczane verisi yok", cikti)
 
     def test_bayat_liste_yayimlanmiyor(self):
-        """Nöbet günde bir devrediliyor; dünün listesi yanlış eczaneyi gösterir."""
+        """Nöbet günde bir devrediliyor; dünün listesi yanlış eczaneyi gösterir.
+
+        Dünkü liste (eşik aşılmış ama takvimde dün) yalnız
+        `--bayat-da-yayimla` ile çıkar. Dünden eskisi (19 Ekim 2026, L1,
+        `canli.GECERLIK_GUN`) bayrakla bile çıkmaz: paket "veri yok" der.
+        """
+        simdi = datetime.now(TR)
+        dun_sabah = (simdi - timedelta(days=1)).replace(hour=0, minute=1, second=0,
+                                                        microsecond=0)
         self._yaz(paket(yas_dakika=3000))
+        kod, cikti = self._komut(bayat_da_yayimla=True)
+        self.assertEqual(kod, 1)
+        self.assertIn("eczane verisi yok", cikti)
+        self.assertEqual(Haber.objects.count(), 0)
+
+        self._yaz(paket(yas_dakika=int((simdi - dun_sabah).total_seconds() // 60)))
         kod, cikti = self._komut()
         self.assertEqual(kod, 1)
         self.assertIn("bayat", cikti)

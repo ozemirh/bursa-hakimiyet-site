@@ -26,11 +26,13 @@ bilmeli.{% endcomment %}
       <section class="kutu eczane-sayfa">
         <div class="kutu-bas vurgu">
           <h1>{% if ilce_ad %}{{ ilce_ad|buyult }} NÖBETÇİ ECZANELER{% else %}BURSA NÖBETÇİ ECZANELER{% endif %}</h1>
-          {% if panel %}<span class="tumu">{{ adet }} eczane</span>{% endif %}
+          {% if panel and not panel.gecersiz %}<span class="tumu">{{ adet }} eczane</span>{% endif %}
         </div>
         <div class="kutu-ic">
 
-          {% if panel %}
+          {% if panel.gecersiz %}
+            {% include "parca/eczane_gecersiz.html" with p=panel %}
+          {% elif panel %}
             <p class="eczane-ozet{% if panel.bayat %} bayat{% endif %}">
               <b><time datetime="{{ panel.gun|date:'Y-m-d' }}">{{ panel.gun|date:"j F Y" }}</time> nöbeti</b>
               {% if panel.pencere %}&middot; çoğu eczanede {{ panel.pencere }} ({{ panel.pencere_adet }} eczane){% endif %}
@@ -47,11 +49,13 @@ bilmeli.{% endcomment %}
           olmayan ilçe "0" ile görünür. Eksik liste okura sayfanın eksik
           olduğunu düşündürürdü.{% endcomment %}
           <nav class="eczane-ilceler" aria-label="İlçeye göre nöbetçi eczane">
-            <a href="{{ kok_yol }}"{% if not ilce_slug %} aria-current="page"{% endif %}>Bursa geneli{% if panel %} <span class="adet">{{ panel.sayi }}</span>{% endif %}</a>
-{% for i in serit %}            <a href="{{ i.yol }}"{% if i.secili %} aria-current="page"{% endif %}>{{ i.ad }} <span class="adet">{{ i.adet }}</span></a>
+            {% comment %}Liste geçersizken adet basılmaz: "0" okura "bugün
+            nöbetçi yok" der, oysa durum "listeyi bilmiyoruz".{% endcomment %}
+            <a href="{{ kok_yol }}"{% if not ilce_slug %} aria-current="page"{% endif %}>Bursa geneli{% if panel and not panel.gecersiz %} <span class="adet">{{ panel.sayi }}</span>{% endif %}</a>
+{% for i in serit %}            <a href="{{ i.yol }}"{% if i.secili %} aria-current="page"{% endif %}>{{ i.ad }}{% if not panel.gecersiz %} <span class="adet">{{ i.adet }}</span>{% endif %}</a>
 {% endfor %}          </nav>
 
-          {% if ilce_slug and panel and not eczaneler %}
+          {% if ilce_slug and panel and not panel.gecersiz and not eczaneler %}
             {% comment %}"Bu ilçede bugün nöbetçi yok" da bir veridir ve
             uydurulmaz: kaynak o ilçe için kayıt döndürmediyse öyle yazılır.
             Küçük ilçelerde nöbet komşu ilçeye devredilebiliyor.{% endcomment %}

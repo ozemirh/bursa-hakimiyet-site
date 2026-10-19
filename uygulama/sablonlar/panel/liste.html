@@ -17,6 +17,7 @@ yazılır. Bu hatanın panelin yerleşimini bir kez bozduğu kayıtlı
   {% include "panel/parca/suzgec.html" %}
 
   {% if uyari %}<div class="kutu uyari serit" role="status">{{ uyari }}</div>{% endif %}
+  {% if dizilim %}{% include "panel/parca/manset_dizilimi.html" %}{% endif %}
   {% if ust_bilgi or ek_baglantilar %}
     {% comment %}Bağlantılar arasında BOŞLUK olmak zorunda: `.dugme`
        `white-space:nowrap` taşıyor ve aralarında boşluk olmayan düğmeler tek

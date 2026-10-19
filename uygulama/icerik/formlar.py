@@ -415,6 +415,17 @@ class HaberForm(forms.ModelForm):
                 f"Spot en çok {SPOT_SINIR} karakter olabilir (şu an {len(spot)}).")
         return spot
 
+    def clean_govde(self):
+        """Düz metin gövde kayıtta paragraflanır (Paket H, 19 Ekim 2026).
+
+        Boş satırla ayrılmış düz metin `<p>`'lere çevrilir; etiket taşıyan
+        (HTML) gövdeye dokunulmaz. Çevrilen metin kaçırılmıştır ve sayfada
+        yine `govde_temizle` beyaz listesinden geçer. Yayın kapısının
+        paragraf sayımı çeviriden önce ve sonra aynı sayıyı verir.
+        """
+        from .temizle import duz_metni_paragrafla
+        return duz_metni_paragrafla((self.cleaned_data.get("govde") or "").strip())
+
     def clean_muhabir(self):
         muhabir = (self.cleaned_data.get("muhabir") or "").strip()
         if self.data.get("kaynak_turu") == Haber.KAYNAK_MUHABIR and not muhabir:
@@ -1080,6 +1091,17 @@ class SonDakikaForm(forms.ModelForm):
             Haber.objects.filter(pk=self.instance.haber_id)
             if self.instance.pk and self.instance.haber_id
             else Haber.objects.none())
+
+    def clean_adres(self):
+        """Bant bağlantısı: site içi yol ya da http(s) — `javascript:` gibi
+        şemalar okurun tarayıcısında çalışırdı (Paket H, 19 Ekim 2026)."""
+        from .baglam import guvenli_bant_adresi
+        adres = (self.cleaned_data.get("adres") or "").strip()
+        if adres and not guvenli_bant_adresi(adres):
+            raise forms.ValidationError(
+                "Adres “/” ile başlayan site içi bir yol ya da http(s) "
+                "adresi olmalı.")
+        return adres
 
     def clean(self):
         veri = super().clean()

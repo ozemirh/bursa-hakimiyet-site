@@ -60,7 +60,11 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
   {% elif servis.tur == "puan" %}
     <div class="kutu-bas">
       <h2 id="servis-bas">{{ servis.takip.lig_adi|default:"PUAN DURUMU" }}{% if servis.takip.grup_adi %} &middot; {{ servis.takip.grup_adi }}{% endif %}</h2>
-      <span class="tumu">{% if servis.takip.hafta %}{{ servis.takip.hafta }}. hafta &middot; {% endif %}<a href="/bursaspor">Tüm tablo &rarr;</a></span>
+      {% comment %}Hafta numarası tablonun haftasıdır, BUGÜNÜN değil (19 Ekim
+      2026, L1): veri bayatken "7. hafta" yalnız başlıkta duruyor ve lig
+      o haftadaymış gibi okunuyordu. Bayatken numaranın yanında "güncel
+      değil" yazılır; künyedeki tarihli uyarı aynen durur.{% endcomment %}
+      <span class="tumu">{% if servis.takip.hafta %}{{ servis.takip.hafta }}. hafta{% if servis.takip.tazelik.durum != "taze" %}, <b>güncel değil</b>{% endif %} &middot; {% endif %}<a href="/bursaspor">Tüm tablo &rarr;</a></span>
     </div>
     <div class="kutu-ic">
       <div class="puan-panel">
@@ -116,9 +120,12 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
       <h2 id="servis-bas">{% if servis.yer %}{{ servis.yer|buyult }} NÖBETÇİ ECZANELERİ{% else %}NÖBETÇİ ECZANELER{% endif %}</h2>
       {% comment %}Adet PANELİN GÖSTERDİĞİ değil, bugünkü TOPLAMDIR:
       "düğmedeki sayı, basınca geleni sayar" (URUN-PLANI.md §32.2).{% endcomment %}
-      <span class="tumu"><a href="{{ servis.yol }}">{{ servis.adet }} eczanenin tamamı &rarr;</a></span>
+      {% if servis.gecersiz %}<span class="tumu"><a href="{{ servis.yol }}">Nöbetçi eczane sayfası &rarr;</a></span>
+      {% else %}<span class="tumu"><a href="{{ servis.yol }}">{{ servis.adet }} eczanenin tamamı &rarr;</a></span>{% endif %}
     </div>
     <div class="kutu-ic">
+      {% if servis.gecersiz %}{% include "parca/eczane_gecersiz.html" with p=servis.panel %}
+      {% else %}
       <ul class="eczane-izgara">
         {% for e in servis.eczaneler %}
         <li>
@@ -138,6 +145,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
         {% if servis.gun %}{{ servis.gun|date:"j F Y, l" }}{% endif %}{% if servis.pencere %} &middot; nöbet {{ servis.pencere }}{% endif %}.{% if servis.bayat %} <b>Liste tazelenemedi, saatleri eczaneden doğrulayın.</b>{% endif %}
         {% if servis.kaynak.ad %} Kaynak: {{ servis.kaynak.ad }}.{% endif %}
       </p>
+      {% endif %}
     </div>
   {% endif %}
 
