@@ -4,13 +4,18 @@
 politikasını `<ul><li>…</li></ul>` olarak veriyor ve `<ul>`, `<p>` içine
 konamaz. Tarayıcı paragrafı erkenden kapatıyor, liste `.sag-not` stilinin
 DIŞINDA kalıp iri ve koyu çiziliyordu. Ekran görüntüsüne bakılmasa fark
-edilmezdi — şablon hatası sessizdir.{% endcomment %}
+edilmezdi — şablon hatası sessizdir.
+
+`kullanilmiyor` (Paket H, 19 Ekim 2026): alanın sitede karşılığı yoksa
+editöre söylenir — formda durup okura hiç yansımayan alan, masanın boşa
+emek harcadığı yerdir.{% endcomment %}
 {% if alan %}
 <div class="alan{% if alan.errors %} hatali{% endif %}">
   {{ alan.label_tag }}
   {{ alan }}
   {% if ipucu %}<div class="sag-not">{{ ipucu }}</div>
   {% elif alan.help_text %}<div class="sag-not">{{ alan.help_text }}</div>{% endif %}
+  {% if kullanilmiyor %}<div class="sag-not" data-sitede-kullanilmiyor><b>Sitede kullanılmıyor.</b> {{ kullanilmiyor }}</div>{% endif %}
   {% if alan.errors %}<p class="hata" role="alert">{{ alan.errors|join:" " }}</p>{% endif %}
 </div>
 {% endif %}

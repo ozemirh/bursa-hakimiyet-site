@@ -545,3 +545,17 @@ if _TEST_KOSUSU:
     ARSIV_GORSEL_KOK = ARSIV_KOK / "gorseller"
     TUREV_KOK = _TEST_KOK / "turev"
     PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+# --- Anasayfa dizilimi (Paket H, 19 Ekim 2026) ------------------------------
+#
+# Ayrıntı ve gerekçe: icerik/anasayfa_dizilimi.py.
+#
+#   BH_MANSET_BURSA_ORANI    ilk 15 manşetin en az kaçı Bursa haberi olsun
+#                            ("10/15" biçiminde; varsayılan 10/15). Bayraklı
+#                            haberler sayıya dâhildir; düşüş kuralı eksiği
+#                            Bursa haberiyle tamamlar.
+#   BH_MANSET_BAYRAK_SAAT    bayrağın öncelik süresi (varsayılan 48 saat).
+#                            Süresi geçen bayrak silinmez, yalnız önceliğini
+#                            yitirir ve haber düşüş havuzunda sıralanır.
+MANSET_BURSA_ORANI = os.environ.get("BH_MANSET_BURSA_ORANI", "10/15").strip() or "10/15"
+MANSET_BAYRAK_SAAT = int(os.environ.get("BH_MANSET_BAYRAK_SAAT", "48"))

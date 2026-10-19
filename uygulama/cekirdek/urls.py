@@ -68,6 +68,10 @@ urlpatterns = [
          name="panel-galeri-ara"),
     path("panel/haber/<int:kimlik>", panel_gorunum.haber_duzenle,
          name="panel-haber-duzenle"),
+    # Bugun ekraninin tek tik "Yayina al" fiili (Paket H). Yalniz POST;
+    # tek yayin kapisindan gecer.
+    path("panel/haber/<int:kimlik>/yayinla", panel_gorunum.haber_yayinla,
+         name="panel-haber-yayinla"),
 
     # Icerik bolumunun kalan aileleri. Adres kaliplari liste/duzenle
     # ciftidir; duzenle yolu tekil, liste yolu cogul adla duruyor ki

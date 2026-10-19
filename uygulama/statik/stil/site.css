@@ -1921,6 +1921,18 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .detay .rozet-k{color:var(--kagit)}
 .detay h1{font-family:var(--tema-baslik-aile);font-size:34px;line-height:1.09;font-weight:900;letter-spacing:-.3px;margin:9px 0 12px}
 .detay .spot{font-size:16.5px;line-height:1.5;border-left:4px solid var(--tema-isaret);padding-left:12px;margin-bottom:14px}
+/* Paket H (19 Ekim 2026): panel alanlarının sitedeki karşılığı — ikinci
+   başlık, imza, etiket listesi (bağlantısız: etiket sayfası yok), gömülü
+   kod kartı (dış çerçeve yüklemez). Biçim kararı → web-tasarim-direktoru. */
+.detay .ikinci-baslik{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.3;color:var(--tema-koyu);margin:-4px 0 12px}
+.detay-kunye .imza{font-family:var(--display);font-weight:700;color:var(--tema-koyu);font-size:14px;letter-spacing:.3px}
+.etiket-listesi{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;border-top:1px solid var(--tema-yuzey-cizgi);padding-top:10px;margin-top:16px;font-size:13px}
+.etiket-listesi b{font-family:var(--display);letter-spacing:.5px;color:var(--gri)}
+.etiket-listesi ul{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.etiket-listesi li{border:1px solid var(--cizgi);background:var(--yumusak);padding:3px 8px;color:var(--murekkep);overflow-wrap:anywhere}
+.gomulu-kartlar{list-style:none;margin:14px 0;padding:0;display:grid;gap:8px}
+.gomulu-kart a{display:block;border:1px solid var(--cizgi);border-left:4px solid var(--tema-isaret);background:var(--yumusak);padding:10px 12px;font-family:var(--display);font-weight:700;color:var(--tema-koyu);overflow-wrap:anywhere}
+.gomulu-kart a:hover{background:var(--tema-dolgu);color:var(--kagit)}
 .detay-kunye{display:flex;flex-wrap:wrap;gap:7px 14px;align-items:center;border-top:1px solid var(--tema-yuzey-cizgi);border-bottom:1px solid var(--tema-yuzey-cizgi);padding:9px 0;font-size:12.5px;color:var(--gri);margin-bottom:16px}
 .detay-kunye .yazan{font-family:var(--display);font-weight:700;color:var(--tema-koyu);font-size:14.5px;letter-spacing:.3px}
 /* Dokunma hedefi 18 px ölçülmüştü (WCAG 2.5.8) — satır yüksekliği

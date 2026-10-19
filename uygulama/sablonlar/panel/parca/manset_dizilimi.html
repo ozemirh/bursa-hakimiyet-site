@@ -1,0 +1,60 @@
+{% comment %}"Anasayfada şu an" — manşet ekranının üst bloğu (Paket H, 19 Ekim 2026).
+
+Anasayfayla AYNI işlevden gelir (`icerik/anasayfa_dizilimi.kur`): sitenin
+okura bastığı dizilim ile panelin gösterdiği dizilim ayrı hesaplanmaz.
+Her satırda haberin oraya NEDEN girdiği yazar: masanın bayrağı mı, yoksa
+"önce Bursa" düşüş kuralı mı. Bayrak yaşı denetim kaydındaki son "manşete
+alma" anından; kaydı olmayan bayrakta yayın zamanından.{% endcomment %}
+<section class="kutu-kart" aria-labelledby="dizilim-bas">
+  <div class="bas"><h2 id="dizilim-bas">Anasayfada şu an</h2>
+    <span class="damga">Ana manşette Bursa: {{ dizilim.bursa }}/{{ dizilim.manset_adedi }}</span></div>
+  <div class="kutu-govde">
+    <p class="alt-not">
+      Düşüş kuralı: ilk {{ dizilim.manset_adedi }} manşetin en az
+      <b>{{ dizilim.en_az_bursa }}</b> tanesi Bursa haberi (oran
+      <code>BH_MANSET_BURSA_ORANI</code> = {{ dizilim.oran }}). Bayraklı haberler
+      her zaman önde; bayrağın öncelik süresi {{ dizilim.bayrak_saat }} saat.
+      {% if dizilim.bursa < dizilim.en_az_bursa %}<b>Oran tutmuyor:</b> bayraklı
+      ulusal haberler ya da havuzda yeterli Bursa haberi olmaması.{% endif %}
+    </p>
+    {% for y in dizilim.yuvalar %}
+      <div class="tablo-kaydir">
+        <table class="liste">
+          <caption><b>{{ y.ad }}</b> · {{ y.satirlar|length }} kayıt</caption>
+          <thead><tr><th scope="col">Sıra</th><th scope="col">Başlık</th>
+            <th scope="col">Neden</th><th scope="col">Bayrak yaşı</th><th scope="col">Kategori</th></tr></thead>
+          <tbody>
+            {% for s in y.satirlar %}
+              <tr data-yuva="{{ y.kod }}" data-neden="{% if s.bayrakli %}bayrak{% else %}dusus{% endif %}">
+                <td class="mono">{{ s.sira }}</td>
+                <td><a href="{% url 'panel-haber-duzenle' kimlik=s.haber.pk %}">{{ s.haber.baslik }}</a></td>
+                <td>{% if s.bayrakli %}<b>{{ s.neden }}</b>{% else %}{{ s.neden }}{% endif %}</td>
+                <td class="mono">{{ s.yas|default:"—" }}</td>
+                <td>{{ s.haber.kategori.ad }}{% if s.haber.ilce %} · {{ s.haber.ilce.ad }}{% endif %}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="alt-not">Bu yuvada haber yok.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
+    {% if dizilim.disarida %}
+      <div class="tablo-kaydir">
+        <table class="liste">
+          <caption><b>Bayrağı var, anasayfada değil</b> · {{ dizilim.disarida|length }} kayıt</caption>
+          <thead><tr><th scope="col">Başlık</th><th scope="col">Bayrak</th>
+            <th scope="col">Neden</th><th scope="col">Bayrak yaşı</th></tr></thead>
+          <tbody>
+            {% for x in dizilim.disarida %}
+              <tr data-disarida="1">
+                <td><a href="{% url 'panel-haber-duzenle' kimlik=x.haber.pk %}">{{ x.haber.baslik }}</a></td>
+                <td>{{ x.bayrak }}</td><td>{{ x.neden }}</td><td class="mono">{{ x.yas|default:"—" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</section>
