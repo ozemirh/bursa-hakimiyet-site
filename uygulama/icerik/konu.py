@@ -8,6 +8,8 @@ Sitede **yalnız onaylı** dosya görünür; süzgeç tek yerde, `Konu.yayindaki
 
 from __future__ import annotations
 
+from django.utils import timezone
+
 from .models import Haber, Konu, KonuHaber
 
 # Haber sayfasındaki akış penceresi: okunan haberle birlikte EN ÇOK 5
@@ -17,12 +19,22 @@ EN_COK_SATIR = 5
 
 
 def uyeler(konu: Konu):
-    """Dosyanın yayındaki haberleri, tarih sırasında."""
+    """Dosyanın yayındaki haberleri, tarih sırasında.
+
+    Yayın süzgeci `Haber.yayindakiler()` ile AYNI kural (ileri tarihli
+    haber de dışarıda). Sıralama `konuhaber_sira` indeksinden
+    (`konu, tarih, haber`) çıkar, geçici sıralama ağacı kurulmaz; kategori
+    slug'ı süreç içi eşlemeden gelir, ön çekim sorgusu yok (19 Ekim 2026).
+
+    Koşullar birleşme üzerinden yazılıyor, `haber__in=yayindakiler()` alt
+    sorgusu olarak DEĞİL: o biçim 1 milyonluk tabloyu tarıyordu (ölçüm
+    `okunma.en_cok` belgesinde, 2.593 ms).
+    """
     return [b.haber for b in (
         konu.baglar
-        .filter(haber__durum=Haber.DURUM_AKTIF, haber__yayin_zamani__isnull=False)
+        .filter(haber__durum=Haber.DURUM_AKTIF, haber__yayin_zamani__isnull=False,
+                haber__yayin_zamani__lte=timezone.now())
         .select_related("haber", "haber__kategori", "haber__ilce")
-        .prefetch_related("haber__kategori__turler")
         .order_by("tarih", "haber_id"))]
 
 
