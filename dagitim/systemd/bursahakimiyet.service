@@ -1,0 +1,42 @@
+# /etc/systemd/system/bursahakimiyet.service — uygulama sunucusu (gunicorn)
+# YALNIZ DOSYA, kurulmadı. Ayrıntı: dagitim/KURULUM.md
+#
+#   systemctl enable --now bursahakimiyet
+#   systemctl reload bursahakimiyet     # kod güncellemesi: işçiler sırayla yenilenir
+#   journalctl -u bursahakimiyet -f
+
+[Unit]
+Description=Bursa Hakimiyet (gunicorn)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=notify
+NotifyAccess=main
+User=bh
+Group=www-data
+RuntimeDirectory=bursahakimiyet
+RuntimeDirectoryMode=0750
+WorkingDirectory=/srv/bursahakimiyet/kod/uygulama
+EnvironmentFile=/etc/bursahakimiyet/ortam
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/srv/bursahakimiyet/venv/bin/gunicorn cekirdek.wsgi:application \
+    -c /srv/bursahakimiyet/kod/dagitim/gunicorn.conf.py
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=40
+Restart=on-failure
+RestartSec=3
+
+# Sertleştirme: kod ve sistem salt okunur; yazılabilen yerler açıkça sayılı.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+ReadWritePaths=/srv/bursahakimiyet/turev /srv/bursahakimiyet/medya /srv/bursahakimiyet/gunluk
+
+[Install]
+WantedBy=multi-user.target

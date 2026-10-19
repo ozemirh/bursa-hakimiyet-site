@@ -1,0 +1,31 @@
+# /etc/systemd/system/bh-site-haritasi.service — sitemap dosyalarını üretir.
+# Çıktı BH_SITE_HARITASI_KOK (/srv/bursahakimiyet/sitemap); nginx
+# /static/sitemap/ adresini oradan özetsiz verir. YALNIZ DOSYA.
+#
+# Yerinde yazılan dosyayı nginx yarım verebilirdi; bu yüzden komut önce
+# ayrı klasöre üretir, sonra `rsync --delay-updates` her dosyayı geçici adla
+# yazıp en sonda topluca yeniden adlandırır. Okur ya eski ya yeni dosyayı
+# görür, yarımını görmez.
+
+[Unit]
+Description=Bursa Hakimiyet site haritasi uretimi
+After=postgresql.service
+OnFailure=bh-uyari@%n.service
+
+[Service]
+Type=oneshot
+User=bh
+Group=bh
+EnvironmentFile=/etc/bursahakimiyet/ortam
+WorkingDirectory=/srv/bursahakimiyet/kod/uygulama
+ExecStart=/bin/sh -c 'rm -rf /srv/bursahakimiyet/gunluk/sitemap-yeni && \
+  /srv/bursahakimiyet/venv/bin/python manage.py site_haritasi_uret --cozumleme-yok \
+    --kok /srv/bursahakimiyet/gunluk/sitemap-yeni && \
+  rsync -a --delay-updates /srv/bursahakimiyet/gunluk/sitemap-yeni/ /srv/bursahakimiyet/sitemap/'
+TimeoutStartSec=30min
+Nice=10
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/bursahakimiyet/sitemap /srv/bursahakimiyet/gunluk

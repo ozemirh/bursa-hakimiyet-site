@@ -1,0 +1,15 @@
+# /etc/systemd/system/bh-canli-sik.timer — piyasa + döviz, 15 dakikada bir.
+# Persistent=true: makine kapalıyken kaçan koşu açılışta telafi edilir.
+# YALNIZ DOSYA, kurulmadı; açmak kullanıcı kararıdır (KURULUM.md §6).
+
+[Unit]
+Description=Bursa Hakimiyet canli veri - sik (15 dk)
+
+[Timer]
+OnCalendar=*:00/15
+Persistent=true
+RandomizedDelaySec=60
+Unit=bh-canli@sik.service
+
+[Install]
+WantedBy=timers.target

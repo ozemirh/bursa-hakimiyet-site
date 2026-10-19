@@ -1,0 +1,29 @@
+# /etc/systemd/system/bh-canli@.service — canlı veri tazeleme (şablon birim)
+# Örnek: bh-canli@sik.service · @saatlik · @gunluk · @haber
+# Zamanlayıcılar: bh-canli-*.timer. YALNIZ DOSYA, kurulmadı.
+#
+# Windows Görev Zamanlayıcı tanımlarının üç kusuru burada yok (DEGERLENDIRME
+# §3/10): oturum açık olmasa da çalışır (hizmet kullanıcısı), pile bağlı
+# değildir, kaçan koşu telafi edilir (timer'da Persistent=true).
+
+[Unit]
+Description=Bursa Hakimiyet canli veri (%i)
+After=network-online.target
+Wants=network-online.target
+OnFailure=bh-uyari@%n.service
+
+[Service]
+Type=oneshot
+User=bh
+Group=bh
+EnvironmentFile=/etc/bursahakimiyet/ortam
+WorkingDirectory=/srv/bursahakimiyet/kod
+ExecStart=/srv/bursahakimiyet/kod/dagitim/bin/canli-tazele.sh %i
+# Kaynak asılı kalırsa bir sonraki koşuyu bekletmesin.
+TimeoutStartSec=10min
+Nice=10
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/bursahakimiyet/canli-veri

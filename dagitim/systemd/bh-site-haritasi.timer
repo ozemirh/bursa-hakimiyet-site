@@ -1,0 +1,16 @@
+# /etc/systemd/system/bh-site-haritasi.timer — site haritası, 15 dakikada bir.
+# googleNews.xml son 48 saati taşır; Google News için tazelik önemli.
+# Tam üretim süresi PostgreSQL'de ölçülmeli (SQLite'ta 104.940 adres 11,8 sn);
+# uzun sürerse aylık dosyalar saatlik, googleNews 15 dk diye ikiye bölünür.
+# YALNIZ DOSYA.
+
+[Unit]
+Description=Bursa Hakimiyet site haritasi (15 dk)
+
+[Timer]
+OnCalendar=*:07/15
+Persistent=true
+Unit=bh-site-haritasi.service
+
+[Install]
+WantedBy=timers.target
