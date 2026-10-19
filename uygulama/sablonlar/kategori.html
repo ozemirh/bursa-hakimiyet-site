@@ -82,8 +82,8 @@ yok.{% endcomment %}
           <h2 class="gorsel-gizli">Haberler</h2>
           {% if sayfa.number == 1 %}
           <div class="kutu-izgara liste-izgara">
-            {% for h in sayfa|slice:":3" %}{% if forloop.first %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 genis=1 kategori_gizle=kategori %}
-            {% else %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 kategori_gizle=kategori %}
+            {% for h in sayfa|slice:":3" %}{% if forloop.first %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 genis=1 kategori_gizle=kategori gorsel_yuva="liste" gorsel_oncelikli=1 %}
+            {% else %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 kategori_gizle=kategori gorsel_yuva="liste" gorsel_hemen=1 %}
             {% endif %}{% endfor %}
           </div>
           {% endif %}

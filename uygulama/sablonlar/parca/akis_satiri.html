@@ -12,11 +12,11 @@ haberi yalnız başlıktaki bağlantıdan görür, liste iki katına çıkmaz. �
 silme.
 
 Görsel yoksa kategori temsilî SVG'si çizilir (arşivde 2023-07 öncesi dosyalar
-yok); uzak adrese bağlanılmaz, sayfa internetsiz de açılmalı.{% endcomment %}
+yok); uzak adrese bağlanılmaz, sayfa internetsiz de açılmalı.{% endcomment %}{% load gorsel_etiket %}
 <li>
   <a class="foto {{ h|kart_rengi }}" href="{{ h.get_absolute_url }}" tabindex="-1" aria-hidden="true">
     {% if h.gorsel_yolu %}
-      <img src="{{ h.gorsel_yolu }}" alt="{{ h.gorsel_alt|default:h.baslik }}" loading="lazy">
+      {% gorsel h "satir" %}
     {% else %}
       <svg role="img" aria-label="{{ h.kategori.ad|baslikla }} haberini temsil eden çizim"><use href="#{{ h.kategori|simge_adi }}"/></svg>
     {% endif %}

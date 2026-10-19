@@ -47,7 +47,7 @@ def pg_ekleri(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("icerik", "0014_konu_takibi"),
+        ("icerik", "0015_basarim_indeksleri"),
     ]
 
     operations = [

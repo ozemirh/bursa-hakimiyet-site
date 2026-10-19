@@ -21,7 +21,9 @@ from icerik import ilgili as ilgili_yardimci
 from icerik import konu as konu_yardimci
 from icerik import okunma
 from icerik.models import Haber
+from icerik.sayfa_onbellegi import sayfa_onbellegi
 
+from . import slug_eslemesi
 from .models import Kategori, KategoriTur, Yonlendirme
 
 
@@ -40,6 +42,7 @@ def _kanonik_dilim(tur: str, dilim_slug: str, dilim_id: str):
     return satir.slug, satir.slug == dilim_slug
 
 
+@sayfa_onbellegi
 def haber(request, kategori, slug, kimlik):
     """Haber detayı. **Çözüm kimlikle yapılır**, slug yok sayılır.
 
@@ -54,13 +57,20 @@ def haber(request, kategori, slug, kimlik):
         hedef = f"{kayit.yeni_yol.rstrip('/')}/{slug}-{kimlik}"
         return redirect(hedef, permanent=kayit.kod == 301)
 
-    # Kategori slug'i hic taninmiyorsa adres gecerli degil.
-    if not KategoriTur.objects.filter(tur=Kategori.TUR_HABER, slug=kategori).exists():
+    # Kategori slug'i hic taninmiyorsa adres gecerli degil. Surec ici
+    # eslemeden bakiliyor (taksonomi/slug_eslemesi.py): istek basina bir
+    # KategoriTur sorgusu daha az. Eslemede yoksa veritabanina sorulur —
+    # baska bir surecte az once acilmis kategori eslemeye en gec
+    # `slug_eslemesi.OMUR` sonra girer, o arada adres 404 vermemeli.
+    if not (slug_eslemesi.slug_var_mi(kategori, Kategori.TUR_HABER)
+            or KategoriTur.objects.filter(tur=Kategori.TUR_HABER, slug=kategori).exists()):
         raise Http404("Bilinmeyen kategori slug'ı")
 
+    # `kategori__turler` ön çekimi kalktı: slug süreç içi eşlemeden geliyor
+    # (taksonomi/slug_eslemesi.py), sayfa başına bir sorgu daha az.
     kayit = (Haber.yayindakiler()
              .select_related("kategori", "ilce")
-             .prefetch_related("kategori__turler", "kaynaklar")
+             .prefetch_related("kaynaklar")
              .filter(pk=kimlik).first())
     if kayit is None:
         raise Http404("Haber yok")
@@ -69,15 +79,10 @@ def haber(request, kategori, slug, kimlik):
     if request.path.rstrip("/") != kanonik:
         return redirect(kanonik, permanent=True)
 
-    # Okunma sayacı. Kanonik denetimden SONRA: yönlendirilen istek sayılsaydı
-    # aynı okuma iki kez sayılırdı (301 + hedef). Yazma tamponludur ve
-    # hatası sayfaya yansımaz (icerik/okunma.py).
-    okunma.say(request, kayit.pk)
-
     # Konu akışı önce: ilgili haberler kutusu akışta zaten görünenleri
     # atlar, aynı başlık sayfada iki kez basılmaz (5 Eylül 2026).
     akis = konu_yardimci.akis(kayit)
-    return render(request, "haber_detay.html", {
+    yanit = render(request, "haber_detay.html", {
         "haber": kayit,
         "baslik": kayit.baslik,
         "ilgili": _ilgili(kayit, akis),
@@ -90,6 +95,13 @@ def haber(request, kategori, slug, kimlik):
         # şablon bloğu hiç çizmez (5 Eylül 2026).
         "konu_akisi": akis,
     })
+    # Okunma sayacı. Kanonik denetimden SONRA: yönlendirilen istek sayılsaydı
+    # aynı okuma iki kez sayılırdı (301 + hedef). Sayımı görünüm değil sayfa
+    # önbelleği katmanı yapar (icerik/sayfa_onbellegi.py): önbellekten
+    # servis edilen okuma da böylece sayılır. Yazma tamponludur ve hatası
+    # sayfaya yansımaz (icerik/okunma.py).
+    yanit.okunma_haber = kayit.pk
+    return yanit
 
 
 ILGILI_ADET = 6   # iki sütunlu ızgara; 5'te son satır tek kalıyordu
@@ -117,7 +129,6 @@ def _en_cok(kayit):
     """
     sorgu = (Haber.yayindakiler()
              .select_related("kategori")
-             .prefetch_related("kategori__turler")
              .exclude(pk=kayit.pk))
     # Okunan haberin kendisi rayında durmaz: eleme `haric` ile SIRALAMA
     # tarafında yapılıyor, yoksa beşinci sıra kendisi olduğunda liste
@@ -132,8 +143,7 @@ def _ilcedekiler(kayit):
         return []
     return (Haber.yayindakiler()
             .select_related("kategori")
-            .prefetch_related("kategori__turler")
-            .filter(ilce=kayit.ilce)
+            .filter(ilce_id=kayit.ilce_id)
             .exclude(pk=kayit.pk)[:4])
 
 

@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load site_etiket %}
+{% load site_etiket gorsel_etiket %}
 {% comment %}
 Yazar sayfası — künye + köşe yazıları listesi.
 
@@ -30,7 +30,7 @@ kutusu çiziliyor; sayfa internetsiz de açılmalı ve kırık görsel görünme
           <div class="yazarlar">
             <div class="yazar">
               {% if yazar.gorsel_yolu %}
-                <span class="foto vesika"><img src="{{ yazar.gorsel_yolu }}" alt="{{ yazar.ad }}" width="58" height="58"></span>
+                <span class="foto vesika">{% gorsel yazar "vesika" alt=yazar.ad hemen=True %}</span>
               {% else %}
                 <span class="vesika" aria-hidden="true">{{ yazar.basharfler }}</span>
               {% endif %}

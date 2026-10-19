@@ -47,7 +47,7 @@ class KunyeYapisi(TestCase):
                 yayin_zamani=timezone.now() - timezone.timedelta(minutes=n))
 
     def setUp(self):
-        baglam._kunye_bellek = None
+        baglam.onbellek.sil(baglam.KUNYE_ANAHTARI)
 
     def _kunye(self, yol="/"):
         govde = self.client.get(yol).content.decode()
@@ -151,7 +151,7 @@ class KunyeYapisi(TestCase):
             id=970001, slug="kunye-yeni", baslik="Yeni", spot="s",
             govde="<p>g</p>", kategori=tur.kategori,
             yayin_zamani=timezone.now())
-        baglam._kunye_bellek = None
+        baglam.onbellek.sil(baglam.KUNYE_ANAHTARI)
         self.assertIn("<strong>4</strong> haber arşivde", self._kunye())
 
     def test_sayilamayinca_cumle_hic_basilmiyor(self):
@@ -162,7 +162,8 @@ class KunyeYapisi(TestCase):
         Önbellek doğrudan kuruluyor — `Haber.yayindakiler` yamalanırsa
         sayfanın kendi haber sorgusu da düşer ve sınanan şey kaybolur.
         """
-        baglam._kunye_bellek = (time.monotonic(), None)
+        baglam.onbellek.caches[baglam.onbellek.VERI].set(
+            baglam.KUNYE_ANAHTARI, (time.time(), None))
         kunye = self._kunye()
         self.assertNotIn("haber arşivde", kunye)
         # Sayfanın geri kalanı ayakta: künye kusuru sayfayı düşürmez.
@@ -179,7 +180,7 @@ class KunyeYapisi(TestCase):
         from django.db import DatabaseError
         with patch.object(Haber, "yayindakiler",
                           side_effect=DatabaseError("kilit")) as sahte:
-            baglam._kunye_bellek = None
+            baglam.onbellek.sil(baglam.KUNYE_ANAHTARI)
             self.assertIsNone(baglam._kunye_arsiv())
             self.assertIsNone(baglam._kunye_arsiv())
             self.assertIsNone(baglam._kunye_arsiv())

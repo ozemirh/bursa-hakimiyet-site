@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load site_etiket %}
+{% load site_etiket gorsel_etiket %}
 {% comment %}
 Video detayı.
 
@@ -37,7 +37,7 @@ iştir (oynatıcı seçimi, çerez/izleme, yaş sınırı).
 
         <div class="foto ana-gorsel {{ video|kart_rengi }}">
           {% if video.gorsel_yolu %}
-            <img src="{{ video.gorsel_yolu }}" alt="{{ video.gorsel_alt|default:video.baslik }}" width="1280" height="720" decoding="async">
+            {% gorsel video "detay" oncelikli=True %}
           {% else %}
             <svg role="img" aria-label="{{ video.baslik }} videosunu temsil eden çizim"><use href="#{{ video.kategori|simge_adi }}"/></svg>
           {% endif %}

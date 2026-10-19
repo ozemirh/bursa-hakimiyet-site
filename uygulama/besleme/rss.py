@@ -109,14 +109,16 @@ class TemelBesleme(Feed):
         beslemeden çıkarabiliyor. Sayfada görünüp beslemede görünmemesi
         gereken haber var, tersi yok.
 
-        `kategori__turler` ön çekimi adres kurmak için gerekli
-        (`get_absolute_url` slug'ı oradan okuyor).
+        Adresin kategori slug'ı süreç içi eşlemeden gelir
+        (`taksonomi/slug_eslemesi.py`); `kategori` birleştirmesi yalnız
+        `<category>` etiketindeki ad için. Sıralama Meta'nınkiyle aynı
+        (`-yayin_zamani, -id`): `haber_okur_kismi` indeksini sıralamanın
+        kendisi için kullanabilsin, beraberlikte sıra da belirli olsun.
         """
         return (Haber.yayindakiler()
                 .filter(rss=True)
                 .select_related("kategori")
-                .prefetch_related("kategori__turler")
-                .order_by("-yayin_zamani"))
+                .order_by("-yayin_zamani", "-id"))
 
     def item_title(self, haber):
         return haber.baslik

@@ -255,3 +255,135 @@ except json.JSONDecodeError:
 LOGIN_URL = "/panel/giris"
 LOGIN_REDIRECT_URL = "/panel/"
 LOGOUT_REDIRECT_URL = "/panel/giris"
+
+
+# --- başarım (önbellek, bağlantı, günlük) — 19 Ekim 2026 ---------------
+#
+# Bu blok BAŞARIM paketinindir; güvenlik/statik ayarları yukarıdadır.
+#
+# PAYLAŞILAN ÖNBELLEK. Eskiden menü, künye ve arşiv sayıları modül
+# düzeyindeki global değişkende tutuluyordu: süreçler paylaşmıyor, her
+# yeniden başlatmada sıfırlanıyor, kilitsiz olduğu için süre dolunca
+# eşzamanlı istekler aynı pahalı sorguyu birlikte açıyordu (ölçüm: soğuk
+# süreçte menü sayımı 3,4–45 sn). Yardımcılar `icerik/onbellek.py`de.
+#
+#   BH_REDIS         redis://sunucu:6379/0 — verilirse Django'nun yerleşik
+#                    RedisCache arka ucu kullanılır (`redis` paketi ister;
+#                    bugün kurulu DEĞİL, yol hazır).
+#   BH_ONBELLEK_KOK  Redis yoksa dosya önbelleğinin kökü. Varsayılan depo
+#                    DIŞI: Windows'ta %LOCALAPPDATA%, Linux'ta
+#                    ~/.cache altında `bursa-hakimiyet/onbellek`.
+#
+# İki takma ad var: `default` hesaplanmış VERİ (menü, sayımlar, site
+# haritası özetleri), `sayfa` basılmış ÇIKTI (30 sn'lik sayfa HTML'i,
+# site haritası dosyaları). Ayrı tutuluyorlar: çıktı çok ve büyük kayıt
+# taşır, budandığında pahalı veriyi sürüklememeli.
+import sys as _sys  # noqa: E402
+
+
+def _onbellek_koku() -> Path:
+    ozel = os.environ.get("BH_ONBELLEK_KOK", "").strip()
+    if ozel:
+        return Path(ozel)
+    yerel = os.environ.get("LOCALAPPDATA") or os.environ.get("XDG_CACHE_HOME")
+    if yerel:
+        return Path(yerel) / "bursa-hakimiyet" / "onbellek"
+    return Path.home() / ".cache" / "bursa-hakimiyet" / "onbellek"
+
+
+ONBELLEK_KOK = _onbellek_koku()
+_REDIS = os.environ.get("BH_REDIS", "").strip()
+# Test koşusu paylaşılan önbelleğe ASLA yazmaz: gerçek sunucunun dosyalarını
+# kirletir, testler de birbirinin değerini görür. Testte veri önbelleği
+# süreç içi (her testten önce temizlenir, bkz. cekirdek/test_kosucu.py),
+# sayfa önbelleği kapalı; sayfa önbelleğini sınayan testler kendi
+# ayarlarını açar.
+_TEST_KOSUSU = len(_sys.argv) > 1 and _sys.argv[1] == "test"
+
+if _TEST_KOSUSU:
+    CACHES = {
+        "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                    "LOCATION": "bh-test-veri"},
+        "sayfa": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    }
+elif _REDIS:
+    CACHES = {
+        "default": {"BACKEND": "django.core.cache.backends.redis.RedisCache",
+                    "LOCATION": _REDIS, "KEY_PREFIX": "bh", "TIMEOUT": 300},
+        "sayfa": {"BACKEND": "django.core.cache.backends.redis.RedisCache",
+                  "LOCATION": _REDIS, "KEY_PREFIX": "bh-sayfa", "TIMEOUT": 30},
+    }
+else:
+    # Dosya önbelleği her yazımda dizini listeler (budama denetimi);
+    # MAX_ENTRIES o listelemeyi birkaç milisaniyede tutacak kadar.
+    CACHES = {
+        "default": {"BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+                    "LOCATION": str(ONBELLEK_KOK / "veri"), "TIMEOUT": 300,
+                    "OPTIONS": {"MAX_ENTRIES": 5000}},
+        "sayfa": {"BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+                  "LOCATION": str(ONBELLEK_KOK / "sayfa"), "TIMEOUT": 30,
+                  "OPTIONS": {"MAX_ENTRIES": 3000}},
+    }
+
+TEST_RUNNER = "cekirdek.test_kosucu.Kosucu"
+
+# Anonim okur için sayfa mikro önbelleği (anasayfa, kategori, ilçe, haber
+# detay). 30 sn: §21'in "beş dakika eski manşet kabul edilemez" kuralının
+# çok altında, ve haber kaydedilince bütün sayfalar ANINDA geçersizleşir
+# (`icerik/sinyaller.py`). 0 verilirse kapanır.
+SAYFA_ONBELLEK_SANIYE = int(os.environ.get("BH_SAYFA_ONBELLEK", "30"))
+
+# Okunma sayacının ziyaretçi adresi. `X-Forwarded-For` YALNIZ bu listedeki
+# vekilden gelen istekte okunur; liste boşsa hiç okunmaz ve REMOTE_ADDR
+# kullanılır. Koşulsuz güvenilseydi herkes başlığı yazıp sayacı şişirirdi.
+# Üretimde nginx aynı makinedeyse: BH_GUVENILIR_VEKIL=127.0.0.1,::1
+# Adres ya da ağ (CIDR) yazılabilir, virgülle ayrılır.
+GUVENILIR_VEKILLER = [a.strip() for a in os.environ.get(
+    "BH_GUVENILIR_VEKIL", "").split(",") if a.strip()]
+
+# Okunma tamponunun nereye boşaltılacağı (icerik/okunma.py):
+#   "istek" (varsayılan) — istek yolu 30 sn'de bir TEK işlemle yazar.
+#   "komut"              — istek yolu yalnız kuyruk dosyasına yazar;
+#                          veritabanına `manage.py okunma_bosalt` taşır.
+#                          Zamanlanmış görev kullanıcı kararıdır, açılmadı.
+OKUNMA_YAZIM = os.environ.get("BH_OKUNMA_YAZIM", "istek").strip() or "istek"
+OKUNMA_KUYRUK_KOK = Path(os.environ.get(
+    "BH_OKUNMA_KUYRUK", ONBELLEK_KOK / "okunma-kuyrugu"))
+if _TEST_KOSUSU:
+    # Test süreci kapanırken tamponu gerçek kuyruğa bırakmasın.
+    import tempfile as _tempfile  # noqa: E402
+    OKUNMA_KUYRUK_KOK = Path(_tempfile.gettempdir()) / f"bh-test-okunma-{os.getpid()}"
+
+# Kalıcı bağlantı: her istekte yeni bağlantı açmak PostgreSQL'de ölçülür
+# bir bedel. Sağlık denetimi kopmuş bağlantıyı istek başında yeniler.
+DATABASES["default"].setdefault(
+    "CONN_MAX_AGE", int(os.environ.get("BH_BAGLANTI_OMRU", "60")))
+DATABASES["default"].setdefault("CONN_HEALTH_CHECKS", True)
+
+# Yavaş sorgu günlüğü — DEBUG'dan BAĞIMSIZ. Django'nun `django.db.backends`
+# günlüğü yalnız DEBUG=1'de yazar; burada her bağlantıya bir sarmalayıcı
+# takılır (icerik/yavas_sorgu.py) ve eşiği aşan sorgu `bh.yavas_sorgu`ya
+# düşer. Dosya verilmezse konsola.
+YAVAS_SORGU_MS = int(os.environ.get("BH_YAVAS_SORGU_MS", "200"))
+_YAVAS_DOSYA = os.environ.get("BH_YAVAS_SORGU_DOSYASI", "").strip()
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"kisa": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"}},
+    "handlers": {
+        "bh_konsol": {"class": "logging.StreamHandler", "formatter": "kisa"},
+        **({"bh_dosya": {"class": "logging.handlers.RotatingFileHandler",
+                         "filename": _YAVAS_DOSYA, "maxBytes": 10 * 2**20,
+                         "backupCount": 5, "encoding": "utf-8",
+                         "formatter": "kisa"}} if _YAVAS_DOSYA else {}),
+    },
+    "loggers": {
+        "bh.yavas_sorgu": {"handlers": ["bh_dosya" if _YAVAS_DOSYA else "bh_konsol"],
+                           "level": "CRITICAL" if _TEST_KOSUSU else "WARNING",
+                           "propagate": False},
+        "bh.onbellek": {"handlers": ["bh_konsol"],
+                        "level": "CRITICAL" if _TEST_KOSUSU else "WARNING",
+                        "propagate": False},
+    },
+}

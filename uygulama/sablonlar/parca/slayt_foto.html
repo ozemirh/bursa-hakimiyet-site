@@ -23,7 +23,12 @@ Slaytta yazı bloğu (`.slayt .yazi`, z-index 2) fotoğrafın ÜSTÜNDE duruyor
 ve kendi bağlantılarını taşıyor (başlık, "SESLİ DİNLE"). Buradaki bağlantı
 onun kardeşi ve altında kalıyor, yani yazının bağlantılarını KAPATMIYOR.
 Bu yüzden `.foto`ya z-index verme.
-{% endcomment %}<a class="foto karart{% if not h.gorsel_yolu %} {{ h|kart_rengi }}{% endif %}" href="{{ h.get_absolute_url }}" tabindex="-1" aria-hidden="true">
-  {% if h.gorsel_yolu %}<img src="{{ h.gorsel_yolu }}" alt="{{ h.gorsel_alt|default:h.baslik }}" width="1280" height="720" loading="lazy" decoding="async">
+
+Görsel `{% gorsel %}` etiketiyle (19 Ekim 2026): `gorsel_yuva` "manset" ya
+da "mini"; manşetin İLK slaytı `gorsel_oncelikli` ile gelir — sayfanın LCP
+görseli odur ve eskiden `loading="lazy"` taşıyordu. Kalan slaytlar
+`gorsel_ertele` ile `data-srcset` taşır; site.js etkin ve sıradaki slaytı yükler.
+{% endcomment %}{% load gorsel_etiket %}<a class="foto karart{% if not h.gorsel_yolu %} {{ h|kart_rengi }}{% endif %}" href="{{ h.get_absolute_url }}" tabindex="-1" aria-hidden="true">
+  {% if h.gorsel_yolu %}{% gorsel h gorsel_yuva|default:"manset" oncelikli=gorsel_oncelikli hemen=gorsel_hemen ertele=gorsel_ertele %}
   {% else %}<svg role="img" aria-label="{{ h.kategori.ad|baslikla }} haberini temsil eden çizim"><use href="#{{ h.kategori|simge_adi }}"/></svg>{% endif %}
 </a>

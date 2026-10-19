@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load static site_etiket %}
+{% load static site_etiket gorsel_etiket %}
 {% comment %}
 Köşe yazısı detayı. İskelet `haber_detay.html` ile bilerek aynı: seslendirme
 betiği `.detay h1`, `.detay .spot` ve `.metin > p` seçicilerine bağlı, bu
@@ -51,7 +51,7 @@ bağlantı durur.
                kutu çizmektense yok saymak doğru.{% endcomment %}
             {% if yazi.gorsel_yolu or yazar.gorsel_yolu %}
               <div class="foto ana-gorsel">
-                <img src="{{ yazi.gorsel_yolu|default:yazar.gorsel_yolu }}" alt="{{ yazar.ad }}" width="1280" height="720" decoding="async">
+                {% if yazi.gorsel_yolu %}{% gorsel yazi "detay" alt=yazar.ad oncelikli=True %}{% else %}{% gorsel yazar "detay" alt=yazar.ad oncelikli=True %}{% endif %}
               </div>
               <p class="foto-alt">{{ yazar.ad }}</p>
             {% endif %}

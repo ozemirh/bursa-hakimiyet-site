@@ -4,7 +4,7 @@ Normalizasyon `arama_metni.py`dedir ve motor tanımaz; bu modül o çekirdeğin
 çıktısını iki motordan birine çevirir:
 
 - **PostgreSQL** (asıl yol): `icerik_haberarama.vektor @@ 'kelime':* & …`
-  — üretilmiş `tsvector` sütunu + GIN indeksi (`0015_arama_metni`).
+  — üretilmiş `tsvector` sütunu + GIN indeksi (`0016_arama_metni`).
   Panel: `baslik LIKE '%kelime%'` + `pg_trgm` GIN indeksi.
 - **SQLite** (yedek yol): aynı normalize sütunda `LIKE '% kelime%'`.
   İndeks yok, tam tarama; doğru ama yavaş. Bu yüzden **zaman sınırı**

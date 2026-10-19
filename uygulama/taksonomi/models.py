@@ -45,11 +45,19 @@ class Kategori(models.Model):
         `.filter()` yerine `.all()` üzerinden dönülüyor: sayfada onlarca
         haber varken her biri adresini buradan kuruyor ve `.filter()`
         prefetch önbelleğini atlayıp her çağrıda veritabanına gidiyordu.
+
+        Ön çekim YOKSA süreç içi eşlemeye bakılır (`slug_eslemesi`, 19 Ekim
+        2026): ön çekimi unutan sorgu artık kayıt başına sorgu açmıyor.
         """
-        for satir in self.turler.all():
-            if satir.tur == tur:
-                return satir.slug
-        return ""
+        if "turler" in getattr(self, "_prefetched_objects_cache", {}):
+            for satir in self.turler.all():
+                if satir.tur == tur:
+                    return satir.slug
+            return ""
+        if self.pk is None:
+            return ""
+        from . import slug_eslemesi
+        return slug_eslemesi.slug(self.pk, tur)
 
 
 class KategoriTur(models.Model):

@@ -379,11 +379,11 @@ class MenuSiralamasiOnbellekli(TestCase):
 
     def setUp(self):
         from icerik import baglam
-        baglam._menu_bellek = None
+        baglam.onbellek.sil(baglam.MENU_ANAHTARI)
 
     def tearDown(self):
         from icerik import baglam
-        baglam._menu_bellek = None
+        baglam.onbellek.sil(baglam.MENU_ANAHTARI)
 
     def test_ikinci_cagri_veritabanina_gitmiyor(self):
         from django.db import connection
@@ -452,7 +452,7 @@ class SayfaSorguProfili(TestCase):
 
     def setUp(self):
         from icerik import baglam
-        baglam._menu_bellek = None
+        baglam.onbellek.sil(baglam.MENU_ANAHTARI)
         self.client.get("/ilceler")      # menü önbelleğini ısıt
 
     def _sorgu_sayisi(self, yol):

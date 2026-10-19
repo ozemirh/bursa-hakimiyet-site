@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load site_etiket %}
+{% load site_etiket gorsel_etiket %}
 {% comment %}
 Yazar dizini. Veri gelmeden de doğru çalışır: boş liste "henüz göç etmedi"
 diye karşılanır, böylece bu sayfa bekleme sayfasının yerini erkenden alabilir.
@@ -24,7 +24,7 @@ diye karşılanır, böylece bu sayfa bekleme sayfasının yerini erkenden alabi
             {% for y in yazarlar %}
             <div class="yazar">
               {% if y.gorsel_yolu %}
-                <span class="foto vesika"><img src="{{ y.gorsel_yolu }}" alt="{{ y.ad }}" width="58" height="58" loading="lazy"></span>
+                <span class="foto vesika">{% gorsel y "vesika" alt=y.ad %}</span>
               {% else %}
                 <span class="vesika" aria-hidden="true">{{ y.basharfler }}</span>
               {% endif %}
