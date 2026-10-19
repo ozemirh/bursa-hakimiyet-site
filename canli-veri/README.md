@@ -16,7 +16,7 @@ JSON dosyasına. Paket kurulumu yok.
 | `hava_durumu.py` | Bursa hava durumu — şu an + 5 gün + saatlik |
 | `namaz_vakitleri.py` | Namaz vakitleri (Diyanet ölçütleriyle hesap) |
 | `nobetci_eczane.py` | Bursa nöbetçi eczaneleri |
-| `puan_durumu.py` | Dört lig puan durumu + takip edilen takımın haftalık maçı |
+| `puan_durumu.py` | Dört lig puan durumu + takip edilen takımın haftalık maçı + **sezon fikstürü** (12 Eylül 2026) |
 | `vizyon_takvimi.py` | Türkiye vizyon takvimi |
 | `veri/` | Çıktı (`.gitignore`de) |
 
@@ -47,8 +47,7 @@ kapsadığı bileşenler:
 | **Hava durumu** | MGM açık uçları — `servis.mgm.gov.tr` | Saatte bir (son durum saatlik güncelleniyor). Eşik **3 saat** | Aynı davranış. Kalıcı düşmede `--kaynak elle` → `hava-elle.json` |
 | **Namaz vakitleri** | **Kaynak yok, hesap var.** Diyanet ölçütleriyle astronomik hesap; ağ gerektirmez | Günde bir yeter (gece yarısından sonra). Eşik **48 saat** — bu eşik kaynak düşmesini değil, zamanlayıcının durduğunu yakalar | Hesap düşmez. Yine de `--kaynak elle` → `namaz-elle.json` yolu var |
 | **Nöbetçi eczane** | Bursa Eczacı Odası — `beo.org.tr/nobetci-eczaneler` | Nöbet günde bir devrediliyor (ölçüldü: 18:30 → ertesi gün 08:30). Günde iki kez yeter. Eşik **24 saat** | Aynı davranış. Kalıcı düşmede `--kaynak elle` → `eczane-elle.json` |
-| **Puan durumu** | TFF — `www.tff.org` | Maç günü saatte bir, diğer gün günde bir. Eşik **48 saat** | Önceki dosya korunur, `durum-puan-durumu.json` → `eski`, kod **2**; hiç veri yoksa `yok` + kod **1** |
-| **Vizyon takvimi** | **Dağıtımcı duyuruları** (varsayılan) — Başka Sinema `/basin/` + Bir Film `/sinemalarda` · Wikidata · elle · TMDB ve Box Office TR (ikisi de kilitli) | Haftada bir (perşembe akşamı yeter). Eşik **7 gün** | Bir dağıtımcı düşerse öteki yayına devam eder; ikisi de düşerse önceki dosya korunur, `durum-vizyon-takvimi.json` → `eski`, kod **2**. Kalıcı düşmede `--kaynak elle` |
+| **Puan durumu** | TFF — `www.tff.org` | Maç günü saatte bir, diğer gün günde bir. Eşik **48 saat** | Önceki dosya korunur, `durum-puan-durumu.json` → `eski`, kod **2**; hiç veri yoksa `yok` + kod **1** || **Vizyon takvimi** | **Dağıtımcı duyuruları** (varsayılan) — Başka Sinema `/basin/` + Bir Film `/sinemalarda` · Wikidata · elle · TMDB ve Box Office TR (ikisi de kilitli) | Haftada bir (perşembe akşamı yeter). Eşik **7 gün** | Bir dağıtımcı düşerse öteki yayına devam eder; ikisi de düşerse önceki dosya korunur, `durum-vizyon-takvimi.json` → `eski`, kod **2**. Kalıcı düşmede `--kaynak elle` |
 
 Çıkış kodları: **0** taze veri · **2** çekilemedi ama önceki dosya duruyor ·
 **1** çekilemedi ve elde veri de yok. Zamanlayıcı 2'yi uyarı, 1'i hata sayar.
@@ -578,6 +577,28 @@ tablosunda aranır. Küme düştüğünde/çıktığında betik değişmez.
 26 Ağustos 2026 ölçümü: **Trendyol 1. Lig, 5. sıra, 6 puan**; 4. hafta maçı
 29.08.2026 19:00, Metro Holding Kayserispor – Bursaspor (deplasman).
 
+### Sezon fikstürü — 12 Eylül 2026
+
+Bursaspor bölüm sayfası için takip edilen takımın **bütün sezonu** çekilir
+ve `takip.fikstur` altına yazılır: oynanan maçların skoru, oynanmamışların
+tarihi ve saati (TFF henüz programlamadıysa saat boş). Aynı TFF sayfası
+`&hafta=N` parametresiyle o haftanın maçlarını veriyor (ölçüldü:
+`pageID=142&hafta=7`, 38 hafta bağlantısı); gruplu ligde `&grupID` de
+eklenir.
+
+**Oynanmış hafta yeniden istenmez.** Skor bir daha değişmez; önceki
+dosyadan taşınır. İlk koşu 38 istek (ölçüldü: 67 sn), sonraki koşular yalnız
+oynanmamış haftaları okur — TFF erteleme ve saat değişikliğini oraya işliyor.
+Bir haftanın sayfası düşerse o hafta önceki dosyadan taşınır ve devam edilir;
+tek bir haftanın düşmesi fikstürü düşürmez. Fikstür hiç alınamazsa `takip`
+bloğu yine yazılır, sayfa fikstür tablosunu çizmez.
+
+Sayfadaki türetim (`icerik/bursaspor.py`): tam tablo, sıradaki maç
+işaretli, sonuç harfi (G/B/M) Bursaspor açısından. Skor kaynaktaki yönüyle
+(ev–deplasman) kalır. Aynı gün denenen kadro betiği (`kadro.py`, kulüp
+sitesi) kullanıcı kararıyla kaldırıldı; sayfada yalnız haftanın maçı, puan
+penceresi ve fikstür var.
+
 ### Kendi kendini denetler
 
 Her koşuda iki eşitlik ölçülür ve `denetim` bloğuna yazılır:
@@ -757,7 +778,7 @@ bozmaz (atomik yazım) ama kaynağa gereksiz yük biner.
 | `namaz_vakitleri.py` | günde bir, gece yarısından sonra (`--gun 30`) |
 | `nobetci_eczane.py` | günde iki kez — 08:00 ve 18:00 (nöbet 18:30'da devrediliyor) |
 | `tazele.ps1 -Grup haber` | günde bir — 08:20. Listeyi tazeler, sonra `manage.py eczane_haberi` ile o günün nöbetçi eczane haberini yayımlar (URUN-PLANI.md §41). Sıra bağlayıcı: tersi dünün listesini yayımlar. Görev Zamanlayıcı kaydı: `BH eczane haberi` |
-| `puan_durumu.py` | maç günü saatte bir, diğer gün günde bir |
+| `puan_durumu.py` | maç günü saatte bir, diğer gün günde bir. Sezon fikstürü aynı koşuda; oynanmış haftalar yeniden istenmez |
 | `vizyon_takvimi.py` | haftada bir, perşembe akşamı |
 
 ## F6'nın durumu

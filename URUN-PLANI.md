@@ -6409,3 +6409,120 @@ doğrulandı: sahte kimlikle `<ins>` doğru ölçü ve niteliklerle kuruluyor
 `data-ad-status="unfilled"` dönünce gri pano geri geliyor. Ortak parçaya
 geçen yerel test hizmeti 1500 px'te 1100×150 + iki pageskin, 800 px'te
 728×90 + 300×250 dolduruyor — refactor öncesiyle aynı.
+
+## §67 — Bursaspor sayfası kulüp sayfası oldu (12 Eylül 2026)
+
+Kullanıcı: *"bursaspor sayfası için daha özel bir şey istiyorum, bu konuyla
+ilgili araştırma yap ve neler ekleyebileceğimizi öğren"*, ardından "tamam yap".
+
+**Araştırma.** Kulübün resmi sitesi tam sezon fikstürünü (skor + stat),
+24 kişilik kadroyu ve teknik heyeti veriyor; ulusal takım sayfaları (Fanatik,
+Goal, Sporx) dört ortak modül kullanıyor: sıradaki maç, son sonuçlar, form
+şeridi, puan durumu. Mevcut bursahakimiyet.com.tr'nin Fikstür ve Puan Durumu
+sayfaları **boş tablo** basıyor. Bizim sayfa genel kategori şablonuydu;
+Bursaspor'a özel tek şey servis panelindeki beş satırlık pencereydi.
+
+**Eklenen** (`icerik/bursaspor.py`, `parca/bursaspor_bolumu.html`,
+`site.css` son bölüm):
+
+| Blok | Veri | Nerede |
+|---|---|---|
+| Form şeridi (son 5 maç) + son 3 sonuç + iç saha/deplasman + "Hangi kanalda?" bağı | `takip.fikstur` (TFF, hafta hafta) · kanal bağı gazetenin kendi haberi | Servis paneli, maç kartının altı; `/spor`da da var |
+| Konu kısayolları (transfer · taraftar · hakem · Özlüce · bilet · basketbol) | Arama sayfasına bağlantı | Haber kutusunun altı |
+| GAZETENİN BURSASPOR'U: PRES + YORUMLAYALIM dizileri, Bursaspor köşe yazıları | Arşiv, başlık kalıbı (ölçüldü: 32 · 41 bölüm; 157 yazı) | Aynı |
+| FİKSTÜR VE SONUÇLAR — 38 hafta tek tablo, sıradaki maç işaretli | `takip.fikstur` | Kadro ile yan yana |
+| KADRO — mevkiye göre 24 futbolcu + 20 kişilik heyet, her ad arşiv aramasına bağlı | `kadro.json` (kulüp sitesi) | |
+| BURSASPOR BASKETBOL — kategoriye düşen basketbol haberleri | Arşiv (141 kayıt) | Künye ile yan yana |
+| KULÜP KÜNYESİ — başkan, TD, stadyum, kapasite, tesis, telefon | TFF kulüp sayfası + kadro | |
+
+**Betikler.** `puan_durumu.py` aynı TFF sayfasını `&hafta=N` ile 38 kez okur,
+oynanmış haftaları önceki dosyadan taşır (ilk koşu 67 sn, sonrakiler
+oynanmamış hafta kadar). Yeni `kadro.py` kulüp sitesinden ad + mevki, TFF'den
+künye çeker; `tazele.ps1 -Grup gunluk` içine girdi. Eşik 10 gün.
+
+**Uydurulmayanlar.** Forma numarası, yaş, uyruk (kulüp sitesinde yok);
+saati açıklanmamış maçların saati; yayın kanalı (yapısal kaynak yok, yalnız
+gazetenin haberi bağlanır); tarihçe/kupalar (elle yazılmış ansiklopedi
+maddesi konmadı, künye yalnız TFF verisi).
+
+**Renk yok.** §63 kararı sürüyor: kulüp yeşili yalnız anasayfa kutusunda.
+Sonuç kutusu galibiyette dolu lacivert, beraberlikte çerçeve, mağlubiyette
+dolu kırmızı — harf üçünde de duruyor.
+
+**Ölçüldü.** 888/888 test. Yatay taşma 390 · 430 · 600 · 820 · 1000 ·
+1200 · 1440 px'te **0** (iframe yöntemi; `--window-size` 500 altına
+inmediği için). Sorgular 1–5 ms.
+
+**Açık kalan.** Kategori arşivi 25 Ağustos'ta duruyor (canlı site 12 Eylül
+basıyor); sayfa taze akış olmadan bayat kalır. Kulüp sitesinden kadro
+alımı için kulübe tek satırlık izin yazısı; TFF fikstürü mevcut hukuk teyidi
+kalemine girer.
+
+## §68 — Bursaspor sayfası: yedi bloktan üçü kaldı, sayfa yeşil-beyaz (12 Eylül 2026)
+
+§67'nin aynı gün ikinci turu. Kullanıcı: *"bu yeni hali beğenmedim, haftanın
+maçı, puan tablosu ve fikstür kalsın geri kalanı kaldır, ama bursaspor
+sayfasını da yeşil beyaz renklerine büründür"*.
+
+**Kaldırılan:** form şeridi ve son sonuçlar (maç kartı eski hâline döndü),
+konu kısayolları, GAZETENİN BURSASPOR'U (PRES · YORUMLAYALIM · köşe), KADRO,
+BURSASPOR BASKETBOL, KULÜP KÜNYESİ, "hangi kanalda" bağı. `kadro.py` betiği
+ve verisi silindi, `tazele.ps1` eski hâline döndü. **Yeniden önerilmez.**
+
+**Kalan:** servis panelinde haftanın maçı + puan penceresi (dokunulmadı),
+haber kutusunun altında sezonun tam fikstürü (`parca/bursaspor_bolumu.html`,
+`icerik/bursaspor.py` yalnız `fikstur_hazirla`).
+
+**Yeşil-beyaz kabuk.** §63'ün "bölüm rengi yok" kuralının tek istisnası,
+kullanıcı kararıyla: `kategori.html` gövdeye `data-bolum="bursaspor"`
+basıyor (`taban.html`e `govde_nitelik` bloğu açıldı), kurallar `site.css`
+sonunda `body[data-bolum="bursaspor"]` altında. Üst kabuk (servis şeridi,
+kategori bandı, menü) değişmedi; değişen içerik sütunu: kutu başlıkları
+yeşil, h1 kutusu koyu yeşil, fitil beyaz, maç kartı açık yeşil, sıradaki
+maç ve galibiyet kutusu yeşil, mağlubiyet kırmızı kaldı. Anasayfa
+`#bursaspor` kutusuyla aynı dört değişken. Fikstür yoksa `bursaspor`
+bağlamı None gelir ve kabuk da yeşile dönmez — yarım yeşil sayfa yok.
+`tests_bolum_bloklari.test_bolume_ozel_renk_yok` bu istisnayı tanıyacak
+şekilde güncellendi: `data-bolum` CSS'te yalnız `bursaspor` değeriyle geçer.
+
+**Ölçüldü.** 879 test; yatay taşma 390–1440 px yedi genişlikte 0.
+
+**Sunucu notu.** Kullanıcı 8731'i kapatıp açtığında değişiklik görünmedi:
+15:44'te açılan eski süreç yaşamaya devam ediyordu ve Windows istekleri ona
+veriyordu (`netstat -ano | findstr :8731` iki satır). Eski süreç kapatılınca
+düzeldi; sunucu açmadan önce port kontrolü yapılmalı.
+
+## §69 — ekip kuruldu, tasarım dili genişledi, kapsamlı değerlendirme (19 Ekim 2026)
+
+**Ekip.** Kullanıcı projeyi yönetmek ve geliştirmek için on rol ajanı istedi.
+Roller, sahiplik tablosu, eşik konular ve değişmez kararlar kök dizindeki
+`EKIP.md`de. Koordinatör `haber-sistemi-uzmani` olarak kalıyor.
+
+**Ürünün amacı (kullanıcının sözü).** Bursa özelinde ve kısmen ulusala hitap eden,
+klasik haber sitesi temasında ama yapay zekânın ve modern teknolojinin
+imkânlarından faydalanan bir haber sitesi.
+
+**Tasarım dili — §63 güncellendi.** Site kırmızı · lacivert · beyaz; Bursaspor
+yeşil-beyaz; **seçili diğer sayfalar sayfaya özel tasarım** alacak. Bursaspor
+artık tek istisna değil, ilk örnek. Hangi sayfaların seçileceğine kullanıcı karar
+verir. Mekanizma önerisi ve aday sayfalar `DEGERLENDIRME-2026-10.md` §6'da.
+`tests_bolum_bloklari.test_bolume_ozel_renk_yok` ilk yeni tema geldiğinde
+kayıt tabanlı teste dönüştürülecek.
+
+**Değerlendirme.** On ajan salt okunur çalıştı; rapor `DEGERLENDIRME-2026-10.md`.
+Kesimi (F8) engelleyen ana kalemler:
+- yedek yok;
+- panelin kimlik üretimi canlı siteyle çakışıyor;
+- taze haber akışı yok (~11 bin haber geride);
+- yayın kapısı muhabirde ve toplu fiilde aşılabiliyor;
+- manşet ve son dakika bayrakları siteye bağlı değil;
+- ayarlar fail-open, SSRF açığı var, denetim günlüğü yazılmıyor;
+- 5187/7418 künye, sürüm ve cevap hakkı altyapısı eksik;
+- SEO meta ve JSON-LD eksik, `/amp/*` 404 dönüyor;
+- PostgreSQL göçü başlamadı.
+
+Yol haritası raporun §5'inde altı aşama olarak yazılı.
+
+**Ölçüm düzeltmeleri.** Arama artık 1 milyon kayıtta ölçüldü: sonuçsuz sorgu
+2,8–31 sn, yani §21'deki p95 1.748 ms geçersiz. PostgreSQL bugün çalışmıyor
+(hizmet yok, 5432 dinlenmiyor). Eczane görevinin son sonucu `0x800710E0`.

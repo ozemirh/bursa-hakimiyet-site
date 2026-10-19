@@ -354,6 +354,73 @@ def _macini_bul(maclar: list[dict], kulup_id: int) -> dict | None:
     return None
 
 
+# -- sezon fiksturu -------------------------------------------------------
+#
+# 12 Eylul 2026: Bursaspor bolum sayfasi icin takip edilen takimin BUTUN
+# sezonu cekilir - oynanan maclarin skoru, oynanmamislarin tarihi. Ayni
+# TFF sayfasi `&hafta=N` parametresiyle o haftanin maclarini veriyor
+# (olculdu: pageID=142&hafta=7, 38 hafta baglantisi). Baska kaynak yok,
+# lisans sorusu degismiyor.
+#
+# Oynanmis haftalar YENIDEN ISTENMEZ: skor bir daha degismez, onceki
+# dosyadan tasinir. Boylece sezon ilerledikce istek sayisi azalir; ilk
+# kosuda 38, son haftalarda bir-iki istek. Oynanmamis hafta her kosuda
+# yeniden okunur - TFF erteleme ve saat degisikligini oraya isliyor.
+
+_HAFTA_BAG = re.compile(r"hafta=(\d+)", re.I)
+
+
+def hafta_sayisi(html: str) -> int:
+    """Sayfadaki hafta baglantilarinin en buyugu; hic yoksa 0."""
+    sayilar = [int(h) for h in _HAFTA_BAG.findall(html)]
+    return max(sayilar) if sayilar else 0
+
+
+def fikstur_cek(lig_adresi: str, kulup_id: int, eski: list[dict] | None,
+                sozluk: dict[int, str]) -> list[dict]:
+    """Takip edilen takimin sezon fiksturunu hafta hafta toplar.
+
+    Hafta icinde takimin maci yoksa (bay ya da ertelenip haftadan dusmus)
+    o hafta listeye girmez; uydurma satir acilmaz. Bir haftanin sayfasi
+    alinamazsa o hafta eski dosyadan (varsa) tasinir ve devam edilir -
+    tek bir haftanin dusmesi butun fiksturu dusurmemeli.
+    """
+    ana = ortak.getir(lig_adresi, kodlama="cp1254")
+    toplam = hafta_sayisi(ana)
+    if not toplam:
+        ortak.log("  fikstur: hafta baglantisi bulunamadi, atlandi")
+        return list(eski or [])
+
+    eski_haftalar = {m.get("hafta"): m for m in (eski or []) if m.get("hafta")}
+    cikti: list[dict] = []
+    istek = tasinan = 0
+    for hafta in range(1, toplam + 1):
+        onceki = eski_haftalar.get(hafta)
+        if onceki and onceki.get("oynandi"):
+            cikti.append(onceki)
+            tasinan += 1
+            continue
+        ortak.bekle()
+        try:
+            html = ortak.getir(f"{lig_adresi}&hafta={hafta}", kodlama="cp1254")
+        except ortak.CekmeHatasi as e:
+            ortak.log(f"  fikstur {hafta}. hafta alinamadi: {e}")
+            if onceki:
+                cikti.append(onceki)
+            continue
+        istek += 1
+        maclar = maclari_ayikla(html)
+        maclarin_adlarini_onar(maclar, sozluk)
+        mac = _macini_bul(maclar, kulup_id)
+        if mac:
+            mac = dict(mac)
+            mac["hafta"] = hafta
+            cikti.append(mac)
+    ortak.log(f"  fikstur: {toplam} hafta, {len(cikti)} mac, {istek} istek, "
+              f"{tasinan} hafta onceki dosyadan")
+    return cikti
+
+
 # -- tutarlilik -----------------------------------------------------------
 
 def tutarlilik_denetle(ligler: list[dict]) -> dict:
@@ -459,6 +526,22 @@ def calistir(kok: Path, secilen: list[str], takim: str) -> int:
     takip = takimi_bul(ligler, takim)
     if takip:
         veri["takip"] = takip
+        # Sezon fiksturu. Cekilemezse takip blogu yine yazilir; fikstur
+        # onceki dosyadan tasinir ya da bos kalir - sayfa o zaman fikstur
+        # tablosunu hic cizmez, haftanin maci ve tablo yine ayakta.
+        eski = ortak.json_oku(cikti) or {}
+        eski_fikstur = (eski.get("takip") or {}).get("fikstur") or []
+        lig = next((l for l in ligler if l["anahtar"] == takip["lig"]), None)
+        if lig:
+            adres = lig["sayfa"]
+            if takip.get("grup_id") is not None:
+                adres += f"&grupID={takip['grup_id']}"
+            try:
+                takip["fikstur"] = fikstur_cek(adres, takip["kulup_id"],
+                                               eski_fikstur, sozluk)
+            except ortak.CekmeHatasi as e:
+                ortak.log(f"  fikstur alinamadi, onceki tasindi: {e}")
+                takip["fikstur"] = eski_fikstur
         skor = takip.get("mac")
         nerede = f"{takip['lig_adi']} {takip['sira']}. sira, {takip['puan']} puan"
         if skor and skor["oynandi"]:

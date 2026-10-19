@@ -343,10 +343,13 @@ class BolumBloklari(TestCase):
         Bu test kararı tutuyor: düzenek geri gelirse burada düşer ve
         kullanıcıya yeniden sorulması gerektiği anlaşılır.
 
-        §35'in "site lacivert-kırmızı kalır" kuralı böylece istisnasız
-        sürüyor; tek istisna anasayfadaki `#bursaspor` kutusudur ve o
-        29 Ağustos 2026'da ayrıca kararlaştırılmıştı."""
-        for yol in ("/bursaspor", "/bursa", "/ekonomi", "/saglik",
+        §35'in "site lacivert-kırmızı kalır" kuralı böylece sürüyor. İki
+        istisna var, ikisi de ayrıca kararlaştırıldı: anasayfadaki
+        `#bursaspor` kutusu (29 Ağustos 2026) ve **Bursaspor bölüm sayfası**
+        (12 Eylül 2026, kullanıcı: "bursaspor sayfasını da yeşil beyaz
+        renklerine büründür"). O sayfa `data-bolum="bursaspor"` taşır;
+        başka bölüm taşımaz, CSS'te başka değer geçmez."""
+        for yol in ("/bursa", "/ekonomi", "/saglik",
                     "/gundem", f"/ilce/{self.ilce.slug}"):
             self.assertNotIn("data-bolum", self.client.get(yol).content.decode(), yol)
         self.assertFalse(hasattr(views, "BOLUM_TEMA"))
@@ -359,8 +362,11 @@ class BolumBloklari(TestCase):
         import re
         kural = re.sub(r"/\*.*?\*/", "", stil, flags=re.S)
         for iz in ("--bolum-vurgu", "--bolum-koyu", "--bolum-ak", "--bolum-cizgi",
-                   "data-bolum", "--saglik"):
+                   "--saglik"):
             self.assertNotIn(iz, kural, iz)
+        # `data-bolum` yalnız Bursaspor değeriyle geçer; genel düzenek yok.
+        degerler = set(re.findall(r'data-bolum(?:="([^"]*)"|\])', kural))
+        self.assertEqual(degerler, {"bursaspor"})
         taban = (kok / "sablonlar" / "taban.html").read_text(encoding="utf-8")
         self.assertNotIn("ana_nitelik", taban)
 

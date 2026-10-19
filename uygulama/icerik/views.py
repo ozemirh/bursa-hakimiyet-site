@@ -33,6 +33,7 @@ from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 
 from .arama_metni import sorgu_coz
 from .canli import anasayfa_verisi, oku, puan_ligleri, puan_takibi
+from . import bursaspor as bursaspor_bolumu
 from . import eczane as eczane_sayfa
 from . import okunma
 from .models import Haber, ResmiIlan
@@ -390,6 +391,8 @@ PUAN_PENCERE = 2
 SERVIS_DOVIZ = {"ekonomi"}
 SERVIS_PUAN = {"bursaspor", "spor", "bursa-da-spor"}
 SERVIS_NOBET = {"saglik"}
+# Kulüp sayfası: sezon fikstürü ve yeşil-beyaz kabuk yalnız burada.
+BURSASPOR_SLUG = "bursaspor"
 
 # NOT — BÖLÜME ÖZEL RENK denendi ve GERİ ALINDI (7 Eylül 2026, §62 → §63).
 # Dört bölüm kendi vurgusunu alıyordu: kulüp yeşili (bursaspor), kent
@@ -508,6 +511,11 @@ def kategori(request, slug):
         "daha_uc": f"/daha-fazla?kaynak=kategori&slug={slug}",
         "servis": _bolum_servisi(slug=slug),
         "akis": _bolum_akisi(sayfa),
+        # Bursaspor'a özel blok (12 Eylül 2026, `icerik/bursaspor.py`):
+        # sezon fikstürü + yeşil-beyaz kabuk. Yalnız o bölümde; `/spor`
+        # genel spor sayfasıdır ve kulüp sayfasına dönmez.
+        "bursaspor": (bursaspor_bolumu.bolum_verisi(oku("puan-durumu"))
+                      if slug == BURSASPOR_SLUG else None),
         **_bolum_gorselleri(kategori),
     })
 

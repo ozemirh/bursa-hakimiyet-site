@@ -26,7 +26,10 @@ bağlantıda. İnternetsizde Georgia'ya düşer, sayfa açılmaya devam eder.{% 
   tarayiciyla olcmek icin.{% endcomment %}
 <script>try{var bhq=new URLSearchParams(location.search).get('reklam-test');if(bhq==='acik'||bhq==='kapali'){localStorage.setItem('bh-reklam-test',bhq);}if(localStorage.getItem('bh-reklam-test')==='acik'){document.documentElement.setAttribute('data-reklam-test','acik');}}catch(e){}</script>
 {% endif %}</head>
-<body>
+{% comment %}`govde_nitelik`: sayfa gövdeye nitelik ekleyebilir. Bugün tek
+kullanıcı Bursaspor bölümü (`data-bolum="bursaspor"`, yeşil-beyaz kabuk,
+12 Eylül 2026). Boş kalınca etiket eskisi gibi düz `<body>`.{% endcomment %}
+<body{% block govde_nitelik %}{% endblock %}>
 <a class="atla" href="#ana-icerik">İçeriğe atla</a>
 {% include "parca/simgeler.html" %}
 {% include "parca/ust_bant.html" %}

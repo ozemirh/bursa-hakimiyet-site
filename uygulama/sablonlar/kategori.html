@@ -3,6 +3,11 @@
 
 {% block baslik %}{{ baslik }} — Bursa Hakimiyet{% endblock %}
 {% block aciklama %}{{ baslik }} başlığındaki son haberler — Bursa Hakimiyet.{% endblock %}
+{% comment %}Yeşil-beyaz kabuk YALNIZ Bursaspor sayfasında (12 Eylül 2026,
+kullanıcı kararı: "bursaspor sayfasını da yeşil beyaz renklerine
+büründür"). §63'ün "bölüm rengi yok" kuralının tek istisnası; başka bölüm
+renk almaz. Nitelik gövdeye iner, kurallar `site.css` sonunda.{% endcomment %}
+{% block govde_nitelik %}{% if bursaspor %} data-bolum="bursaspor"{% endif %}{% endblock %}
 
 {% comment %}BÖLÜM SAYFASI — üç kademeli yerleşim (2 Eylül 2026, §46).
 
@@ -154,6 +159,11 @@ yok.{% endcomment %}
           {% if sayfa.has_next %}{% include "parca/daha_fazla.html" with devam=1 sonraki=sayfa.next_page_number daha_uc=daha_uc daha_hedef=".akis-ritim" %}{% endif %}
         </div>
       </section>
+
+      {% comment %}BURSASPOR FİKSTÜRÜ (12 Eylül 2026): haber kutusunun
+      altında, görüntü kuşağının üstünde. Yalnız `/bursaspor` bağlam
+      taşır (`views.kategori`), diğer bölümlerde parça boş döner.{% endcomment %}
+      {% if bursaspor %}{% include "parca/bursaspor_bolumu.html" %}{% endif %}
 
       {% comment %}GÖRÜNTÜ KUŞAĞI (6 Eylül 2026, §59, kullanıcı isteği:
       "kategori sayfalarının içeriğini çeşitlendir"). Akışın ALTINDA, "daha

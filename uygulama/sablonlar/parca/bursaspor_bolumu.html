@@ -1,0 +1,39 @@
+{% load site_etiket %}
+{% comment %}BURSASPOR FİKSTÜRÜ — 12 Eylül 2026.
+
+Haber kutusunun ALTINDA, görüntü kuşağının ÜSTÜNDE. Kullanıcı kararı
+(aynı gün): "haftanın maçı, puan tablosu ve fikstür kalsın, geri kalanı
+kaldır" — kadro, gazetenin dizileri, basketbol, künye, form şeridi ve
+konu şeridi bu kararla gitti; yeniden eklenmez. Haftanın maçı ve puan
+penceresi servis panelinde (`parca/bolum_servis.html`).
+
+Sezonun tamamı tek tabloda: oynananlarda skor ve sonuç kutusu (G/B/M),
+oynanmayanlarda tarih ve varsa saat; sıradaki maç işaretli. Skor
+kaynaktaki yönüyle basılır, çevrilmez. Kural görünümde
+(`icerik/bursaspor.py`), burada yalnız çizim.{% endcomment %}
+{% if bursaspor.fikstur %}{% with f=bursaspor.fikstur %}
+<section class="kutu bs-fikstur" id="fikstur" aria-labelledby="bs-fikstur-bas">
+  <div class="kutu-bas"><h2 id="bs-fikstur-bas">FİKSTÜR VE SONUÇLAR</h2><span class="tumu">{{ f.oynanan }}/{{ f.toplam }} maç oynandı</span></div>
+  <div class="kutu-ic">
+    <div class="bs-fikstur-sar" role="region" tabindex="0" aria-label="Bursaspor sezon fikstürü ve sonuçları">
+    <table class="bs-tablo">
+      <caption class="gorsel-gizli">Sezonun bütün maçları; oynananlarda skor, oynanmayanlarda tarih.</caption>
+      <thead><tr><th scope="col"><abbr title="Hafta">H</abbr></th><th scope="col">Tarih</th><th scope="col">Ev sahibi</th><th scope="col">Skor</th><th scope="col">Deplasman</th><th scope="col"><abbr title="Sonuç: galibiyet, beraberlik, mağlubiyet">S</abbr></th></tr></thead>
+      <tbody>
+        {% for m in f.maclar %}
+        <tr{% if not m.skor_var and f.sonraki and m.mac_id == f.sonraki.mac_id %} class="sonraki"{% endif %}>
+          <td class="hafta">{{ m.hafta }}</td>
+          <td class="tarih">{% if m.tarih_g %}<time datetime="{{ m.tarih_g|date:"Y-m-d" }}">{{ m.tarih_g|date:"j M" }}</time>{% if not m.skor_var and m.saat %} {{ m.saat }}{% endif %}{% else %}&ndash;{% endif %}</td>
+          <td class="takim{% if m.bizim_ev %} bizim{% endif %}">{{ m.ev|baslikla }}</td>
+          <td class="skor">{% if m.skor_var %}{{ m.ev_gol }}&ndash;{{ m.deplasman_gol }}{% else %}<span class="bekliyor" aria-label="oynanmadı">&ndash;</span>{% endif %}</td>
+          <td class="takim{% if not m.bizim_ev %} bizim{% endif %}">{{ m.deplasman|baslikla }}</td>
+          <td class="sonuc f-{{ m.sonuc }}">{% if m.sonuc %}<span aria-hidden="true">{{ m.sonuc }}</span><span class="gorsel-gizli">{{ m.sonuc_adi }}</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <p class="servis-kunye">Kaynak: {{ f.kaynak.ad|default:"TFF" }}. Saati yazılmamış maçlar TFF tarafından henüz programlanmadı.{% if f.guncelleme %} Son güncelleme {{ f.guncelleme|slice:":10" }} {{ f.guncelleme|slice:"11:16" }}{% if f.bayat %} &middot; <b>güncel değil</b>{% endif %}.{% endif %}</p>
+  </div>
+</section>
+{% endwith %}{% endif %}
