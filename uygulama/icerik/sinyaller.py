@@ -20,6 +20,8 @@ isterse `onbellek.surumu_artir()` çağırmalı.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+
 from django.db.models.signals import post_delete, post_save
 
 
@@ -45,6 +47,30 @@ def _ilce_degisti(**_):
     from . import baglam, onbellek
     onbellek.sil(baglam.ILCE_ANAHTARI)
     onbellek.surumu_artir()
+
+
+@contextmanager
+def surum_toplu(*modeller):
+    """Toplu yazımda yayın sürümünü kayıt başına değil BİR KEZ artırır.
+
+    `konu_tara` binlerce dosya siler ve yazar; her kayıt sinyali dosya
+    önbelleğine bir yazım demek (19 Ekim 2026 tam taramasında yazma evresi
+    12 dakika). Blok süresince verilen modellerin sürüm alıcıları çıkarılır,
+    çıkışta (hata olsa da) geri bağlanır ve sürüm bir kez artırılır.
+    """
+    sokulen = []
+    for model in modeller:
+        for sinyal in (post_save, post_delete):
+            uid = f"bh-surum-{model.__name__}-{sinyal is post_save}"
+            if sinyal.disconnect(sender=model, dispatch_uid=uid):
+                sokulen.append((sinyal, model, uid))
+    try:
+        yield
+    finally:
+        for sinyal, model, uid in sokulen:
+            sinyal.connect(_surum, sender=model, dispatch_uid=uid)
+        from . import onbellek
+        onbellek.surumu_artir()
 
 
 def bagla() -> None:

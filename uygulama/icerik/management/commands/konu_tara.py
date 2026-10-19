@@ -36,6 +36,7 @@ from django.utils import timezone
 from icerik import konu_motoru
 from icerik.arama_metni import slugla
 from icerik.models import Haber, Konu, KonuHaber
+from icerik.sinyaller import surum_toplu
 
 # Yargı dili geçen dosyalara editörün göreceği uyarı; arac/konular.json'daki
 # "hassas" alanının karşılığı. Metin demo dosyasından alındı.
@@ -92,8 +93,9 @@ class Command(BaseCommand):
         if secenek["kuru"]:
             return
 
-        yazilan, atlanan, onaylanan = self._yaz(
-            konular, secenek.get("onay_esigi"), secenek["sifirla"])
+        with surum_toplu(Konu, KonuHaber):
+            yazilan, atlanan, onaylanan = self._yaz(
+                konular, secenek.get("onay_esigi"), secenek["sifirla"])
         self.stdout.write(self.style.SUCCESS(
             f"{yazilan} konu yazıldı, {onaylanan} onaylı, {atlanan} onaylı dosyayla "
             f"örtüştüğü için atlandı ({time.time() - t0:.0f} s)"))

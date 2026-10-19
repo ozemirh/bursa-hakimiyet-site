@@ -297,6 +297,15 @@ class KonuVeri(TestCase):
         borsa.refresh_from_db()
         self.assertEqual(borsa.onay, Konu.ONAY_ONAYLI)
 
+    def test_surum_toplu_bir_kez_artirir_ve_geri_baglar(self):
+        from . import onbellek, sinyaller
+        with patch.object(onbellek, "surumu_artir") as artir:
+            with sinyaller.surum_toplu(Konu, KonuHaber):
+                self._onayli_borsa()            # 1 konu + 6 bağ kaydı
+            self.assertEqual(artir.call_count, 1)
+            Konu.objects.filter(slug="new-york-2026-09").first().save()
+            self.assertEqual(artir.call_count, 2)   # alıcı geri bağlandı
+
     # --- 4. sürüyor
     def test_suruyor_okuma_aninda(self):
         bugun = timezone.localdate()
