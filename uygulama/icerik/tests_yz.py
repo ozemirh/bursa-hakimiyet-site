@@ -337,6 +337,8 @@ class YayinKapisi(KopruTemel):
             "etiketler": "atıksu",
             "durum": Haber.DURUM_AKTIF,
             "hazirlik": "hazir",
+            "kaynak_turu": Haber.KAYNAK_MUHABIR,
+            "muhabir": "A. Yılmaz",
         }
         veri.update(degisiklikler)
         return veri
@@ -371,6 +373,8 @@ class TaslaktanYayina(KopruTemel):
             "kategori": Kategori.objects.get(ad="BURSA").pk,
             "etiketler": "atıksu",
             "kaynak_turu": Haber.KAYNAK_DIS_YAYIN,
+            # Kaynak kuralı: taslağın açtığı kaynak kaydı formda korunur.
+            "kaynaklar": list(Kaynak.objects.values_list("pk", flat=True)[:1]),
             "durum": Haber.DURUM_AKTIF,
             "hazirlik": "hazir",
         }

@@ -35,6 +35,7 @@ from django.utils import timezone
 
 from icerik import eczane as eczane_metni
 from icerik.arama_metni import slugla
+from icerik import yayin_kapisi
 from icerik.kimlik import yeni_kayit_kaydet
 from icerik.models import Haber
 from taksonomi.models import Etiket, Kategori, Kaynak
@@ -88,6 +89,18 @@ class Command(BaseCommand):
 
         paket = eczane_metni.haber_paketi(panel)
         slug = paket["slug"]
+
+        # Tek yayın kapısı (`icerik/yayin_kapisi.py`): servis haberi de
+        # panelin içerik eşiğinden geçer. Kaynak türü "Dış yayın" ve kaynak
+        # kaydı (Eczacı Odası) her zaman var; eksik yoksa geçer.
+        eksik = yayin_kapisi.icerik_eksikleri(
+            baslik=paket["baslik"], slug=slug, spot=paket["spot"],
+            govde=paket["govde"], etiket_sayisi=len(paket["etiketler"]),
+            kaynak_turu=Haber.KAYNAK_DIS_YAYIN, kaynak_sayisi=1, muhabir="")
+        if eksik:
+            y(self.style.ERROR("Yayın eşiğini geçmiyor: " + ", ".join(eksik)))
+            raise SystemExit(1)
+
         var_olan = Haber.objects.filter(slug=slug).first()
 
         y(f"Gün: {panel['gun']} · {panel['sayi']} eczane · "

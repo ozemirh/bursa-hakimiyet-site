@@ -295,7 +295,9 @@ class HaberFormuBagi(Temel):
         self._gir("Editör")
         yanit = self.client.post(
             f"/panel/haber/{haber.pk}",
-            self._gonderi_verisi(haber, sosyal_hesaplar=[hesap.pk]))
+            self._gonderi_verisi(haber, sosyal_hesaplar=[hesap.pk],
+                                 kaynak_turu=Haber.KAYNAK_MUHABIR,
+                                 muhabir="A. Yılmaz"))
         self.assertEqual(yanit.status_code, 302)
         gonderi = SosyalGonderi.objects.get(haber=haber, hesap=hesap)
         self.assertEqual(gonderi.durum, SosyalGonderi.BEKLIYOR)

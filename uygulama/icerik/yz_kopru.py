@@ -40,7 +40,7 @@ from django.utils import timezone
 
 from taksonomi.models import Ilce, Kategori, Kaynak
 
-from . import goc_kaynak
+from . import goc_kaynak, yayin_kapisi
 from .arama_metni import anahtar
 from .formlar import etiketleri_kur
 from .kimlik import yeni_kayit_kaydet
@@ -391,6 +391,15 @@ def taslak_yaz(paket: dict, kullanici):
     if etiketler:
         haber.etiketler.set(etiketleri_kur(etiketler))
         notlar.append("Etiketler: %s." % ", ".join(etiketler))
+
+    # Yayın kapısı formla aynı işlev (`yayin_kapisi`): taslak buradan
+    # yayına çıkmaz, ama neyin eksik olduğu aynı ölçütle şimdiden yazılır.
+    if haber.durum != Haber.DURUM_PASIF:          # yayın kapısını atlayamaz
+        raise YzHatasi("Taslak Pasif dışında bir durumla açılamaz.")
+    eksikler = yayin_kapisi.haber_eksikleri(haber)
+    if eksikler:
+        notlar.append("Yayına almadan önce tamamlanacaklar: %s."
+                      % ", ".join(eksikler))
 
     # Gerekçeler pakete de yazılıyor: taslak ekranı sayfa yenilendiğinde de
     # "kategori neden bu" sorusunu yanıtlayabilmeli, oturuma bağlı olmamalı.

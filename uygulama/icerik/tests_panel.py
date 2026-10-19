@@ -15,7 +15,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
-from taksonomi.models import Etiket, Kategori, KategoriTur, Yonlendirme
+from taksonomi.models import Etiket, Kategori, KategoriTur, Kaynak, Yonlendirme
 
 from .formlar import (BASLIK_SINIR, SPOT_SINIR, HaberForm,
                       etiketleri_kur)
@@ -93,6 +93,8 @@ class HaberFormuAlanSozlesmesi(TestCase):
         cls.kategori = KategoriTur.objects.get(
             tur=Kategori.TUR_HABER, slug="gundem").kategori
         cls.etiket = Etiket.objects.create(ad="Bursa gündemi", slug="bursa-gundemi")
+        # Kaynak kuralı (yayin_kapisi): ajans haberi en az bir kaynakla yayınlanır.
+        cls.kaynak = Kaynak.objects.create(ad="Test Ajansı", tur=Kaynak.TUR_AJANS)
 
     def _veri(self, **ek):
         temel = {
@@ -104,6 +106,7 @@ class HaberFormuAlanSozlesmesi(TestCase):
             "durum": Haber.DURUM_AKTIF,
             "hazirlik": "hazir",
             "kaynak_turu": Haber.KAYNAK_AJANS,
+            "kaynaklar": [self.kaynak.pk],
             "yayin_zamani": timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
         temel.update(ek)
@@ -203,10 +206,26 @@ class HaberFormuAlanSozlesmesi(TestCase):
         self.assertEqual(haber.meta_yazar, "haber_merkezi")
 
     def test_kaynak_turu_bos_birakilabiliyor(self):
-        form = HaberForm(data=self._veri(kaynak_turu="", muhabir=""))
-        self.assertTrue(form.is_valid(), form.errors)
+        """§25: boş = ölçülemedi. Taslakta ve YAYINDAKİ arşiv kaydının
+        düzeltmesinde boş kalabilir; yeni yayında kaynak türü şart
+        (`yayin_kapisi`, kaynak her zaman belirtilir)."""
+        taslak = HaberForm(data=self._veri(kaynak_turu="", muhabir="",
+                                           durum=Haber.DURUM_PASIF,
+                                           hazirlik="taslak"))
+        self.assertTrue(taslak.is_valid(), taslak.errors)
         self.assertEqual(
-            form.fields["kaynak_turu"].choices[0], ("", "Belirtilmemiş"))
+            taslak.fields["kaynak_turu"].choices[0], ("", "Belirtilmemiş"))
+
+        arsiv = Haber.objects.create(
+            id=810300, slug="arsiv", baslik="Arşiv", kategori=self.kategori,
+            durum=Haber.DURUM_AKTIF, yayin_zamani=timezone.now())
+        duzeltme = HaberForm(data=self._veri(kaynak_turu="", muhabir=""),
+                             instance=arsiv)
+        self.assertTrue(duzeltme.is_valid(), duzeltme.errors)
+
+        yeni = HaberForm(data=self._veri(kaynak_turu="", muhabir=""))
+        self.assertFalse(yeni.is_valid())
+        self.assertIn("kaynak türü", " ".join(yeni.non_field_errors()))
 
     # --- etiket alanı: boş tablo yüzünden görünmüyordu (29 Ağustos) ---
     def test_etiket_yazilarak_aciliyor(self):

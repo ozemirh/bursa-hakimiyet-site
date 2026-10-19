@@ -29,7 +29,7 @@ from .formlar import (BildirimForm, FotoGaleriForm, GazeteForm, HaberForm,
                       KategoriForm, KaynakForm, KoseYazisiForm, KullaniciForm,
                       ReklamKampanyasiForm, ReklamYuvasiForm, ResmiIlanForm,
                       SonDakikaForm, VideoForm, YazarForm, YorumForm)
-from . import okunma, yz_kopru
+from . import okunma, yayin_kapisi, yz_kopru
 from .kimlik import yeni_kayit_kaydet
 from .arama_metni import slugla
 from .models import (YZ_BASLIK_ISARETI, Bildirim, Gazete, Haber, IkiAdimli,
@@ -523,22 +523,17 @@ def haber_ekle(request):
 def haber_duzenle(request, kimlik):
     haber = get_object_or_404(Haber, pk=kimlik)
 
-    # §11: kendi haberi ile başkasının haberi ayrı kararlardır.
+    # §11: kendi haberi ile başkasının haberi ayrı kararlardır. Yetki
+    # denetimi formun içinde (`yayin_kapisi.yayin_yetkisi`): yetkisiz
+    # kullanıcının formunda durum alanı yok, elle gönderilirse reddedilir.
     kendisinin = haber.olusturan_id == request.user.pk
-    yayinlayabilir = request.user.has_perm(
-        "icerik.kendi_haberini_yayinlama" if kendisinin
-        else "icerik.baskasinin_haberini_yayinlama")
+    yayinlayabilir = yayin_kapisi.yayin_yetkisi(request.user, haber)
+    onceki_durum = haber.durum
 
     form = HaberForm(request.POST or None, instance=haber, kullanici=request.user)
     if request.method == "POST" and form.is_valid():
-        if form.cleaned_data.get("durum") == Haber.DURUM_AKTIF and not yayinlayabilir:
-            form.add_error(
-                "durum",
-                "Bu haberi yayına alma yetkiniz yok. Taslak olarak kaydedebilir "
-                "ya da 'Yayına hazır' işaretleyip masaya bırakabilirsiniz.")
-        else:
-            _kaydet(form, request)
-            return redirect("panel-haber-duzenle", kimlik=haber.pk)
+        _kaydet(form, request, onceki_durum=onceki_durum)
+        return redirect("panel-haber-duzenle", kimlik=haber.pk)
 
     return render(request, "panel/haber_form.html", {
         "baslik": haber.baslik,
@@ -552,7 +547,7 @@ def haber_duzenle(request, kimlik):
     })
 
 
-def _kaydet(form, request):
+def _kaydet(form, request, onceki_durum=None):
     """Yeni kayda kimlik ve slug verir.
 
     **Kimlik adresin parçasıdır** ve göçte eski kimlikler korunmuştur; yeni
@@ -1300,13 +1295,8 @@ def _secilen_sorgu(request):
 
 
 def _yayina_hazir_mi(haber) -> bool:
-    """§4'ün yayın eşiği: spot · en az iki paragraf gövde · en az bir etiket."""
-    from .formlar import EN_AZ_PARAGRAF, HaberForm
-    if not (haber.spot or "").strip():
-        return False
-    if HaberForm._paragraf_sayisi(haber.govde or "") < EN_AZ_PARAGRAF:
-        return False
-    return haber.etiketler.exists()
+    """Yayın eşiği — formla AYNI işlev (`yayin_kapisi.haber_eksikleri`)."""
+    return not yayin_kapisi.haber_eksikleri(haber)
 
 
 @login_required
@@ -1418,9 +1408,18 @@ def _onay_gizli_alanlari(request) -> list:
 
 
 def _fiil_yayina_al(request, sorgu) -> str:
-    hazir, eksik = [], 0
-    for haber in sorgu.prefetch_related("etiketler").iterator(chunk_size=500):
-        if _yayina_hazir_mi(haber):
+    """Toplu yayın — formla aynı kapı: kayıt başına yetki + içerik eşiği.
+
+    Önceden yalnız spot · paragraf · etiket aranıyordu; `[yazılacak]`
+    işaretli ve slug'ı boş taslak `/bursa/-1696500` gibi 404 veren bir
+    adresle yayına çıkabiliyordu. Kaynak kuralı da yoktu.
+    """
+    hazir, eksik, yetkisiz = [], 0, 0
+    for haber in (sorgu.prefetch_related("etiketler", "kaynaklar")
+                  .iterator(chunk_size=500)):
+        if not yayin_kapisi.yayin_yetkisi(request.user, haber):
+            yetkisiz += 1
+        elif _yayina_hazir_mi(haber):
             hazir.append(haber.pk)
         else:
             eksik += 1
@@ -1434,7 +1433,10 @@ def _fiil_yayina_al(request, sorgu) -> str:
     ozet = f"{len(hazir)} haber yayına alındı."
     if eksik:
         ozet += (f" {eksik} kayıt ATLANDI: yayın eşiğini geçmiyor "
-                 "(spot · en az iki paragraf gövde · en az bir etiket).")
+                 "(başlık işareti · adres · spot · en az iki paragraf gövde · "
+                 "en az bir etiket · kaynak).")
+    if yetkisiz:
+        ozet += f" {yetkisiz} kayıt ATLANDI: bu haberleri yayına alma yetkiniz yok."
     return ozet
 
 
