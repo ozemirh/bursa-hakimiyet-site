@@ -216,6 +216,21 @@ class Yazar(models.Model):
     def listedekiler(cls):
         return cls.objects.filter(aktif=True)
 
+    @classmethod
+    def son_yazisiyla(cls, sorgu=None):
+        """Yazar listesi + her yazarın son yazısının başlığı TEK sorguda.
+
+        `son_yazi` niteliği yazar başına bir sorgu açıyordu (PG ölçümü,
+        19 Ekim 2026: `/yazarlar` 38 sorgu, köşe yazısı rayı +5). İlişkili
+        alt sorgu `(yazar, -yayin_zamani)` indeksinden tek satır okur;
+        `son_yazi` önce bu açıklamaya bakar.
+        """
+        from django.db.models import OuterRef, Subquery
+        son = (KoseYazisi.yayindakiler().filter(yazar=OuterRef("pk"))
+               .order_by("-yayin_zamani").values("baslik")[:1])
+        sorgu = cls.listedekiler() if sorgu is None else sorgu
+        return sorgu.annotate(son_yazi_basligi=Subquery(son))
+
     def get_absolute_url(self) -> str:
         return f"/yazarlar/{self.slug}-{self.pk}"
 
@@ -251,7 +266,11 @@ class Yazar(models.Model):
     @property
     def son_yazi(self) -> str:
         """Sağ raydaki yazar kutusu yazar adının altında son yazının başlığını
-        gösteriyor (URUN-PLANI.md §1, bileşen 13)."""
+        gösteriyor (URUN-PLANI.md §1, bileşen 13).
+
+        Liste `son_yazisiyla()` ile geldiyse sorgu açmaz."""
+        if hasattr(self, "son_yazi_basligi"):
+            return self.son_yazi_basligi or ""
         yazi = self.yazilari().only("baslik").first()
         return yazi.baslik if yazi else ""
 
