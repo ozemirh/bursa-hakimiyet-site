@@ -14,7 +14,7 @@ bilmeli.{% endcomment %}
 
 {% block baslik %}{{ baslik }} | Bursa Hakimiyet{% endblock %}
 {% block aciklama %}{{ aciklama }}{% endblock %}
-{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ yol }}">{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ site_koku }}{{ yol }}">{% endblock %}
 
 {% block icerik %}
       <nav class="kirinti" aria-label="Neredesiniz">

@@ -1,9 +1,19 @@
 {% extends "taban.html" %}
-{% load static site_etiket gorsel_etiket %}
+{% load static site_etiket gorsel_etiket seo_etiket %}
 
-{% block baslik %}{{ haber.baslik }} — Bursa Hakimiyet{% endblock %}
-{% block aciklama %}{{ haber.spot|striptags|truncatechars:300 }}{% endblock %}
-{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ haber.get_absolute_url }}">{% endblock %}
+{% comment %}SEO (Paket G): `seo_baslik` doluysa <title> ve og:title onu kullanır;
+JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
+{% block baslik %}{{ haber.seo_baslik|default:haber.baslik }} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ haber.spot|striptags|truncatechars:300|default:haber.baslik }}{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ site_koku }}{{ haber.get_absolute_url }}">{% endblock %}
+{% block og_tur %}article{% endblock %}
+{% block og_baslik %}{{ haber.seo_baslik|default:haber.baslik }}{% endblock %}
+{% block og_adres %}{{ site_koku }}{{ haber.get_absolute_url }}{% endblock %}
+{% block paylasim_gorseli %}{% include "parca/og_gorsel.html" with nesne=haber %}{% endblock %}
+{% block og_ek %}{% include "parca/og_makale.html" with kayit=haber bolum=haber.kategori.ad|baslikla %}{% endblock %}
+{% block rss_bolum %}<link rel="alternate" type="application/rss+xml" title="Bursa Hakimiyet — {{ haber.kategori.ad|baslikla }}" href="{{ site_koku }}/rss/{{ haber.kategori.slug_al }}">{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld "haber" haber %}</script>
+<script type="application/ld+json">{% jsonld "haber_kirinti" haber %}</script>{% endblock %}
 
 {% block icerik %}
       <nav class="kirinti" aria-label="Kırıntı navigasyonu">
@@ -25,7 +35,9 @@
             <div class="detay-kunye">
               <span>Haber Merkezi</span>
               {% if haber.yayin_zamani %}<span><time datetime="{{ haber.yayin_zamani|date:'c' }}">{{ haber.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
-              {% if haber.guncelleme_zamani %}<span>Güncelleme: {{ haber.guncelleme_zamani|date:'H:i' }}</span>{% endif %}
+              {% comment %}Güncelleme damgası tarih + saat (5187 md. 4, Paket G); yalnız
+              yayından en az bir dakika sonraysa — arşivde iki alan çoğunlukla eşit.{% endcomment %}
+              {% with g=haber|guncelleme %}{% if g %}<span>Güncelleme: <time datetime="{{ g|date:'c' }}">{{ g|date:'j F Y, H:i' }}</time></span>{% endif %}{% endwith %}
               {% comment %}Okuma süresi (29 Ağustos): kelime_sayisi 485.388/486.667
               kayıtta dolu; boşsa hiç basılmaz — uydurma süre yazılmaz.{% endcomment %}
               {% if haber.kelime_sayisi %}<span>{{ haber.kelime_sayisi|okuma_dakikasi }} dk okuma</span>{% endif %}

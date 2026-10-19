@@ -41,7 +41,6 @@ import re
 from typing import Iterable, Iterator
 from xml.sax.saxutils import escape
 
-from django.utils import timezone
 
 from . import ayarlar
 from .aileler import Aile, AyOzeti, dosya_adi, kayitli_aileler
@@ -75,10 +74,13 @@ AY_DESENI = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 # değiştirir ve kayıtlı adresleri kırar).
 ADRES_SINIRI = 50_000
 
+# Kök öğede nitelik YOK (Paket G, 19 Ekim 2026). Canlı sitenin kopyası olarak
+# `lastModified="…" lastmod="…"` taşıyordu; ikisi de sitemaps.org şemasında
+# tanımsız ve şemaya göre doğrulayan araçlar dosyayı reddedebiliyor.
+# Tazelik bilgisi her `<sitemap>` öğesinin kendi `<lastmod>`unda duruyor.
 _INDEKS_BAS = (
     '<?xml version="1.0" encoding="UTF-8"?>\n'
-    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'
-    ' lastModified="{yerel}" lastmod="{iso}">\n'
+    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
 )
 _INDEKS_SON = "</sitemapindex>\n"
 
@@ -128,9 +130,7 @@ def indeks_parcalari(kok: str, ozetler: dict[str, list[AyOzeti]] | None = None,
     aynı 274 satırlık özet iki kez hesaplanmıyor.
     """
     aileler = list(aileler if aileler is not None else kayitli_aileler())
-    simdi = timezone.localtime()
-    yield _INDEKS_BAS.format(yerel=simdi.strftime("%Y-%m-%d %H:%M:%S"),
-                             iso=zaman_yaz(simdi))
+    yield _INDEKS_BAS
     for aile in aileler:
         aylar = (ozetler or {}).get(aile.anahtar)
         if aylar is None:

@@ -96,6 +96,8 @@ MIDDLEWARE = [
     'cekirdek.ara_katman.SeciciGZip',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'cekirdek.ara_katman.SiteHaritasiDosyalari',
+    # /amp/*, sondaki eğik çizgi, /arama?ara= → kanonik 301 (Paket G).
+    'cekirdek.adres_duzeni.AdresDuzeni',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -129,6 +131,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'icerik.baglam.site',
+                # Kanonik adres SITE_KOKU'dan, paylaşım görseli (Paket G).
+                'icerik.seo.baglam',
             ],
         },
     },

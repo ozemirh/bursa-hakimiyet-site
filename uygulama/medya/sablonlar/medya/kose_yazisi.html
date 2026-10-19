@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load static site_etiket gorsel_etiket %}
+{% load static site_etiket gorsel_etiket seo_etiket %}
 {% comment %}
 Köşe yazısı detayı. İskelet `haber_detay.html` ile bilerek aynı: seslendirme
 betiği `.detay h1`, `.detay .spot` ve `.metin > p` seçicilerine bağlı, bu
@@ -11,8 +11,16 @@ bağlantı durur.
 {% endcomment %}
 
 {% block baslik %}{{ yazi.baslik }} — {{ yazar.ad }} — Bursa Hakimiyet{% endblock %}
-{% block aciklama %}{{ yazi.spot|striptags|truncatechars:300 }}{% endblock %}
-{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ yazi.get_absolute_url }}">{% endblock %}
+{% block aciklama %}{{ yazi.spot|striptags|truncatechars:300|default:yazi.baslik }}{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ site_koku }}{{ yazi.get_absolute_url }}">{% endblock %}
+{% comment %}SEO (Paket G): OpinionNewsArticle + yazar Person; yazının görseli yoksa
+paylaşım görseli yazarın portresi.{% endcomment %}
+{% block og_tur %}article{% endblock %}
+{% block og_baslik %}{{ yazi.baslik }} — {{ yazar.ad }}{% endblock %}
+{% block paylasim_gorseli %}{% if yazi.gorsel_yolu %}{% include "parca/og_gorsel.html" with nesne=yazi %}{% else %}{% include "parca/og_gorsel.html" with nesne=yazar %}{% endif %}{% endblock %}
+{% block og_ek %}{% include "parca/og_makale.html" with kayit=yazi bolum="Köşe Yazıları" %}{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld "kose" yazi %}</script>
+<script type="application/ld+json">{% jsonld "kose_kirinti" yazi %}</script>{% endblock %}
 
 {% block icerik %}
       <nav class="kirinti" aria-label="Kırıntı navigasyonu">

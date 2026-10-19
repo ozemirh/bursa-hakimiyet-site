@@ -1,11 +1,44 @@
-{% load static %}<!DOCTYPE html>
+{% load static seo_etiket %}<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block baslik %}Bursa Hakimiyet — Bursa'nın günlük haber gazetesi{% endblock %}</title>
 <meta name="description" content="{% block aciklama %}Bursa Hakimiyet: Bursa gündemi, ilçe haberleri, ekonomi, Bursaspor, hava durumu, namaz vakitleri, nöbetçi eczane, resmî ilanlar.{% endblock %}">
-{% block kanonik %}{% endblock %}
+{% comment %}SEO meta bloğu (Paket G, 19 Ekim 2026; DEGERLENDIRME-2026-10 §3
+bulgu 8). Her sayfa yalnız FARKLI olanı blokla geçer:
+- `robots`: varsayılan dizine açık + büyük görsel önizleme; arama, 404,
+  bekleyen sayfa ve ince konu dosyası `noindex, follow` verir.
+- `kanonik`: varsayılan `kanonik_adres` (icerik/seo.py) = SITE_KOKU + yol
+  + geçerli ?sayfa=N (N>1). İstek konağından KURULMAZ.
+- `og_baslik` · `og_tur` · `paylasim_gorseli` · `og_ek` · `yapisal` ·
+  `rss_bolum`. og/twitter açıklaması `aciklama` bloğunun AYNISIDIR
+  (`blok_tekrar`): açıklama tek yerde yazılır.{% endcomment %}
+<meta name="robots" content="{% block robots %}index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1{% endblock %}">
+{% block kanonik %}<link rel="canonical" href="{{ kanonik_adres }}">{% endblock %}
+<meta property="og:site_name" content="Bursa Hakimiyet">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:type" content="{% block og_tur %}website{% endblock %}">
+<meta property="og:title" content="{% block og_baslik %}{{ baslik|default:"Bursa Hakimiyet — Bursa'nın günlük haber gazetesi" }}{% endblock %}">
+<meta property="og:description" content="{% blok_tekrar "aciklama" %}">
+<meta property="og:url" content="{% block og_adres %}{{ kanonik_adres }}{% endblock %}">
+{% block paylasim_gorseli %}<meta property="og:image" content="{{ seo_varsayilan_gorsel }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Bursa Hakimiyet logosu">
+<meta name="twitter:image" content="{{ seo_varsayilan_gorsel }}">{% endblock %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@b_hakimiyet">
+<meta name="twitter:title" content="{% blok_tekrar "og_baslik" %}">
+<meta name="twitter:description" content="{% blok_tekrar "aciklama" %}">
+{% block og_ek %}{% endblock %}
+<link rel="alternate" type="application/rss+xml" title="Bursa Hakimiyet — tüm haberler" href="{{ site_koku }}/rss">
+{% block rss_bolum %}{% endblock %}
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="{% static 'simge/simge-32.png' %}" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="{% static 'simge/apple-touch-icon.png' %}">
+{% if seo_tema_rengi %}<meta name="theme-color" content="{{ seo_tema_rengi }}">{% endif %}
+{% block yapisal %}{% endblock %}
 {% comment %}Roboto Serif YALNIZ haber gövdesi ve spot için (§35): gazeteye
 ses veren tek tipografik hamle, listelerde ve başlıklarda sans kalır.
 İtalik kesim alınmadı — ağırlık getirisi yok. Yazı tipleri 19 Ekim 2026'dan

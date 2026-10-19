@@ -5,6 +5,11 @@ yerelleştirme sayıyı virgülle basabiliyor — virgüllü sayı geçersiz CSS
 hiç dönmez. Aynı tuzak 30 Ağustos'ta sıcaklık çubuğunun yüzdesinde
 yaşanmıştı.{% endcomment %}
 {% load l10n %}
+{% load seo_etiket %}
+{% comment %}JSON-LD (Paket G): WebSite + SearchAction ve NewsMediaOrganization
+(sameAs: gazetenin resmî hesapları, icerik/seo.py RESMI_HESAPLAR).{% endcomment %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld "site" %}</script>
+<script type="application/ld+json">{% jsonld "kurulus" %}</script>{% endblock %}
 
 {% block icerik %}
 

@@ -16,6 +16,7 @@ from django.views.static import serve
 
 from django.contrib.auth import views as kimlik_gorunum
 
+from cekirdek import adres_duzeni
 from cekirdek import durum as durum_gorunum
 
 from icerik import gorsel_turev
@@ -183,6 +184,7 @@ urlpatterns = [
 
     # ads.txt — AdSense kimligi verildiyse yayimlanir, yoksa 404.
     path("ads.txt", reklam_gorunum.ads_txt, name="ads-txt"),
+    path("favicon.ico", adres_duzeni.favicon, name="favicon"),
 
     path("", icerik_gorunum.anasayfa, name="anasayfa"),
     path("ara", icerik_gorunum.arama, name="arama"),

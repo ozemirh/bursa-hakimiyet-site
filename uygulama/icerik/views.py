@@ -37,6 +37,7 @@ from . import eczane as eczane_sayfa
 from . import okunma, onbellek
 from .models import Haber, ResmiIlan
 from .sayfa_onbellegi import sayfa_onbellegi
+from .sayfa_no import sayfa_getir
 
 # Manşet slaydındaki sayfa sayısı. §35'te 15'ten 5'e inmişti; 30 Ağustos
 # 2026'da kullanıcı kararıyla yeniden 15 oldu.
@@ -985,9 +986,9 @@ class SinirliSayfalayici(Paginator):
 
 
 def _sayfala(request, sorgu, sinirli=False, boy=SAYFA_BOYU):
-    numara = request.GET.get("sayfa") or 1
     sinif = SinirliSayfalayici if sinirli else Paginator
-    sayfa = sinif(sorgu, boy).get_page(numara)
+    # Geçersiz/aralık dışı ?sayfa= → 404, yumuşak 404 yok (Paket G).
+    sayfa = sayfa_getir(sinif(sorgu, boy), request.GET.get("sayfa"))
     # Numaralı sayfalama (29 Ağustos): "1 … 4 [5] 6 … 50". Elided aralık
     # şablondan çağrılamıyor (metot bağımsız değişken istiyor), burada
     # kurulur; parca/sayfalama.html bu listeyi çizer.
@@ -1016,7 +1017,7 @@ KONU_SAYFA_BOYU = 30
 def konular(request):
     """Onaylı dosyaların dizini; en son gelişme önde."""
     sorgu = Konu.yayindakiler().order_by("-bitis", "-id")
-    sayfa = Paginator(sorgu, KONU_SAYFA_BOYU).get_page(request.GET.get("sayfa") or 1)
+    sayfa = sayfa_getir(Paginator(sorgu, KONU_SAYFA_BOYU), request.GET.get("sayfa"))
     return render(request, "konular.html", {
         "baslik": "Konu Dosyaları",
         "sayfa": sayfa,
