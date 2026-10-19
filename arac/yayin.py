@@ -229,23 +229,20 @@ def gorsel_indir(kaynak: dict, slug: str, kok: Path) -> str | None:
     url = (kaynak.get("gorsel_url") or "").strip()
     if not url.lower().startswith(("http://", "https://")):
         return None
-    istek = urllib.request.Request(url, headers={
-        "User-Agent": TARAYICI,
-        "Accept": "image/avif,image/webp,image/png,image/jpeg,*/*;q=0.8",
-        "Referer": kaynak.get("kaynak_url") or url,
-    })
+    # 19 Ekim 2026 (Paket F): indirme guvenli kapidan (`uygulama/icerik/
+    # dis_istek.py`). Ic aga istek yok; yalniz JPEG/PNG/WebP/GIF, tur hem
+    # baslikta hem sihirli baytta tutmali; uzanti TURDEN, adresten degil —
+    # `.svg`/`.html` diske hic yazilmaz.
+    from ayiklayici import guvenli_kapi
+    kapi = guvenli_kapi()
     try:
-        with urllib.request.urlopen(istek, timeout=30) as yanit:
-            tur = (yanit.headers.get("Content-Type") or "").split(";")[0].strip().lower()
-            if not tur.startswith("image/"):
-                return None
-            veri = yanit.read(EN_BUYUK_GORSEL + 1)
-    except (urllib.error.URLError, OSError, ValueError):
+        veri, _tur, uzanti = kapi.gorsel_getir(
+            url, en_cok_bayt=EN_BUYUK_GORSEL,
+            ek_basliklar={"Referer": kaynak.get("kaynak_url") or url})
+    except kapi.DisIstekHatasi:
         return None
-    if not veri or len(veri) > EN_BUYUK_GORSEL:
+    if not slug or "/" in slug or "\\" in slug or slug.startswith("."):
         return None
-
-    uzanti = UZANTI.get(tur) or Path(url.split("?")[0]).suffix.lower() or ".jpg"
     klasor = kok / GORSEL_KLASOR
     klasor.mkdir(parents=True, exist_ok=True)
     (klasor / (slug + uzanti)).write_bytes(veri)
