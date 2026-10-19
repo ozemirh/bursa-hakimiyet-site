@@ -235,6 +235,29 @@ class TemaSayfalari(TestCase):
             self.assertNotIn("data-bolum", metin, yol)
             self.assertIn("<body>", metin, yol)
 
+    def test_onbellekli_istekte_tema_dogru(self):
+        """Sayfa önbelleği (Paket A, 30 sn) HTML'i `data-bolum` ile birlikte
+        saklıyor. Anahtar yol başına olduğu için bir bölümün teması öbürüne
+        sızmamalı; isabetli istekte de nitelik aynı basılmalı."""
+        from django.core.cache import caches
+        from django.test import override_settings
+        from . import onbellek
+        yerel = "django.core.cache.backends.locmem.LocMemCache"
+        with override_settings(
+                CACHES={"default": {"BACKEND": yerel, "LOCATION": "bh-tema-veri"},
+                        "sayfa": {"BACKEND": yerel, "LOCATION": "bh-tema-sayfa"}},
+                SAYFA_ONBELLEK_SANIYE=30):
+            caches[onbellek.SAYFA].clear()
+            for _ in range(2):
+                for yol, beklenen in (("/ekonomi", ' data-bolum="ekonomi"'),
+                                      ("/teknoloji", ' data-bolum="teknoloji"'),
+                                      ("/gundem", "")):
+                    yanit = self.client.get(yol)
+                    self.assertIn(f"<body{beklenen}>", yanit.content.decode(), yol)
+            self.assertEqual(self.client.get("/ekonomi")["X-Onbellek"], "isabet")
+            self.assertEqual(self.client.get("/teknoloji")["X-Onbellek"], "isabet")
+            caches[onbellek.SAYFA].clear()
+
     def test_ekonomi_bursa_listesi_kurali(self):
         """Ekonomi bölümünden Bursa'yı ananlar; ulusal haber listede yok."""
         metin = self._govde("/ekonomi")

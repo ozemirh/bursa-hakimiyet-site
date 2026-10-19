@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load static site_etiket %}
+{% load static site_etiket gorsel_etiket %}
 {% comment %}
 Köşe yazısı detayı. İskelet `haber_detay.html` ile bilerek aynı: seslendirme
 betiği `.detay h1`, `.detay .spot` ve `.metin > p` seçicilerine bağlı, bu
@@ -39,7 +39,7 @@ bağlantı durur.
             kırpılmış portre aldı. Portre yazarın kendi kaydından gelir — kırpım
             kuralları (`.portre img[src*="-afis"]`) o dosya adlarına bağlı.{% endcomment %}
             <header class="gorus-bas">
-              {% if yazar.gorsel_yolu %}<a class="portre" href="{{ yazar.get_absolute_url }}" tabindex="-1" aria-hidden="true"><img src="{{ yazar.gorsel_yolu }}" alt="" width="96" height="96" decoding="async"></a>
+              {% if yazar.gorsel_yolu %}<a class="portre" href="{{ yazar.get_absolute_url }}" tabindex="-1" aria-hidden="true">{% gorsel yazar "portre" alt="" hemen=True %}</a>
               {% else %}<span class="portre vesika" aria-hidden="true">{{ yazar.basharfler }}</span>{% endif %}
               <div class="gorus-kimlik">
                 <span class="gorus-tur">KÖŞE YAZISI</span>
@@ -70,7 +70,9 @@ bağlantı durur.
             {% comment %}Köşe sayfasının kendi görseli yazının fotoğrafı değil,
                o tarihteki YAZAR AFİŞİDİR (ölçüldü: gorsel_alt yazarın adını
                taşıyor). 19 Ekim 2026'dan beri yazının üstüne basılmıyor;
-               yazar kimliği sütun başındaki portrede (yukarıda).{% endcomment %}
+               yazar kimliği sütun başındaki portrede (yukarıda). Paket D'nin
+               bu blok için yazdığı `{% gorsel yazi "detay" oncelikli=True %}`
+               çağrısı da bu yüzden düştü; LCP artık yazının metni.{% endcomment %}
 
             {% include "parca/seslendirme.html" %}
 

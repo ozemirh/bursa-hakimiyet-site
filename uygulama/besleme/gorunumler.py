@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from django.http import Http404, HttpResponse, StreamingHttpResponse
 
-from . import ayarlar, siteharitasi
+from . import ayarlar, bellek, siteharitasi
 from .aileler import onekten_aile
 
 XML_TURU = "application/xml; charset=utf-8"
@@ -40,8 +40,11 @@ def aylik(istek, onek, ay):
     if aile is None or not siteharitasi.ay_gecerli(ay):
         raise Http404("Böyle bir sitemap dosyası yok.")
     kok = ayarlar.site_koku(istek)
-    return StreamingHttpResponse(
-        siteharitasi.aylik_parcalar(kok, aile, ay), content_type=XML_TURU)
+    # Gövde önbellekten (besleme/bellek.py, 19 Ekim 2026): aynı üretecin
+    # çıktısı, biçim değişmez. Yanıt yine akış yanıtı — tek parçalık akış.
+    metin = bellek.aylik_metin(
+        kok, aile, ay, lambda: "".join(siteharitasi.aylik_parcalar(kok, aile, ay)))
+    return StreamingHttpResponse(iter([metin]), content_type=XML_TURU)
 
 
 def google_news(istek):

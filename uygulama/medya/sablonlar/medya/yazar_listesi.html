@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load site_etiket %}
+{% load site_etiket gorsel_etiket %}
 {% comment %}
 Yazar dizini. Veri gelmeden de doğru çalışır: boş liste "henüz göç etmedi"
 diye karşılanır, böylece bu sayfa bekleme sayfasının yerini erkenden alabilir.
@@ -28,7 +28,7 @@ diye karşılanır, böylece bu sayfa bekleme sayfasının yerini erkenden alabi
               harita ve ad harfleri görünüyordu. Kırpım anasayfa kuşağının
               ölçülmüş penceresiyle (`site.css`, `.portre img[src*="-afis"]`).{% endcomment %}
               {% if y.gorsel_yolu %}
-                <span class="portre"><img src="{{ y.gorsel_yolu }}" alt="{{ y.ad }}" width="58" height="58" loading="lazy"></span>
+                <span class="portre">{% gorsel y "vesika" alt=y.ad %}</span>
               {% else %}
                 <span class="vesika" aria-hidden="true">{{ y.basharfler }}</span>
               {% endif %}

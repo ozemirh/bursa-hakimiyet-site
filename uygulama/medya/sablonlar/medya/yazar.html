@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load site_etiket %}
+{% load site_etiket gorsel_etiket %}
 {% comment %}
 Yazar sayfası — künye + köşe yazıları listesi.
 
@@ -28,7 +28,11 @@ kutusu çiziliyor; sayfa internetsiz de açılmalı ve kırık görsel görünme
       dolu değil (ölçüldü); boş alan için satır basılmaz.{% endcomment %}
       <section class="kutu gorus-yazar" aria-labelledby="yazar-bas">
         <header class="gorus-bas">
-          {% if yazar.gorsel_yolu %}<span class="portre"><img src="{{ yazar.gorsel_yolu }}" alt="{{ yazar.ad }}" width="120" height="120" decoding="async"></span>
+          {% comment %}Görsel etiketi (Paket D): `portre` yuvası — afiş şablonu
+          %288 yakınlaştırıldığı için 120 px'lik dairede de geniş türev
+          gerekir. Türev adı kaynak dosya adını taşıdığından `-afis`/`-portre`
+          kırpım kuralları çalışmaya devam eder.{% endcomment %}
+          {% if yazar.gorsel_yolu %}<span class="portre">{% gorsel yazar "portre" alt=yazar.ad hemen=True %}</span>
           {% else %}<span class="portre vesika" aria-hidden="true">{{ yazar.basharfler }}</span>{% endif %}
           <div class="gorus-kimlik">
             <span class="gorus-tur">KÖŞE YAZARI</span>
