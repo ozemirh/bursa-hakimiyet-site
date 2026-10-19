@@ -14,7 +14,10 @@ from django.utils import timezone
 from .tests import TemelVeri
 from .xml_karakter import xml_temizle
 
-KIRLI_SPOT = "Kelime işlemciden gelen\x1d spot\x0b metni\x00."
+# NUL (\x00) yalnız SQLite'ta saklanabilir; PostgreSQL metni bunu reddeder,
+# yani o motorda böyle bir kayıt hiç oluşamaz. Temizleyicinin NUL davranışı
+# veritabanından bağımsız birim testinde (aşağıda) sınanıyor.
+KIRLI_SPOT = "Kelime işlemciden gelen\x1d spot\x0b metni\x0c."
 KIRLI_BASLIK = "Başlık\x1d içinde\x08 denetim"
 
 

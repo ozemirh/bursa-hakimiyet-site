@@ -116,6 +116,27 @@ def kelimeler(metin: str | None) -> list[str]:
     return [k for k in _KELIME_AYIRICI.split(anahtar(metin)) if k]
 
 
+def kayit_metni(*parcalar: str | None) -> str:
+    """Saklanacak aranabilir metin: kelimeler tek boşlukla, iki uçta boşluk.
+
+    >>> kayit_metni("Bursa'da IŞIK", None, "Gölge")
+    ' bursa da isik golge '
+
+    Biçim bir **sözleşmedir**, iki motor da ona dayanır:
+
+    - Kelime sınırı her zaman tek boşluk olduğu için "kelimeyle başlayan"
+      koşulu `" isik"` alt dizisi, "tam kelime" koşulu `" a "` alt dizisi
+      olarak yazılabilir — motorun kelime bölücüsüne güvenmeye gerek kalmaz.
+    - Kelime bölme burada, `kelimeler()` ile yapılır; motor metni yeniden
+      bölmez. Sorgu tarafı da aynı işlevden geçtiği için saklanan kelime ile
+      aranan kelime her zaman aynı kuralla üretilmiş olur.
+
+    Kelime yoksa boş dize döner (iki boşluk değil): boş metin boş kalır.
+    """
+    hepsi = [k for p in parcalar for k in kelimeler(p)]
+    return f" {' '.join(hepsi)} " if hepsi else ""
+
+
 def _duraklar() -> frozenset[str]:
     """Durak listesi dosyadan okunur ve **normalize edilerek** saklanır.
 

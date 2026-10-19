@@ -276,6 +276,14 @@ def _upsert(kovalar: dict[tuple[int, date], int]) -> None:
                     f"ON CONFLICT ({haber_s}, {gun_s}) DO UPDATE SET "
                     f"{adet_s} = {tablo}.{adet_s} + excluded.{adet_s}",
                     [d for satir in dilim for d in satir])
+        # Yabancı anahtarlar iki motorda da DEFERRABLE INITIALLY DEFERRED:
+        # ihlal deyimde değil işlem SONUNDA patlar. Bu blok dış bir işlemin
+        # içindeyse (savepoint) hata `kovalari_yaz`ın `IntegrityError`
+        # dalına hiç düşmez, dış işlemin commit'inde patlayıp onu da geri
+        # alırdı (B paketi, 19 Ekim 2026; tests_pg_uyum.OkunmaYetimKova).
+        # Denetim burada zorlanır: PG `SET CONSTRAINTS ALL IMMEDIATE`,
+        # SQLite `PRAGMA foreign_key_check(tablo)`.
+        connection.check_constraints(table_names=[Okunma._meta.db_table])
 
 
 def kovalari_yaz(kovalar: dict[tuple[int, date], int]) -> int:

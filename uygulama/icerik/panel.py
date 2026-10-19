@@ -3075,12 +3075,20 @@ def haber_ara(request):
         return JsonResponse({"sonuclar": [],
                              "uyari": "En az 3 harflik bir kelime yazın."})
 
+    from . import arama as arama_motoru
+
     haric = request.GET.get("haric") or 0
-    bulunan = (Haber.objects.filter(baslik__icontains=sorgu)
-               .exclude(pk=haric)
-               .exclude(durum=Haber.DURUM_SILINMIS)
-               .only("id", "baslik", "yayin_zamani")
-               .order_by()[:HABER_ARA_EN_COK])
+    # 19 Ekim 2026: normalize başlıkta alt dizi (`IŞIK` = `ışık`), PG'de
+    # pg_trgm GIN indeksiyle. SQLite'ta tam tarama, zaman sınırı altında.
+    try:
+        with arama_motoru.sure_siniri():
+            bulunan = list(arama_motoru.panel_suz(
+                Haber.objects.exclude(pk=haric).exclude(durum=Haber.DURUM_SILINMIS),
+                cozum).only("id", "baslik", "yayin_zamani")
+                .order_by()[:HABER_ARA_EN_COK])
+    except arama_motoru.ZamanAsimi:
+        return JsonResponse({"sonuclar": [], "uyari":
+                             "Arama zaman sınırını aştı; daha belirgin bir kelime yazın."})
     return JsonResponse({"sonuclar": [
         {"id": h.pk,
          "etiket": f"[{h.pk}] {h.baslik[:70]}",
