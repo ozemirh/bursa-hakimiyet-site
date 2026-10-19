@@ -6526,3 +6526,94 @@ Yol haritası raporun §5'inde altı aşama olarak yazılı.
 **Ölçüm düzeltmeleri.** Arama artık 1 milyon kayıtta ölçüldü: sonuçsuz sorgu
 2,8–31 sn, yani §21'deki p95 1.748 ms geçersiz. PostgreSQL bugün çalışmıyor
 (hizmet yok, 5432 dinlenmiyor). Eczane görevinin son sonucu `0x800710E0`.
+
+## §70 — optimizasyon ve altyapı turu: on üç paket (19 Ekim 2026)
+
+**Kullanıcı kararları.**
+- Yedek alınmayacak.
+- Zamanlanmış görevler açılmayacak.
+- Haberler yeni panelden girilecek.
+- Özel tasarım alacak sayfalar köşe yazıları, ekonomi ve teknoloji (Bursaspor'a ek).
+- Kullanıcının sözü: "Özellikle sitenin optimizasyonu … köklü değişikliklere izin
+  veriyorum, altyapıyı sağlam kuralım."
+
+**Yöntem.** Her paket ayrı bir git worktree'sinde, sahibi olan rol ajanınca yapıldı.
+Koordinatör her paketi ana dala birleştirdi ve tam testi koştu. Gerçek veri ölçüm
+sırasında salt okunurdu (`BH_SQLITE_YOLU=file:…?mode=ro`).
+
+| Paket | Sahip | Ne |
+|---|---|---|
+| A | backend | Paylaşılan önbellek, anonim sayfa mikro önbelleği (30 sn, kayıtla anında düşer), indeksler (0015), sitemap tek sorgu, okunma toplu yazım, N+1 |
+| B | backend | Yerel PostgreSQL 18 (ICU `tr-TR`), `pg_goc` göçü ve doğrulaması, indeksli Türkçe arama (0016) |
+| C | devops | Fail-closed ayarlar (`BH_ORTAM`), WhiteNoise + gzip/brotli + sürümlü statik, CSS yorum ayıklama, yerel fontlar, CSP, `/_durum`, `dagitim/`, CI, `gelistir.ps1` |
+| D | frontend | İstek anında görsel türevleri (`/gorsel/<genişlik>/…` WebP + og), `{% gorsel %}`: srcset/sizes/ölçü/öncelik |
+| E | tasarım direktörü | Tema düzeneği (`icerik/temalar.py`, `--tema-*` rolleri); ekonomi, teknoloji ve köşe yazıları tasarımları; Bursaspor taşındı; odak halkası ≥ 3:1 |
+| F | full stack | Kimlik tabanı 5.000.000, tek yayın kapısı, SSRF kapısı, raster görsel, `yayinci.py` CORS/jeton, giriş sınırı ve oturum süresi, denetim kaydı (0016), URL'den türetilen yetki taraması |
+| G | SEO | Meta/OG/Twitter, JSON-LD, `SITE_KOKU` kanoniği, `/amp/*`, sondaki eğik çizgi ve eski arama 301'leri, sayfa 404'ü, ince konu `noindex`, UTM |
+| H | full stack | Manşet bayrakları anasayfada; "önce Bursa" düşüşü (`BH_MANSET_BURSA_ORANI` 10/15, bayrak önceliği 48 sa); `SonDakika` tablosu; Yayına hazır kuyruğu; gerçek imza; paragraflama |
+| J | veri | Bayatlık sözleşmesi (`canli.tazelik()`), namaz istek anında hesaplanıyor, maç/vizyon/döviz işaretleri, kaynak sağlığı eşikleri, Başka Sinema (ToS nedeniyle varsayılan dışı) |
+| K | test | Hermetik paket (fixture canlı veri), kararsız testin kök nedeni (`time.time()` 15,6 ms → `yeni_surum()`), başarım bütçesi, site ölçüm testi (`BH_SITE_OLCUM=1`), `--parallel` |
+| L1 | frontend | Ölçü eşleştirmeli yazı tipi yedekleri, `ch`→`em`, 1024 taşması, /ara LCP, dünden eski nöbet listesi gizli |
+| L2 | backend | İlgili haberler indeksli (0018), köşe yazısı N+1, `temizle` dış bağlantı biçimleri, vekil sistem denetimi, PG ayarları (`dagitim/postgresql/`) |
+| M | yapay zekâ | 25 periyodik kalıp grubu; 444 onaylı dosya onay beklemeye geri alındı (silinmedi, geri yüklenebilir); "sürüyor" okuma anında; K2 olgu denetimi yayın kapısında; YZ köken kaydı (0019) |
+
+**Ölçüldü (önce → sonra).**
+
+| Ölçüm | Önce | Sonra |
+|---|---|---|
+| Anasayfa, soğuk süreç | 33,7 sn | 0,1 sn (önbellek dolu) · 0,6 sn (önbellek boş) |
+| Anasayfa, sıcak | 78 ms / 36 sorgu | 1,5 ms önbellekten · 51 ms / 14 sorgu önbelleksiz |
+| Panel "Bugün" | 21,5 sn | 0,17 sn |
+| Sitemap indeksi | 19,6 sn / 385 sorgu | 0,6 sn soğuk · 9 ms sıcak |
+| Haber detay p95, önbelleksiz (PG) | 496 ms | 63 ms |
+| Arama p95 | 21,4 sn (SQLite `icontains`) | 119 ms (PG GIN), `IŞIK = ışık` |
+| Anasayfa görsel indirme, 390 / 1440 px | 6,99 / 9,22 MB | 0,15 / 0,23 MB |
+| Anasayfa HTML aktarımı | 192 KB | 32 KB (gzip) |
+| site.css aktarımı | 200 KB | 19,7 KB gzip · 16,2 KB brotli |
+| Dış istek (Google Fonts) | 7 | 0 |
+| Font geciktirmeli CLS, köşe yazısı @1000 | 0,059 | 0 |
+| `check --deploy` (üretim ayarı) | 6 uyarı | 0 |
+| Test paketi | 879 test, 135 sn | 1452 test; SQLite ve PG yeşil; `--parallel 4` 19 sn |
+| Site ölçümü (11 sayfa × 8 genişlik, gerçek veri) | — | taşma 0 · h1 1 · lazy LCP 0 · dış kaynak 0 · halkasız odak 0 |
+
+**Geliştirme ortamı değişti.**
+- Uygulama `BH_ORTAM` verilmezse üretim sayılır ve anahtarsız açılmaz. Sunucu
+  `.\gelistir.ps1` ile başlatılır.
+- Geliştirme veritabanı yerel PostgreSQL'dir: `D:\bursa-hakimiyet-pg\veri`, port 5433,
+  bağlantı bilgisi git'e girmeyen kök `.env` dosyasında.
+- `uygulama/db.sqlite3` dondurulmuş geri dönüş kopyasıdır. 0015 ve sonraki
+  migration'lar ona uygulanmadı; SQLite'a dönülecekse önce `migrate` (~5–6 dk) ve
+  `arama_doldur` gerekir.
+- `uygulama/statik/sitemap/` artık git'te izlenmiyor. Dosyalar diskte duruyor;
+  üretimde `site_haritasi_uret` üretir.
+- `arac/yayinci.py` artık jeton istiyor. Editör sayfası `http://127.0.0.1:8787/`
+  adresinden açılmalı; dosyadan açılan sayfa yayıncıyı kullanamaz.
+
+**Migration zinciri:** 0015_basarim_indeksleri → 0016_arama_metni + 0016_guvenlik_logkaydi
+→ 0017_merge → 0018_ilgili_baslik_indeksi → 0019_yz_koken. Yerel PG'de köken göçü
+önce 0018_yz_koken adıyla uygulanmıştı; `django_migrations` kaydı 0019_yz_koken olarak
+düzeltildi (tablolar aynı).
+
+**Veri değişiklikleri (yerel PG, geri alınabilir).**
+- 444 konu dosyası onay beklemeye alındı: 288'i periyodik kalıba, 133'ü yapısal
+  süzgece, 23'ü yalnız ölçüye takıldı. Geri alma dosyası
+  `D:\bursa-hakimiyet-pg\konu_geri_alma_2026-10-19.json`, geri yükleme komutu
+  `konu_temizle --geri-yukle <dosya>`.
+- Göçte kimlik 1035397'nin gövdesindeki NUL karakteri düştü; PostgreSQL metni
+  bu karakteri saklayamıyor.
+
+**Kullanıcı kararı bekleyenler.**
+- Bursa oranı 10/15 ve 48 saatlik bayrak önceliği (varsayılan konuldu).
+- Tepe/kare eşlemesi.
+- Okura "yapay zekâ destekli" etiketi.
+- K2 bulgusunu kim kapatabilir.
+- 444 dosyanın editörce değerlendirilmesi.
+- 1696272–74 kimliklerinin taşınması.
+- "Google News" alt metninin veride temizlenmesi.
+- GA4, Search Console ve push abonelerinin taşınması.
+- Gerçek YouTube/X gömme (CSP + KVKK).
+- Etiket sayfası.
+- Başka Sinema'dan yazılı izin istenip istenmeyeceği.
+- §35 işaret renkleri (turkuaz/amber).
+- Köşe adları ve özgeçmişler: 37 yazarın hiçbirinde yok, yeni içerik ister.
+- Üretim sunucusu ve bütçesi; kesim tarihi.
