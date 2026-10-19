@@ -148,6 +148,28 @@ class TazeBayatKilit(TestCase):
         self.assertEqual(onbellek.hesapla("t:yedek", uret, taze=60, yedek=list), [])
         self.assertEqual(uret.call_count, 1)
 
+    def test_eszamanli_isteklerde_tek_hesap(self):
+        """Yığılma: önbellek boşken aynı anda gelen 8 istek pahalı hesabı
+        BİR kez yaptırır; ötekiler kilidi görüp sonucu bekler."""
+        import threading
+        import time as zaman
+        sayac = []
+
+        def uret():
+            sayac.append(1)
+            zaman.sleep(0.3)
+            return "deger"
+
+        sonuclar = []
+        isler = [threading.Thread(target=lambda: sonuclar.append(
+            onbellek.hesapla("t:yigilma", uret, taze=60))) for _ in range(8)]
+        for i in isler:
+            i.start()
+        for i in isler:
+            i.join()
+        self.assertEqual(len(sayac), 1)
+        self.assertEqual(sonuclar, ["deger"] * 8)
+
     def test_bayatlat_silmeden_yeniden_hesaplatiyor(self):
         self.assertEqual(onbellek.hesapla("t:b", lambda: 1, taze=60), 1)
         onbellek.bayatlat("t:b")
