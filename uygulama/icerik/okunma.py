@@ -15,6 +15,24 @@ aynı mantık. Bedeli: süreç ölürse son turun sayımı kaybolur. Bir okunma
 sıralaması için bu kabul edilebilir; sayfanın 500 vermesi değildir, o
 yüzden yazma hatası sayfaya hiç yansımaz.
 
+**Tek işlem, tek deyim (19 Ekim 2026).** Boşaltma eskiden kova başına bir
+`UPDATE` + gerekirse `INSERT` açıyordu; her biri kendi işleminde, yani
+`journal_mode=delete` altında kova başına bir disk eşitlemesi ve yazma
+kilidi. Artık bütün tampon `transaction.atomic()` içinde çok satırlı tek
+bir `INSERT … ON CONFLICT DO UPDATE SET adet = adet + excluded.adet`
+deyimiyle yazılıyor; sözdizimi SQLite (3.24+) ve PostgreSQL'de aynı.
+
+**Okuma yolu yazmaz.** `en_cok()` eskiden boşaltmayı da tetikliyordu; yani
+en çok okunanları SORAN her sayfa yazma kilidine girebiliyordu. Boşaltma
+yalnız sayım yolunda (`say`) ve `okunma_bosalt` komutunda.
+
+**İki yazım düzeni** (`settings.OKUNMA_YAZIM`): `istek` (varsayılan) —
+yukarıdaki gibi istek yolu yazar; `komut` — istek yolu tamponu yalnız
+kuyruk dosyasına bırakır, veritabanına `manage.py okunma_bosalt` taşır.
+Zamanlanmış görev kullanıcı kararıdır ve açılmadı; `komut` düzeni ancak o
+görev kurulunca seçilmeli, yoksa sayım kuyrukta bekler. Süreç kapanırken
+tampon her iki düzende de kuyruk dosyasına bırakılır, kaybolmaz.
+
 **Liste ya tamamen gerçek olur ya hiç.** Bir modül gerçek veriye ancak
 istenen sayıda haberin her biri pencerede `ESIK_OKUNMA` okunmaya ulaşmışsa
 geçer; ulaşmamışsa çağıran eski davranışına döner. Yarısı gerçek yarısı
@@ -24,15 +42,22 @@ geçer; ulaşmamışsa çağıran eski davranışına döner. Yarısı gerçek y
 
 from __future__ import annotations
 
+import atexit
+import ipaddress
+import json
+import os
 import threading
 import time
 from datetime import date, timedelta
+from functools import lru_cache
+from pathlib import Path
 
-from django.db import DatabaseError
-from django.db.models import F, Sum
+from django.conf import settings
+from django.db import DatabaseError, IntegrityError, connection, transaction
+from django.db.models import Sum
 from django.utils import timezone
 
-from .models import Okunma
+from .models import Haber, Okunma
 
 # Sıralamanın penceresi. Gazetede "en çok okunan" her zaman bir pencere
 # ölçüsüdür; ömür boyu toplam eski bir haberi listeye kalıcı çakar.
@@ -88,19 +113,57 @@ def _on_yukleme_mi(request) -> bool:
                for b in basliklar)
 
 
+@lru_cache(maxsize=8)
+def _vekil_aglari(tanim: tuple[str, ...]) -> tuple:
+    aglar = []
+    for parca in tanim:
+        try:
+            aglar.append(ipaddress.ip_network(parca, strict=False))
+        except ValueError:
+            continue    # bozuk girdi ayarı düşürmez, yalnız o satır yok sayılır
+    return tuple(aglar)
+
+
+def _guvenilir(adres: str, aglar) -> bool:
+    try:
+        ip = ipaddress.ip_address(adres)
+    except ValueError:
+        return False
+    return any(ip in ag for ag in aglar)
+
+
+def ziyaretci_adresi(request) -> str:
+    """Okurun adresi — `X-Forwarded-For`a KOŞULSUZ güvenmeden.
+
+    Başlık yalnız istek güvenilir bir vekilden geldiyse
+    (`settings.GUVENILIR_VEKILLER`) okunur ve SAĞDAN SOLA yürünür: zincirin
+    sağ ucu bizim vekilimizin gördüğü adrestir, sol ucu ise istemcinin
+    kendi yazdığı, taklit edilebilen kısım. İlk güvenilmeyen adım okurdur.
+    Liste boşsa başlık hiç okunmaz: eskiden ilk adım koşulsuz alınıyordu ve
+    herkes başlığa rastgele adres yazıp tekrar süzgecini atlatabiliyordu.
+    """
+    uzak = request.META.get("REMOTE_ADDR", "")
+    aglar = _vekil_aglari(tuple(getattr(settings, "GUVENILIR_VEKILLER", ()) or ()))
+    if not aglar or not _guvenilir(uzak, aglar):
+        return uzak
+    zincir = [a.strip() for a in
+              request.META.get("HTTP_X_FORWARDED_FOR", "").split(",") if a.strip()]
+    for adres in reversed(zincir):
+        if not _guvenilir(adres, aglar):
+            return adres
+    return zincir[0] if zincir else uzak
+
+
 def _imza(request, haber_id: int) -> int:
     """Okurun kimliği DEĞİL — yalnız "bunu az önce saydık mı" anahtarı.
 
     Adres ve tarayıcı dizisi belleğe **yazılmaz**; yalnız karması tutulur ve
     `TEKRAR_SANIYE` sonunda düşer. Vekil sunucu arkasında `REMOTE_ADDR`
     bütün okurlarda aynı olurdu ve sayaç haber başına yarım saatte bir
-    okunma sayardı; o yüzden `X-Forwarded-For`un ilk adımı öncelikli.
-    Taklit edilebilir, ama taklidin kazancı sayacı şişirmektir, okuru
-    tanımak değil.
+    okunma sayardı; adresin nasıl bulunduğu `ziyaretci_adresi`nde.
     """
-    ileten = request.META.get("HTTP_X_FORWARDED_FOR", "")
-    adres = ileten.split(",")[0].strip() or request.META.get("REMOTE_ADDR", "")
-    return hash((adres, request.META.get("HTTP_USER_AGENT", ""), haber_id))
+    return hash((ziyaretci_adresi(request), request.META.get("HTTP_USER_AGENT", ""),
+                 haber_id))
 
 
 def sayilmali(request, haber_id: int) -> bool:
@@ -148,47 +211,175 @@ def gerekliyse_bosalt() -> None:
         bosalt()
 
 
-def bosalt() -> int:
-    """Tamponu veritabanına yazar; yazılan kova sayısını döndürür.
-
-    Yazma başarısız olursa (kilitli dosya, dolu disk) sayımlar tampona GERİ
-    konur ve bir sonraki turda denenir; tavan aşılmışsa düşürülür — sayaç
-    eksik sayar, süreç şişmez.
-    """
+def _tamponu_al() -> dict[tuple[int, date], int]:
     global _son_bosaltma
     with _kilit:
         _son_bosaltma = time.monotonic()
         kovalar = dict(_bekleyen)
         _bekleyen.clear()
-    if not kovalar:
+    return kovalar
+
+
+def _tampona_geri_koy(kovalar: dict) -> None:
+    """Yazılamayan sayım bir sonraki tura kalır; tavan aşılmışsa yeni kova
+    düşer — sayaç eksik sayar, süreç şişmez."""
+    with _kilit:
+        for anahtar, adet in kovalar.items():
+            if anahtar not in _bekleyen and len(_bekleyen) >= BOSALT_ADET * 4:
+                continue
+            _bekleyen[anahtar] = _bekleyen.get(anahtar, 0) + adet
+
+
+def bosalt() -> int:
+    """Tamponu boşaltır; işlenen kova sayısını döndürür.
+
+    `istek` düzeninde veritabanına yazar (varsa kuyruk dosyalarını da aynı
+    işleme katar), `komut` düzeninde yalnız kuyruk dosyasına bırakır.
+    Yazma başarısız olursa (kilitli dosya, dolu disk) sayımlar tampona GERİ
+    konur ve bir sonraki turda denenir.
+    """
+    kovalar = _tamponu_al()
+    if getattr(settings, "OKUNMA_YAZIM", "istek") == "komut":
+        if kovalar and not kuyruga_yaz(kovalar):
+            _tampona_geri_koy(kovalar)
+            return 0
+        return len(kovalar)
+    if not kovalar and not _kuyruk_dosyalari():
+        return 0
+    try:
+        return kuyrugu_bosalt(ek=kovalar)
+    except DatabaseError:
+        _tampona_geri_koy(kovalar)
         return 0
 
-    yazilan = 0
-    for (haber_id, gun), adet in kovalar.items():
-        if _kovayi_yaz(haber_id, gun, adet):
-            yazilan += 1
-        else:
-            with _kilit:
-                if len(_bekleyen) < BOSALT_ADET * 4:
-                    anahtar = (haber_id, gun)
-                    _bekleyen[anahtar] = _bekleyen.get(anahtar, 0) + adet
+
+def _upsert(kovalar: dict[tuple[int, date], int]) -> None:
+    """Bütün kovalar TEK işlemde, parti başına çok satırlı TEK deyimle.
+
+    `ON CONFLICT (haber_id, gun) DO UPDATE` iki sürecin aynı kovayı aynı
+    anda açma yarışını da kapatıyor: eskiden UPDATE boş dönünce INSERT
+    deneniyor, yarışı kaybeden süreç bütünlük hatası alıp yeniden
+    deniyordu.
+    """
+    q = connection.ops.quote_name
+    tablo = q(Okunma._meta.db_table)
+    haber_s, gun_s, adet_s = q(Okunma._meta.get_field("haber").column), q("gun"), q("adet")
+    satirlar = [(h, g.isoformat(), a) for (h, g), a in kovalar.items() if a > 0]
+    parti = 300   # 3 değişken × 300 = 900: SQLite'ın eski 999 sınırının altında
+    with transaction.atomic():
+        with connection.cursor() as imlec:
+            for i in range(0, len(satirlar), parti):
+                dilim = satirlar[i:i + parti]
+                yer = ", ".join(["(%s, %s, %s)"] * len(dilim))
+                imlec.execute(
+                    f"INSERT INTO {tablo} ({haber_s}, {gun_s}, {adet_s}) VALUES {yer} "
+                    f"ON CONFLICT ({haber_s}, {gun_s}) DO UPDATE SET "
+                    f"{adet_s} = {tablo}.{adet_s} + excluded.{adet_s}",
+                    [d for satir in dilim for d in satir])
+
+
+def kovalari_yaz(kovalar: dict[tuple[int, date], int]) -> int:
+    """Kovaları veritabanına yazar; yazılan kova sayısını döndürür.
+
+    Arada silinmiş bir haberin kovası bütün partiyi bütünlük hatasıyla
+    düşürmesin diye hata alınırsa var olmayan kimlikler ayıklanıp bir kez
+    daha denenir. `DatabaseError` çağırana yükselir.
+    """
+    if not kovalar:
+        return 0
+    try:
+        _upsert(kovalar)
+        return len(kovalar)
+    except IntegrityError:
+        var = set(Haber.objects.filter(pk__in={h for h, _ in kovalar})
+                  .values_list("pk", flat=True))
+        temiz = {k: a for k, a in kovalar.items() if k[0] in var}
+        _upsert(temiz)
+        return len(temiz)
+
+
+# --------------------------------------------------------------------------
+# Kuyruk dosyaları — `komut` düzeni ve süreç kapanışı
+
+def _kuyruk_koku() -> Path:
+    return Path(getattr(settings, "OKUNMA_KUYRUK_KOK", "okunma-kuyrugu"))
+
+
+def _kuyruk_dosyalari() -> list[Path]:
+    kok = _kuyruk_koku()
+    if not kok.is_dir():
+        return []
+    return sorted(kok.glob("okunma-*.json"))
+
+
+def kuyruga_yaz(kovalar: dict[tuple[int, date], int]) -> bool:
+    """Kovaları süreç adına benzersiz bir dosyaya bırakır.
+
+    Önce `.tmp` yazılıp sonra adı değiştiriliyor: komut yarım dosya
+    okumasın. Dosya adı süreç kimliği + nanosaniye; iki süreç aynı dosyaya
+    hiç yazmaz, kilit gerekmez.
+    """
+    if not kovalar:
+        return True
+    try:
+        kok = _kuyruk_koku()
+        kok.mkdir(parents=True, exist_ok=True)
+        ad = kok / f"okunma-{os.getpid()}-{time.time_ns()}.json"
+        gecici = ad.with_name(ad.name + ".tmp")
+        gecici.write_text(json.dumps([[h, g.isoformat(), a]
+                                      for (h, g), a in kovalar.items()]),
+                          encoding="utf-8")
+        os.replace(gecici, ad)
+        return True
+    except OSError:
+        return False
+
+
+def kuyrugu_bosalt(ek: dict | None = None) -> int:
+    """Kuyruk dosyalarını (ve `ek` tamponunu) TEK işlemde veritabanına yazar.
+
+    Her dosya önce sürece özel bir ada taşınarak SAHİPLENİLİR; aynı anda
+    çalışan ikinci bir boşaltıcı o dosyayı göremez, sayım iki kez yazılmaz.
+    Yazım düşerse dosyalar eski adlarına döner ve sayım kaybolmaz.
+    """
+    toplam: dict[tuple[int, date], int] = dict(ek or {})
+    sahiplenilen: list[tuple[Path, Path]] = []
+    for dosya in _kuyruk_dosyalari():
+        hedef = dosya.with_name(f"{dosya.stem}.isleniyor-{os.getpid()}")
+        try:
+            os.replace(dosya, hedef)
+        except OSError:
+            continue    # başka bir boşaltıcı aldı
+        try:
+            for h, g, a in json.loads(hedef.read_text(encoding="utf-8")):
+                anahtar = (int(h), date.fromisoformat(g))
+                toplam[anahtar] = toplam.get(anahtar, 0) + int(a)
+        except (OSError, ValueError, TypeError):
+            # Bozuk dosya sonsuza dek yeniden denenmesin: kenara alınır.
+            os.replace(hedef, hedef.with_name(dosya.stem + ".bozuk"))
+            continue
+        sahiplenilen.append((dosya, hedef))
+    try:
+        yazilan = kovalari_yaz(toplam)
+    except DatabaseError:
+        for dosya, hedef in sahiplenilen:
+            os.replace(hedef, dosya)
+        raise
+    for _, hedef in sahiplenilen:
+        hedef.unlink(missing_ok=True)
     return yazilan
 
 
-def _kovayi_yaz(haber_id: int, gun: date, adet: int) -> bool:
-    """Kovayı artır, yoksa aç. Yarışta (iki süreç aynı kovayı açtı) bir kez
-    daha dener; ikisi de olmazsa `False` döner ve sayım tampona geri gider."""
-    for son_deneme in (False, True):
-        try:
-            if (Okunma.objects.filter(haber_id=haber_id, gun=gun)
-                    .update(adet=F("adet") + adet)):
-                return True
-            Okunma.objects.create(haber_id=haber_id, gun=gun, adet=adet)
-            return True
-        except DatabaseError:
-            if son_deneme:
-                return False
-    return False
+def _kapanista_birak() -> None:
+    """Süreç kapanırken tampon veritabanına DEĞİL kuyruk dosyasına gider:
+    kapanışta veritabanını beklemek süreci asabilir. Bir sonraki boşaltma
+    (istek yolu ya da komut) dosyayı toplar."""
+    kovalar = _tamponu_al()
+    if kovalar:
+        kuyruga_yaz(kovalar)
+
+
+atexit.register(_kapanista_birak)
 
 
 def sifirla() -> None:
@@ -246,7 +437,8 @@ def en_cok(sorgu, adet: int, haric=()) -> list:
     """
     if adet <= 0:
         return []
-    gerekliyse_bosalt()
+    # Boşaltma burada ÇAĞRILMIYOR (19 Ekim 2026): okuma yolu yazmaz. Tampon
+    # en geç `BOSALT_SANIYE` sonra sayım yolunda ya da komutla yazılır.
 
     satirlar = Okunma.objects.filter(gun__gte=pencere_basi())
     if haric:
