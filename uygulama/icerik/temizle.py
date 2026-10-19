@@ -101,13 +101,45 @@ class _Temizleyici(HTMLParser):
         for ad, deger in nitelikler:
             if ad.lower() != "href" or not deger:
                 continue
-            hedef = deger.strip()
-            if hedef.startswith("/"):
-                return hedef
-            if urlparse(hedef).scheme.lower() in GUVENLI_SEMA:
-                return hedef
-            return None
+            return baglanti_hedefi(deger)
         return None
+
+
+#: Tarayıcının URL ayrıştırıcısının adresin HER yerinden sildiği karakterler
+#: (WHATWG URL: ASCII sekme ve satır sonu). `java\tscript:` böyle `javascript:`
+#: olur; denetim tarayıcının göreceği biçim üzerinde yapılmalı.
+_URL_SILINEN = str.maketrans("", "", "\t\n\r")
+
+
+def baglanti_hedefi(ham: str) -> str | None:
+    """`href` değerinin basılacak hâli; güvensizse None (bağlantı düz metne iner).
+
+    **Kökten göreli adres (`//kotu.example`) dış bağlantıdır** (Paket L2,
+    19 Ekim 2026). Eskiden "/" ile başlayan her değer iç bağlantı dalına
+    düşüp olduğu gibi basılıyordu; ama tarayıcı `//kotu.example/yol`u da,
+    `/\\kotu.example/yol`u da (WHATWG ayrıştırıcısı http(s) adreslerinde
+    ters bölüyü eğik çizgi sayar) DIŞ adrese çözer. Artık bu biçim açık
+    `https://` adresine çevrilir: okur ve editör nereye gittiğini görür,
+    bağlantı dış bağlantıyla aynı muameleyi alır. Ana makinesi olmayan
+    (`///`, `/\\/`'den sonra boş) değer reddedilir.
+
+    Gerçek iç bağlantı (`/bursa/haber-12`) dokunulmadan kalır.
+    """
+    hedef = ham.strip().translate(_URL_SILINEN)
+    if not hedef:
+        return None
+    if hedef[0] in "/\\":
+        # Tarayıcı gözüyle: http(s) adresinde "\" = "/".
+        bicim = hedef.replace("\\", "/")
+        if not bicim.startswith("//"):
+            return hedef if "\\" not in hedef else bicim  # gerçek iç bağlantı
+        hedef = "https://" + bicim.lstrip("/")
+        if not urlparse(hedef).netloc:
+            return None
+        return hedef
+    if urlparse(hedef).scheme.lower() in GUVENLI_SEMA:
+        return hedef
+    return None
 
 
 def govde_temizle(ham: str) -> str:
