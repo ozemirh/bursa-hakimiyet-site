@@ -41,19 +41,31 @@ SAYFA_ACIK = override_settings(
 # Sayfa adı → önbelleksiz istekteki sorgu tavanı (yollar: `Temel.yollar`).
 #             ölçülen az kayıt / 4 kat kayıt
 TAVAN = {
-    "anasayfa": 30,             # 23 / 23
-    "haber_detay": 12,          # 11 / 11
+    "anasayfa": 30,             # 24 / 24 (L2: yazar kuşağı tek sorgu)
+    "haber_detay": 12,          # 12 / 12 (H: editörün ilgili seçimi + etiketler)
     "kategori_bursa": 12,       #  7 / 7
     "kategori_ekonomi": 12,     #  9 / 7
     "kategori_bursaspor": 12,   #  7 / 7
     "ilce": 10,                 #  5 / 5
-    # 11 / 14 — BÜYÜYOR: "yazarın diğer yazıları" (medya/views.py
-    # kose_yazisi, `digerleri`) her kalem için yazarı ayrıca çekiyor
-    # (select_related yok); [:5] dilimiyle sınırlı N+1, en çok +5 sorgu.
-    # Düzeltme sahibinde (backend); düzelince tavan 12'ye iner.
-    "kose_yazisi": 16,
+    # 11 / 14 idi — BÜYÜYORDU: "yazarın diğer yazıları" her kalem için
+    # yazarı ayrıca çekiyordu. Paket L2: `select_related("yazar")` +
+    # raydaki yazarların son yazısı tek sorguda (`Yazar.son_yazisiyla`).
+    "kose_yazisi": 12,          #  7 / 7
+    #  1 / 1 — yazar başına "son yazı" sorgusu kalktı (Paket L2; PG'de 38 idi).
+    "yazarlar": 4,
     "konular": 4,               #  2 / 2
 }
+
+#: PostgreSQL'de motora özgü EK sorgular (Paket L2). İlgili haberin PG yolu
+#: iki sorgu daha açar: pencere uçlarının kimlik yoklaması (istek başına) ve
+#: ağır çapa istatistiği (`pg_stats`; süreç başına günde BİR kez, burada
+#: soğuk süreç ölçüldüğü için sayılıyor). Sabit bedeldir, kayıtla büyümez —
+#: çok kayıt turu bunu ayrıca denetler.
+PG_EK = {"haber_detay": 2}
+
+
+def tavan(ad: str) -> int:
+    return TAVAN[ad] + (PG_EK.get(ad, 0) if connection.vendor == "postgresql" else 0)
 
 #: Anasayfa HTML'i (sıkıştırmasız) en çok bu kadar.
 ANASAYFA_HTML_TAVAN = 200 * 1024
@@ -94,6 +106,14 @@ class Temel(TestCase):
         cls.haber = Haber.objects.get(pk=960000)
         cls.yazar = Yazar.objects.create(id=9601, slug="butce-yazari", ad="Bütçe Yazarı",
                                          unvan="Köşe yazarı", sayfasi_tarandi=False)
+        # Yazar sayısı da büyüsün: "son yazı" yazar başına sorgu açarsa
+        # çok kayıt turunda tavanı deler.
+        for n in range(2 + cls.ARTIS // 20):
+            ek = Yazar.objects.create(id=9610 + n, slug=f"butce-ek-{n}", ad=f"Ek Yazar {n}",
+                                      sayfasi_tarandi=False)
+            KoseYazisi.objects.create(
+                id=962000 + n, slug=f"butce-ek-yazi-{n}", baslik=f"Ek yazı {n}",
+                yazar=ek, govde="<p>a</p>", yayin_zamani=simdi - timedelta(hours=n))
         for n in range(3 + cls.ARTIS // 10):
             KoseYazisi.objects.create(
                 id=961000 + n, slug=f"butce-yazi-{n}", baslik=f"Köşe yazısı {n}",
@@ -116,6 +136,7 @@ class Temel(TestCase):
             "kategori_bursaspor": "/bursaspor",
             "ilce": "/ilce/osmangazi",
             "kose_yazisi": self.yazi.get_absolute_url(),
+            "yazarlar": "/yazarlar",
             "konular": "/konular",
         }
 
@@ -134,7 +155,7 @@ class SorguTavani(Temel):
             with self.subTest(ad):
                 n, _ = self.sorgu_say(yol)
                 olcum[ad] = n
-                self.assertLessEqual(n, TAVAN[ad], f"{ad} {yol}: {n} sorgu")
+                self.assertLessEqual(n, tavan(ad), f"{ad} {yol}: {n} sorgu")
         if os.environ.get("BH_BUTCE_RAPOR") == "1":
             print(type(self).__name__, olcum)
 

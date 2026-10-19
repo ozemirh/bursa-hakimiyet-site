@@ -22,6 +22,7 @@ from django.db import transaction
 
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 
+from ... import arama
 from ...models import Haber
 from ...temizle import KURTARILAMAZ, metin_duzelt
 
@@ -107,3 +108,8 @@ class Command(BaseCommand):
     def _yaz(model, yigin, alanlar):
         with transaction.atomic():
             model.objects.bulk_update(yigin, alanlar, batch_size=YIGIN)
+            if model is Haber:
+                # `bulk_update` kayıt kancasını çağırmaz; düzelen başlık/spot
+                # aramaya AYNI işlemde yansır (Paket L2). Kayıtlar
+                # `only("pk", "baslik", "spot")` ile yüklendi, ek sorgu yok.
+                arama.yaz(arama.satir_kur(h.pk, h.baslik, h.spot) for h in yigin)

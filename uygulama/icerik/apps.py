@@ -18,6 +18,8 @@ class IcerikConfig(AppConfig):
         # Oturum süresi için giriş damgası (Paket F madde 8).
         from .giris_guvenligi import sinyali_bagla
         sinyali_bagla()
+        # Ayara bağlı sistem denetimleri (Paket L2): içe aktarma kaydeder.
+        from cekirdek import denetimler  # noqa: F401
 
         # Arama metni haberle birlikte tazelenir (icerik/arama.py). Kanca
         # `Haber.save()` içinde değil burada: model dosyası arama motorunu
