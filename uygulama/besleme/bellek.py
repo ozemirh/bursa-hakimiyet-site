@@ -27,7 +27,6 @@ saklar.
 from __future__ import annotations
 
 import hashlib
-import time
 
 from django.core.cache import caches
 from django.db.models.signals import post_delete, post_save, pre_save
@@ -76,7 +75,9 @@ def ay_degisti(aile, aylar_: set[str]) -> None:
         return
     veri = caches[onbellek.VERI]
     for ay in aylar_:
-        veri.set(_surum_anahtari(aile.anahtar, ay), f"{time.time():.6f}", None)
+        # Benzersiz sürüm: düz `time.time()` Windows'ta 15,6 ms aynı kalıyor,
+        # aynı dilimdeki ikinci kayıt eski dosyayı servis ettiriyordu.
+        veri.set(_surum_anahtari(aile.anahtar, ay), onbellek.yeni_surum(), None)
     if aile.ay_ozeti is None:
         onbellek.sil(ozet_anahtari(aile.anahtar))
         return
