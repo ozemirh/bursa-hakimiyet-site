@@ -29,6 +29,7 @@ Araç `arac/` klasöründen **tembel** içe aktarılır: Django açılışında
 from __future__ import annotations
 
 import json
+import logging
 import re
 import sys
 from html import escape
@@ -40,13 +41,15 @@ from django.utils import timezone
 
 from taksonomi.models import Ilce, Kategori, Kaynak
 
-from . import goc_kaynak
+from . import dis_istek, goc_kaynak, yayin_kapisi
 from .arama_metni import anahtar
 from .formlar import etiketleri_kur
+from .kimlik import yeni_kayit_kaydet
 from .models import YZ_BASLIK_ISARETI, Haber
 
 ARAC_KOK = Path(settings.BASE_DIR).parent / "arac"
 CIKTI_KOK = ARAC_KOK / "cikti"
+gunluk = logging.getLogger("bh.yz_kopru")
 
 #: Panelde gösterilen sağlayıcılar. Sıra editör sayfasındakiyle aynı: önce
 #: model kullanmayan yol. `claude` sağlayıcısı listede yok — API anahtarı
@@ -140,10 +143,18 @@ def paket_uret(adres: str, saglayici: str = "kural") -> dict:
         raise YzHatasi("Bilinmeyen sağlayıcı: %s" % saglayici)
 
     ayiklayici, kural_motoru = _arac()
+    # İndirme güvenli kapıdan (`dis_istek`): iç ağ, yerel makine ve bulut
+    # üst veri adresleri reddedilir, yönlendirme başına yeniden denetlenir,
+    # 5 MB sınır. Hata metni iç ayrıntı taşımaz; ayrıntı günlüğe gider.
     try:
-        kaynak = ayiklayici.ayikla(ayiklayici.getir(adres), adres)
-    except Exception as e:                      # noqa: BLE001 — editöre göster
+        html = dis_istek.html_getir(adres)
+    except dis_istek.DisIstekHatasi as e:
         raise YzHatasi("Kaynak alınamadı: %s" % e) from e
+    try:
+        kaynak = ayiklayici.ayikla(html, adres)
+    except Exception as e:                      # noqa: BLE001 — ayrıntı günlüğe
+        gunluk.exception("yz_kopru: ayiklama hatasi %s", adres)
+        raise YzHatasi("Kaynak sayfası ayıklanamadı.") from e
     if not (kaynak.get("orijinal_govde") or "").strip():
         raise YzHatasi(
             "Sayfadan metin çıkarılamadı. Sayfa JavaScript ile kuruluyor ya da "
@@ -362,7 +373,6 @@ def taslak_yaz(paket: dict, kullanici):
                       "cümleleri tezgahta duruyor.")
 
     haber = Haber(
-        id=_yeni_kimlik(),
         slug="",                       # editörün yazacağı başlıktan kurulacak
         baslik=baslik,
         spot=(taslak.get("spot") or "").strip(),
@@ -381,7 +391,9 @@ def taslak_yaz(paket: dict, kullanici):
         seo_baslik=(taslak.get("seo_baslik") or "").strip()[:200],
         kelime_sayisi=_kelime_say(govde),
     )
-    haber.save()
+    # Kimlik tek kaynaktan (`icerik/kimlik.py`): eski sitenin aralığıyla
+    # çakışmayan taban, `force_insert` ve çakışmada yeniden deneme.
+    yeni_kayit_kaydet(haber)
 
     if kaynak_kaydi is not None:
         haber.kaynaklar.set([kaynak_kaydi])
@@ -390,17 +402,20 @@ def taslak_yaz(paket: dict, kullanici):
         haber.etiketler.set(etiketleri_kur(etiketler))
         notlar.append("Etiketler: %s." % ", ".join(etiketler))
 
+    # Yayın kapısı formla aynı işlev (`yayin_kapisi`): taslak buradan
+    # yayına çıkmaz, ama neyin eksik olduğu aynı ölçütle şimdiden yazılır.
+    if haber.durum != Haber.DURUM_PASIF:          # yayın kapısını atlayamaz
+        raise YzHatasi("Taslak Pasif dışında bir durumla açılamaz.")
+    eksikler = yayin_kapisi.haber_eksikleri(haber)
+    if eksikler:
+        notlar.append("Yayına almadan önce tamamlanacaklar: %s."
+                      % ", ".join(eksikler))
+
     # Gerekçeler pakete de yazılıyor: taslak ekranı sayfa yenilendiğinde de
     # "kategori neden bu" sorusunu yanıtlayabilmeli, oturuma bağlı olmamalı.
     paket["panel_notlari"] = notlar
     paket_kaydet(paket, haber.pk)
     return haber, notlar
-
-
-def _yeni_kimlik() -> int:
-    """Yeni kimlik = en büyük kimlik + 1 (`panel._kaydet` ile aynı kural)."""
-    en_buyuk = Haber.objects.order_by("-id").values_list("id", flat=True).first()
-    return (en_buyuk or 0) + 1
 
 
 def taslak_al(adres: str, kullanici, saglayici: str = "kural"):
@@ -414,11 +429,11 @@ def taslak_al(adres: str, kullanici, saglayici: str = "kural"):
 # Görsel — ayrı ve açık karar
 # ---------------------------------------------------------------------------
 
-EN_BUYUK_GORSEL = 8 * 1024 * 1024
-UZANTI = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
-          "image/avif": ".avif", "image/gif": ".gif"}
-TARAYICI = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/128.0 Safari/537.36")
+#: Görsel sınırı ve türleri güvenli kapıdan (`dis_istek`): yalnız JPEG,
+#: PNG, WebP, GIF; 15 MB. SVG ve AVIF bilerek yok — SVG betik taşır, AVIF'in
+#: sihirli bayt denetimi ayrı iş ve arşivde bu türde dosya yok.
+EN_BUYUK_GORSEL = dis_istek.GORSEL_SINIRI
+UZANTI = dict(dis_istek.RASTER_TURLER)
 
 
 def gorsel_indir(haber: Haber):
@@ -427,33 +442,23 @@ def gorsel_indir(haber: Haber):
     Taslak açılırken **çağrılmaz**. Fotoğrafın hak durumu haber haber
     değerlendirilir; indirme editörün ayrı bir kararıdır ve panelde ayrı bir
     düğmedir. Döner: (başarılı_mı, mesaj).
-    """
-    import urllib.error
-    import urllib.request
 
+    19 Ekim 2026: indirme güvenli kapıdan geçer. `gorsel_url` formda elle
+    de yazılabildiği için bu düğme iç ağa istek attırmanın ikinci yoluydu;
+    ayrıca `image/svg+xml` ya da adresinden `.html` uzantısı alan bir dosya
+    arşiv köküne yazılıp site kökeninde çalıştırılabiliyordu. Artık tür
+    hem başlıkta hem sihirli baytta tutmalı ve uzantı TÜRDEN türetilir.
+    """
     url = (haber.gorsel_url or "").strip()
     if not url.lower().startswith(("http://", "https://")):
         return False, "Bu haberde indirilecek bir görsel adresi yok."
 
-    istek = urllib.request.Request(url, headers={
-        "User-Agent": TARAYICI,
-        "Accept": "image/avif,image/webp,image/png,image/jpeg,*/*;q=0.8",
-        "Referer": url,
-    })
     try:
-        with urllib.request.urlopen(istek, timeout=30) as yanit:
-            tur = (yanit.headers.get("Content-Type") or "").split(";")[0].strip().lower()
-            if not tur.startswith("image/"):
-                return False, "Adres görsel döndürmedi (%s)." % (tur or "tür yok")
-            veri = yanit.read(EN_BUYUK_GORSEL + 1)
-    except (urllib.error.URLError, OSError, ValueError) as e:
+        veri, _tur, uzanti = dis_istek.gorsel_getir(
+            url, en_cok_bayt=EN_BUYUK_GORSEL, ek_basliklar={"Referer": url})
+    except dis_istek.DisIstekHatasi as e:
         return False, "Görsel indirilemedi: %s" % e
-    if not veri:
-        return False, "Görsel boş geldi."
-    if len(veri) > EN_BUYUK_GORSEL:
-        return False, "Görsel 8 MB sınırını aştı."
 
-    uzanti = UZANTI.get(tur) or Path(url.split("?")[0]).suffix.lower() or ".jpg"
     ay = (haber.yayin_zamani or timezone.now()).strftime("%Y-%m")
     klasor = Path(settings.ARSIV_GORSEL_KOK) / ay
     klasor.mkdir(parents=True, exist_ok=True)

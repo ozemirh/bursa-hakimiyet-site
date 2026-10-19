@@ -3,9 +3,30 @@
     python arac/yayinci.py            # 127.0.0.1:8787
     python arac/yayinci.py --port 9000
 
-Sayfa dosyadan (file://) acildigi icin tarayici disariya yazamaz; yazma isini bu
-kucuk sunucu yapar. Yalnizca standart kutuphane kullanir ve SADECE 127.0.0.1'e
-baglanir — disaridan erisilemez.
+Editor sayfasini YAYINCININ KENDISINDEN acin: http://127.0.0.1:8787/
+Yalnizca standart kutuphane kullanir ve SADECE 127.0.0.1'e baglanir.
+
+## Guvenlik (19 Ekim 2026, Paket F madde 5)
+
+"Yalniz 127.0.0.1'e baglanir" tek basina koruma degildi: sunucu
+`Access-Control-Allow-Origin: *` ve `Allow-Private-Network: true` gonderiyordu,
+yani kullanicinin actigi HERHANGI bir web sitesi tarayici uzerinden
+`/yayinla` ve `/ayikla` uclarini tetikleyebiliyordu (dosya yazma + sunucudan
+istek). Simdi uc kapi var:
+
+1. **Host denetimi** — `Host` basligi yalniz `127.0.0.1:PORT` ya da
+   `localhost:PORT`. DNS rebinding (saldirganin alan adinin 127.0.0.1'e
+   donmesi) bu basligi degistiremez.
+2. **Koken denetimi** — `Origin` geldiyse izinli listede olmali: sayfanin
+   acildigi yerel koken (`http://127.0.0.1:PORT`, `http://localhost:PORT`)
+   ve `BH_YAYINCI_KOKENLER` ile verilenler. `*` yok, ozel ag izni yok.
+   Dosyadan (file://) acilan sayfanin kokeni `null`dur ve kabul edilmez —
+   `null` kokeni her sandbox iframe'i de tasir.
+3. **Paylasilan jeton** — her POST `X-Yayinci-Jetonu` basligi tasimali.
+   Jeton `BH_YAYINCI_JETONU` ortam degiskeninden, yoksa
+   `arac/.yayinci-jetonu` dosyasindan okunur; o da yoksa sunucu her
+   acilista rastgele uretir. Sayfa yayincidan acilinca jeton sayfaya
+   gomulur (baska koken bu sayfayi okuyamaz).
 
 Sunucu kapaliyken sayfa calismaya devam eder: dugme "yayin sunucusu kapali" der
 ve baska hicbir sey degismez. Sayfanin bagimsizligi bozulmaz.
@@ -15,7 +36,10 @@ from __future__ import annotations
 
 import argparse
 import functools
+import hmac
 import json
+import os
+import secrets
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -28,6 +52,9 @@ from kural_motoru import slugla, taslak_uret_kural  # noqa: E402
 from yayin import KOK, YayinHatasi, yayinla  # noqa: E402
 
 EN_BUYUK = 4 * 1024 * 1024   # 4 MB; taslak paketi bunun cok altinda
+JETON_BASLIGI = "X-Yayinci-Jetonu"
+JETON_DOSYASI = Path(__file__).resolve().parent / ".yayinci-jetonu"
+EDITOR_SAYFASI = KOK / "yapay-zeka-editor.html"
 
 
 # stdout yonlendirildiginde blok tamponlanir ve bilgi satirlari gunluge hic
@@ -35,36 +62,124 @@ EN_BUYUK = 4 * 1024 * 1024   # 4 MB; taslak paketi bunun cok altinda
 yaz = functools.partial(print, flush=True)
 
 
-class Islem(BaseHTTPRequestHandler):
-    server_version = "BHYayinci/1.0"
+def jeton_bul() -> str:
+    """Ortam > yerel dosya > her acilista rastgele."""
+    jeton = os.environ.get("BH_YAYINCI_JETONU", "").strip()
+    if not jeton and JETON_DOSYASI.exists():
+        jeton = JETON_DOSYASI.read_text(encoding="utf-8").strip()
+    return jeton or secrets.token_urlsafe(32)
 
-    def _basliklar(self, kod: int, uzunluk: int = 0) -> None:
+
+def izinli_kumeler(port: int) -> tuple[frozenset, frozenset]:
+    """(izinli Host degerleri, izinli Origin degerleri)."""
+    konaklar = {f"127.0.0.1:{port}", f"localhost:{port}"}
+    kokenler = {f"http://127.0.0.1:{port}", f"http://localhost:{port}"}
+    for k in os.environ.get("BH_YAYINCI_KOKENLER", "").split(","):
+        k = k.strip().rstrip("/")
+        if k and k != "null" and k != "*":
+            kokenler.add(k)
+    return frozenset(konaklar), frozenset(kokenler)
+
+
+class Islem(BaseHTTPRequestHandler):
+    server_version = "BHYayinci/1.1"
+
+    # -- kapi --------------------------------------------------------------
+
+    def _koken(self) -> str:
+        return (self.headers.get("Origin") or "").strip()
+
+    def _konak_gecerli(self) -> bool:
+        """DNS rebinding: Host yalniz yerel ad + port olabilir."""
+        return (self.headers.get("Host") or "").strip().lower() in self.server.izinli_konaklar
+
+    def _koken_gecerli(self) -> bool:
+        koken = self._koken()
+        return not koken or koken in self.server.izinli_kokenler
+
+    def _jeton_gecerli(self) -> bool:
+        gelen = (self.headers.get(JETON_BASLIGI) or "").strip()
+        return bool(gelen) and hmac.compare_digest(gelen, self.server.jeton)
+
+    def _reddet(self, kod: int, neden: str) -> None:
+        self.log_message("reddedildi (%s): %s %s", neden, self.command, self.path)
+        self._yanit(kod, {"ok": False, "hata": "İstek reddedildi."}, cors=False)
+
+    # -- yanit -------------------------------------------------------------
+
+    def _basliklar(self, kod: int, uzunluk: int = 0, *, cors: bool = True,
+                   tur: str = "application/json; charset=utf-8") -> None:
         self.send_response(kod)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        # Chrome, ozel aga (localhost) giden istekler icin bunu arayabiliyor.
-        self.send_header("Access-Control-Allow-Private-Network", "true")
+        self.send_header("Content-Type", tur)
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        koken = self._koken()
+        # Yalniz izinli kokene, adiyla. `*` ve ozel ag izni YOK.
+        if cors and koken and koken in self.server.izinli_kokenler:
+            self.send_header("Access-Control-Allow-Origin", koken)
+            self.send_header("Vary", "Origin")
+            self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers",
+                             "Content-Type, " + JETON_BASLIGI)
         if uzunluk:
             self.send_header("Content-Length", str(uzunluk))
         self.end_headers()
 
-    def _yanit(self, kod: int, veri: dict) -> None:
+    def _yanit(self, kod: int, veri: dict, cors: bool = True) -> None:
         govde = json.dumps(veri, ensure_ascii=False).encode("utf-8")
-        self._basliklar(kod, len(govde))
+        self._basliklar(kod, len(govde), cors=cors)
         self.wfile.write(govde)
 
     def do_OPTIONS(self) -> None:            # noqa: N802
+        if not self._konak_gecerli():
+            self._reddet(421, "host")
+            return
+        if not self._koken() or not self._koken_gecerli():
+            self._reddet(403, "origin")
+            return
         self._basliklar(204)
 
     def do_GET(self) -> None:                # noqa: N802
-        if self.path.rstrip("/") in ("/durum", ""):
-            self._yanit(200, {"ok": True, "kok": str(KOK)})
+        if not self._konak_gecerli():
+            self._reddet(421, "host")
+            return
+        yol = self.path.split("?", 1)[0].rstrip("/")
+        if yol in ("", "/editor"):
+            self._editor()
+        elif yol == "/durum":
+            self._yanit(200, {"ok": True})
         else:
             self._yanit(404, {"ok": False, "hata": "Bilinmeyen adres."})
 
+    def _editor(self) -> None:
+        """Editor sayfasi, jeton gomulu. Baska koken bu yaniti OKUYAMAZ:
+        CORS basligi yok, Host denetimi rebinding'i kapatiyor."""
+        if not EDITOR_SAYFASI.exists():
+            self._yanit(404, {"ok": False, "hata": "Editör sayfası bulunamadı."})
+            return
+        html = EDITOR_SAYFASI.read_text(encoding="utf-8")
+        meta = '<meta name="bh-yayinci-jetonu" content="%s">' % self.server.jeton
+        html = html.replace("<head>", "<head>\n" + meta, 1)
+        govde = html.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(govde)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.end_headers()
+        self.wfile.write(govde)
+
     def do_POST(self) -> None:               # noqa: N802
+        if not self._konak_gecerli():
+            self._reddet(421, "host")
+            return
+        if not self._koken_gecerli():
+            self._reddet(403, "origin")
+            return
+        if not self._jeton_gecerli():
+            self._reddet(403, "jeton")
+            return
         adres = self.path.rstrip("/")
         if adres not in ("/yayinla", "/ayikla"):
             self._yanit(404, {"ok": False, "hata": "Bilinmeyen adres."})
@@ -168,15 +283,25 @@ class Islem(BaseHTTPRequestHandler):
         sys.stderr.write("  %s\n" % (bicim % args))
 
 
+def sunucu_kur(port: int, jeton: str | None = None) -> ThreadingHTTPServer:
+    """Sunucuyu kurar (testler de kullanir). Port 0 = bos port."""
+    sunucu = ThreadingHTTPServer(("127.0.0.1", port), Islem)
+    gercek_port = sunucu.server_address[1]
+    sunucu.jeton = jeton or jeton_bul()
+    sunucu.izinli_konaklar, sunucu.izinli_kokenler = izinli_kumeler(gercek_port)
+    return sunucu
+
+
 def main() -> int:
     ayrist = argparse.ArgumentParser(description="Yerel yayin sunucusu")
     ayrist.add_argument("--port", type=int, default=8787)
     secim = ayrist.parse_args()
 
-    sunucu = ThreadingHTTPServer(("127.0.0.1", secim.port), Islem)
+    sunucu = sunucu_kur(secim.port)
     print("Yayin sunucusu calisiyor: http://127.0.0.1:%d" % secim.port)
     print("Yayin klasoru: %s" % KOK)
-    print("yapay-zeka-editor.html sayfasini acip \"Yayina gonder\" diyebilirsiniz.")
+    print("Editor sayfasini buradan acin: http://127.0.0.1:%d/" % secim.port)
+    print("(Dosyadan acilan sayfa yayinciyi kullanamaz: koken ve jeton denetimi.)")
     print("Durdurmak icin Ctrl+C.")
     try:
         sunucu.serve_forever()

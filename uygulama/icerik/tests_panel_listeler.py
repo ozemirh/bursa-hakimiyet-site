@@ -885,7 +885,9 @@ class TopluIslem(TestCase):
                 id=960000 + sira, slug=f"toplu-{sira}",
                 baslik=f"Toplu haber {sira}", kategori=self.gundem,
                 spot="Spot metni.", govde="<p>Bir.</p><p>İki.</p>",
-                durum=Haber.DURUM_PASIF, hazirlik="taslak")
+                durum=Haber.DURUM_PASIF, hazirlik="taslak",
+                # Yayın kapısının kaynak kuralı: muhabir haberinde muhabir adı.
+                kaynak_turu=Haber.KAYNAK_MUHABIR, muhabir="A. Yılmaz")
             haber.etiketler.add(self.etiket)
             self.haberler.append(haber)
         self.kimlikler = [h.pk for h in self.haberler]

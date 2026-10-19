@@ -10,7 +10,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
-from taksonomi.models import Etiket, Kategori, KategoriTur
+from taksonomi.models import Etiket, Kategori, KategoriTur, Kaynak
 
 from .models import Haber
 
@@ -26,6 +26,7 @@ class PanelErisim(TestCase):
         cls.kategori = KategoriTur.objects.get(
             tur=Kategori.TUR_HABER, slug="gundem").kategori
         cls.etiket = Etiket.objects.create(ad="Etiket", slug="etiket")
+        cls.kaynak = Kaynak.objects.create(ad="Test Ajansı", tur=Kaynak.TUR_AJANS)
         cls.kullanicilar = {}
         for rol in ("Muhabir", "Editör", "Sayfa Sekreteri",
                     "İlan Sorumlusu", "Yayın Yönetmeni"):
@@ -96,7 +97,7 @@ class PanelErisim(TestCase):
             "govde": "<p>Bir.</p><p>İki.</p>",
             "kategori": self.kategori.pk, "etiketler": self.etiket.ad,
             "durum": Haber.DURUM_AKTIF, "hazirlik": "hazir",
-            "kaynak_turu": Haber.KAYNAK_AJANS,
+            "kaynak_turu": Haber.KAYNAK_AJANS, "kaynaklar": [self.kaynak.pk],
             "yayin_zamani": timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
         })
         self.assertEqual(yanit.status_code, 200)   # form hatayla geri döner
@@ -115,7 +116,7 @@ class PanelErisim(TestCase):
             "govde": "<p>Bir.</p><p>İki.</p>",
             "kategori": self.kategori.pk, "etiketler": self.etiket.ad,
             "durum": Haber.DURUM_AKTIF, "hazirlik": "hazir",
-            "kaynak_turu": Haber.KAYNAK_AJANS,
+            "kaynak_turu": Haber.KAYNAK_AJANS, "kaynaklar": [self.kaynak.pk],
             "yayin_zamani": timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
         })
         self.assertEqual(yanit.status_code, 302)
@@ -136,7 +137,7 @@ class PanelErisim(TestCase):
             "govde": "<p>Bir.</p><p>İki.</p>",
             "kategori": self.kategori.pk, "etiketler": self.etiket.ad,
             "durum": Haber.DURUM_AKTIF, "hazirlik": "hazir",
-            "kaynak_turu": Haber.KAYNAK_AJANS,
+            "kaynak_turu": Haber.KAYNAK_AJANS, "kaynaklar": [self.kaynak.pk],
             "yayin_zamani": timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
         })
         self.client.logout()

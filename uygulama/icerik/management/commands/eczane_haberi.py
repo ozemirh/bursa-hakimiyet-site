@@ -35,6 +35,8 @@ from django.utils import timezone
 
 from icerik import eczane as eczane_metni
 from icerik.arama_metni import slugla
+from icerik import yayin_kapisi
+from icerik.kimlik import yeni_kayit_kaydet
 from icerik.models import Haber
 from taksonomi.models import Etiket, Kategori, Kaynak
 
@@ -87,6 +89,18 @@ class Command(BaseCommand):
 
         paket = eczane_metni.haber_paketi(panel)
         slug = paket["slug"]
+
+        # Tek yayın kapısı (`icerik/yayin_kapisi.py`): servis haberi de
+        # panelin içerik eşiğinden geçer. Kaynak türü "Dış yayın" ve kaynak
+        # kaydı (Eczacı Odası) her zaman var; eksik yoksa geçer.
+        eksik = yayin_kapisi.icerik_eksikleri(
+            baslik=paket["baslik"], slug=slug, spot=paket["spot"],
+            govde=paket["govde"], etiket_sayisi=len(paket["etiketler"]),
+            kaynak_turu=Haber.KAYNAK_DIS_YAYIN, kaynak_sayisi=1, muhabir="")
+        if eksik:
+            y(self.style.ERROR("Yayın eşiğini geçmiyor: " + ", ".join(eksik)))
+            raise SystemExit(1)
+
         var_olan = Haber.objects.filter(slug=slug).first()
 
         y(f"Gün: {panel['gun']} · {panel['sayi']} eczane · "
@@ -126,9 +140,9 @@ class Command(BaseCommand):
         koşuda ilerler.
         """
         simdi = timezone.now()
+        # Yeni kaydın kimliği tek kaynaktan (`icerik/kimlik.py`): eski
+        # sitenin aralığıyla çakışmayan taban + `force_insert`.
         haber = var_olan or Haber(
-            id=(Haber.objects.order_by("-id")
-                .values_list("id", flat=True).first() or 0) + 1,
             slug=slug,
             yayin_zamani=self._yayin_zamani(panel["gun"], simdi),
         )
@@ -150,7 +164,10 @@ class Command(BaseCommand):
         # Nöbet listesi ilçe üstü: haber Bursa geneli. İlçe alanı boş
         # bırakılıyor ki ilçe sayfaları günlük eczane kaydıyla dolmasın.
         haber.ilce = None
-        haber.save()
+        if var_olan is None:
+            yeni_kayit_kaydet(haber)
+        else:
+            haber.save()
 
         kaynak, _ = Kaynak.objects.get_or_create(
             ad=KAYNAK_ADI, defaults={"tur": Kaynak.TUR_DIS_YAYIN})

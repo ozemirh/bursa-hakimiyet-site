@@ -29,7 +29,8 @@ from .formlar import (BildirimForm, FotoGaleriForm, GazeteForm, HaberForm,
                       KategoriForm, KaynakForm, KoseYazisiForm, KullaniciForm,
                       ReklamKampanyasiForm, ReklamYuvasiForm, ResmiIlanForm,
                       SonDakikaForm, VideoForm, YazarForm, YorumForm)
-from . import okunma, yz_kopru
+from . import denetim_kaydi, okunma, onbellek, yayin_kapisi, yz_kopru
+from .kimlik import yeni_kayit_kaydet
 from .arama_metni import slugla
 from .models import (YZ_BASLIK_ISARETI, Bildirim, Gazete, Haber, IkiAdimli,
                      LogKaydi, ReklamKampanyasi, ReklamYuvasi, ResmiIlan,
@@ -522,22 +523,17 @@ def haber_ekle(request):
 def haber_duzenle(request, kimlik):
     haber = get_object_or_404(Haber, pk=kimlik)
 
-    # §11: kendi haberi ile başkasının haberi ayrı kararlardır.
+    # §11: kendi haberi ile başkasının haberi ayrı kararlardır. Yetki
+    # denetimi formun içinde (`yayin_kapisi.yayin_yetkisi`): yetkisiz
+    # kullanıcının formunda durum alanı yok, elle gönderilirse reddedilir.
     kendisinin = haber.olusturan_id == request.user.pk
-    yayinlayabilir = request.user.has_perm(
-        "icerik.kendi_haberini_yayinlama" if kendisinin
-        else "icerik.baskasinin_haberini_yayinlama")
+    yayinlayabilir = yayin_kapisi.yayin_yetkisi(request.user, haber)
+    onceki = denetim_kaydi.haber_ozeti(haber)   # form doğrularken örneği değiştirir
 
     form = HaberForm(request.POST or None, instance=haber, kullanici=request.user)
     if request.method == "POST" and form.is_valid():
-        if form.cleaned_data.get("durum") == Haber.DURUM_AKTIF and not yayinlayabilir:
-            form.add_error(
-                "durum",
-                "Bu haberi yayına alma yetkiniz yok. Taslak olarak kaydedebilir "
-                "ya da 'Yayına hazır' işaretleyip masaya bırakabilirsiniz.")
-        else:
-            _kaydet(form, request)
-            return redirect("panel-haber-duzenle", kimlik=haber.pk)
+        _kaydet(form, request, onceki=onceki)
+        return redirect("panel-haber-duzenle", kimlik=haber.pk)
 
     return render(request, "panel/haber_form.html", {
         "baslik": haber.baslik,
@@ -551,12 +547,13 @@ def haber_duzenle(request, kimlik):
     })
 
 
-def _kaydet(form, request):
+def _kaydet(form, request, onceki=None):
     """Yeni kayda kimlik ve slug verir.
 
     **Kimlik adresin parçasıdır** ve göçte eski kimlikler korunmuştur; yeni
-    haberler mevcut en büyük kimliğin üstünden devam eder ki eski adreslerle
-    hiç çakışmasın.
+    haberler eski sitenin aralığıyla çakışmayan bir tabandan alır
+    (`icerik/kimlik.py`, varsayılan 5.000.000). "En büyük + 1" kuralı
+    1696272–74'te canlıdaki haberlerle çakışmıştı.
 
     **Slug bir kez yazılır.** Django'nun `slugify`'ı burada kullanılmıyor:
     Türkçe harfi çevirmez, atar ("Nilüfer Çayı" → `nilfer-ay`) ve arşivdeki
@@ -565,16 +562,21 @@ def _kaydet(form, request):
     gerçek başlık değil, yer tutucudur; slug ilk gerçek başlıkta kurulur.
     """
     haber = form.save(commit=False)
-    if haber.pk is None:
-        en_buyuk = Haber.objects.order_by("-id").values_list("id", flat=True).first()
-        haber.id = (en_buyuk or 0) + 1
+    yeni = haber.pk is None
     if not haber.slug and not haber.baslik.startswith(YZ_BASLIK_ISARETI):
-        haber.slug = slugla(haber.baslik, 220) or f"haber-{haber.id}"
+        # Yedek slug kimlik taşımaz: kimlik çakışmada yeniden denenebilir
+        # ve adres zaten `-{id}` ile biter.
+        haber.slug = slugla(haber.baslik, 220) or "haber"
     if haber.olusturan_id is None:
         haber.olusturan = request.user
-    haber.save()
+    if yeni:
+        yeni_kayit_kaydet(haber)
+    else:
+        haber.save()
     form.save_m2m()
     form._kategori_degisimini_yonlendir(haber)
+    # Denetim kaydı: oluşturma, yayın durumu, kategori ve manşet değişimi.
+    denetim_kaydi.haber_degisimi(request, haber, None if yeni else onceki)
     _sosyal_kuyrugu_esitle(form, haber, request)
     return haber
 
@@ -635,6 +637,10 @@ def yz_taslak_ekle(request):
         except yz_kopru.YzHatasi as e:
             hata = str(e)
         else:
+            denetim_kaydi.yaz(request, "haber_olusturma", hedef_tur="haber",
+                              hedef_id=haber.pk,
+                              sonrasi={"durum": haber.durum, "saglayici": saglayici},
+                              gerekce="Yapay zekâ taslağı: %s" % adres[:150])
             messages.success(
                 request, "Taslak açıldı: #%s. Yayına almadan önce gözden "
                          "geçirin." % haber.pk)
@@ -1171,6 +1177,11 @@ def medya_toplu_islem(request, aile):
             **_yetkiler(request.user),
         })
 
+    hedef_durum = {"yayina_al": model.DURUM_AKTIF, "yayindan_cek": model.DURUM_PASIF,
+                   "arsivle": model.DURUM_ARSIV}[fiil["kod"]]
+    # Denetim kaydı: yalnız durumu gerçekten değişenler.
+    degisecek = list(sorgu.exclude(durum=hedef_durum).order_by()
+                     .values_list("pk", flat=True))
     if fiil["kod"] == "yayina_al":
         simdi = timezone.now()
         sorgu.filter(yayin_zamani__isnull=True).update(yayin_zamani=simdi)
@@ -1182,6 +1193,9 @@ def medya_toplu_islem(request, aile):
     else:
         sayi = sorgu.update(durum=model.DURUM_ARSIV)
         ozet = f"{sayi} kayıt arşive alındı."
+    onbellek.surumu_artir()      # update() sinyal göndermez; sayfa önbelleği
+    denetim_kaydi.toplu_yaz(request, TOPLU_DENETIM_FIILI[fiil["kod"]], aile,
+                            degisecek, sonrasi={"durum": hedef_durum}, gerekce=ozet)
     return _medya_don(request, liste_adresi, ozet)
 
 
@@ -1295,13 +1309,8 @@ def _secilen_sorgu(request):
 
 
 def _yayina_hazir_mi(haber) -> bool:
-    """§4'ün yayın eşiği: spot · en az iki paragraf gövde · en az bir etiket."""
-    from .formlar import EN_AZ_PARAGRAF, HaberForm
-    if not (haber.spot or "").strip():
-        return False
-    if HaberForm._paragraf_sayisi(haber.govde or "") < EN_AZ_PARAGRAF:
-        return False
-    return haber.etiketler.exists()
+    """Yayın eşiği — formla AYNI işlev (`yayin_kapisi.haber_eksikleri`)."""
+    return not yayin_kapisi.haber_eksikleri(haber)
 
 
 @login_required
@@ -1349,8 +1358,50 @@ def toplu_islem(request):
         "mansetten_cikar": _fiil_mansetten_cikar,
         "kategori": _fiil_kategori,
     }[fiil_kodu]
+    # Denetim kaydı için öncesi: küme en çok TOPLU_UST_SINIR kayıt.
+    onceki = {pk: (durum, kategori) for pk, durum, kategori in
+              sorgu.prefetch_related(None).order_by()
+              .values_list("pk", "durum", "kategori_id")}
     ozet = islem(request, sorgu)
+    # Toplu fiiller `QuerySet.update()` kullanır, kayıt sinyali gitmez:
+    # sayfa mikro önbelleği burada açıkça geçersizleşir ki yayına alınan /
+    # çekilen haber okura ANINDA yansısın (icerik/sinyaller.py notu).
+    onbellek.surumu_artir()
+    _toplu_denetim(request, fiil, onceki, ozet)
     return _toplu_don(request, ozet)
+
+
+#: Toplu fiil → denetim kaydı fiili. Listede olmayanlar "toplu_islem".
+TOPLU_DENETIM_FIILI = {
+    "yayina_al": "yayina_alma", "yayindan_cek": "yayindan_cekme",
+    "arsivle": "arsivleme", "mansete_al": "mansete_alma",
+    "mansetten_cikar": "mansetten_cikarma", "kategori": "kategori_degistirme",
+}
+_TOPLU_DEGER_ALANLARI = ("hazirlik_degeri", "ilce_degeri", "etiket_degeri",
+                         "manset_slot", "kategori_degeri")
+
+
+def _toplu_denetim(request, fiil, onceki: dict, ozet: str) -> None:
+    """Toplu fiilin denetim kaydı: etkilenen her haber için bir satır.
+
+    Durum ve kategori fiillerinde yalnız GERÇEKTEN değişen kayıtlar yazılır
+    (eşiği geçmeyip atlanan haber "yayına alındı" diye günlüğe girmesin);
+    diğer fiillerde seçilen kümenin tamamı.
+    """
+    kod = fiil["kod"]
+    kimlikler = list(onceki)
+    deger = {a: request.POST.get(a) for a in _TOPLU_DEGER_ALANLARI if request.POST.get(a)}
+    if kod in ("yayina_al", "yayindan_cek", "arsivle", "kategori"):
+        sonra = {}
+        for bas in range(0, len(kimlikler), 500):
+            sonra.update({pk: (d, k) for pk, d, k in Haber.objects.filter(
+                pk__in=kimlikler[bas:bas + 500]).values_list("pk", "durum", "kategori_id")})
+        sira = 1 if kod == "kategori" else 0
+        kimlikler = [pk for pk in kimlikler
+                     if pk in sonra and sonra[pk][sira] != onceki[pk][sira]]
+    denetim_kaydi.toplu_yaz(
+        request, TOPLU_DENETIM_FIILI.get(kod, "toplu_islem"), "haber", kimlikler,
+        sonrasi={"fiil": kod, **deger}, gerekce=ozet)
 
 
 def _toplu_don(request, ozet, hata=False):
@@ -1413,9 +1464,18 @@ def _onay_gizli_alanlari(request) -> list:
 
 
 def _fiil_yayina_al(request, sorgu) -> str:
-    hazir, eksik = [], 0
-    for haber in sorgu.prefetch_related("etiketler").iterator(chunk_size=500):
-        if _yayina_hazir_mi(haber):
+    """Toplu yayın — formla aynı kapı: kayıt başına yetki + içerik eşiği.
+
+    Önceden yalnız spot · paragraf · etiket aranıyordu; `[yazılacak]`
+    işaretli ve slug'ı boş taslak `/bursa/-1696500` gibi 404 veren bir
+    adresle yayına çıkabiliyordu. Kaynak kuralı da yoktu.
+    """
+    hazir, eksik, yetkisiz = [], 0, 0
+    for haber in (sorgu.prefetch_related("etiketler", "kaynaklar")
+                  .iterator(chunk_size=500)):
+        if not yayin_kapisi.yayin_yetkisi(request.user, haber):
+            yetkisiz += 1
+        elif _yayina_hazir_mi(haber):
             hazir.append(haber.pk)
         else:
             eksik += 1
@@ -1429,7 +1489,10 @@ def _fiil_yayina_al(request, sorgu) -> str:
     ozet = f"{len(hazir)} haber yayına alındı."
     if eksik:
         ozet += (f" {eksik} kayıt ATLANDI: yayın eşiğini geçmiyor "
-                 "(spot · en az iki paragraf gövde · en az bir etiket).")
+                 "(başlık işareti · adres · spot · en az iki paragraf gövde · "
+                 "en az bir etiket · kaynak).")
+    if yetkisiz:
+        ozet += f" {yetkisiz} kayıt ATLANDI: bu haberleri yayına alma yetkiniz yok."
     return ozet
 
 
@@ -2207,9 +2270,20 @@ def kullanici_listesi(request):
 @permission_required("icerik.kullanici_yonetimi", raise_exception=True)
 def kullanici_duzenle(request, kimlik):
     kullanici = get_object_or_404(User, pk=kimlik)
+    onceki_roller = sorted(kullanici.groups.values_list("name", flat=True))
     form = KullaniciForm(request.POST or None, instance=kullanici)
     if request.method == "POST" and form.is_valid():
+        oncesi = {a: _json_deger(form.initial.get(a)) for a in form.changed_data
+                  if a != "roller"}
         form.save()
+        sonraki_roller = sorted(kullanici.groups.values_list("name", flat=True))
+        sonrasi = {a: _json_deger(form.cleaned_data.get(a)) for a in form.changed_data
+                   if a != "roller"}
+        if onceki_roller != sonraki_roller:
+            oncesi["roller"], sonrasi["roller"] = onceki_roller, sonraki_roller
+        if sonrasi:
+            denetim_kaydi.yaz(request, "kullanici_degisikligi", hedef_tur="kullanici",
+                              hedef_id=kullanici.pk, oncesi=oncesi, sonrasi=sonrasi)
         return redirect("panel-kullanici-duzenle", kimlik=kullanici.pk)
     return render(request, "panel/kayit_form.html", {
         "baslik": _gorunen_ad(kullanici),
@@ -2241,6 +2315,13 @@ def kullanici_duzenle(request, kimlik):
 class SifreDegistir(PasswordChangeView):
     template_name = "panel/sifre.html"
     success_url = "/panel/sifre?degisti=1"
+
+    def form_valid(self, form):
+        yanit = super().form_valid(form)
+        # Parolanın kendisi ASLA yazılmaz; yalnız olay.
+        denetim_kaydi.yaz(self.request, "parola_degisikligi", hedef_tur="kullanici",
+                          hedef_id=self.request.user.pk)
+        return yanit
 
     def get_context_data(self, **kwargs):
         baglam = super().get_context_data(**kwargs)
@@ -2279,6 +2360,19 @@ class SifreDegistir(PasswordChangeView):
 # önüne ne çıkacak" kararıdır — manşetle aynı karar sınıfı. Adayı raporda
 # plan eki olarak duruyor: ikisine ayrı yetkilik açılabilir.
 # ===========================================================================
+
+
+def _json_deger(deger):
+    """Denetim kaydının JSON alanına yazılabilir hâl (model → kimlik)."""
+    if deger is None or isinstance(deger, (bool, int, float, str)):
+        return deger
+    if hasattr(deger, "pk"):
+        return deger.pk
+    if hasattr(deger, "isoformat"):
+        return deger.isoformat()
+    if isinstance(deger, (list, tuple, set)) or hasattr(deger, "__iter__"):
+        return [_json_deger(d) for d in deger]
+    return str(deger)
 
 
 def _durum_rozeti_genel(nesne, sinif_haritasi):
@@ -2402,7 +2496,8 @@ def log_listesi(request):
             "adres": "",
             "hucreler": [
                 _tarih(k.zaman),
-                _metin(k.kullanici.get_username()),
+                _metin(k.kullanici.get_username()) if k.kullanici_id
+                else _yok(k.gerekce or "Kullanıcı kaydı yok."),
                 _metin(k.get_fiil_display()),
                 _metin(k.hedef_tur, "mono") if k.hedef_tur
                 else _yok("Hedefsiz kayıt — oturum olayı."),
@@ -2439,6 +2534,9 @@ def log_listesi(request):
             "kaydın değiştiğini söyleyen sütunu yoktu (§24.8).",
             "Saklama önerisi: oturum kayıtları 12 ay, eylem kayıtları süresiz.",
             "Kullanıcı bağı PROTECT: hesap silinirse log okunamaz hâle gelirdi.",
+            "IP adresi KVKK gereği maskeli yazılır (IPv4 /24, IPv6 /48); "
+            "ayar BH_LOG_IP (maskeli · tam · yok). Var olmayan kullanıcı "
+            "adıyla yapılan başarısız denemede denenen ad Gerekçe'dedir.",
         ])
 
 
@@ -2893,7 +2991,14 @@ def son_dakika_duzenle(request, kimlik):
     kayit = get_object_or_404(SonDakika.objects.select_related("haber"), pk=kimlik)
     form = SonDakikaForm(request.POST or None, instance=kayit)
     if request.method == "POST" and form.is_valid():
+        oncesi = {a: _json_deger(form.initial.get(a)) for a in form.changed_data}
         form.save()
+        if form.changed_data:
+            denetim_kaydi.yaz(
+                request, "son_dakika_degisikligi", hedef_tur="son_dakika",
+                hedef_id=kayit.pk, oncesi=oncesi,
+                sonrasi={a: _json_deger(form.cleaned_data.get(a))
+                         for a in form.changed_data})
         return redirect("panel-son-dakika-duzenle", kimlik=kayit.pk)
     return render(request, "panel/kayit_form.html", {
         "baslik": kayit.baslik,
@@ -3130,11 +3235,15 @@ def konu_karar(request, kimlik):
     if karar not in dict(Konu.ONAYLAR):
         messages.error(request, "Karar anlaşılmadı.")
         return redirect("panel-konu-duzenle", kimlik=kayit.pk)
+    onceki_onay = kayit.onay
     kayit.onay = karar
     if karar == Konu.ONAY_ONAYLI:
         kayit.onaylayan = request.user
         kayit.onay_zamani = timezone.now()
     kayit.save(update_fields=["onay", "onaylayan", "onay_zamani"])
+    denetim_kaydi.yaz(request, "konu_karari", hedef_tur="konu", hedef_id=kayit.pk,
+                      oncesi={"onay": onceki_onay}, sonrasi={"onay": karar},
+                      gerekce=kayit.ad[:200])
     messages.success(request, {
         Konu.ONAY_ONAYLI: "Dosya onaylandı; sitede görünüyor.",
         Konu.ONAY_RET: "Dosya reddedildi; motor bir daha önermez.",
@@ -3153,5 +3262,8 @@ def konu_haber_cikar(request, kimlik, haber_id):
     silinen, _ = kayit.baglar.filter(haber_id=haber_id).delete()
     if silinen:
         kayit.sayilari_tazele()
+        denetim_kaydi.yaz(request, "konu_bag_cikarma", hedef_tur="konu",
+                          hedef_id=kayit.pk, oncesi={"haber_id": haber_id},
+                          gerekce=kayit.ad[:200])
         messages.success(request, "Haber dosyadan çıkarıldı.")
     return redirect("panel-konu-duzenle", kimlik=kayit.pk)

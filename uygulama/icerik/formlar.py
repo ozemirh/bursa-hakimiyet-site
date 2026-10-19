@@ -14,9 +14,18 @@ muhabirin hiçbir şey kaydedemediği anlamına gelirdi.
 
     Taslak kaydı   → yalnızca başlık ve kategori şart
     Yayına alma    → başlık · spot · en az iki paragraf gövde · etiket ·
-                     kategori · yayın zamanı
+                     kategori · yayın zamanı · kaynak
 
 Bu, `arac/yayin.py`deki "boş taslak yayınlanmaz" kuralıyla aynı eşiktir.
+Eşiğin kendisi `icerik/yayin_kapisi.py`de: form, toplu fiil ve yapay zekâ
+taslağı aynı işlevden geçer (19 Ekim 2026).
+
+## Yetki
+
+Yayın yetkisi olmayan kullanıcının (muhabir) formunda `durum` alanı YOKTUR
+ve yeni haber Pasif doğar. Elle kurulmuş bir istekle `durum=Aktif`
+gönderilirse form reddeder; yayındaki bir haberi yetkisiz kullanıcı
+değiştiremez (yayındaki metni değiştirmek de yayımlamaktır).
 
 ## Adres uyarısı
 
@@ -35,6 +44,7 @@ from django.utils import timezone
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 from taksonomi.models import Etiket, Ilce, Kategori, Kaynak, Yonlendirme
 
+from . import yayin_kapisi
 from .arama_metni import anahtar, slugla
 from .models import (YZ_BASLIK_ISARETI, Bildirim, Gazete, Haber,
                      ReklamKampanyasi, ReklamYuvasi, ResmiIlan, SonDakika,
@@ -49,7 +59,7 @@ BASLIK_SINIR = 60      # §4 alan 2 — ekranda sayaç görünür
 # çiğniyor; sınır gerçeği değil eski formun bir niteliğini anlatıyordu.
 # 320'ye çıkarıldı (arşivin ~%89'unu kapsar). Kullanıcı kararı.
 SPOT_SINIR = 320       # §4 alan 4 — ölçümle güncellendi (URUN-PLANI §56)
-EN_AZ_PARAGRAF = 2     # §4 alan 5
+EN_AZ_PARAGRAF = yayin_kapisi.EN_AZ_PARAGRAF     # §4 alan 5
 
 
 # ===========================================================================
@@ -330,6 +340,21 @@ class HaberForm(forms.ModelForm):
         for ad in ("spot", "govde", "yayin_zamani"):
             self.fields[ad].required = False
 
+        # Yeni haber Pasif/Taslak doğar (19 Ekim 2026). Modelin varsayılanı
+        # Aktif — göç verisi için öyle; panelde varsayılan YAYIN DEĞİL.
+        if self.instance.pk is None:
+            self.instance.durum = Haber.DURUM_PASIF
+            if not self.is_bound:
+                self.initial.setdefault("durum", Haber.DURUM_PASIF)
+                self.initial.setdefault("hazirlik", "taslak")
+
+        # §11: muhabir yayına alamaz. Yetkisi olmayanın formunda durum alanı
+        # yok; kayıt örneğin durumunu korur (yeni haberde Pasif).
+        self.yayin_yetkili = (kullanici is None
+                              or yayin_kapisi.yayin_yetkisi(kullanici, self.instance))
+        if not self.yayin_yetkili:
+            self.fields.pop("durum")
+
         # §11: manşete alma ayrı yetkidir. Yetkisi olmayan bu üç kutuyu
         # göremez — formda tutulup sessizce yok sayılması yanlış olurdu.
         if kullanici is not None and not kullanici.has_perm("icerik.mansete_alma"):
@@ -411,30 +436,34 @@ class HaberForm(forms.ModelForm):
 
     def clean(self):
         veri = super().clean()
-        durum = veri.get("durum")
+        # Yetkisiz kullanıcıda alan yok: geçerli durum kaydın kendisininki.
+        durum = (veri.get("durum") if "durum" in self.fields
+                 else self.instance.durum)
         hazirlik = veri.get("hazirlik")
         yayina_gidiyor = (durum == Haber.DURUM_AKTIF) or (hazirlik == "hazir")
 
         # §7: meta yazar elle seçildiyse türetim durur.
         veri["meta_yazar_elle"] = bool(veri.get("meta_yazar"))
 
+        if not self.yayin_yetkili:
+            if self.instance.pk and self.instance.durum == Haber.DURUM_AKTIF:
+                raise forms.ValidationError(
+                    "Bu haber yayında; yayındaki haberi değiştirme yetkiniz "
+                    "yok. Düzeltme için masaya (editöre) bildirin.")
+            # Alan formda yok ama istek elle kurulabilir: sessizce yok
+            # saymak yerine açıkça reddediyoruz ki muhabir ne olduğunu bilsin.
+            if str(self.data.get("durum") or "") == str(Haber.DURUM_AKTIF):
+                raise forms.ValidationError(
+                    "Bu haberi yayına alma yetkiniz yok. Taslak olarak "
+                    "kaydedebilir ya da 'Yayına hazır' işaretleyip masaya "
+                    "bırakabilirsiniz.")
+
         if not yayina_gidiyor:
             return veri
 
-        eksik = []
-        # Yapay zekâ aracı, motor başlık yazmadığında başlığı işaretleyerek
-        # bırakır. İşaret yayına giderken kapıyı kapatır: kaynağın başlığı
-        # kazara yayınlanmasın (`yz_kopru.baslik_al`).
-        if (veri.get("baslik") or "").startswith(YZ_BASLIK_ISARETI):
-            eksik.append("başlık (taslakta '%s' işareti duruyor)"
-                         % YZ_BASLIK_ISARETI)
-        if not (veri.get("spot") or "").strip():
-            eksik.append("spot")
-        govde = (veri.get("govde") or "").strip()
-        if self._paragraf_sayisi(govde) < EN_AZ_PARAGRAF:
-            eksik.append(f"gövde (en az {EN_AZ_PARAGRAF} paragraf)")
-        if not veri.get("etiketler"):
-            eksik.append("en az bir etiket")
+        # Eşik tek yerde (`icerik/yayin_kapisi.py`): yapay zekâ işareti, boş
+        # adres, spot, iki paragraf, etiket ve kaynak kuralı.
+        eksik = yayin_kapisi.form_eksikleri(veri, self.instance)
         if not veri.get("yayin_zamani"):
             veri["yayin_zamani"] = timezone.now()
 
@@ -446,17 +475,8 @@ class HaberForm(forms.ModelForm):
 
     @staticmethod
     def _paragraf_sayisi(govde: str) -> int:
-        """Gövdedeki paragraf sayısı.
-
-        Panelden HTML gelir (`<p>…</p>`), yapıştırmadan düz metin de gelebilir;
-        ikisi de sayılır.
-        """
-        if not govde:
-            return 0
-        etiketli = govde.lower().count("<p")
-        if etiketli:
-            return etiketli
-        return len([p for p in govde.split("\n\n") if p.strip()])
+        """Gövdedeki paragraf sayısı — `yayin_kapisi.paragraf_sayisi`."""
+        return yayin_kapisi.paragraf_sayisi(govde)
 
     # -- kayıt -------------------------------------------------------------
 

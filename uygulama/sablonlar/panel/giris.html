@@ -14,7 +14,8 @@
 <body class="giris-sayfa">
   <main class="giris-kutu">
     <h1>Yönetim Paneli</h1>
-    {% if form.errors %}<p class="hata" role="alert">Kullanıcı adı ya da parola hatalı.</p>{% endif %}
+    {% for m in messages %}<p class="alt-not" role="status">{{ m }}</p>{% endfor %}
+    {% if form.errors %}<p class="hata" role="alert">{% if form.kilitli %}{{ form.non_field_errors|join:" " }}{% else %}Kullanıcı adı ya da parola hatalı.{% endif %}</p>{% endif %}
     <form method="post">
       {% csrf_token %}
       <div class="alan"><label for="id_username">Kullanıcı adı</label>{{ form.username }}</div>

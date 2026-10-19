@@ -73,6 +73,7 @@
     <fieldset>
       <legend>Yayın</legend>
       {% include "panel/parca/alan.html" with alan=form.durum %}
+      {% if not form.durum %}<p class="alt-not">Durum: {% if haber %}{{ haber.get_durum_display }}{% else %}Pasif{% endif %}. Yayına alma masanın kararıdır; haberi “Yayına hazır” işaretleyip masaya bırakabilirsiniz.</p>{% endif %}
       {% include "panel/parca/alan.html" with alan=form.hazirlik ipucu="Yalnız durum Pasif iken anlamlıdır." %}
       {% include "panel/parca/alan.html" with alan=form.yayin_zamani %}
       {% include "panel/parca/alan.html" with alan=form.guncelleme_zamani %}

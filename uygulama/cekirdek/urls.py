@@ -18,6 +18,7 @@ from django.contrib.auth import views as kimlik_gorunum
 
 from icerik import gorsel_turev
 from icerik import panel as panel_gorunum
+from icerik.giris_guvenligi import GirisGorunumu
 from icerik import reklam as reklam_gorunum
 from icerik import views as icerik_gorunum
 from sosyal import panel as sosyal_gorunum
@@ -35,9 +36,9 @@ urlpatterns = [
 
     # --- Yonetim paneli (F5). Site adreslerinden ONCE: "panel" tek dilimli
     # oldugu icin en sondaki kategori kalibina da uyar.
-    path("panel/giris", kimlik_gorunum.LoginView.as_view(
-        template_name="panel/giris.html", redirect_authenticated_user=True),
-        name="panel-giris"),
+    # Giriş: başarısız deneme sınırı (kullanıcı adı + IP, IP) ve kilit —
+    # icerik/giris_guvenligi.py (Paket F madde 8).
+    path("panel/giris", GirisGorunumu.as_view(), name="panel-giris"),
     path("panel/cikis", kimlik_gorunum.LogoutView.as_view(next_page="/panel/giris"),
          name="panel-cikis"),
     path("panel/", panel_gorunum.bugun, name="panel-bugun"),

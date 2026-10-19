@@ -6,5 +6,8 @@ canli-veri/veri/
 
 canli-veri/gizli.json
 
+# Yerel yayinci jetonu (arac/yayinci.py) — depoya girmez.
+arac/.yayinci-jetonu
+
 # Ajan çalışma kopyaları
 .claude/worktrees/

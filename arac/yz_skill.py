@@ -80,7 +80,8 @@ def taslak_uret_skill(kaynak: dict, en_fazla_tur: int = EN_FAZLA_TUR) -> dict:
         "tezgah": tezgah_kur(kaynak, sozluk_yukle()),
         "uretim": {
             "saglayici": "skill",
-            "model": "claude-code-cli",
+            # Gercek model kimligi `yz_cli`den (Paket F, 19 Ekim 2026).
+            "model": yz_cli.SON_MODEL or sonuc["uretim"].get("model", ""),
             "surum": "1.0",
             "turlar": gunluk,
             "kalan_bulgular": gunluk[-1]["bulgular"],

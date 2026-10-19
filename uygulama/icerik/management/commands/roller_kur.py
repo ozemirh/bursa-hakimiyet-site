@@ -91,3 +91,38 @@ class Command(BaseCommand):
                 self._yaz(
                     f"  UYARI: {rol} grubunda {grup.permissions.count()} izin var, "
                     f"matris {len(rolun_yetkileri(rol))} diyor.")
+        self._hesap_denetimi()
+
+    #: Ölçüm için açılan deneme hesaplarının ortak parolası (URUN-PLANI §24
+    #: notu). Bu parolayı taşıyan açık hesap üretime TAŞINMAMALI.
+    DENEME_PAROLALARI = ("deneme1234",)
+
+    def _hesap_denetimi(self):
+        """Kurulum uyarısı (Paket F madde 8, 19 Ekim 2026).
+
+        Panel yetkisi rolden gelir; `is_staff` panel için GEREKMEZ, yalnız
+        `/yonetim/` (Django admin) kapısını ve sunum araçlarını açar.
+        Deneme hesapları (`yonetmen`, `editor`, `muhabir`) bugün `is_staff`
+        taşıyor ve ortak bir deneme parolasıyla açık. Komut hiçbir hesabı
+        DEĞİŞTİRMEZ; yalnız uyarır.
+        """
+        if self.sessiz:
+            return
+        from django.contrib.auth.hashers import check_password
+        from django.contrib.auth.models import User
+
+        personel = sorted(User.objects.filter(is_staff=True, is_superuser=False)
+                          .values_list("username", flat=True))
+        if personel:
+            self._yaz(
+                "  UYARI: is_staff panel için gerekmez (yetki rolden gelir); "
+                "yalnız /yonetim/ ve sunum araçlarını açar. is_staff taşıyan "
+                "hesaplar: " + ", ".join(personel))
+        zayif = sorted(
+            u.username for u in User.objects.filter(is_active=True).only("username", "password")
+            if any(check_password(p, u.password) for p in self.DENEME_PAROLALARI))
+        if zayif:
+            self._yaz(
+                "  UYARI: deneme parolası taşıyan açık hesap(lar): "
+                + ", ".join(zayif) + ". Üretime taşınmadan önce kapatılmalı "
+                "ya da parolaları değiştirilmeli.")
