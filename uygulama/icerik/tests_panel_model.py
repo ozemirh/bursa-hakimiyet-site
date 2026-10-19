@@ -589,8 +589,10 @@ class MenuVeIndeks(ModelTuruTemel):
                     self.assertNotContains(yanit, yol)
 
     def test_haber_ilce_indeksi_eklendi(self):
+        # 19 Ekim 2026 (0015): ikinci sıralama anahtarı da indekste — eski
+        # `(ilce, -yayin_zamani)` planda TEMP B-TREE kalıntısı bırakıyordu.
         adlar = [tuple(i.fields) for i in Haber._meta.indexes]
-        self.assertIn(("ilce", "-yayin_zamani"), adlar)
+        self.assertIn(("ilce", "-yayin_zamani", "-id"), adlar)
 
     def test_panel_yollari_site_kaliplarini_golgelemedi(self):
         from django.urls import resolve
