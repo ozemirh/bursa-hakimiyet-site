@@ -1,0 +1,159 @@
+{
+ "_not": "Vizyon takvimi. Afis dosyasi tasinmaz - bkz. afis_notu. Film adi ve tarihi disindaki alanlar kaynakta yoksa bos kalir; doldurulmaz.",
+ "guncelleme": "2026-09-12T15:12:35+03:00",
+ "bayat_esik_dakika": 10080,
+ "aralik": {
+  "baslangic": "2026-09-12",
+  "bitis": "2026-11-30",
+  "ay": 3
+ },
+ "kaynak": {
+  "ad": "Dağıtımcı vizyon duyuruları",
+  "kisa": "Başka Sinema · Bir Film",
+  "adres": "http://www.baskasinema.com/basin/ · https://www.birfilm.net/sinemalarda",
+  "kosullar": "Her iki sitede de içeriğin kullanımını kısıtlayan bir kullanım koşulları sayfası yok (29 Ağustos 2026'da site haritalarının tamamı tarandı); robots.txt bu yolları açık bırakıyor.",
+  "kunye": "Vizyon tarihleri: Başka Sinema ve Bir Film duyuruları.",
+  "kaynaklar": [
+   {
+    "ad": "Başka Sinema",
+    "adres": "http://www.baskasinema.com/basin/",
+    "kosullar": "",
+    "kunye": "Kaynak: Başka Sinema"
+   },
+   {
+    "ad": "Bir Film",
+    "adres": "https://www.birfilm.net/sinemalarda",
+    "kosullar": "",
+    "kunye": "Kaynak: Bir Film"
+   }
+  ],
+  "kapsam_uyarisi": "Bu liste ulusal vizyon takviminin tamamı değildir; yalnızca bu iki dağıtımcının getirdiği filmleri kapsar."
+ },
+ "afis_notu": "Afisler teliflidir. Bu dosya afis dosyasi tasimaz; yalnizca kaynaktaki adresi kunye olarak tutar. Yayinda yerel yer tutucu kullanilir. Afisi basmak icin dagitimcidan yazili izin gerekir.",
+ "film_sayisi": 6,
+ "haftalar": [
+  {
+   "tarih": "2026-09-18",
+   "gun": "cuma",
+   "filmler": [
+    {
+     "ad": "Tavuk",
+     "ozgun_ad": "",
+     "tarih": "2026-09-18",
+     "tur": [
+      "Komedi",
+      "Dram"
+     ],
+     "dagitimci": "Bir Film",
+     "ozet": "",
+     "yas_siniri": "",
+     "kaynak_kimlik": "birfilm:sinemalarda-tavuk",
+     "afis_kaynak": "",
+     "afis_yayinlanabilir": false
+    }
+   ]
+  },
+  {
+   "tarih": "2026-09-25",
+   "gun": "cuma",
+   "filmler": [
+    {
+     "ad": "Prenses ve Şövalye",
+     "ozgun_ad": "",
+     "tarih": "2026-09-25",
+     "tur": [
+      "Animasyon"
+     ],
+     "dagitimci": "Bir Film",
+     "ozet": "",
+     "yas_siniri": "",
+     "kaynak_kimlik": "birfilm:sinemalarda-prenses-ve-sovalye",
+     "afis_kaynak": "",
+     "afis_yayinlanabilir": false
+    }
+   ]
+  },
+  {
+   "tarih": "2026-10-09",
+   "gun": "cuma",
+   "filmler": [
+    {
+     "ad": "Sonsuz",
+     "ozgun_ad": "",
+     "tarih": "2026-10-09",
+     "tur": [
+      "Gerilim"
+     ],
+     "dagitimci": "Bir Film",
+     "ozet": "",
+     "yas_siniri": "",
+     "kaynak_kimlik": "birfilm:sinemalarda-sonsuz",
+     "afis_kaynak": "",
+     "afis_yayinlanabilir": false
+    }
+   ]
+  },
+  {
+   "tarih": "2026-10-30",
+   "gun": "cuma",
+   "filmler": [
+    {
+     "ad": "En Sevdiğim",
+     "ozgun_ad": "",
+     "tarih": "2026-10-30",
+     "tur": [
+      "Dram"
+     ],
+     "dagitimci": "Bir Film",
+     "ozet": "",
+     "yas_siniri": "",
+     "kaynak_kimlik": "birfilm:sinemalarda-en-sevdigim",
+     "afis_kaynak": "",
+     "afis_yayinlanabilir": false
+    }
+   ]
+  },
+  {
+   "tarih": "2026-11-13",
+   "gun": "cuma",
+   "filmler": [
+    {
+     "ad": "Buruk Noel",
+     "ozgun_ad": "",
+     "tarih": "2026-11-13",
+     "tur": [
+      "Dram"
+     ],
+     "dagitimci": "Bir Film",
+     "ozet": "",
+     "yas_siniri": "",
+     "kaynak_kimlik": "birfilm:sinemalarda-buruk-noel",
+     "afis_kaynak": "",
+     "afis_yayinlanabilir": false
+    }
+   ]
+  },
+  {
+   "tarih": "2026-11-27",
+   "gun": "cuma",
+   "filmler": [
+    {
+     "ad": "İdeal Koca",
+     "ozgun_ad": "",
+     "tarih": "2026-11-27",
+     "tur": [
+      "Dram",
+      "Komedi",
+      "Fantastik"
+     ],
+     "dagitimci": "Bir Film",
+     "ozet": "",
+     "yas_siniri": "",
+     "kaynak_kimlik": "birfilm:sinemalarda-ideal-koca",
+     "afis_kaynak": "",
+     "afis_yayinlanabilir": false
+    }
+   ]
+  }
+ ]
+}

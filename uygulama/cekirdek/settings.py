@@ -499,3 +499,29 @@ BH_OTURUM_MUTLAK_SANIYE = int(os.environ.get("BH_OTURUM_MUTLAK_SAAT", "8")) * 36
 BH_OTURUM_BOSTA_SANIYE = int(os.environ.get("BH_OTURUM_BOSTA_DAKIKA", "60")) * 60
 SESSION_COOKIE_AGE = BH_OTURUM_MUTLAK_SANIYE
 MIDDLEWARE = MIDDLEWARE + ["icerik.giris_guvenligi.OturumSuresi"]
+
+# --- test ortamı (Paket K, 19 Ekim 2026) ---------------------------------
+#
+# Test koşusu makinedeki gerçek dosyalara BAĞLI OLMAMALI: `canli-veri/veri/`
+# git'te yok (temiz klonda ve CI'da sonuç değişiyordu), arşiv D: sürücüsünde.
+# Ayar burada, test koşucusunda değil: paralel koşuda (Windows'ta `spawn`)
+# işçi süreçleri ayarları yeniden okur, koşucunun `override_settings`i onlara
+# ulaşmaz.
+#
+#   CANLI_VERI_KOK   depodaki küçültülmüş, kişisel veri içermeyen kopya
+#                    (icerik/test_verisi/canli/). Başka veri isteyen test
+#                    `override_settings(CANLI_VERI_KOK=...)` ile kendi kurar.
+#   ARSIV_KOK        VAR OLMAYAN geçici yol: arşivden okuyan/yazan test kendi
+#                    klasörünü kurmak zorunda; D:'ye dokunan test kalmaz.
+#   TUREV_KOK        aynı geçici kökün altında.
+#   PASSWORD_HASHERS MD5: parola karıştırma testte sözleşme değil yük.
+#
+# BH_CANLI_VERI_KOK / BH_ARSIV_KOK / BH_TUREV_KOK test koşusunda BİLEREK yok
+# sayılır (`cekirdek.tests_hermetik` bunu kilitler).
+if _TEST_KOSUSU:
+    _TEST_KOK = Path(_tempfile.gettempdir()) / "bh-test-yok"
+    CANLI_VERI_KOK = BASE_DIR / "icerik" / "test_verisi" / "canli"
+    ARSIV_KOK = _TEST_KOK / "arsiv"
+    ARSIV_GORSEL_KOK = ARSIV_KOK / "gorseller"
+    TUREV_KOK = _TEST_KOK / "turev"
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
