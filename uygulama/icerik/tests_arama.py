@@ -296,16 +296,15 @@ class AramaGorunumuKazanimlari(TestCase):
         self.assertEqual(yanit.status_code, 200)
         self.assertContains(yanit, "Aramak istediğiniz kelimeyi yazın")
 
-    def test_turkce_kusuru_HENUZ_DURUYOR(self):
-        """Bu tur harf kusurunu ÇÖZMEDİ; indeks çözecek.
-
-        Test bunu bilerek kilitliyor: kusur sessizce "çözüldü" sanılmasın.
-        Düzeltildiğinde bu test kırılacak ve o an bilinçli güncellenecek.
+    def test_turkce_kusuru_KAPANDI(self):
+        """28 Ağustos'ta `test_turkce_kusuru_HENUZ_DURUYOR` idi ve `IŞIK` için
+        "sonuç bulunamadı" bekliyordu. 19 Ekim 2026'da normalize arama alanı
+        (`HaberArama`) geldi ve kusur iki motorda da kapandı; test söz verildiği
+        gibi kırıldı ve bilinçli güncellendi. Ayrıntı `tests_arama_indeks.py`.
         """
-        kucuk = self.client.get("/ara", {"q": "ışık"})
-        buyuk = self.client.get("/ara", {"q": "IŞIK"})
-        self.assertContains(kucuk, "30 sonuç")
-        self.assertContains(buyuk, "sonuç bulunamadı")
+        for q in ("ışık", "IŞIK", "Işık", "isik"):
+            with self.subTest(q=q):
+                self.assertContains(self.client.get("/ara", {"q": q}), "30 sonuç")
 
 
 class CokKelimeliSorguKenarDurumlari(TestCase):

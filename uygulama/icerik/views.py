@@ -31,6 +31,7 @@ from .templatetags.site_etiket import baslikla
 
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 
+from . import arama as arama_motoru
 from .arama_metni import sorgu_coz
 from .canli import anasayfa_verisi, oku, puan_ligleri, puan_takibi
 from . import bursaspor as bursaspor_bolumu
@@ -905,20 +906,19 @@ ARAMA_EN_AZ = 3
 
 
 def arama(request):
-    """Başlık ve spot üzerinde arama.
+    """Başlık ve spot üzerinde arama (19 Ekim 2026: indeksli).
 
-    **Hâlâ `icontains`, yani tam tarama.** Türkçe büyük/küçük harf kusuru
-    da duruyor (`IŞIK` → 0 sonuç): ikisini de indeks çözecek ve indeks göç
-    bittikten sonra kurulacak (URUN-PLANI.md F7 ölçüm turu). Bu görünümde
-    yapılanlar migration gerektirmeyen iki kazanımdır:
+    Sorgu `arama_metni.sorgu_coz` ile terimlere çözülür ve normalize edilmiş
+    `HaberArama` sütununda aranır (`icerik/arama.py`): PostgreSQL'de
+    `tsvector` + GIN + `kelime:*` önek, SQLite'ta aynı anlamda `LIKE`.
+    Türkçe harf kusuru (`IŞIK` → 0 sonuç, §21) böylece iki motorda da kapandı.
 
-    1. `_liste()` artık `govde` çekmiyor,
-    2. sayım üst sınırla kesiliyor (`SinirliSayfalayici`).
+    Korunan iki eski kazanım: `_liste()` `govde` taşımıyor ve sayım üst
+    sınırla kesiliyor (`SinirliSayfalayici`).
 
-    `arama_metni.sorgu_coz` burada **yalnız kapıda** kullanılıyor: sorgunun
-    aranmaya değip değmediğine karar veriyor. Sorgunun kendisi hâlâ ham
-    metinle çalışıyor — normalizasyonun sorguya girmesi için normalize
-    edilmiş bir alan, yani migration gerekiyor.
+    **Zaman sınırı.** Sayım ve sayfa dilimi `arama.sure_siniri` içinde
+    değerlendirilir; aşılırsa okur uyarı görür, işçi kilitlenmez. SQLite
+    yolunda bu sınır gerçekten işler (tam tarama), PostgreSQL'de emniyettir.
     """
     sorgu = (request.GET.get("q") or "").strip()
     cozum = sorgu_coz(sorgu)
@@ -935,16 +935,31 @@ def arama(request):
         uyari = f"Aramak için en az {ARAMA_EN_AZ} harflik bir kelime yazın."
 
     aranacak = bool(sorgu) and not uyari
-    sonuc = _liste().filter(
-        Q(baslik__icontains=sorgu) | Q(spot__icontains=sorgu)
-    ) if aranacak else Haber.objects.none()
-    sayfa = _sayfala(request, sonuc, sinirli=aranacak)
+    toplam = 0
+    if aranacak:
+        try:
+            with arama_motoru.sure_siniri():
+                sayfa = arama_motoru.AramaSayfalayici(_liste(), cozum, SAYFA_BOYU) \
+                    .get_page(request.GET.get("sayfa") or 1)
+                toplam = sayfa.paginator.count
+                # Tembel sorgu şablonda, yani sınırın DIŞINDA çalışırdı.
+                sayfa.object_list = list(sayfa.object_list)
+                sayfa.numaralar = (list(sayfa.paginator.get_elided_page_range(
+                    sayfa.number, on_each_side=2, on_ends=1))
+                    if sayfa.paginator.num_pages > 1 else [])
+        except arama_motoru.ZamanAsimi:
+            uyari = ("Arama zaman sınırını aştı. Daha belirgin ya da daha çok "
+                     "kelimeyle yeniden deneyin.")
+            aranacak = False
+            toplam = 0
+    if not aranacak:
+        sayfa = _sayfala(request, Haber.objects.none())
     return render(request, "arama.html", {
         "baslik": f"“{sorgu}” için arama sonuçları" if sorgu else "Arama",
         "sorgu": sorgu,
         "uyari": uyari,
         "sayfa": sayfa,
-        "toplam": sayfa.paginator.count if aranacak else 0,
+        "toplam": toplam,
     })
 
 
