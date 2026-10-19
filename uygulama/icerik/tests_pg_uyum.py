@@ -85,6 +85,23 @@ class OkunmaYetimKova(TestCase):
         connection.check_constraints()   # dış işlemde bekleyen ihlal kalmadı
 
 
+class OnbellekVeritabaninaBagli(TestCase):
+    """Dosya önbelleğinin kökü makine başına tek; anahtar veritabanına bağlı
+    olmalı ki SQLite'a ve PG'ye bağlı iki süreç birbirinin menüsünü,
+    sayımını, sayfasını görmesin."""
+
+    def test_onek_veritabanina_gore_degisir(self):
+        from unittest import mock
+
+        from cekirdek import settings as ayarlar
+        ilk = ayarlar._vt_oneki()
+        with mock.patch.dict(ayarlar.DATABASES["default"], {"NAME": "baska_vt"}):
+            ikinci = ayarlar._vt_oneki()
+        self.assertNotEqual(ilk, ikinci)
+        with mock.patch.dict(ayarlar.DATABASES["default"], {"PASSWORD": "degisti"}):
+            self.assertEqual(ayarlar._vt_oneki(), ilk)   # parola anahtara girmez
+
+
 @skipUnless(PG, "PostgreSQL'de kısmi indeks kurulumu")
 class PgKismiIndeksler(TestCase):
 
