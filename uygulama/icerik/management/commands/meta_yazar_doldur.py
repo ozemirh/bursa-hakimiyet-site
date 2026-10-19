@@ -200,10 +200,9 @@ class Command(BaseCommand):
         # 356 bin satirlik UPDATE istatistikleri bayatlatir; planlayici bayat
         # istatistikle indeksi birakip tam taramaya donebiliyor (olculdu:
         # ilce sayfasi 745 -> 26 ms). Goc/backfill sonrasi ANALYZE standart adim.
-        from django.db import connection
-        t_analiz = time.time()
-        with connection.cursor() as imlec:
-            imlec.execute("ANALYZE")
-        y(f"  ANALYZE                       {time.time() - t_analiz:>8.1f} sn")
+        # PG'de duz ANALYZE sistem tablolari icin uyari basar (super
+        # kullanici degiliz); yardimci yalniz Django tablolarini sayar.
+        from icerik.istatistik import tazele
+        y(f"  ANALYZE                       {tazele():>8.1f} sn")
         y(self.style.SUCCESS(
             f"\nToplam süre {time.time() - basla:.1f} sn"))

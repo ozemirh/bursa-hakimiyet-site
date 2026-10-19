@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load site_etiket gorsel_etiket %}
+{% load site_etiket gorsel_etiket seo_etiket %}
 {% comment %}
 Video detayı.
 
@@ -12,7 +12,13 @@ iştir (oynatıcı seçimi, çerez/izleme, yaş sınırı).
 
 {% block baslik %}{{ video.baslik }} — Bursa Hakimiyet{% endblock %}
 {% block aciklama %}{{ video.spot|striptags|truncatechars:300|default:video.baslik }}{% endblock %}
-{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ video.get_absolute_url }}">{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ site_koku }}{{ video.get_absolute_url }}">{% endblock %}
+{% comment %}Sayfa oynatıcı gömmediği için JSON-LD VideoObject DEĞİL WebPage
+(görünmeyen içerik işaretlenmez); oynatıcı gelince VideoObject'e geçilir.{% endcomment %}
+{% block og_baslik %}{{ video.baslik }}{% endblock %}
+{% block paylasim_gorseli %}{% include "parca/og_gorsel.html" with nesne=video %}{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld "video" video %}</script>
+<script type="application/ld+json">{% jsonld_medya_kirinti video "Videolar" "/videolar" %}</script>{% endblock %}
 
 {% block icerik %}
       <nav class="kirinti" aria-label="Kırıntı navigasyonu">

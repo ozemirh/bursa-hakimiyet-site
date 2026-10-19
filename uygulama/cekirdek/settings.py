@@ -96,6 +96,8 @@ MIDDLEWARE = [
     'cekirdek.ara_katman.SeciciGZip',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'cekirdek.ara_katman.SiteHaritasiDosyalari',
+    # /amp/*, sondaki eğik çizgi, /arama?ara= → kanonik 301 (Paket G).
+    'cekirdek.adres_duzeni.AdresDuzeni',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -129,6 +131,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'icerik.baglam.site',
+                # Kanonik adres SITE_KOKU'dan, paylaşım görseli (Paket G).
+                'icerik.seo.baglam',
             ],
         },
     },
@@ -388,6 +392,22 @@ def _onbellek_koku() -> Path:
 
 ONBELLEK_KOK = _onbellek_koku()
 _REDIS = os.environ.get("BH_REDIS", "").strip()
+
+
+# Önbellek anahtarı VERİTABANINA bağlıdır (B paketi, 19 Ekim 2026). Kök
+# dizin makine başına tek; geçiş döneminde aynı makinede SQLite'a bağlı
+# geliştirme sunucusu ile PostgreSQL'e bağlı süreçler (göç, ölçüm) birlikte
+# koşuyor ve önek olmadan biri ötekinin menüsünü, sayımlarını, 30 sn'lik
+# sayfa HTML'ini görürdü. Önek motor + ad + sunucu + port'un kısa özetidir;
+# parola girmez.
+def _vt_oneki() -> str:
+    import hashlib
+    vt = DATABASES["default"]
+    kimlik = "|".join(str(vt.get(k, "")) for k in ("ENGINE", "NAME", "HOST", "PORT"))
+    return "vt" + hashlib.sha1(kimlik.encode("utf-8")).hexdigest()[:8]
+
+
+_VT_ONEKI = _vt_oneki()
 # Test koşusu paylaşılan önbelleğe ASLA yazmaz: gerçek sunucunun dosyalarını
 # kirletir, testler de birbirinin değerini görür. Testte veri önbelleği
 # süreç içi (her testten önce temizlenir, bkz. cekirdek/test_kosucu.py),
@@ -404,9 +424,9 @@ if _TEST_KOSUSU:
 elif _REDIS:
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.redis.RedisCache",
-                    "LOCATION": _REDIS, "KEY_PREFIX": "bh", "TIMEOUT": 300},
+                    "LOCATION": _REDIS, "KEY_PREFIX": f"bh-{_VT_ONEKI}", "TIMEOUT": 300},
         "sayfa": {"BACKEND": "django.core.cache.backends.redis.RedisCache",
-                  "LOCATION": _REDIS, "KEY_PREFIX": "bh-sayfa", "TIMEOUT": 30},
+                  "LOCATION": _REDIS, "KEY_PREFIX": f"bh-sayfa-{_VT_ONEKI}", "TIMEOUT": 30},
     }
 else:
     # Dosya önbelleği her yazımda dizini listeler (budama denetimi);
@@ -414,10 +434,10 @@ else:
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
                     "LOCATION": str(ONBELLEK_KOK / "veri"), "TIMEOUT": 300,
-                    "OPTIONS": {"MAX_ENTRIES": 5000}},
+                    "KEY_PREFIX": _VT_ONEKI, "OPTIONS": {"MAX_ENTRIES": 5000}},
         "sayfa": {"BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
                   "LOCATION": str(ONBELLEK_KOK / "sayfa"), "TIMEOUT": 30,
-                  "OPTIONS": {"MAX_ENTRIES": 3000}},
+                  "KEY_PREFIX": _VT_ONEKI, "OPTIONS": {"MAX_ENTRIES": 3000}},
     }
 
 TEST_RUNNER = "cekirdek.test_kosucu.Kosucu"

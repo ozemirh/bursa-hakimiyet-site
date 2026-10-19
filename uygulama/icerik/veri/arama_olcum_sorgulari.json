@@ -1,0 +1,14 @@
+{
+  "_not": "Arama başarım ölçüm seti — 19 Ekim 2026. §21'deki 27 Ağustos setinin kendisi saklanmamıştı (yalnız sınıf bazında sonuçları var); aynı sınıflarla yeniden kuruldu. Ölçen komut: manage.py arama_olc. Set VERİDİR: değiştirilirse önceki ölçümlerle kıyas bozulur, yeni sürüm adı verilmeli.",
+  "surum": "2026-10-19",
+  "siniflar": {
+    "tek_kelime": ["bursa", "belediye", "kaza", "yangın", "deprem", "seçim", "ekonomi", "futbol", "okul", "hastane"],
+    "turkce": ["ışık", "çağrı", "öğrenci", "şehir", "güneş", "gölet", "ağaç", "üniversite", "iğne", "çiftçi"],
+    "buyuk_harf": ["IŞIK", "ÇAĞRI", "ÖĞRENCİ", "İNEGÖL", "BURSASPOR", "OSMANGAZİ", "İSTANBUL", "NİLÜFER"],
+    "ascii": ["ogrenci", "cagri", "inegol", "nilufer", "universite"],
+    "ozel_ad": ["bozbey", "aktaş", "bursaspor", "uludağ", "mudanya", "gemlik"],
+    "uzun_tumce": ["trafik kazası", "nilüfer çayı kirliliği", "bursa büyükşehir belediye meclisi toplantısı", "uludağ kayak merkezi kar kalınlığı", "inegöl mobilya fuarı ihracat rekoru", "osmangazi belediyesi asfalt çalışması", "bursaspor teknik direktör istifa", "doğalgaz zammı nisan ayı", "okullarda karne heyecanı"],
+    "nadir": ["kaşmir keçisi", "zeplin", "arkeoloji kazısı tirilye", "mozaik müzesi"],
+    "sonucsuz": ["qxzvbn", "asdfghjkl", "ışıkqqq", "bursa zzzyyyxxx"]
+  }
+}

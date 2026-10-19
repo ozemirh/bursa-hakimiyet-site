@@ -84,17 +84,35 @@ def _canli_veri() -> dict:
         veri_yas = _yas_dakika(veri.get("guncelleme"))
         esik = veri.get("bayat_esik_dakika") or 0
         bayat = veri_yas is None or bool(esik and veri_yas > esik)
+        deneme_yas = _yas_dakika(kayit.get("denendi"))
         bilesenler[ad] = {
             "son_kosu": kayit.get("durum"),
             "denendi": kayit.get("denendi"),
-            "deneme_yas_dakika": _yas_dakika(kayit.get("denendi")),
+            "deneme_yas_dakika": deneme_yas,
+            # Durum dosyası kendiliğinden yaşlanmaz: 37 gün önceki "taze"
+            # hâlâ "taze" yazar. Son DENEME eşikten eskiyse zamanlayıcı
+            # çalışmıyor demektir (19 Ekim 2026, paket J).
+            "zamanlayici_durdu": bool(esik and (deneme_yas is None
+                                                or deneme_yas > esik)),
             "veri_yas_dakika": veri_yas,
             "esik_dakika": esik or None,
             "bayat": bayat,
+            # Kaynak sağlığı (betikler, `ortak.saglik`): asgari kayıt eşiği
+            # ve kaynak başına sonuç. Eski durum dosyasında yoktur → None.
+            "esik": kayit.get("esik"),
+            "kaynaklar": kayit.get("kaynaklar"),
+            "hata": kayit.get("hata"),
         }
     bayatlar = sorted(a for a, b in bilesenler.items() if b["bayat"])
-    return {"durum": "bayat" if bayatlar or not bilesenler else "taze",
-            "bayat": bayatlar, "bilesenler": bilesenler}
+    # "taze" dışındaki son koşu: supheli (eşik altı, eski dosya korundu),
+    # eski (kaynak düştü), yok (elde veri yok).
+    sorunlu = sorted(a for a, b in bilesenler.items()
+                     if b["son_kosu"] not in (None, "taze")
+                     or (b["esik"] or {}).get("gecti") is False)
+    durdu = sorted(a for a, b in bilesenler.items() if b["zamanlayici_durdu"])
+    genel = "taze" if bilesenler and not (bayatlar or sorunlu) else "bayat"
+    return {"durum": genel, "bayat": bayatlar, "sorunlu_kosu": sorunlu,
+            "zamanlayici_durdu": durdu, "bilesenler": bilesenler}
 
 
 def _json(yol: Path):

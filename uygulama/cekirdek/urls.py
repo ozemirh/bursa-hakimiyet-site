@@ -16,6 +16,7 @@ from django.views.static import serve
 
 from django.contrib.auth import views as kimlik_gorunum
 
+from cekirdek import adres_duzeni
 from cekirdek import durum as durum_gorunum
 
 from icerik import gorsel_turev
@@ -32,7 +33,8 @@ urlpatterns = [
             {"document_root": settings.ARSIV_GORSEL_KOK}),
     # Gorsel turevleri (19 Ekim 2026): /gorsel/<genislik|og>/<kaynak yol>.webp
     # Ilk istekte uretir, diske yazar; yayinda nginx dosyadan verir.
-    re_path(r"^gorsel/(?P<boyut>\d{3,4}|og)/(?P<yol>.+)$", gorsel_turev.gorunum,
+    # Sabit oranlı kırpımlar (og, 16x9, 4x3, 1x1) JSON-LD görsel dizisi için.
+    re_path(r"^gorsel/(?P<boyut>\d{3,4}|og|16x9|4x3|1x1)/(?P<yol>.+)$", gorsel_turev.gorunum,
             name="gorsel-turev"),
     path("yonetim/", admin.site.urls),
     # Saglik ucu (19 Ekim 2026). `\w` alt cizgiyi de yakaladigi icin
@@ -186,6 +188,7 @@ urlpatterns = [
 
     # ads.txt — AdSense kimligi verildiyse yayimlanir, yoksa 404.
     path("ads.txt", reklam_gorunum.ads_txt, name="ads-txt"),
+    path("favicon.ico", adres_duzeni.favicon, name="favicon"),
 
     path("", icerik_gorunum.anasayfa, name="anasayfa"),
     path("ara", icerik_gorunum.arama, name="arama"),

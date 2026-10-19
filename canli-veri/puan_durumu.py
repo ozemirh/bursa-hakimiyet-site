@@ -37,6 +37,7 @@ import argparse
 import re
 import sys
 import unicodedata
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -367,6 +368,27 @@ def _macini_bul(maclar: list[dict], kulup_id: int) -> dict | None:
 # kosuda 38, son haftalarda bir-iki istek. Oynanmamis hafta her kosuda
 # yeniden okunur - TFF erteleme ve saat degisikligini oraya isliyor.
 
+#
+# 19 Ekim 2026 - iki ek kural (DEGERLENDIRME-2026-10.md, veri bolumu):
+#
+# 1. SEZON + LIG ANAHTARI. Onceki dosyadan hafta tasimak yalniz ayni
+#    lig, ayni sezon ve ayni grup icin yapilir. Eskiden yalniz hafta
+#    numarasina bakiliyordu: yeni sezonun ilk kosusu ya da Bursaspor'un
+#    lig degistirmesi gecen sezonun skorlarini "oynandi" diye tasirdi.
+# 2. YENIDEN DOGRULAMA. Oynanmis hafta da artik ara ara yeniden okunur
+#    (TFF hukmen sonuc, tescil duzeltmesi isliyor). Her kayit
+#    `dogrulandi` tarihini tasir; YENIDEN_DOGRULA_GUN'den eski olan en
+#    fazla YENIDEN_DOGRULA_AZAMI hafta bir kosuda okunur - yuk sinirli
+#    kalir (gunluk kosuda haftada ~en cok 7x4 istek degil, sezon boyunca
+#    her hafta yaklasik haftada bir kez).
+
+YENIDEN_DOGRULA_GUN = 7
+YENIDEN_DOGRULA_AZAMI = 4
+
+# Asgari takim esigi: bir grubun tablosu bundan az takim tasiyorsa
+# ayristirma kaymistir (olculen en kucuk grup 17 takim, 2. Lig Kirmizi).
+ASGARI_GRUP_TAKIM = 12
+
 _HAFTA_BAG = re.compile(r"hafta=(\d+)", re.I)
 
 
@@ -392,14 +414,24 @@ def fikstur_cek(lig_adresi: str, kulup_id: int, eski: list[dict] | None,
         return list(eski or [])
 
     eski_haftalar = {m.get("hafta"): m for m in (eski or []) if m.get("hafta")}
+    bugun = date.today()
+    # Yeniden dogrulanacak oynanmis haftalar: dogrulama tarihi en eski
+    # olanlar once, kosu basina en fazla YENIDEN_DOGRULA_AZAMI.
+    eskimis = sorted(
+        (m for m in eski_haftalar.values()
+         if m.get("oynandi") and _dogrulama_yasi(m, bugun) >= YENIDEN_DOGRULA_GUN),
+        key=lambda m: (m.get("dogrulandi") or "", m.get("hafta") or 0))
+    yeniden = {m["hafta"] for m in eskimis[:YENIDEN_DOGRULA_AZAMI]}
     cikti: list[dict] = []
-    istek = tasinan = 0
+    istek = tasinan = dogrulanan = 0
     for hafta in range(1, toplam + 1):
         onceki = eski_haftalar.get(hafta)
-        if onceki and onceki.get("oynandi"):
+        if onceki and onceki.get("oynandi") and hafta not in yeniden:
             cikti.append(onceki)
             tasinan += 1
             continue
+        if hafta in yeniden:
+            dogrulanan += 1
         ortak.bekle()
         try:
             html = ortak.getir(f"{lig_adresi}&hafta={hafta}", kodlama="cp1254")
@@ -415,10 +447,51 @@ def fikstur_cek(lig_adresi: str, kulup_id: int, eski: list[dict] | None,
         if mac:
             mac = dict(mac)
             mac["hafta"] = hafta
+            mac["dogrulandi"] = bugun.isoformat()
             cikti.append(mac)
+        elif onceki and onceki.get("oynandi"):
+            # Sayfa geldi ama mac yok (ayristirma kaymasi ya da erteleme):
+            # oynanmis skoru sessizce silmektense onceki kaydi tasi.
+            cikti.append(onceki)
     ortak.log(f"  fikstur: {toplam} hafta, {len(cikti)} mac, {istek} istek, "
-              f"{tasinan} hafta onceki dosyadan")
+              f"{tasinan} hafta onceki dosyadan, {dogrulanan} oynanmis hafta "
+              f"yeniden dogrulandi")
     return cikti
+
+
+def _dogrulama_yasi(mac: dict, bugun: date) -> int:
+    """Kaydin son dogrulamasindan bu yana gecen gun; damga yoksa cok eski."""
+    try:
+        return (bugun - date.fromisoformat(mac.get("dogrulandi") or "")).days
+    except ValueError:
+        return 10 ** 6
+
+
+def fikstur_anahtari(takip: dict, ligler: list[dict]) -> dict:
+    """Fiksturun ait oldugu lig + sezon + grup. Tasima yalniz eslesirse."""
+    lig = next((l for l in ligler if l.get("anahtar") == takip.get("lig")), {})
+    return {"lig": takip.get("lig"), "sezon": lig.get("sezon") or "",
+            "grup_id": takip.get("grup_id")}
+
+
+def tasinabilir_fikstur(eski: dict, anahtar: dict) -> list[dict]:
+    """Onceki dosyanin fiksturu, YALNIZ ayni lig/sezon/grup ise.
+
+    Eski dosyada `fikstur_anahtari` yoksa (19 Ekim 2026 oncesi) anahtar
+    onceki dosyanin kendi `takip` ve `ligler` alanlarindan kurulur.
+    Sezon bilinmiyorsa (bos) tasinmaz - guvenli taraf: yeniden cekmek.
+    """
+    takip = (eski or {}).get("takip") or {}
+    fikstur = takip.get("fikstur") or []
+    if not fikstur:
+        return []
+    onceki = takip.get("fikstur_anahtari") or fikstur_anahtari(
+        takip, (eski or {}).get("ligler") or [])
+    if not anahtar.get("sezon") or onceki != anahtar:
+        ortak.log(f"  fikstur: onceki dosya baska lig/sezon ({onceki} != "
+                  f"{anahtar}), tasinmadi")
+        return []
+    return fikstur
 
 
 # -- tutarlilik -----------------------------------------------------------
@@ -459,6 +532,34 @@ def tutarlilik_denetle(ligler: list[dict]) -> dict:
     }
 
 
+def takim_sagligi(ligler: list[dict], eski: dict) -> dict:
+    """Lig basina takim sayisi esigi.
+
+    Iki kural: (1) her grup en az ASGARI_GRUP_TAKIM takim tasir; (2) onceki
+    dosyada AYNI lig AYNI sezon varsa takim toplami ondan az olamaz - sezon
+    icinde takim sayisi degismez, azalmasi yarim tablo demektir. Takim
+    sayilari koda gomulmez: sezon degisince (lig 18'den 20'ye cikarsa)
+    kural kendini duzeltir.
+    """
+    onceki = {(l.get("anahtar"), l.get("sezon")):
+              sum(len(g.get("takimlar") or []) for g in l.get("gruplar") or [])
+              for l in (eski or {}).get("ligler") or []}
+    kaynaklar = []
+    toplam = 0
+    for l in ligler:
+        sayi = sum(len(g["takimlar"]) for g in l["gruplar"])
+        toplam += sayi
+        en_az = min((len(g["takimlar"]) for g in l["gruplar"]), default=0)
+        beklenen = onceki.get((l["anahtar"], l.get("sezon"))) if l.get("sezon") else None
+        satir = ortak.kaynak_sonucu(f"TFF {l['anahtar']}", sayi)
+        satir["beklenen"] = beklenen
+        satir["en_kucuk_grup"] = en_az
+        if en_az < ASGARI_GRUP_TAKIM or (beklenen and sayi < beklenen):
+            satir["sonuc"] = "bos"
+        kaynaklar.append(satir)
+    return ortak.saglik("takim", toplam, ASGARI_GRUP_TAKIM, kaynaklar)
+
+
 # -- akis -----------------------------------------------------------------
 
 def calistir(kok: Path, secilen: list[str], takim: str) -> int:
@@ -490,14 +591,17 @@ def calistir(kok: Path, secilen: list[str], takim: str) -> int:
             ligler.append(lig)
             ortak.bekle()
     except ortak.CekmeHatasi as e:
-        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, str(e))
+        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, str(e), ortak.saglik(
+            "takim", 0, 1, [ortak.kaynak_sonucu("TFF", None, str(e))]))
 
-    bos = [l["anahtar"] for l in ligler
-           if not any(g["takimlar"] for g in l["gruplar"])]
-    if bos:
-        return ortak.dusme_ile_bitir(
+    eski_dosya = ortak.json_oku(cikti) or {}
+    saglik = takim_sagligi(ligler, eski_dosya)
+    if not saglik["esik"]["gecti"]:
+        eksikler = ", ".join(k["ad"] for k in saglik["kaynaklar"]
+                             if k["sonuc"] != "tamam")
+        return ortak.esik_alti_bitir(
             kok, BILESEN, cikti,
-            "su liglerin tablosu bos dondu: " + ", ".join(bos))
+            "takim sayisi beklenenin altinda: " + eksikler, saglik)
 
     veri = {
         "_not": ("TFF'nin acik sayfalarindan cekildi. Yayinlanirken kaynak "
@@ -529,8 +633,9 @@ def calistir(kok: Path, secilen: list[str], takim: str) -> int:
         # Sezon fiksturu. Cekilemezse takip blogu yine yazilir; fikstur
         # onceki dosyadan tasinir ya da bos kalir - sayfa o zaman fikstur
         # tablosunu hic cizmez, haftanin maci ve tablo yine ayakta.
-        eski = ortak.json_oku(cikti) or {}
-        eski_fikstur = (eski.get("takip") or {}).get("fikstur") or []
+        anahtar = fikstur_anahtari(takip, ligler)
+        takip["fikstur_anahtari"] = anahtar
+        eski_fikstur = tasinabilir_fikstur(eski_dosya, anahtar)
         lig = next((l for l in ligler if l["anahtar"] == takip["lig"]), None)
         if lig:
             adres = lig["sayfa"]
@@ -555,7 +660,7 @@ def calistir(kok: Path, secilen: list[str], takim: str) -> int:
         ortak.log(f"UYARI: {takim} hicbir ligin tablosunda bulunamadi.")
 
     ortak.json_yaz(cikti, veri)
-    ortak.durum_yaz(kok, BILESEN, "taze")
+    ortak.durum_yaz(kok, BILESEN, "taze", saglik=saglik)
 
     toplam = sum(len(g["takimlar"]) for l in ligler for g in l["gruplar"])
     ortak.log(f"Bitti: {len(ligler)} lig, "

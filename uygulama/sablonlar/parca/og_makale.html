@@ -1,0 +1,4 @@
+{% load seo_etiket %}{% comment %}article:* Open Graph nitelikleri (Paket G). `kayit` yayın ve
+güncelleme zamanı taşır; `bolum` varsa article:section.{% endcomment %}{% if kayit.yayin_zamani %}<meta property="article:published_time" content="{{ kayit.yayin_zamani|date:'c' }}">
+{% with g=kayit|guncelleme %}<meta property="article:modified_time" content="{% if g %}{{ g|date:'c' }}{% else %}{{ kayit.yayin_zamani|date:'c' }}{% endif %}">{% endwith %}{% endif %}
+{% if bolum %}<meta property="article:section" content="{{ bolum }}">{% endif %}

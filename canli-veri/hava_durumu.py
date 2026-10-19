@@ -78,6 +78,11 @@ YOKSA = -9999  # MGM'nin "olcum yok" degeri
 
 ELLE_DOSYA = "hava-elle.json"
 
+# Asgari esik (19 Ekim 2026): MGM son durum + 5 gunluk tahmin veriyor
+# (olculdu). Son durum yoksa ya da 3 gunden az tahmin geldiyse paket
+# YAZILMAZ; onceki iyi dosya korunur, durum "supheli". Elle giriste 1 gun.
+ASGARI_GUN = 3
+
 # MGM'nin kendi convertHadise fonksiyonundan alindi.
 HADISE = {
     "A": "Açık",
@@ -368,17 +373,32 @@ def mgm_cek(il: str, ilce: str) -> dict:
 
 def calistir(kok: Path, kaynak_adi: str, il: str, ilce: str) -> int:
     cikti = kok / f"{BILESEN}.json"
+    kaynak_ad = "Elle giriş" if kaynak_adi == "elle" else "MGM"
+    asgari = 1 if kaynak_adi == "elle" else ASGARI_GUN
     try:
         paket = elle_cek(kok) if kaynak_adi == "elle" else mgm_cek(il, ilce)
-    except ortak.CekmeHatasi as e:
-        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, str(e))
     except Exception as e:
-        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, repr(e))
+        hata = str(e) if isinstance(e, ortak.CekmeHatasi) else repr(e)
+        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, hata, ortak.saglik(
+            "gun", 0, asgari, [ortak.kaynak_sonucu(kaynak_ad, None, hata)]))
 
-    if not paket.get("son_durum") and not paket.get("gunler"):
-        return ortak.dusme_ile_bitir(
+    gun_sayisi = len(paket.get("gunler") or [])
+    son_var = bool(paket.get("son_durum"))
+    saglik = ortak.saglik("gun", gun_sayisi, asgari, [
+        ortak.kaynak_sonucu(kaynak_ad, gun_sayisi, asgari=asgari)])
+    saglik["esik"]["son_durum_var"] = son_var
+    if kaynak_adi != "elle" and not son_var:
+        saglik["esik"]["gecti"] = False
+    elif kaynak_adi == "elle" and son_var:
+        # Elle giriste yalniz "su an" girilmis olabilir; bu yeterli.
+        saglik["esik"]["gecti"] = True
+        saglik["kaynaklar"][0]["sonuc"] = "tamam"
+    if not saglik["esik"]["gecti"]:
+        return ortak.esik_alti_bitir(
             kok, BILESEN, cikti,
-            f"{kaynak_adi} kaynagi ne son durum ne tahmin dondurdu")
+            f"{kaynak_adi} kaynagi {gun_sayisi} gunluk tahmin dondurdu "
+            f"(asgari {asgari}), son durum {'var' if son_var else 'yok'}",
+            saglik)
 
     tanimsiz = []
     for h in ([paket["son_durum"]["hadise"]] if paket.get("son_durum") else []) \
@@ -408,7 +428,7 @@ def calistir(kok: Path, kaynak_adi: str, il: str, ilce: str) -> int:
     }
 
     ortak.json_yaz(cikti, veri)
-    ortak.durum_yaz(kok, BILESEN, "taze")
+    ortak.durum_yaz(kok, BILESEN, "taze", saglik=saglik)
 
     s = veri["son_durum"]
     if s:

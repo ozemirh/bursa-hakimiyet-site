@@ -20,21 +20,56 @@ hiç göstermemek doğru.
 Dosyalar her istekte diskten okunmaz; `KISA_BELLEK_SANIYE` boyunca süreç
 belleğinde tutulur. Anasayfa altı bileşeni birden istiyor ve saniyede onlarca
 istek gelebilir.
+
+## Tazelik sözleşmesi (19 Ekim 2026)
+
+Zamanlayıcı 12 Eylül'de durdu ve site 37 gün boyunca 12 Eylül vakitlerini
+"ŞİMDİ", 13 Eylül maçını "bekliyor" diye gösterdi (DEĞERLENDİRME-2026-10
+bulgu 10). Kural artık TEK YERDE, `tazelik()`te: her bileşen
+`veri["tazelik"]` taşır —
+
+  `durum`      taze | bayat | yok
+  `guncelleme` verinin zamanı (aware `datetime`) ya da None
+  `bugun`      güncelleme bugün mü (bant tarihi ancak o zaman saklar)
+  `metin`      okura basılacak hazır cümle ("12 Eylül 2026, 21:57 tarihli,
+               güncel değil"); taze veride boş
+  `elle`       veri panelden elle mi girildi (`kaynak.kisa == "panel"`)
+
+Okura kural: bayat veri ya açık tarih + "güncel değil" işaretiyle gösterilir
+ya da gizlenir — ASLA canlıymış gibi gösterilmez. Damgası okunamayan veri de
+bayat sayılır: yaşını bilmediğimiz şey taze diye sunulamaz.
+
+Namaz bu sözleşmenin dışında kalır, çünkü artık dosyadan okunmuyor:
+`namaz_verisi()` vakitleri istek anında hesaplar (`canli-veri/namaz_hesap.py`,
+saf Python, ağsız). Yalnız panelden elle giriş varsa dosya esastır ve o
+zaman bugünün satırı yoksa panel "güncel değil" der.
 """
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from django.conf import settings
+from django.utils import formats, timezone
 
 KISA_BELLEK_SANIYE = 30
 
 _bellek: dict[str, tuple[float, dict | None]] = {}
+
+TAZE, BAYAT, YOK = "taze", "bayat", "yok"
+
+# Dosya `bayat_esik_dakika` taşımıyorsa kullanılacak eşik — betiklerdeki
+# sabitlerle aynı. Bilinmeyen bileşen için eşik yoktur (bayat sayılmaz).
+VARSAYILAN_ESIK = {
+    "doviz": 1440, "piyasa": 45, "hava-durumu": 180,
+    "namaz-vakitleri": 2880, "nobetci-eczane": 1440,
+    "puan-durumu": 2880, "vizyon-takvimi": 10080,
+}
 
 
 def _kok() -> Path:
@@ -45,8 +80,9 @@ def _kok() -> Path:
 def oku(bilesen: str) -> dict | None:
     """Bileşenin JSON'unu döndürür; yoksa ya da bozuksa None.
 
-    Dönen sözlüğe iki alan eklenir:
-      `bayat`      — güncelleme eşiği aştı mı
+    Dönen sözlüğe üç alan eklenir:
+      `tazelik`    — sözleşme (bkz. modül notu)
+      `bayat`      — `tazelik.durum != "taze"` (eski şablonlar için)
       `yas_dakika` — verinin yaşı
     """
     simdi = time.time()
@@ -61,12 +97,13 @@ def oku(bilesen: str) -> dict | None:
             veri = json.load(f)
     except (OSError, json.JSONDecodeError):
         veri = None
+    if veri is not None and not isinstance(veri, dict):
+        veri = None
 
     if veri is not None:
-        yas = _yas_dakika(veri.get("guncelleme", ""))
-        esik = veri.get("bayat_esik_dakika") or 0
-        veri["yas_dakika"] = yas
-        veri["bayat"] = bool(yas is not None and esik and yas > esik)
+        veri["tazelik"] = tazelik(veri, VARSAYILAN_ESIK.get(bilesen))
+        veri["yas_dakika"] = veri["tazelik"]["yas_dakika"]
+        veri["bayat"] = veri["tazelik"]["durum"] != TAZE
 
     _bellek[bilesen] = (simdi, veri)
     return veri
@@ -81,19 +118,161 @@ def _yas_dakika(damga: str):
     return round((simdi - an).total_seconds() / 60, 1)
 
 
-def simdiki_vakit(namaz: dict | None) -> str:
+def bugunun_tarihi() -> date:
+    """Yerel (İstanbul) bugün. Testler gün sabitlemek için bunu yamar."""
+    return timezone.localdate()
+
+
+def _aware(an: datetime) -> datetime:
+    return timezone.make_aware(an) if timezone.is_naive(an) else an
+
+
+def tazelik(veri: dict | None, varsayilan_esik: int | None = None,
+            simdi: datetime | None = None) -> dict:
+    """Tek tazelik kuralı. Şablonlar yalnız bunu okur."""
+    if not veri:
+        return {"durum": YOK, "guncelleme": None, "yas_dakika": None,
+                "bugun": False, "metin": "", "elle": False}
+    simdi = simdi or timezone.now()
+    try:
+        guncelleme = _aware(datetime.fromisoformat(str(veri.get("guncelleme"))))
+    except (TypeError, ValueError):
+        guncelleme = None
+    esik = veri.get("bayat_esik_dakika") or varsayilan_esik or 0
+    yas = (round((simdi - guncelleme).total_seconds() / 60, 1)
+           if guncelleme else None)
+    if guncelleme is None:
+        # Yaşı bilinmeyen veri taze diye sunulamaz — eşiği olan bileşende.
+        durum = BAYAT if esik else TAZE
+    else:
+        durum = BAYAT if (esik and yas > esik) else TAZE
+    yerel = timezone.localtime(guncelleme) if guncelleme else None
+    bugun = bool(yerel and yerel.date() == timezone.localtime(simdi).date())
+    if durum == BAYAT:
+        metin = (f"{formats.date_format(yerel, 'j F Y, H:i')} tarihli, "
+                 "güncel değil" if yerel else "güncelleme zamanı bilinmiyor, "
+                 "güncel değil")
+    else:
+        metin = ""
+    kaynak = veri.get("kaynak")
+    elle = isinstance(kaynak, dict) and kaynak.get("kisa") == "panel"
+    return {"durum": durum, "guncelleme": guncelleme, "yas_dakika": yas,
+            "bugun": bugun, "metin": metin, "elle": elle}
+
+
+# -- namaz: istek anında hesap --------------------------------------------
+
+_namaz_modulu = None
+_namaz_gunleri: dict[str, dict] = {}
+
+
+def _namaz_hesap():
+    """`canli-veri/namaz_hesap.py`yi dosya yolundan yükler (bir kez).
+
+    Modül hiçbir şey içe aktarmıyor; `sys.path`e dokunulmaz. Yüklenemezse
+    (dosya yok, sözdizimi bozuk) None — site dosyadaki vakitlere düşer.
+    """
+    global _namaz_modulu
+    if _namaz_modulu is not None:
+        return _namaz_modulu or None
+    yol = Path(getattr(settings, "CANLI_BETIK_KOK",
+                       settings.BASE_DIR.parent / "canli-veri")) / "namaz_hesap.py"
+    try:
+        spec = importlib.util.spec_from_file_location("bh_namaz_hesap", yol)
+        modul = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modul)
+        _namaz_modulu = modul
+    except Exception:  # noqa: BLE001 - hesap yoksa dosya yolu var
+        _namaz_modulu = False
+        return None
+    return modul
+
+
+def _hesap_gunu(modul, gun: date) -> dict:
+    anahtar = gun.isoformat()
+    kayit = _namaz_gunleri.get(anahtar)
+    if kayit is None:
+        if len(_namaz_gunleri) > 60:
+            _namaz_gunleri.clear()
+        kayit = modul.gun_kaydi(gun)
+        _namaz_gunleri[anahtar] = kayit
+    return kayit
+
+
+def bugunun_satiri(namaz: dict | None, gun: date | None = None) -> dict | None:
+    """`gunler` içinden VERİLEN GÜNÜN satırı; yoksa None (asla `gunler[0]`)."""
+    if not namaz:
+        return None
+    hedef = (gun or bugunun_tarihi()).isoformat()
+    for satir in namaz.get("gunler") or []:
+        if satir.get("tarih") == hedef:
+            return satir
+    return None
+
+
+def namaz_verisi(simdi: datetime | None = None) -> dict | None:
+    """Namaz paneli paketi; `bugun` alanı BUGÜNÜN satırıdır ya da None.
+
+    Sıra: (1) panelden elle giriş dosyası varsa o esastır — editör hesabı
+    bilerek reddetmiştir; (2) yoksa istek anında hesap (bugün + yarın);
+    (3) hesap modülü yüklenemezse dosyadaki satırlar. (1) ve (3)'te bugünün
+    satırı yoksa `bugun` None kalır ve panel "güncel değil" der.
+    """
+    yerel = timezone.localtime(simdi) if simdi else timezone.localtime()
+    gun = yerel.date()
+    dosya = oku("namaz-vakitleri")
+    elle = bool(dosya and dosya["tazelik"]["elle"])
+    modul = None if elle else _namaz_hesap()
+    if modul is not None:
+        paket = {
+            "guncelleme": yerel.isoformat(timespec="seconds"),
+            "kaynak": dict(modul.KAYNAK),
+            "yer": dict(modul.BURSA),
+            "vakit_adlari": dict(modul.VAKIT_ADI),
+            "gunler": [_hesap_gunu(modul, gun),
+                       _hesap_gunu(modul, gun + timedelta(days=1))],
+            "hesap": True,
+        }
+        paket["tazelik"] = {"durum": TAZE, "guncelleme": yerel,
+                            "yas_dakika": 0, "bugun": True, "metin": "",
+                            "elle": False}
+        paket["bayat"] = False
+    elif dosya:
+        paket = dict(dosya, hesap=False)
+    else:
+        return None
+    paket["bugun"] = bugunun_satiri(paket, gun)
+    if paket["bugun"] is not None and not paket["hesap"]:
+        # Elle girilmiş tablo günlerce ileriyi kapsayabilir; ölçüt dosyanın
+        # yaşı değil, BUGÜNÜN satırının varlığı.
+        paket["tazelik"] = dict(paket["tazelik"], durum=TAZE, metin="")
+        paket["bayat"] = False
+    if paket["bugun"] is None:
+        son = (paket.get("gunler") or [{}])[-1].get("tarih") or ""
+        paket["tazelik"] = dict(paket["tazelik"], durum=BAYAT, metin=(
+            f"vakit bilgisi güncel değil (son gün {son})" if son
+            else "vakit bilgisi güncel değil"))
+        paket["bayat"] = True
+    return paket
+
+
+def simdiki_vakit(namaz: dict | None, simdi: datetime | None = None) -> str:
     """İçinde bulunulan namaz vaktinin anahtarı; şablon onu vurguluyor.
 
-    Yatsıdan sonra ve imsaktan önce "yatsı" sayılır — gün dönmeden vakit
-    değişmiyor.
+    YALNIZ BUGÜNÜN satırına bakar: bugünün satırı yoksa boş döner ve "ŞİMDİ"
+    şeridi hiç çizilmez (19 Ekim 2026'ya kadar `gunler[0]` okunuyordu ve
+    12 Eylül vakitleri "şimdi" diye gösteriliyordu). Yatsıdan sonra ve
+    imsaktan önce "yatsı" sayılır — gün dönmeden vakit değişmiyor.
     """
-    if not namaz or not namaz.get("gunler"):
+    yerel = timezone.localtime(simdi) if simdi else timezone.localtime()
+    satir = bugunun_satiri(namaz, yerel.date())
+    if not satir:
         return ""
-    vakitler = namaz["gunler"][0].get("vakitler") or {}
-    simdi = datetime.now().strftime("%H:%M")
+    vakitler = satir.get("vakitler") or {}
+    saat = yerel.strftime("%H:%M")
     gecerli = ""
-    for anahtar, saat in vakitler.items():
-        if saat <= simdi:
+    for anahtar, deger in vakitler.items():
+        if deger and deger <= saat:
             gecerli = anahtar
     return gecerli or "yatsi"
 
@@ -106,7 +285,8 @@ def _tarihe_cevir(damga: str | None):
         return None
 
 
-def vizyon_filmleri(vizyon: dict | None, adet: int = 4) -> list[dict]:
+def vizyon_filmleri(vizyon: dict | None, adet: int = 4,
+                    bugun: date | None = None) -> list[dict]:
     """Vizyon takvimini şablonun beklediği **düz** film listesine çevirir.
 
     Dosya haftalara bölünmüş (`haftalar[].filmler[]`); sayfadaki kart şeridi
@@ -117,14 +297,23 @@ def vizyon_filmleri(vizyon: dict | None, adet: int = 4) -> list[dict]:
     **Afiş basılmaz.** Dosyanın kendi notu afişlerin telifli olduğunu ve
     dosyanın afiş taşımadığını söylüyor; ayrıca dış adrese bağlanmak sayfanın
     internetsiz açılması kuralına aykırı. Kartta yerel yer tutucu durur.
+
+    **Geçmiş tarihli film süzülür** (19 Ekim 2026): bölüm "vizyona
+    girecekler" diyor; dosya donunca 18 Eylül filmi Ekim'de hâlâ "yakında"
+    görünüyordu. Bugün giren film kalır. Tarihi çözülemeyen film kalır —
+    süzgeç bilmediği tarihi geçmiş saymaz.
     """
     if not vizyon:
         return []
+    bugun = bugun or bugunun_tarihi()
     filmler: list[dict] = []
     for hafta in vizyon.get("haftalar") or []:
         for film in hafta.get("filmler") or []:
             ad = (film.get("ad") or "").strip()
             if not ad:
+                continue
+            tarih = _tarihe_cevir(film.get("tarih") or hafta.get("tarih"))
+            if tarih is not None and tarih < bugun:
                 continue
             # Kaynakta olmayan alan doldurulmaz; şablon boş olanı hiç basmaz.
             turler = [t for t in (film.get("tur") or []) if t]
@@ -132,7 +321,7 @@ def vizyon_filmleri(vizyon: dict | None, adet: int = 4) -> list[dict]:
                 "ad": ad,
                 # `date` süzgeci düz metinle çalışmaz; tarih burada çözülür ki
                 # sayfada "4 Aralık 2026" yazsın, "2026-12-04" değil.
-                "tarih": _tarihe_cevir(film.get("tarih") or hafta.get("tarih")),
+                "tarih": tarih,
                 "tur": " · ".join(turler),
                 "yas_siniri": film.get("yas_siniri") or "",
                 "dagitimci": film.get("dagitimci") or "",
@@ -188,17 +377,87 @@ def _mac_duzelt(mac: dict | None) -> dict | None:
     return kopya
 
 
-def puan_takibi(puan: dict | None) -> dict | None:
+# Geçmiş maç kutuda kaç gün daha "haftanın maçı" olarak kalır: maç
+# pazar oynandıysa sonuç salıya kadar durur, sonra sıradaki maça geçilir.
+SONUC_GOSTER_GUN = 3
+
+
+def mac_takvimi(puan: dict | None, bugun: date | None = None) -> dict | None:
+    """Haftanın maçı ile fikstürün sıradaki maçı TEK kaynaktan (19 Ekim 2026).
+
+    Eskiden kutu `takip.mac`i (betiğin son koşusundaki hafta), fikstür ise
+    "ilk oynanmamış maç"ı gösteriyordu; dosya donunca ikisi de 13 Eylül
+    maçını "bekliyor" diye basıyordu. Şimdi ikisi de bugüne göre karar
+    verir:
+
+      her maç   `durum`: sonuc (skor var) · bekliyor (tarihi bugün/ileride)
+                · bilgi_yok (tarihi geçti, skor yok — sonuç UYDURULMAZ)
+      sonraki   tarihi bugün ya da ileride olan ilk oynanmamış maç
+      haftanin  bugünün maçı; yoksa son SONUC_GOSTER_GUN içindeki maç;
+                yoksa sıradaki; yoksa en son maç
+
+    `takip.mac` fikstürde yoksa listeye eklenir (aynı `mac_id` varsa skoru
+    olan kayıt esastır).
+    """
+    takip = (puan or {}).get("takip") or {}
+    if not takip:
+        return None
+    bugun = bugun or bugunun_tarihi()
+    ham: dict = {}
+    sira: list = []
+    for m in list(takip.get("fikstur") or []) + ([takip["mac"]] if takip.get("mac") else []):
+        anahtar = m.get("mac_id") or (m.get("tarih"), m.get("ev"), m.get("deplasman"))
+        onceki = ham.get(anahtar)
+        if onceki is None:
+            ham[anahtar] = m
+            sira.append(anahtar)
+        elif m.get("oynandi") and not onceki.get("oynandi"):
+            ham[anahtar] = dict(onceki, **m)
+    if not sira:
+        return None
+    maclar = []
+    for anahtar in sira:
+        m = _mac_duzelt(ham[anahtar])
+        g = m["tarih_g"]
+        if m["skor_var"]:
+            m["durum"] = "sonuc"
+        elif g is not None and g < bugun:
+            m["durum"] = "bilgi_yok"
+        else:
+            m["durum"] = "bekliyor"
+        maclar.append(m)
+    maclar.sort(key=lambda m: (m["tarih_g"] or date.max, m.get("hafta") or 0))
+    gecmis = [m for m in maclar if m["tarih_g"] and m["tarih_g"] < bugun]
+    bugunku = [m for m in maclar if m["tarih_g"] == bugun]
+    sonraki = next((m for m in maclar if m["durum"] == "bekliyor"
+                    and m["tarih_g"] is not None), None)
+    if bugunku:
+        haftanin = bugunku[0]
+    elif gecmis and (bugun - gecmis[-1]["tarih_g"]).days <= SONUC_GOSTER_GUN:
+        haftanin = gecmis[-1]
+    elif sonraki:
+        haftanin = sonraki
+    else:
+        haftanin = gecmis[-1] if gecmis else maclar[-1]
+    return {"maclar": maclar, "sonraki": sonraki, "haftanin": haftanin}
+
+
+def puan_takibi(puan: dict | None, bugun: date | None = None) -> dict | None:
     """`takip` bloğunu şablona hazır hâlde döndürür (Bursaspor + haftanın maçı).
 
-    Çekme betiği Bursaspor'u dört ligin tablosunda arayıp bulduğu satırı ve o
-    haftaki maçını `takip` altına yazıyor; ligi koda gömülü değil. Blok yoksa
-    şablon maç kutusunu hiç çizmez.
+    Çekme betiği Bursaspor'u dört ligin tablosunda arayıp bulduğu satırı
+    `takip` altına yazıyor; ligi koda gömülü değil. Haftanın maçı
+    `mac_takvimi()`nden gelir (bugüne göre). `tazelik` dosyanınkidir: kutu
+    bayat veride tarihle "güncel değil" der. Blok yoksa şablon maç kutusunu
+    hiç çizmez.
     """
     if not puan or not puan.get("takip"):
         return None
     takip = dict(puan["takip"])
-    takip["mac"] = _mac_duzelt(takip.get("mac"))
+    takvim = mac_takvimi(puan, bugun)
+    takip["mac"] = takvim["haftanin"] if takvim else None
+    takip["tazelik"] = puan.get("tazelik") or tazelik(
+        puan, VARSAYILAN_ESIK["puan-durumu"])
     return takip
 
 
@@ -377,7 +636,11 @@ def gece_mi(an, namaz: dict | None = None) -> bool:
     if an is None:
         return False
     saat = an.strftime("%H:%M")
-    vakitler = ((namaz or {}).get("gunler") or [{}])[0].get("vakitler") or {}
+    # O GÜNÜN satırı; tarihsiz/eşleşmeyen pakette ilk satır yaklaşık değer
+    # olarak kullanılır (doğuş/batış günde 1-2 dk kayar, kaba aralıktan iyi).
+    gunler = (namaz or {}).get("gunler") or [{}]
+    satir = bugunun_satiri(namaz, an.date()) or gunler[0]
+    vakitler = satir.get("vakitler") or {}
     dogus, batis = vakitler.get("gunes"), vakitler.get("aksam")
     if dogus and batis:
         return not (dogus <= saat < batis)
@@ -499,10 +762,12 @@ def hava_paneli(hava: dict | None, namaz: dict | None = None,
     karanlik = gece_mi(olcum or datetime.now(), namaz)
     aile = hava_ailesi(son.get("hadise"), karanlik)
 
+    taze = hava.get("tazelik") or tazelik(hava, VARSAYILAN_ESIK["hava-durumu"])
     return {
         "merkez": hava.get("merkez") or {},
         "kaynak": hava.get("kaynak") or {},
-        "bayat": hava.get("bayat"),
+        "tazelik": taze,
+        "bayat": taze["durum"] != TAZE,
         "manzara": aile,
         "gece": karanlik,
         "simdi": {
@@ -634,6 +899,8 @@ def eczane_paneli(eczane: dict | None, simdi: datetime | None = None):
     if not kayitlar:
         return None
     kayitlar.sort(key=lambda k: (_tr_sirala(k["ilce"]), _tr_sirala(k["ad"])))
+    taze = eczane.get("tazelik") or tazelik(eczane,
+                                            VARSAYILAN_ESIK["nobetci-eczane"])
 
     ilceler: list[dict] = []
     sepet: dict[str, dict] = {}
@@ -665,7 +932,8 @@ def eczane_paneli(eczane: dict | None, simdi: datetime | None = None):
         "pencere_adet": pencereler.get(pencere, 0),
         "nobette": sum(1 for k in kayitlar if k["nobette"]),
         "kaynak": eczane.get("kaynak") or {},
-        "bayat": eczane.get("bayat"),
+        "tazelik": taze,
+        "bayat": taze["durum"] != TAZE,
     }
 
 
@@ -678,7 +946,7 @@ def anasayfa_verisi() -> dict:
     vizyon = oku("vizyon-takvimi")
     puan = oku("puan-durumu")
     hava = oku("hava-durumu")
-    namaz = oku("namaz-vakitleri")
+    namaz = namaz_verisi()
     eczane = oku("nobetci-eczane")
     return {
         # Doviz bandi CANLI kur gosteriyor (27 Agustos karari): serbest

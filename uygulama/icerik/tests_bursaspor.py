@@ -10,6 +10,7 @@ Denetlenen üç kural:
    bölümler lacivert-kırmızı kalır (§63).
 """
 
+from datetime import date
 from unittest import mock
 
 from django.test import TestCase
@@ -54,6 +55,13 @@ PUAN = {
 }
 
 
+# Paket 12 Eylül 2026'da çekilmiş gibi kurulu; "sıradaki maç" ve maç durumu
+# 19 Ekim 2026'dan beri BUGÜNE göre hesaplanıyor (`canli.mac_takvimi`), o
+# yüzden gün sabitlenir. Bugünden bağımsız davranış `tests_canli`de.
+GUN = mock.patch("icerik.canli.bugunun_tarihi", new=lambda: date(2026, 9, 12))
+
+
+@GUN
 class FiksturHazirlama(TestCase):
 
     def test_fikstur_yoksa_none(self):
@@ -91,6 +99,7 @@ class FiksturHazirlama(TestCase):
         self.assertTrue(f["maclar"][1]["bizim_ev"])
 
 
+@GUN
 class BursasporSayfasi(TestCase):
 
     @classmethod

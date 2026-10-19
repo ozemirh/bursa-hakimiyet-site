@@ -29,14 +29,17 @@ from .templatetags.site_etiket import baslikla
 
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 
+from . import arama as arama_motoru
 from .arama_metni import sorgu_coz
-from .canli import anasayfa_verisi, oku, puan_ligleri, puan_takibi
+from .canli import (anasayfa_verisi, namaz_verisi, oku, puan_ligleri,
+                    puan_takibi)
 from . import bursaspor as bursaspor_bolumu
 from . import temalar
 from . import eczane as eczane_sayfa
 from . import okunma, onbellek
 from .models import Haber, ResmiIlan
 from .sayfa_onbellegi import sayfa_onbellegi
+from .sayfa_no import sayfa_getir
 
 # Yuva sayıları (§1 bileşen sözleşmesi) 19 Ekim 2026'dan beri dizilim
 # modülünde duruyor; anasayfa ve panelin manşet ekranı aynı sayıyı okusun:
@@ -420,6 +423,10 @@ def _nobet_ozeti(slug="", ad=""):
         # sorusunu paneli terk etmeden yanıtlıyor.
         "pencere": panel.get("pencere") if panel else "",
         "kaynak": panel.get("kaynak") if panel else None,
+        # Bayatlık sözleşmesi (`canli.tazelik`): eski liste künyede
+        # anasayfadaki panelle aynı uyarıyı taşır (19 Ekim 2026).
+        "tazelik": panel.get("tazelik") if panel else None,
+        "bayat": bool(panel and panel.get("bayat")),
     }
 
 
@@ -719,7 +726,10 @@ def _canli_kunyeler():
     """
     kalemler = []
     for ad, bilesen in CANLI_KALEMLER:
-        veri = oku(bilesen) or {}
+        # Namaz dosyadan değil istek anında hesaptan gelir (19 Ekim 2026);
+        # beyan da sitenin gerçekte gösterdiğini söylemeli.
+        veri = (namaz_verisi() if bilesen == "namaz-vakitleri"
+                else oku(bilesen)) or {}
         kaynak = veri.get("kaynak")
         if isinstance(kaynak, dict):
             ham = [kaynak]
@@ -892,20 +902,19 @@ ARAMA_EN_AZ = 3
 
 
 def arama(request):
-    """Başlık ve spot üzerinde arama.
+    """Başlık ve spot üzerinde arama (19 Ekim 2026: indeksli).
 
-    **Hâlâ `icontains`, yani tam tarama.** Türkçe büyük/küçük harf kusuru
-    da duruyor (`IŞIK` → 0 sonuç): ikisini de indeks çözecek ve indeks göç
-    bittikten sonra kurulacak (URUN-PLANI.md F7 ölçüm turu). Bu görünümde
-    yapılanlar migration gerektirmeyen iki kazanımdır:
+    Sorgu `arama_metni.sorgu_coz` ile terimlere çözülür ve normalize edilmiş
+    `HaberArama` sütununda aranır (`icerik/arama.py`): PostgreSQL'de
+    `tsvector` + GIN + `kelime:*` önek, SQLite'ta aynı anlamda `LIKE`.
+    Türkçe harf kusuru (`IŞIK` → 0 sonuç, §21) böylece iki motorda da kapandı.
 
-    1. `_liste()` artık `govde` çekmiyor,
-    2. sayım üst sınırla kesiliyor (`SinirliSayfalayici`).
+    Korunan iki eski kazanım: `_liste()` `govde` taşımıyor ve sayım üst
+    sınırla kesiliyor (`SinirliSayfalayici`).
 
-    `arama_metni.sorgu_coz` burada **yalnız kapıda** kullanılıyor: sorgunun
-    aranmaya değip değmediğine karar veriyor. Sorgunun kendisi hâlâ ham
-    metinle çalışıyor — normalizasyonun sorguya girmesi için normalize
-    edilmiş bir alan, yani migration gerekiyor.
+    **Zaman sınırı.** Sayım ve sayfa dilimi `arama.sure_siniri` içinde
+    değerlendirilir; aşılırsa okur uyarı görür, işçi kilitlenmez. SQLite
+    yolunda bu sınır gerçekten işler (tam tarama), PostgreSQL'de emniyettir.
     """
     sorgu = (request.GET.get("q") or "").strip()
     cozum = sorgu_coz(sorgu)
@@ -922,16 +931,31 @@ def arama(request):
         uyari = f"Aramak için en az {ARAMA_EN_AZ} harflik bir kelime yazın."
 
     aranacak = bool(sorgu) and not uyari
-    sonuc = _liste().filter(
-        Q(baslik__icontains=sorgu) | Q(spot__icontains=sorgu)
-    ) if aranacak else Haber.objects.none()
-    sayfa = _sayfala(request, sonuc, sinirli=aranacak)
+    toplam = 0
+    if aranacak:
+        try:
+            with arama_motoru.sure_siniri():
+                sayfa = arama_motoru.AramaSayfalayici(_liste(), cozum, SAYFA_BOYU) \
+                    .get_page(request.GET.get("sayfa") or 1)
+                toplam = sayfa.paginator.count
+                # Tembel sorgu şablonda, yani sınırın DIŞINDA çalışırdı.
+                sayfa.object_list = list(sayfa.object_list)
+                sayfa.numaralar = (list(sayfa.paginator.get_elided_page_range(
+                    sayfa.number, on_each_side=2, on_ends=1))
+                    if sayfa.paginator.num_pages > 1 else [])
+        except arama_motoru.ZamanAsimi:
+            uyari = ("Arama zaman sınırını aştı. Daha belirgin ya da daha çok "
+                     "kelimeyle yeniden deneyin.")
+            aranacak = False
+            toplam = 0
+    if not aranacak:
+        sayfa = _sayfala(request, Haber.objects.none())
     return render(request, "arama.html", {
         "baslik": f"“{sorgu}” için arama sonuçları" if sorgu else "Arama",
         "sorgu": sorgu,
         "uyari": uyari,
         "sayfa": sayfa,
-        "toplam": sayfa.paginator.count if aranacak else 0,
+        "toplam": toplam,
     })
 
 
@@ -971,9 +995,9 @@ class SinirliSayfalayici(Paginator):
 
 
 def _sayfala(request, sorgu, sinirli=False, boy=SAYFA_BOYU):
-    numara = request.GET.get("sayfa") or 1
     sinif = SinirliSayfalayici if sinirli else Paginator
-    sayfa = sinif(sorgu, boy).get_page(numara)
+    # Geçersiz/aralık dışı ?sayfa= → 404, yumuşak 404 yok (Paket G).
+    sayfa = sayfa_getir(sinif(sorgu, boy), request.GET.get("sayfa"))
     # Numaralı sayfalama (29 Ağustos): "1 … 4 [5] 6 … 50". Elided aralık
     # şablondan çağrılamıyor (metot bağımsız değişken istiyor), burada
     # kurulur; parca/sayfalama.html bu listeyi çizer.
@@ -1002,7 +1026,7 @@ KONU_SAYFA_BOYU = 30
 def konular(request):
     """Onaylı dosyaların dizini; en son gelişme önde."""
     sorgu = Konu.yayindakiler().order_by("-bitis", "-id")
-    sayfa = Paginator(sorgu, KONU_SAYFA_BOYU).get_page(request.GET.get("sayfa") or 1)
+    sayfa = sayfa_getir(Paginator(sorgu, KONU_SAYFA_BOYU), request.GET.get("sayfa"))
     return render(request, "konular.html", {
         "baslik": "Konu Dosyaları",
         "sayfa": sayfa,

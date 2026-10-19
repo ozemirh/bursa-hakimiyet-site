@@ -18,3 +18,13 @@ class IcerikConfig(AppConfig):
         # Oturum süresi için giriş damgası (Paket F madde 8).
         from .giris_guvenligi import sinyali_bagla
         sinyali_bagla()
+
+        # Arama metni haberle birlikte tazelenir (icerik/arama.py). Kanca
+        # `Haber.save()` içinde değil burada: model dosyası arama motorunu
+        # tanımasın, kanca tek yerden açılıp kapansın.
+        from django.db.models.signals import post_save
+
+        from . import arama
+        from .models import Haber
+        post_save.connect(arama.haber_kaydedildi, sender=Haber,
+                          dispatch_uid="icerik.arama.haber_kaydedildi")

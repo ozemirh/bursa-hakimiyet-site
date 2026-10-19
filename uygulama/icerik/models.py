@@ -1128,3 +1128,42 @@ class KonuHaber(models.Model):
 
     def __str__(self) -> str:
         return f"{self.konu_id} ← {self.haber_id}"
+
+
+class HaberArama(models.Model):
+    """Haberin aranabilir hâli — F7 arama indeksi (19 Ekim 2026).
+
+    Başlık ve spot `icerik/arama_metni.py` ile normalize edilip burada
+    saklanır: Türkçe-doğru küçük harf + ASCII katlama, kelimeler tek
+    boşlukla ve baştan sona boşlukla çevrili (`" isik ve golge "`). Böylece
+    `IŞIK`, `Işık`, `ışık`, `isik` aynı kelimeye iner ve motorun harf
+    kuralına (SQLite `LIKE` yalnız ASCII; PostgreSQL `upper()` derleme
+    bağımlı) güvenilmez.
+
+    **Neden `Haber`e sütun değil.** `icerik_haber` 1.038.477 satır ve 3,7 GB;
+    SQLite sütun eklerken tabloyu yeniden kurar (bkz. `Okunma`). Ayrı tablo
+    iki motorda da boş doğar ve doldurma (`arama_doldur`) arşiv tablosuna
+    yazmaz.
+
+    **PostgreSQL'e özgü iki ek** migration'da ve ORM'in dışında durur
+    (`0016_arama_metni`): `vektor` üretilmiş `tsvector` sütunu + GIN indeksi
+    (okur araması, `kelime:*` önek) ve `baslik` üzerinde `pg_trgm` GIN
+    indeksi (panelin alt dizi araması). SQLite'ta ikisi de yoktur; orada
+    arama `LIKE` ile ve zaman sınırıyla çalışır (`icerik/arama.py`).
+
+    Kayıt kancası `icerik/apps.py`: `Haber` kaydedilince bu satır tazelenir.
+    `bulk_create` / `update()` kancayı çağırmaz; toplu işlerden sonra
+    `manage.py arama_doldur --eksik` (ya da `--hepsi`).
+    """
+
+    haber = models.OneToOneField(Haber, primary_key=True, on_delete=models.CASCADE,
+                                 related_name="arama")
+    baslik = models.TextField(blank=True, help_text="Normalize başlık.")
+    metin = models.TextField(blank=True, help_text="Normalize başlık + spot.")
+
+    class Meta:
+        verbose_name = "haber arama metni"
+        verbose_name_plural = "haber arama metinleri"
+
+    def __str__(self) -> str:
+        return f"{self.haber_id}: {self.metin[:60]}"

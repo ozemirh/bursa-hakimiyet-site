@@ -179,10 +179,19 @@ class Command(BaseCommand):
         return secili
 
     def _cozumle(self):
-        """SQLite'ın sorgu planlayıcısına istatistik verir. Bkz. dosya başı."""
-        if connection.vendor != "sqlite":
-            return
-        t0 = time.perf_counter()
-        with connection.cursor() as imlec:
-            imlec.execute("ANALYZE")
-        self.stdout.write(f"ANALYZE: {time.perf_counter() - t0:.1f} sn")
+        """Sorgu planlayıcısına istatistik verir. Bkz. dosya başı.
+
+        19 Ekim 2026: eskiden yalnız SQLite'ta çalışıyordu. PostgreSQL'de
+        autovacuum istatistiği zamanla tazeler, ama göç ya da toplu onarım
+        hemen ardından çalışan bu komut bayat planla ay sorgularını tarardı;
+        artık iki motorda da `icerik.istatistik.tazele` çağrılır (PG'de
+        yalnız sitemap'in okuduğu tablolar, süper kullanıcı gerekmez).
+        """
+        tablolar = None
+        if connection.vendor == "postgresql":
+            from django.apps import apps
+            tablolar = [apps.get_model(m)._meta.db_table for m in (
+                "icerik.Haber", "medya.KoseYazisi", "medya.Video",
+                "medya.FotoGaleri", "taksonomi.Kategori", "taksonomi.KategoriTur")]
+        from icerik.istatistik import tazele
+        self.stdout.write(f"ANALYZE: {tazele(tablolar):.1f} sn")

@@ -14,8 +14,9 @@ Korunması gereken üç davranış var:
 
 import json
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from unittest import mock
 
 from django.test import TestCase, override_settings
 
@@ -81,10 +82,13 @@ class CanliVeriOkuyucu(TestCase):
         self.assertFalse(self._oku("esiksiz")["bayat"])
 
     def test_bozuk_damga_cokertmiyor(self):
+        """Çökmez — ama 19 Ekim 2026'dan beri BAYAT sayılır: yaşını
+        bilmediğimiz veri okura taze diye sunulamaz (tazelik sözleşmesi)."""
         self._yaz("damga", {"guncelleme": "dün", "bayat_esik_dakika": 60})
         veri = self._oku("damga")
         self.assertIsNone(veri["yas_dakika"])
-        self.assertFalse(veri["bayat"])
+        self.assertTrue(veri["bayat"])
+        self.assertEqual(veri["tazelik"]["durum"], "bayat")
 
     def test_onbellek_diskten_tekrar_okumuyor(self):
         self._yaz("onbellek", {"guncelleme": datetime.now(TR).isoformat()})
@@ -102,14 +106,15 @@ class SimdikiVakit(TestCase):
         self.assertEqual(simdiki_vakit({}), "")
 
     def test_gecmis_vakitlerin_sonuncusu_secilir(self):
-        veri = {"gunler": [{"vakitler": {
+        veri = {"gunler": [{"tarih": date.today().isoformat(), "vakitler": {
             "imsak": "00:01", "gunes": "00:02", "ogle": "23:58",
             "ikindi": "23:59", "aksam": "23:59", "yatsi": "23:59"}}]}
         # Sabahın ilk iki vakti geçmiş, öğle ve sonrası gelmemiş olmalı.
         self.assertEqual(simdiki_vakit(veri), "gunes")
 
     def test_hicbiri_gecmediyse_yatsi(self):
-        veri = {"gunler": [{"vakitler": {"imsak": "23:59", "yatsi": "23:59"}}]}
+        veri = {"gunler": [{"tarih": date.today().isoformat(),
+                            "vakitler": {"imsak": "23:59", "yatsi": "23:59"}}]}
         self.assertEqual(simdiki_vakit(veri), "yatsi")
 
 
@@ -160,6 +165,7 @@ class AnasayfaCanliVeriyleAyakta(TestCase):
         self.assertNotContains(yanit, "doviz-ic")
 
 
+@mock.patch("icerik.canli.bugunun_tarihi", new=lambda: date(2026, 9, 1))
 class VizyonFilmleri(TestCase):
     """Vizyon bölümü canlı veriden çizilir.
 
@@ -233,7 +239,7 @@ class VizyonBolumuSayfada(TestCase):
             "guncelleme": datetime.now(TR).isoformat(),
             "bayat_esik_dakika": 10080,
             "kaynak": {"ad": "Deneme Kaynağı"},
-            "haftalar": [{"tarih": "2026-09-04",
+            "haftalar": [{"tarih": (date.today() + timedelta(days=9)).isoformat(),
                           "filmler": [{"ad": "Deneme Filmi", "tur": ["Dram"]}]}],
         }, ensure_ascii=False), encoding="utf-8")
         yanit = self._yanit(kok)

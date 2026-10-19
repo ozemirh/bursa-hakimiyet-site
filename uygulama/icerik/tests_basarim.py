@@ -376,7 +376,9 @@ class SayfaOnbellegi(Temel):
     def test_paylasim_parametresi_ayri_kayit_acmiyor(self):
         self.client.get("/bursaspor")
         self.assertEqual(self.client.get("/bursaspor?utm_source=x")["X-Onbellek"], "isabet")
-        self.assertEqual(self.client.get("/bursaspor?sayfa=2")["X-Onbellek"], "kayit")
+        # `sayfa` anahtara girer. 2. sayfa burada yok (aralık dışı → 404,
+        # Paket G); açık `?sayfa=1` de ayrı anahtardır.
+        self.assertEqual(self.client.get("/bursaspor?sayfa=1")["X-Onbellek"], "kayit")
 
     def test_onbellekten_servis_edilen_okuma_da_sayiliyor(self):
         h = self.haber(1)

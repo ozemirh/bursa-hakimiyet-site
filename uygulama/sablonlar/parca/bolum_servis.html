@@ -53,7 +53,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
       </div>
       <p class="servis-kunye">
         {% if servis.doviz.kaynak.kunye %}{{ servis.doviz.kaynak.kunye }}{% endif %}
-        {% if servis.doviz.guncelleme %}Son güncelleme {{ servis.doviz.guncelleme|slice:"11:16" }}{% if servis.doviz.bayat %} &middot; <b>güncel değil</b>{% endif %}.{% endif %}
+        {% with t=servis.doviz.tazelik %}{% if t.guncelleme %}Son güncelleme {% if not t.bugun %}{{ t.guncelleme|date:"j F Y" }} {% endif %}{{ t.guncelleme|date:"H:i" }}{% if t.durum != "taze" %} &middot; <b>güncel değil</b>{% endif %}.{% elif t.durum != "taze" %}<b>Güncel değil.</b>{% endif %}{% endwith %}
       </p>
     </div>
 
@@ -68,16 +68,20 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
         {% comment %}HAFTANIN MAÇI. Skor yalnız maç oynandıysa basılır;
         oynanmadıysa tarih ve saat gösterilir — kaynakta olmayan sonuç
         uydurulmaz (anasayfadaki kutuyla aynı kural).{% endcomment %}
-        {% if servis.takip.mac %}{% with mac=servis.takip.mac %}
+        {% comment %}19 Ekim 2026: maç `canli.mac_takvimi`nden gelir ve
+        `durum` taşır. Tarihi geçmiş, skoru olmayan maçta saat "bekliyor"
+        diye basılmaz: "sonuç bilgisi yok" + verinin tarihi.{% endcomment %}
+        {% if servis.takip.mac %}{% with mac=servis.takip.mac t=servis.takip.tazelik %}
         <div class="mac-karti">
-          <span class="mac-bas">{% if mac.skor_var %}SONUÇ{% else %}HAFTANIN MAÇI{% endif %}</span>
+          <span class="mac-bas">{% if mac.durum == "sonuc" %}SONUÇ{% elif mac.durum == "bilgi_yok" %}MAÇ{% else %}HAFTANIN MAÇI{% endif %}</span>
           <div class="mac-takimlar">
             <b{% if mac.ev_kulup_id == servis.takip.kulup_id %} class="bizim"{% endif %}>{{ mac.ev|baslikla }}</b>
-            {% if mac.skor_var %}<span class="mac-skor">{{ mac.ev_gol }}&ndash;{{ mac.deplasman_gol }}</span>
+            {% if mac.durum == "sonuc" %}<span class="mac-skor">{{ mac.ev_gol }}&ndash;{{ mac.deplasman_gol }}</span>
+            {% elif mac.durum == "bilgi_yok" %}<span class="mac-skor bekliyor" aria-label="sonuç bilgisi yok">&ndash;</span>
             {% else %}<span class="mac-skor bekliyor">{{ mac.saat|default:"&ndash;" }}</span>{% endif %}
             <b{% if mac.deplasman_kulup_id == servis.takip.kulup_id %} class="bizim"{% endif %}>{{ mac.deplasman|baslikla }}</b>
           </div>
-          <span class="mac-zaman">{% if mac.tarih_g %}<time datetime="{{ mac.tarih_g|date:"Y-m-d" }}">{{ mac.tarih_g|date:"j F Y, l" }}</time>{% else %}{{ mac.tarih }}{% endif %}</span>
+          <span class="mac-zaman">{% if mac.tarih_g %}<time datetime="{{ mac.tarih_g|date:"Y-m-d" }}">{{ mac.tarih_g|date:"j F Y, l" }}</time>{% else %}{{ mac.tarih }}{% endif %}{% if mac.durum == "bilgi_yok" %} &middot; <b>sonuç bilgisi yok</b>{% if t.guncelleme %} (veri {{ t.guncelleme|date:"j F Y" }} tarihli){% endif %}{% elif t.durum != "taze" %} &middot; <b>güncel değil</b>{% if t.guncelleme %} (veri {{ t.guncelleme|date:"j F Y" }} tarihli){% endif %}{% endif %}</span>
         </div>
         {% endwith %}{% endif %}
 
@@ -103,6 +107,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
         {{ servis.takip.ad|baslikla }} &middot; {{ servis.takip.sira }}. sıra &middot; {{ servis.takip.puan }} puan &middot;
         O{{ servis.takip.oynadi }} G{{ servis.takip.galibiyet }} B{{ servis.takip.beraberlik }} M{{ servis.takip.maglubiyet }} &middot;
         {{ servis.takip.attigi }} attı, {{ servis.takip.yedigi }} yedi.
+        {% if servis.takip.tazelik.durum != "taze" %}<b>Tablo {{ servis.takip.tazelik.metin }}.</b>{% endif %}
       </p>
     </div>
 
@@ -130,7 +135,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
         {% endfor %}
       </ul>
       <p class="servis-kunye">
-        {% if servis.gun %}{{ servis.gun|date:"j F Y, l" }}{% endif %}{% if servis.pencere %} &middot; nöbet {{ servis.pencere }}{% endif %}.
+        {% if servis.gun %}{{ servis.gun|date:"j F Y, l" }}{% endif %}{% if servis.pencere %} &middot; nöbet {{ servis.pencere }}{% endif %}.{% if servis.bayat %} <b>Liste tazelenemedi, saatleri eczaneden doğrulayın.</b>{% endif %}
         {% if servis.kaynak.ad %} Kaynak: {{ servis.kaynak.ad }}.{% endif %}
       </p>
     </div>

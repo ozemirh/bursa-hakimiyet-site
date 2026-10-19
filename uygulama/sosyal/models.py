@@ -216,7 +216,9 @@ class SosyalGonderi(models.Model):
                 and self.haber_yayinda_mi())
 
     def haber_adresi(self) -> str:
-        return settings.SITE_KOKU.rstrip("/") + self.haber.get_absolute_url()
+        """Platformun UTM'siyle (Paket G) — Facebook `link` alanı da bunu alır."""
+        from .metin import haber_adresi
+        return haber_adresi(self.haber, self.hesap.platform)
 
     def durum_sinifi(self) -> str:
         """Panelin mevcut rozet sınıflarına eşleme — yeni CSS açılmadı."""

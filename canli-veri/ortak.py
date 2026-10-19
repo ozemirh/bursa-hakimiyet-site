@@ -178,12 +178,20 @@ def json_oku(yol: Path):
 # -- kaynak dustugunde ----------------------------------------------------
 
 def durum_yaz(kok: Path, bilesen: str, durum: str, hata: str = "",
-              eski_damga: str = "") -> None:
-    """durum: taze | eski | yok
+              eski_damga: str = "", saglik: dict | None = None) -> None:
+    """durum: taze | supheli | eski | yok
 
-    taze = bu kosuda yeni veri yazildi
-    eski = cekme basarisiz, onceki dosya duruyor -> sayfa onu gostersin
-    yok  = cekme basarisiz ve elde hicbir sey yok -> sayfa bilesen kutusunu gizlesin
+    taze    = bu kosuda yeni veri yazildi ve asgari esigi gecti
+    supheli = kaynak cevap verdi AMA kayit sayisi asgari esigin altinda
+              (sessiz ayristirma kirilmasi); yeni veri YAZILMADI, onceki
+              iyi dosya duruyor (19 Ekim 2026: Baska Sinema 6 Eylul'den
+              beri 0 film donduruyordu ve durum dosyasi "taze" diyordu)
+    eski    = cekme basarisiz, onceki dosya duruyor -> sayfa onu tarihle
+              ve "guncel degil" isaretiyle gostersin
+    yok     = elde hicbir sey yok -> sayfa bilesen kutusunu gizlesin
+
+    `saglik` (`saglik()` ciktisi) kaynak basina sonucu ve esigi tasir;
+    `/_durum` ucu bunu oldugu gibi gosterir.
     """
     kayit = {
         "bilesen": bilesen,
@@ -197,19 +205,72 @@ def durum_yaz(kok: Path, bilesen: str, durum: str, hata: str = "",
         y = yas_dakika(eski_damga)
         if y is not None:
             kayit["yas_dakika"] = round(y, 1)
+    if saglik:
+        kayit.update(saglik)
     json_yaz(kok / f"durum-{bilesen}.json", kayit)
 
 
-def dusme_ile_bitir(kok: Path, bilesen: str, cikti: Path, hata: str) -> int:
+def kaynak_sonucu(ad: str, kayit: int | None, hata: str = "",
+                  asgari: int | None = None) -> dict:
+    """Tek kaynagin bu kosudaki sonucu: tamam | bos | hata."""
+    if hata:
+        sonuc = "hata"
+    elif kayit is None or (asgari is not None and kayit < asgari) or kayit == 0:
+        sonuc = "bos"
+    else:
+        sonuc = "tamam"
+    satir = {"ad": ad, "sonuc": sonuc, "kayit": kayit}
+    if asgari is not None:
+        satir["asgari"] = asgari
+    if hata:
+        satir["hata"] = hata[:300]
+    return satir
+
+
+def saglik(alan: str, gelen: int, asgari: int,
+           kaynaklar: list[dict] | None = None) -> dict:
+    """Durum dosyasina giden saglik blogu.
+
+    `esik.gecti` False ise ya toplam asgarinin altinda ya da kaynaklardan
+    biri `bos`/`hata` dondu - iki durumda da kosu "taze" sayilmaz.
+    """
+    kaynaklar = kaynaklar or []
+    gecti = gelen >= asgari and all(k["sonuc"] == "tamam" for k in kaynaklar)
+    return {"esik": {"alan": alan, "asgari": asgari, "gelen": gelen,
+                     "gecti": gecti},
+            "kaynaklar": kaynaklar}
+
+
+def esik_alti_bitir(kok: Path, bilesen: str, cikti: Path, neden: str,
+                    saglik_blogu: dict) -> int:
+    """Kaynak cevap verdi ama veri asgari esigin altinda.
+
+    Yeni (supheli) veri YAZILMAZ: onceki iyi dosya korunur, sayfa onu kendi
+    tarihiyle gosterir ve zamanla "guncel degil" isaretine duser. Elde
+    dosya yoksa durum `yok`, kod 1 - yarim liste yayina gitmez.
+    """
+    eski = json_oku(cikti)
+    if eski:
+        durum_yaz(kok, bilesen, "supheli", neden, eski.get("guncelleme", ""),
+                  saglik_blogu)
+        log(f"UYARI: {neden}. Esik alti veri yazilmadi, onceki dosya korundu.")
+        return 2
+    durum_yaz(kok, bilesen, "yok", neden, saglik=saglik_blogu)
+    log(f"HATA: {neden}. Esik alti veri yazilmadi, elde onceki veri de yok.")
+    return 1
+
+
+def dusme_ile_bitir(kok: Path, bilesen: str, cikti: Path, hata: str,
+                    saglik_blogu: dict | None = None) -> int:
     """Cekme basarisiz oldugunda cagrilir; surec cikis kodunu dondurur."""
     eski = json_oku(cikti)
     if eski:
         damga = eski.get("guncelleme", "")
-        durum_yaz(kok, bilesen, "eski", hata, damga)
+        durum_yaz(kok, bilesen, "eski", hata, damga, saglik_blogu)
         y = yas_dakika(damga)
         log(f"HATA: {hata}. Onceki dosya korundu"
             + (f" (yas {y:.0f} dk)." if y is not None else "."))
         return 2
-    durum_yaz(kok, bilesen, "yok", hata)
+    durum_yaz(kok, bilesen, "yok", hata, saglik=saglik_blogu)
     log(f"HATA: {hata}. Elde onceki veri de yok.")
     return 1

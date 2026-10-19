@@ -9,7 +9,10 @@ sabit "34°C" ve "%81" değerleri 25 Ağustos 2026 demosuna aitti.
 <div class="servis">
   <div class="servis-ic">
     <strong>{% now "j F Y, l" %}</strong>
-    {% if hava.son_durum.sicaklik %}<span class="ayrac"></span><span>Bursa {{ hava.son_durum.sicaklik|floatformat:0 }}°C · {{ hava.gunler.0.hadise.ad }}</span>{% endif %}
+    {% comment %}Şeritte tarih basacak yer yok; bu yüzden sıcaklık YALNIZ
+    taze veride görünür (19 Ekim 2026). Bayat ölçüm "Bursa 24°C" diye bugünün
+    havası sanılıyordu.{% endcomment %}
+    {% if hava.son_durum.sicaklik and hava.tazelik.durum == "taze" %}<span class="ayrac"></span><span>Bursa {{ hava.son_durum.sicaklik|floatformat:0 }}°C · {{ hava.gunler.0.hadise.ad }}</span>{% endif %}
     <span class="sag">
       {% comment %}Sosyal bağlantılar 30 Ağustos 2026'da (§35) künyeden
       BURAYA taşındı: kullanıcı isteği "sayfanın üstlerinde ve etkileyici".
