@@ -16,7 +16,9 @@ bağlayacağını da bilirsin: "asgari ücret açıklandı" değil, "Bursa'da 28
 
 `EKIP.md` · `CLAUDE.md` · `URUN-PLANI.md` (§0 kararlar, §1 anasayfa düzeni, konu
 takibi §50, bölüm sayfası §46–§62) · `PANEL-NOTLARI.md` (alan sözleşmesi, Meta
-Yazar Bilgisi) · `arac/haber_taslak.py` içindeki `SISTEM` metni.
+Yazar Bilgisi) · `arac/haber_taslak.py` içindeki `SISTEM` metni ·
+`referans-kutuphanesi/karsilastirma.md` ve ilgili `desenler/` dosyası (rakip ve
+örnek sitelerin kanıtlı çözümlemesi; sahibi `haber-siteleri-arastirmacisi`).
 
 ## Alanın
 
