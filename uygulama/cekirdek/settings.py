@@ -86,12 +86,36 @@ WSGI_APPLICATION = 'cekirdek.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Veritabani ortamdan secilir (19 Ekim 2026, PostgreSQL gecisinin ilk adimi).
+#
+#   BH_VERITABANI   postgresql://kullanici:parola@sunucu:port/ad
+#                   Verilirse PostgreSQL kullanilir.
+#   BH_SQLITE_YOLU  Verilmezse SQLite bu dosyadan okunur; varsayilan
+#                   uygulama/db.sqlite3. Ayri calisma kopyalari (git worktree)
+#                   asil veritabanini bu degiskenle gosterir.
+def _veritabani():
+    adres = os.environ.get("BH_VERITABANI", "").strip()
+    if not adres:
+        return {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": Path(os.environ.get("BH_SQLITE_YOLU",
+                                        BASE_DIR / "db.sqlite3")),
+        }
+    from urllib.parse import unquote, urlsplit
+    p = urlsplit(adres)
+    if p.scheme not in ("postgres", "postgresql"):
+        raise ValueError(f"BH_VERITABANI desteklenmeyen sema: {p.scheme!r}")
+    return {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": unquote(p.path.lstrip("/")),
+        "USER": unquote(p.username or ""),
+        "PASSWORD": unquote(p.password or ""),
+        "HOST": p.hostname or "",
+        "PORT": str(p.port or ""),
     }
-}
+
+
+DATABASES = {"default": _veritabani()}
 
 
 # Password validation
