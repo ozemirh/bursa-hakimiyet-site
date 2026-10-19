@@ -1,7 +1,52 @@
 .venv/
 __pycache__/
 *.pyc
-uygulama/db.sqlite3
-canli-veri/veri/
 
+# --- veritabani: dosya ve SQLite yan dosyalari (WAL, paylasimli bellek,
+# gunluk) ve elle alinmis kopyalar
+uygulama/db.sqlite3
+*.sqlite3
+*.sqlite3-*
+*.sqlite3.*
+*.db-journal
+
+# --- canli veri ciktisi ve gizli bilgiler
+canli-veri/veri/
 canli-veri/gizli.json
+
+# --- ortam / gizli anahtar. HICBIR gizli bilgi depoya girmez; depo herkese
+# acik. Ornek degiskenler dagitim/.env.ornek icinde, degersiz.
+.env
+.env.*
+!.env.ornek
+*.env
+uygulama/.yerel-gizli-anahtar
+*.pem
+*.key
+
+# --- uretilen dosyalar
+# collectstatic ciktisi (STATIC_ROOT, BH_STATIK_KOK)
+uygulama/statik-yayin/
+# site_haritasi_uret ciktisi: uretilir, izlenmez (19 Ekim 2026). Adres
+# /static/sitemap/ ayni kaldi; dosyalar komutla yeniden uretilir.
+uygulama/statik/sitemap/
+
+# --- gunlukler ve onbellekler
+*.log
+log-*.txt
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# --- editor ve isletim sistemi
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+.DS_Store

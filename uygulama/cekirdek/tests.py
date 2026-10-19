@@ -46,7 +46,8 @@ from .depolama import yorum_ayikla
 
 UYGULAMA = Path(settings.BASE_DIR)
 AYAR_DOSYASI = UYGULAMA / "cekirdek" / "settings.py"
-GUCLU_ANAHTAR = "Qz7xK2mP9vL4nR8tW1yB6cF3hJ5dG0sA-uE_iO7pT2kM9wX4zN8qV1rY6bH3jL5f"
+# Gercek anahtar DEGIL: yalniz uzunluk/cesitlilik kuralini gecen bir test degeri.
+GUCLU_ANAHTAR = "yalniz-test-icin-uydurma-anahtar-0123456789-abcdefghijklmnop"
 URETIM_ORTAMI = {
     "BH_ORTAM": "uretim",
     "BH_GIZLI_ANAHTAR": GUCLU_ANAHTAR,
