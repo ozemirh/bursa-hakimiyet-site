@@ -629,8 +629,11 @@ if os.environ.get("BH_PANEL_OLCUM") == "1":
             çiziliyor.
             """
             self._hazirla()
+            # 19 Ekim 2026: yazı tipleri yerelden (statik/fontlar/); engel
+            # oraya çevrildi. Google adresleri artık sayfada hiç yok.
             self.cdp.cagir("Network.setBlockedURLs", urls=[
-                "*fonts.googleapis.com*", "*fonts.gstatic.com*"])
+                "*/statik/fontlar/*", "*fonts.googleapis.com*",
+                "*fonts.gstatic.com*"])
             self._oturum_ac()
             hatalar, olculen = [], 0
             for ad, yol, beklenen_h1, _ in self._sayfalar():
