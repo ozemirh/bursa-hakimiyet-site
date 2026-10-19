@@ -33,7 +33,7 @@ baştan okunur; bölüm sayfası "ne oldu" sorusuna en yeniden yanıt verir.{% e
         </div>
         <div class="konu-kunye">
           <span><b>DÖNEM</b> {{ konu.baslangic|date:"j F Y" }} – {{ konu.bitis|date:"j F Y" }}</span>
-          {% if konu.acik %}<span class="suruyor">SÜRÜYOR</span>{% else %}<span><b>DURUM</b> Kapandı</span>{% endif %}
+          {% if konu.suruyor %}<span class="suruyor">SÜRÜYOR</span>{% else %}<span><b>DURUM</b> Kapandı</span>{% endif %}
           {% if konu.anahtarlar %}<span><b>ANAHTAR</b> {{ konu.anahtarlar|join:" · " }}</span>{% endif %}
         </div>
         {% if konu.ozet %}<p class="konu-ozet-metin">{{ konu.ozet }}</p>{% endif %}

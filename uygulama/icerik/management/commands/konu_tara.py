@@ -12,6 +12,13 @@ yazılır; onaylı ve reddedilmiş dosyalara dokunulmaz. Onaylı bir dosyayla
 üyelerinin yarısından çoğu örtüşen öneri yazılmaz (aynı dosya iki kez
 önerilmesin).
 
+19 Ekim 2026: onayı `konu_temizle` ile geri alınmış dosyalar (`geri_alma`
+dolu) da onay bekler ama **silinmez** — onlar motorun taze önerisi değil,
+editörün karar vereceği eski onaylı dosyalardır; örtüşme denetiminde
+onaylı gibi sayılır. "Sürüyor" artık burada yazılmaz: dosya `acik=True`
+(kapatılmadı) doğar, sürüp sürmediğini sayfa açılırken `Konu.suruyor`
+hesaplar.
+
 Başlıklar 1.038.474 satırdan `values_list` ile ham okunur; model nesnesi
 kurulmaz. Ölçüm 5 Eylül 2026: okuma ~40 s, zincirleme ~6 dk.
 """
@@ -20,7 +27,7 @@ from __future__ import annotations
 
 import time
 from collections import Counter
-from datetime import date, timedelta
+from datetime import date
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -37,7 +44,6 @@ HASSAS_KOKLER = ("tutukla", "gözaltı", "soruştur", "dava", "iddianame",
 HASSAS_UYARI = ("Yargı süreci sürüyor olabilir. Masumiyet karinesi korunur: "
                 "kesin hüküm dili kullanılmaz, şüphelinin suçlamaları reddettiği "
                 "belirtilir.")
-ACIK_GUN = 30   # son haber bu kadar yakınsa dosya "sürüyor"
 
 
 class Command(BaseCommand):
@@ -86,9 +92,8 @@ class Command(BaseCommand):
         if secenek["kuru"]:
             return
 
-        son_gun = max(t for _, _, t in kayitlar)
         yazilan, atlanan, onaylanan = self._yaz(
-            konular, son_gun, secenek.get("onay_esigi"), secenek["sifirla"])
+            konular, secenek.get("onay_esigi"), secenek["sifirla"])
         self.stdout.write(self.style.SUCCESS(
             f"{yazilan} konu yazıldı, {onaylanan} onaylı, {atlanan} onaylı dosyayla "
             f"örtüştüğü için atlandı ({time.time() - t0:.0f} s)"))
@@ -108,8 +113,8 @@ class Command(BaseCommand):
 
     # ------------------------------------------------------------ yazma
     @transaction.atomic
-    def _yaz(self, konular, son_gun: date, onay_esigi, sifirla=False):
-        silinecek = Konu.objects.filter(kaynak=Konu.KAYNAK_MOTOR)
+    def _yaz(self, konular, onay_esigi, sifirla=False):
+        silinecek = Konu.objects.filter(kaynak=Konu.KAYNAK_MOTOR).filter(geri_alma="")
         if sifirla:
             # Komut/eşik onayı editör kararı değildir; yalnız `onaylayan`
             # dolu olan (panelden onaylanan) ve reddedilen dosyalar kalır.
@@ -120,9 +125,10 @@ class Command(BaseCommand):
 
         # Onaylı dosyaların üyeleri: örtüşen öneri yazılmaz.
         onayli_uyeler: dict[int, set[int]] = {}
-        for konu_id, haber_id in (KonuHaber.objects
-                                  .filter(konu__onay=Konu.ONAY_ONAYLI)
-                                  .values_list("konu_id", "haber_id")):
+        korunan = (KonuHaber.objects.filter(konu__onay=Konu.ONAY_ONAYLI)
+                   | KonuHaber.objects.filter(konu__onay=Konu.ONAY_BEKLIYOR)
+                   .exclude(konu__geri_alma=""))
+        for konu_id, haber_id in korunan.values_list("konu_id", "haber_id"):
             onayli_uyeler.setdefault(konu_id, set()).add(haber_id)
 
         mevcut_sluglar = set(Konu.objects.values_list("slug", flat=True))
@@ -143,7 +149,7 @@ class Command(BaseCommand):
                 kaynak=Konu.KAYNAK_MOTOR,
                 onay=Konu.ONAY_ONAYLI if onayli else Konu.ONAY_BEKLIYOR,
                 guven=k.guven, gerekce=k.gerekce,
-                acik=(son_gun - k.bitis).days <= ACIK_GUN,
+                acik=True,          # kapatılmadı; "sürüyor" okuma anında
                 baslangic=k.baslangic, bitis=k.bitis,
                 haber_sayisi=len(k.uyeler),
                 onay_zamani=simdi if onayli else None,

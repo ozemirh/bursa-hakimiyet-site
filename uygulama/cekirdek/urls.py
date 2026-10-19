@@ -21,6 +21,7 @@ from cekirdek import durum as durum_gorunum
 
 from icerik import gorsel_turev
 from icerik import panel as panel_gorunum
+from icerik import panel_yz
 from icerik.giris_guvenligi import GirisGorunumu
 from icerik import reklam as reklam_gorunum
 from icerik import views as icerik_gorunum
@@ -60,6 +61,9 @@ urlpatterns = [
          name="panel-yz-taslak"),
     path("panel/yz-taslak/<int:kimlik>/gorsel", panel_gorunum.yz_gorsel_indir,
          name="panel-yz-gorsel"),
+    # K2 bulgusu tek tek kapatilir (Paket M); gorunum ayri dosyada.
+    path("panel/yz-taslak/<int:kimlik>/bulgu/<int:bulgu>", panel_yz.bulgu_kapat,
+         name="panel-yz-bulgu-kapat"),
     # Ilgili haber secicisinin JSON ucu. Salt okuma; haber formunun
     # 356 bin secenekli <select>ini bu ucla degistirdik.
     path("panel/haber-ara", panel_gorunum.haber_ara,

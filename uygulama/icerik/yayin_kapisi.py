@@ -25,6 +25,12 @@ gibi 404 veren adresler doğuyordu (DEGERLENDIRME-2026-10 §3 bulgu 4).
        kendi muhabirimiz  → muhabir adı
        belirtilmemiş      → yeni yayında kaynak türü seçilmeli
 
+**K2 kapısı (19 Ekim 2026, Paket M).** Yapay zekâ taslağında kaynakta
+geçmeyen bir sayı, tarih, yüzde ya da özel ad varsa (`arac/denetim.py`,
+`YzBulgu`) ve editör o bulguyu "kontrol ettim" diye kapatmadıysa haber
+yayına çıkmaz. Bulgu yalnız araçtan gelen haberde olur; elle yazılan habere
+bu kapı hiç değmez.
+
 Kaynak kuralı yeni bir kural değil, `CLAUDE.md`deki "kaynak her zaman
 belirtilir" kuralının kapıda uygulanmasıdır. Tek istisna: ZATEN yayında olan
 arşiv kaydının kaynak türü boşsa (göçte ölçülemedi, 337 bin haber) düzeltme
@@ -35,6 +41,7 @@ işler.
 
 from __future__ import annotations
 
+from . import yz_koken
 from .arama_metni import slugla
 from .models import YZ_BASLIK_ISARETI, Haber
 
@@ -67,7 +74,8 @@ def yayin_yetkisi(kullanici, haber=None) -> bool:
 
 def icerik_eksikleri(*, baslik: str, slug: str, spot: str, govde: str,
                      etiket_sayisi: int, kaynak_turu: str, kaynak_sayisi: int,
-                     muhabir: str, kaynak_turu_sart: bool = True) -> list[str]:
+                     muhabir: str, kaynak_turu_sart: bool = True,
+                     acik_k2: int = 0) -> list[str]:
     """Yayına çıkmak için eksik olanların okunur listesi. Boş liste = geçer."""
     eksik = []
     baslik = (baslik or "").strip()
@@ -90,13 +98,19 @@ def icerik_eksikleri(*, baslik: str, slug: str, spot: str, govde: str,
             eksik.append("muhabir adı")
     elif kaynak_turu_sart:
         eksik.append("kaynak türü")
+    if acik_k2:
+        eksik.append(f"yapay zekâ olgu denetimi ({acik_k2} açık K2 bulgusu: taslakta "
+                     "kaynakta geçmeyen sayı, tarih ya da ad var; taslak ekranında "
+                     "her birini kaynağa bakıp 'Kontrol ettim' ile kapatın)")
     return eksik
 
 
-def haber_eksikleri(haber: Haber) -> list[str]:
+def haber_eksikleri(haber: Haber, acik_k2: int | None = None) -> list[str]:
     """Kayıtlı bir haber için — toplu fiil ve komutlar.
 
-    `etiketler` ve `kaynaklar` ön çekimliyse ek sorgu açmaz.
+    `etiketler` ve `kaynaklar` ön çekimliyse ek sorgu açmaz. `acik_k2`
+    verilmezse haberin açık K2 bulgusu sayılır (bir sorgu); toplu fiil
+    sayıyı önceden tek sorguda bulup verir.
     """
     return icerik_eksikleri(
         baslik=haber.baslik, slug=haber.slug, spot=haber.spot,
@@ -105,7 +119,8 @@ def haber_eksikleri(haber: Haber) -> list[str]:
         kaynak_turu=haber.kaynak_turu,
         kaynak_sayisi=len(haber.kaynaklar.all()),
         muhabir=haber.muhabir,
-        kaynak_turu_sart=haber.durum != Haber.DURUM_AKTIF)
+        kaynak_turu_sart=haber.durum != Haber.DURUM_AKTIF,
+        acik_k2=(yz_koken.acik_k2_sayisi(haber.pk) if acik_k2 is None else acik_k2))
 
 
 def form_eksikleri(veri: dict, ornek: Haber) -> list[str]:
@@ -121,4 +136,5 @@ def form_eksikleri(veri: dict, ornek: Haber) -> list[str]:
         kaynak_turu=veri.get("kaynak_turu") or "",
         kaynak_sayisi=len(veri.get("kaynaklar") or []),
         muhabir=veri.get("muhabir") or "",
-        kaynak_turu_sart=(ornek.pk is None or ornek.durum != Haber.DURUM_AKTIF))
+        kaynak_turu_sart=(ornek.pk is None or ornek.durum != Haber.DURUM_AKTIF),
+        acik_k2=yz_koken.acik_k2_sayisi(ornek.pk))

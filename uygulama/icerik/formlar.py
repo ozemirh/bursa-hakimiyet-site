@@ -1099,11 +1099,14 @@ class KonuForm(forms.ModelForm):
         model = Konu
         fields = ["ad", "ozet", "hassas_uyari", "acik"]
         labels = {"ad": "Dosya adı", "ozet": "Özet",
-                  "hassas_uyari": "Hassas dosya uyarısı", "acik": "Dosya sürüyor"}
+                  "hassas_uyari": "Hassas dosya uyarısı", "acik": "Dosya açık"}
         help_texts = {
             "ozet": "Bir paragraf; konu sayfasının üstünde ve dizinde görünür.",
             "hassas_uyari": "Yargı süreci gibi dosyalarda editörün göreceği not; "
                             "okura basılmaz.",
+            "acik": "İşareti kaldırırsanız dosya kapanır. İşaretliyken sitede "
+                    "\"sürüyor\" yazısı yalnız son haber 30 gün içindeyse görünür; "
+                    "o hesap sayfa açılırken yapılır.",
         }
         widgets = {"ozet": forms.Textarea(attrs={"rows": 4}),
                    "hassas_uyari": forms.Textarea(attrs={"rows": 2})}

@@ -15,7 +15,7 @@ düşen, haberin kendi dilidir.{% endcomment %}
   <div class="konu-bas">
     <span class="rozet-k">KONUNUN AKIŞI</span>
     <h2 id="konu-akis-bas"><a href="{{ a.konu.get_absolute_url }}">{{ a.konu.ad }}</a></h2>
-    <span class="konu-ozet">{{ a.toplam }} haber · {{ a.konu.baslangic|date:"j M Y" }} – {{ a.konu.bitis|date:"j M Y" }}{% if a.konu.acik %} · <b>sürüyor</b>{% endif %}</span>
+    <span class="konu-ozet">{{ a.toplam }} haber · {{ a.konu.baslangic|date:"j M Y" }} – {{ a.konu.bitis|date:"j M Y" }}{% if a.konu.suruyor %} · <b>sürüyor</b>{% endif %}</span>
   </div>
   <ol class="konu-zaman">
     {% if a.gizli_once %}<li class="daha"><a href="{{ a.konu.get_absolute_url }}">{{ a.gizli_once }} önceki haber</a></li>{% endif %}

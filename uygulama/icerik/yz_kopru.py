@@ -41,7 +41,7 @@ from django.utils import timezone
 
 from taksonomi.models import Ilce, Kategori, Kaynak
 
-from . import dis_istek, goc_kaynak, yayin_kapisi
+from . import dis_istek, goc_kaynak, yayin_kapisi, yz_koken
 from .arama_metni import anahtar
 from .formlar import etiketleri_kur
 from .kimlik import yeni_kayit_kaydet
@@ -332,6 +332,53 @@ def govde_html(paket: dict) -> str:
     return "\n\n".join(parcalar)
 
 
+def denetim_sonucu(paket: dict) -> dict:
+    """Paketi `arac/denetim.py` ile denetler; köken kaydına yazılacak sözlük.
+
+    `k2`: uydurma olgu bulguları (kaynakta geçmeyen sayı, tarih, yüzde, özel
+    ad). Denetim çalışamazsa model taslağı için **kapı kapalı kalır**: tek
+    bir "denetim çalışmadı" bulgusu yazılır ve editör onu da elle kapatır.
+    Kural motoru metin üretmediği için onda bu bulgu açılmaz.
+    """
+    uretim = paket.get("uretim") or {}
+    kural_mi = uretim.get("saglayici") == "kural"
+    sonuc = {"hal": "?", "bulgular": [], "k2": [],
+             "skill_turlari": [t.get("bulgu_sayisi") for t in uretim.get("turlar") or []],
+             "kalan": uretim.get("kalan_bulgular") or []}
+    try:
+        _arac()
+        import denetim
+        sonuc["hal"] = hal = denetim.hal_bul(paket)
+    except Exception as e:                      # noqa: BLE001 — kapı kapalı kalır
+        gunluk.exception("yz_kopru: denetim yuklenemedi")
+        sonuc["hata"] = str(e)[:200]
+        sonuc["k2"] = [] if kural_mi else [_DENETIM_CALISMADI]
+        return sonuc
+    # Alan ve kural denetimi (K1, K3-K7) bilgi içindir; paket eksik alanlıysa
+    # (eski paketler) düşer ama K2'yi düşürmez.
+    try:
+        sonuc["bulgular"] = (denetim.mekanik(paket["taslak"], hal)
+                             + [b for b in denetim.kural_denetimi(paket, hal)
+                                if not b.startswith("K2 ")])
+    except Exception as e:                      # noqa: BLE001 — bilgi alanı
+        sonuc["hata"] = "alan denetimi: %s" % str(e)[:180]
+    if hal == "kural-bos":
+        return sonuc
+    try:
+        sonuc["k2"] = denetim.olgu_bulgulari(paket)
+    except Exception as e:                      # noqa: BLE001 — kapı kapalı kalır
+        gunluk.exception("yz_kopru: K2 calismadi")
+        sonuc["hata"] = "K2: %s" % str(e)[:190]
+        sonuc["k2"] = [_DENETIM_CALISMADI]
+    return sonuc
+
+
+_DENETIM_CALISMADI = {
+    "kural": "K2", "tur": "denetim", "deger": "Otomatik olgu denetimi çalışmadı",
+    "alan": "—", "baglam": "Taslaktaki sayı, tarih ve adları kaynakla elle "
+                           "karşılaştırın, sonra kapatın."}
+
+
 def _kelime_say(govde: str) -> int:
     return len([p for p in re.sub(r"<[^>]+>", " ", govde).split() if p])
 
@@ -372,6 +419,14 @@ def taslak_yaz(paket: dict, kullanici):
         notlar.append("Gövde boş: kural motoru dil üretmez, kaynağın ham "
                       "cümleleri tezgahta duruyor.")
 
+    # K2 (19 Ekim 2026): bulgu varsa taslak "İncelemede" doğar ve bulgular
+    # tek tek kapatılmadan yayın kapısı açılmaz (`yayin_kapisi`).
+    denetim = denetim_sonucu(paket)
+    if denetim["k2"]:
+        notlar.append("Olgu denetimi (K2): %d bulgu — taslakta kaynakta geçmeyen "
+                      "sayı, tarih ya da ad var. Taslak 'İncelemede'; bulgular "
+                      "kapatılmadan yayına alınamaz." % len(denetim["k2"]))
+
     haber = Haber(
         slug="",                       # editörün yazacağı başlıktan kurulacak
         baslik=baslik,
@@ -382,7 +437,7 @@ def taslak_yaz(paket: dict, kullanici):
         kaynak_turu=kaynak_turu,
         olusturan=kullanici,
         durum=Haber.DURUM_PASIF,       # yayınlamaz — panel formu yayınlar
-        hazirlik="taslak",
+        hazirlik="incelemede" if denetim["k2"] else "taslak",
         gorsel_url=(kaynak.get("gorsel_url") or "")[:600],
         gorsel_alt=((taslak.get("gorsel_alt") or kaynak.get("gorsel_alt") or "")
                     .strip()[:300]),
@@ -401,6 +456,11 @@ def taslak_yaz(paket: dict, kullanici):
     if etiketler:
         haber.etiketler.set(etiketleri_kur(etiketler))
         notlar.append("Etiketler: %s." % ", ".join(etiketler))
+
+    # Köken: sağlayıcı, model, denetim sonucu ve editör dokunmadan önceki
+    # metin. Yayına alınınca editörün değiştirdiği oran buna göre ölçülür.
+    yz_koken.kaydet(haber, paket, denetim, kullanici,
+                    yz_koken.duz_metin("" if yazilacak else baslik, haber.spot, govde))
 
     # Yayın kapısı formla aynı işlev (`yayin_kapisi`): taslak buradan
     # yayına çıkmaz, ama neyin eksik olduğu aynı ölçütle şimdiden yazılır.

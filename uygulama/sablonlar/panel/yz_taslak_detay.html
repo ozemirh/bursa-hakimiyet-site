@@ -99,6 +99,43 @@ editör kendi cümleleriyle yazar.{% endcomment %}
         </div>
       </div>
 
+      {% comment %}K2 — uydurma olgu denetimi (19 Ekim 2026, Paket M). Bulgu
+         `haber.yz_koken` üzerinden okunur; köken kaydı yoksa (araçtan önce
+         açılmış taslak) blok hiç çizilmez. Her bulgu kendi düğmesiyle kapanır,
+         toplu kapatma yok. Açık bulgu varken yayın kapısı kapalıdır.{% endcomment %}
+      {% with koken=haber.yz_koken %}{% if koken %}
+        <div class="yan-kart">
+          <h2>Olgu denetimi (K2)</h2>
+          <p class="sag-not">{{ koken.saglayici }}{% if koken.model %} · {{ koken.model }}{% endif %}.
+             Taslakta olup kaynakta geçmeyen sayı, tarih ve adlar. "Kaynakta yok"
+             demek "yanlış" demek değil; kaynağa bakın, gerekirse haberi düzeltin,
+             sonra kapatın.</p>
+          <ul class="yz-liste">
+            {% for b in koken.bulgular.all %}
+              <li>
+                <b>{{ b.get_tur_display }}:</b> {{ b.deger }} <span class="sag-not">({{ b.alan }})</span>
+                {% if b.baglam %}<br><span class="sag-not">{{ b.baglam }}</span>{% endif %}
+                {% if b.kapandi %}
+                  <br><span class="durum-etiket">Kontrol edildi — {{ b.kapatan.get_username|default:"?" }}, {{ b.kapanma|date:"j M H:i" }}</span>
+                {% else %}
+                  <form method="post" action="{% url 'panel-yz-bulgu-kapat' haber.pk b.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="dugme ufak">Kontrol ettim</button>
+                  </form>
+                {% endif %}
+              </li>
+            {% empty %}
+              <li>Bulgu yok.</li>
+            {% endfor %}
+          </ul>
+          {% if koken.benzerlik is not None %}
+            <p class="sag-not">Yayına alınırken taslağa benzerlik:
+               {{ koken.benzerlik|floatformat:3 }} (editör değişikliği
+               {{ koken.degisim_orani|floatformat:3 }}).</p>
+          {% endif %}
+        </div>
+      {% endif %}{% endwith %}
+
       {% if dogrulanacaklar %}
         <div class="yan-kart">
           <h2>Yayından önce</h2>

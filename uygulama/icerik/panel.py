@@ -29,7 +29,7 @@ from .formlar import (BildirimForm, FotoGaleriForm, GazeteForm, HaberForm,
                       KategoriForm, KaynakForm, KoseYazisiForm, KullaniciForm,
                       ReklamKampanyasiForm, ReklamYuvasiForm, ResmiIlanForm,
                       SonDakikaForm, VideoForm, YazarForm, YorumForm)
-from . import denetim_kaydi, okunma, onbellek, yayin_kapisi, yz_kopru
+from . import denetim_kaydi, okunma, onbellek, yayin_kapisi, yz_koken, yz_kopru
 from .kimlik import yeni_kayit_kaydet
 from .arama_metni import slugla
 from .models import (YZ_BASLIK_ISARETI, Bildirim, Gazete, Haber, IkiAdimli,
@@ -563,6 +563,7 @@ def _kaydet(form, request, onceki=None):
     """
     haber = form.save(commit=False)
     yeni = haber.pk is None
+    yayinda_miydi = onceki is not None and onceki.get("durum") == Haber.DURUM_AKTIF
     if not haber.slug and not haber.baslik.startswith(YZ_BASLIK_ISARETI):
         # Yedek slug kimlik taşımaz: kimlik çakışmada yeniden denenebilir
         # ve adres zaten `-{id}` ile biter.
@@ -575,6 +576,8 @@ def _kaydet(form, request, onceki=None):
         haber.save()
     form.save_m2m()
     form._kategori_degisimini_yonlendir(haber)
+    if haber.durum == Haber.DURUM_AKTIF and not yayinda_miydi:
+        yz_koken.yayina_alindi([haber.pk], request.user)   # araçtan gelmediyse no-op
     # Denetim kaydı: oluşturma, yayın durumu, kategori ve manşet değişimi.
     denetim_kaydi.haber_degisimi(request, haber, None if yeni else onceki)
     _sosyal_kuyrugu_esitle(form, haber, request)
@@ -1471,11 +1474,12 @@ def _fiil_yayina_al(request, sorgu) -> str:
     adresle yayına çıkabiliyordu. Kaynak kuralı da yoktu.
     """
     hazir, eksik, yetkisiz = [], 0, 0
+    acik_k2 = yz_koken.acik_k2_tumu()      # K2 kapısı: tek sorgu, satır başına değil
     for haber in (sorgu.prefetch_related("etiketler", "kaynaklar")
                   .iterator(chunk_size=500)):
         if not yayin_kapisi.yayin_yetkisi(request.user, haber):
             yetkisiz += 1
-        elif _yayina_hazir_mi(haber):
+        elif not yayin_kapisi.haber_eksikleri(haber, acik_k2=int(haber.pk in acik_k2)):
             hazir.append(haber.pk)
         else:
             eksik += 1
@@ -1486,11 +1490,12 @@ def _fiil_yayina_al(request, sorgu) -> str:
                                                   hazirlik="hazir")
         Haber.objects.filter(pk__in=dilim, yayin_zamani__isnull=True).update(
             yayin_zamani=simdi)
+        yz_koken.yayina_alindi(dilim, request.user)
     ozet = f"{len(hazir)} haber yayına alındı."
     if eksik:
         ozet += (f" {eksik} kayıt ATLANDI: yayın eşiğini geçmiyor "
                  "(başlık işareti · adres · spot · en az iki paragraf gövde · "
-                 "en az bir etiket · kaynak).")
+                 "en az bir etiket · kaynak · açık K2 bulgusu).")
     if yetkisiz:
         ozet += f" {yetkisiz} kayıt ATLANDI: bu haberleri yayına alma yetkiniz yok."
     return ozet
@@ -1510,8 +1515,18 @@ def _fiil_hazirlik(request, sorgu) -> str:
     deger = request.POST.get("hazirlik_degeri") or ""
     if deger not in dict(Haber.HAZIRLIK):
         return "Geçersiz hazırlık değeri."
+    atlanan = 0
+    if deger == "hazir":
+        # K2: açık bulgusu olan yapay zekâ taslağı "Yayına hazır"a geçmez.
+        acik = yz_koken.acik_k2_tumu()
+        if acik:
+            atlanan = sorgu.filter(pk__in=acik).count()
+            sorgu = sorgu.exclude(pk__in=acik)
     sayi = sorgu.update(hazirlik=deger)
-    return f"{sayi} haberin hazırlığı “{dict(Haber.HAZIRLIK)[deger]}” yapıldı."
+    ozet = f"{sayi} haberin hazırlığı “{dict(Haber.HAZIRLIK)[deger]}” yapıldı."
+    if atlanan:
+        ozet += f" {atlanan} kayıt ATLANDI: açık K2 (olgu denetimi) bulgusu var."
+    return ozet
 
 
 def _fiil_ilce(request, sorgu) -> str:
@@ -3203,6 +3218,9 @@ def konu_listesi(request):
             "sayısı ve gelişme dili. Kesin ölçüt değil, sıralama ipucu.",
             "TÜİK enflasyonu, hava durumu, döviz gibi periyodik türler motorda "
             "elenir; kaçanı burada reddet.",
+            "19 Ekim 2026: 5 Eylül'de eşik komutuyla onaylanmış, periyodik "
+            "görünen dosyalar onay beklemeye geri alındı (`konu_temizle`). "
+            "Nedeni dosyanın künyesinde yazar; karar tek tek verilir.",
         ])
 
 
@@ -3227,7 +3245,10 @@ def konu_duzenle(request, kimlik):
         "kilitli": [("Kimlik", kayit.pk), ("Kaynak", kayit.get_kaynak_display()),
                     ("Güven", kayit.guven if kayit.kaynak == Konu.KAYNAK_MOTOR else "—"),
                     ("Haber", kayit.haber_sayisi),
-                    ("Onaylayan", kayit.onaylayan.get_username() if kayit.onaylayan_id else "—")],
+                    ("Onaylayan", kayit.onaylayan.get_username() if kayit.onaylayan_id else "—"),
+                    # 19 Ekim 2026: "sürüyor" okuma anında (`Konu.suruyor`).
+                    ("Sürüyor", "Evet" if kayit.suruyor else "Hayır"),
+                    ("Onayı geri alındı", kayit.geri_alma or "—")],
         **_yetkiler(request.user),
     })
 

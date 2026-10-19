@@ -1044,7 +1044,7 @@ def konular(request):
     return render(request, "konular.html", {
         "baslik": "Konu Dosyaları",
         "sayfa": sayfa,
-        "surenler": Konu.yayindakiler().filter(acik=True).count(),
+        "surenler": Konu.surenler().count(),
     })
 
 

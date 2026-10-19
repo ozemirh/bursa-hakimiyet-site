@@ -481,6 +481,9 @@ class LogKaydi(models.Model):
         ("konu_karari", "Konu onaylama/reddetme"),
         ("konu_bag_cikarma", "Konu dosyasından haber çıkarma"),
         ("giris_kilidi", "Giriş denemesi kilidi"),
+        # 19 Ekim 2026 (Paket M): K2 bulgusu tek tek kapatılır, kimin
+        # kapattığı burada da durur (bulgunun kendi kaydına ek olarak).
+        ("yz_bulgu_kapatma", "Yapay zekâ olgu bulgusunu kapatma"),
     ]
 
     # PROTECT: kullanıcı silinirse log okunamaz hâle gelir. Kimliği ada değil
@@ -1016,7 +1019,12 @@ class Konu(models.Model):
     guven = models.PositiveSmallIntegerField(
         default=0, help_text="Motorun 0-100 güven puanı; editör dosyasında 0.")
     gerekce = models.TextField(blank=True, help_text="Motorun okunabilir gerekçesi.")
-    acik = models.BooleanField(default=False, help_text="Dosya sürüyor mu.")
+    # 19 Ekim 2026: "sürüyor" artık bu alan DEĞİL, okuma anında hesaplanır
+    # (`suruyor`). Bu alan editörün "dosya kapandı" kararıdır: işareti
+    # kaldırılırsa son haber taze olsa da dosya sürüyor sayılmaz. Eskiden
+    # tarama anında yazılıyordu; 5 Eylül taramasının 231 dosyası son haberi
+    # 25 Ağustos olduğu hâlde Ekim'de "sürüyor" görünüyordu.
+    acik = models.BooleanField(default=False, help_text="Editör kapatmadı (sürebilir).")
     baslangic = models.DateField(db_index=True)
     bitis = models.DateField()
     haber_sayisi = models.PositiveIntegerField(default=0)
@@ -1025,6 +1033,14 @@ class Konu(models.Model):
         "auth.User", null=True, blank=True, on_delete=models.SET_NULL,
         related_name="onayladigi_konular")
     onay_zamani = models.DateTimeField(null=True, blank=True)
+    geri_alma = models.CharField(
+        max_length=300, blank=True,
+        help_text="Onayı geri alındıysa nedeni (19 Ekim 2026, `konu_temizle`). Dolu "
+                  "ve onay bekleyen dosya yeniden taramada SİLİNMEZ: kararı "
+                  "editör verecek.")
+
+    #: Son haberi bu kadar gün içindeyse dosya "sürüyor".
+    SURUYOR_GUN = 30
 
     class Meta:
         verbose_name = "konu"
@@ -1041,6 +1057,18 @@ class Konu(models.Model):
     @classmethod
     def yayindakiler(cls):
         return cls.objects.filter(onay=cls.ONAY_ONAYLI)
+
+    @property
+    def suruyor(self) -> bool:
+        """Okuma anında: editör kapatmadı VE son haber `SURUYOR_GUN` içinde."""
+        return bool(self.acik and self.bitis
+                    and (timezone.localdate() - self.bitis).days <= self.SURUYOR_GUN)
+
+    @classmethod
+    def surenler(cls):
+        """`suruyor` ile aynı kural, sorgu olarak (dizindeki sayaç)."""
+        sinir = timezone.localdate() - timezone.timedelta(days=cls.SURUYOR_GUN)
+        return cls.yayindakiler().filter(acik=True, bitis__gte=sinir)
 
     def sayilari_tazele(self) -> None:
         """Bağlar değişince başlangıç, bitiş ve sayı yeniden hesaplanır."""
@@ -1117,3 +1145,85 @@ class HaberArama(models.Model):
 
     def __str__(self) -> str:
         return f"{self.haber_id}: {self.metin[:60]}"
+
+
+class YzKoken(models.Model):
+    """Yapay zekâ taslağının köken kaydı — 19 Ekim 2026, Paket M.
+
+    Taslak hangi sağlayıcı ve modelle, hangi denetim sonucuyla üretildi;
+    yayına alınırken editör ne kadarını değiştirdi. DEGERLENDIRME-2026-10
+    §4: model taslağı 0,999 benzerlikle neredeyse aynen yayımlanmıştı ve
+    bunu gösteren kalıcı bir kayıt yoktu.
+
+    **Okura etiket gösterilmez** — kullanıcı kararı bekliyor. Bu tablo
+    yalnız kayıttır; panel ve denetim için.
+
+    Neden `Haber`e sütun değil: arşiv tablosu 1 milyon satır (bkz.
+    `HaberArama`); köken yalnız araçtan gelen birkaç haberde var.
+    """
+
+    haber = models.OneToOneField(Haber, on_delete=models.CASCADE, related_name="yz_koken")
+    saglayici = models.CharField(max_length=12, help_text="kural · cli · skill · claude")
+    model = models.CharField(max_length=80, blank=True,
+                             help_text="Aracın bildirdiği model kimliği; kural motorunda boş.")
+    kaynak_adres = models.CharField(max_length=600, blank=True)
+    denetim = models.JSONField(
+        default=dict, blank=True,
+        help_text="`arac/denetim.py` sonucu: bulgu listesi, skill turları, kalan bulgular.")
+    uretilen_metin = models.TextField(
+        blank=True, help_text="Taslağın başlık + spot + gövdesi, editör dokunmadan önce.")
+    olusturan = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                  on_delete=models.SET_NULL, related_name="+")
+    olusturma = models.DateTimeField(auto_now_add=True)
+    yayin_zamani = models.DateTimeField(null=True, blank=True,
+                                        help_text="İlk yayına alınış.")
+    yayinlayan = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                   on_delete=models.SET_NULL, related_name="+")
+    benzerlik = models.FloatField(
+        null=True, blank=True,
+        help_text="Yayındaki metnin taslağa benzerliği (difflib, kelime düzeyi, 0-1).")
+
+    class Meta:
+        verbose_name = "yapay zekâ köken kaydı"
+        verbose_name_plural = "yapay zekâ köken kayıtları"
+
+    def __str__(self) -> str:
+        return f"{self.haber_id} · {self.saglayici}"
+
+    @property
+    def degisim_orani(self) -> float | None:
+        """Editörün değiştirdiği pay: 1 − benzerlik."""
+        return None if self.benzerlik is None else round(1 - self.benzerlik, 4)
+
+
+class YzBulgu(models.Model):
+    """Taslağın denetim bulgusu; şimdilik yalnız K2 (uydurma olgu).
+
+    Açık K2 bulgusu olan haber yayına çıkamaz (`yayin_kapisi`). Editör her
+    bulguyu kaynağa bakıp tek tek "kontrol ettim" diye kapatır; kimin ne
+    zaman kapattığı kayıtta kalır. Toplu kapatma yok — bilerek.
+    """
+
+    TURLER = [("sayi", "Sayı"), ("tarih", "Tarih"), ("saat", "Saat"),
+              ("yuzde", "Yüzde"), ("ozel_ad", "Özel ad"),
+              ("denetim", "Denetim çalışmadı")]
+
+    koken = models.ForeignKey(YzKoken, on_delete=models.CASCADE, related_name="bulgular")
+    kural = models.CharField(max_length=4, default="K2")
+    tur = models.CharField(max_length=8, choices=TURLER)
+    deger = models.CharField(max_length=200)
+    alan = models.CharField(max_length=40, help_text="Taslaktaki yeri: spot, govde[3]…")
+    baglam = models.CharField(max_length=300, blank=True)
+    kapandi = models.BooleanField(default=False)
+    kapatan = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                on_delete=models.SET_NULL, related_name="+")
+    kapanma = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "yapay zekâ denetim bulgusu"
+        verbose_name_plural = "yapay zekâ denetim bulguları"
+        ordering = ["id"]
+        indexes = [models.Index(fields=["koken", "kural", "kapandi"], name="yzbulgu_acik")]
+
+    def __str__(self) -> str:
+        return f"{self.kural} {self.tur}: {self.deger}"
