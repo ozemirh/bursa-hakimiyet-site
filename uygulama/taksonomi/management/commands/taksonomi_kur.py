@@ -64,7 +64,10 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **secenekler):
-        y = self.stdout.write
+        # verbosity=0 sessiz: testler bu komutu ~60 yerde kurar ve her biri
+        # eskiden bir satır basıyordu (Paket K, 19 Ekim 2026).
+        y = (self.stdout.write if secenekler.get("verbosity", 1) >= 1
+             else (lambda *a, **k: None))
         olculmemis = []
 
         for ad, haber_id, slug, sira, olculdu in KATEGORILER:

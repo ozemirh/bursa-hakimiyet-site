@@ -1,0 +1,127 @@
+{
+ "_not": "Dolar, euro ve sterlin TCMB'nin açık günlük kur bülteninden çekildi. Gram altın ve BIST 100 TCMB'de yok; onları piyasa.py çeker (TCMB EVDS · Google Finance · doviz.com · Mynet) ve bu betik piyasa.json'dan okur. O dosya yoksa ya da bayatsa panelden elle giriş devreye girer; hiçbir koşulda değer uydurulmaz. Yayınlanırken her kalemin kaynağı belirtilir.",
+ "guncelleme": "2026-09-12T21:57:07+03:00",
+ "bayat_esik_dakika": 1440,
+ "kaynak": {
+  "ad": "Türkiye Cumhuriyet Merkez Bankası",
+  "kisa": "TCMB",
+  "adres": "https://www.tcmb.gov.tr/kurlar/today.xml",
+  "kosullar": "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/Kullanim+Sartlari",
+  "kunye": "Kaynak: TCMB döviz kurları."
+ },
+ "bulten": {
+  "tarih": "11.09.2026",
+  "tarih_iso": "2026-09-11",
+  "no": "2026/171"
+ },
+ "onceki_bulten": "2026-09-10",
+ "kalemler": [
+  {
+   "anahtar": "dolar",
+   "ad": "Dolar",
+   "birim": "TL",
+   "deger": 48.525,
+   "alis": 48.4305,
+   "satis": 48.5178,
+   "onceki": null,
+   "degisim": 0.0,
+   "degisim_yuzde": 0.0,
+   "yon": "esit",
+   "kaynak": "doviz",
+   "kaynak_durumu": "taze",
+   "tcmb_resmi": {
+    "deger": 48.5178,
+    "alis": 48.4305,
+    "satis": 48.5178,
+    "bulten": null
+   },
+   "piyasa_damgasi": "2026-09-12T21:57:05+03:00"
+  },
+  {
+   "anahtar": "euro",
+   "ad": "Euro",
+   "birim": "TL",
+   "deger": 56.3246,
+   "alis": 56.1754,
+   "satis": 56.2766,
+   "onceki": null,
+   "degisim": -0.1695,
+   "degisim_yuzde": -0.3,
+   "yon": "asagi",
+   "kaynak": "doviz",
+   "kaynak_durumu": "taze",
+   "tcmb_resmi": {
+    "deger": 56.2766,
+    "alis": 56.1754,
+    "satis": 56.2766,
+    "bulten": null
+   },
+   "piyasa_damgasi": "2026-09-12T21:57:05+03:00"
+  },
+  {
+   "anahtar": "sterlin",
+   "ad": "Sterlin",
+   "birim": "TL",
+   "deger": 65.7182,
+   "alis": 65.3215,
+   "satis": 65.6621,
+   "onceki": null,
+   "degisim": 0.046,
+   "degisim_yuzde": 0.07,
+   "yon": "yukari",
+   "kaynak": "doviz",
+   "kaynak_durumu": "taze",
+   "tcmb_resmi": {
+    "deger": 65.6621,
+    "alis": 65.3215,
+    "satis": 65.6621,
+    "bulten": null
+   },
+   "piyasa_damgasi": "2026-09-12T21:57:05+03:00"
+  },
+  {
+   "anahtar": "gram_altin",
+   "ad": "Gram altın",
+   "birim": "TL",
+   "deger": 6784.88,
+   "alis": null,
+   "satis": null,
+   "onceki": null,
+   "degisim": 48.5,
+   "degisim_yuzde": 0.72,
+   "yon": "yukari",
+   "kaynak": "doviz",
+   "kaynak_durumu": "taze",
+   "piyasa_damgasi": "2026-09-12T21:57:05+03:00"
+  },
+  {
+   "anahtar": "bist100",
+   "ad": "BIST 100",
+   "birim": "puan",
+   "deger": 14467.25,
+   "alis": null,
+   "satis": null,
+   "onceki": null,
+   "degisim": 73.41,
+   "degisim_yuzde": 0.51,
+   "yon": "yukari",
+   "kaynak": "doviz",
+   "kaynak_durumu": "taze",
+   "piyasa_damgasi": "2026-09-12T21:57:05+03:00"
+  }
+ ],
+ "denetim": {
+  "kalem": 5,
+  "kaynaktan_gelen": 3,
+  "piyasadan_gelen": 5,
+  "elle_girilen": 0,
+  "kaynagi_olmayan": [],
+  "kaynak_dagilimi": {
+   "dolar": "doviz",
+   "euro": "doviz",
+   "sterlin": "doviz",
+   "gram_altin": "doviz",
+   "bist100": "doviz"
+  }
+ }
+}
