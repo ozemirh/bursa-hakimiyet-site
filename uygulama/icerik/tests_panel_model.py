@@ -263,9 +263,14 @@ class LogEkrani(ModelTuruTemel):
 
     def test_fiil_suzgeci(self):
         LogKaydi.objects.create(kullanici=self.yonetmen, fiil="giris")
+        # 19 Ekim 2026'dan beri oturum açmanın kendisi de kayıt yazıyor
+        # (denetim_kaydi): elle açılan + bu testin girişi = 2.
         self._gir("Yayın Yönetmeni")
         yanit = self.client.get("/panel/log", {"fiil": "giris"})
-        self.assertEqual(yanit.context["sayfa"].paginator.count, 1)
+        self.assertEqual(LogKaydi.objects.filter(fiil="giris").count(), 2)
+        self.assertEqual(yanit.context["sayfa"].paginator.count, 2)
+        self.assertEqual(LogKaydi.objects.exclude(fiil="giris").count(),
+                         LogKaydi.objects.count() - 2)
 
     def test_fiil_kapali_liste(self):
         """Serbest metin olsaydı log aranamazdı."""

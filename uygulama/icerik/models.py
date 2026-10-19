@@ -401,12 +401,23 @@ class LogKaydi(models.Model):
         ("kullanici_degisikligi", "Kullanıcı veya rol değişikliği"),
         ("parola_degisikligi", "Parola değişikliği"),
         ("resmi_ilan", "Resmî ilan girme/silme"),
+        # 19 Ekim 2026 (Paket F madde 9): yazan kod geldiğinde eksik kalan
+        # fiiller. Liste kapalı kalır; yeni fiil buraya eklenmeden yazılmaz.
+        ("haber_olusturma", "Haber oluşturma"),
+        ("son_dakika_degisikligi", "Son dakika değişikliği"),
+        ("konu_karari", "Konu onaylama/reddetme"),
+        ("konu_bag_cikarma", "Konu dosyasından haber çıkarma"),
+        ("giris_kilidi", "Giriş denemesi kilidi"),
     ]
 
     # PROTECT: kullanıcı silinirse log okunamaz hâle gelir. Kimliği ada değil
     # KAYDA bağlamak, "dört hesap Administrator" sorununun asıl çözümü.
+    #
+    # Boş olabilir (19 Ekim 2026): başarısız giriş denemesi var olmayan bir
+    # kullanıcı adıyla da yapılır; o zaman denenen ad `gerekce`de durur.
     kullanici = models.ForeignKey(
-        "auth.User", on_delete=models.PROTECT, related_name="log_kayitlari")
+        "auth.User", on_delete=models.PROTECT, related_name="log_kayitlari",
+        null=True, blank=True)
     fiil = models.CharField(max_length=32, choices=FIILLER)
     hedef_tur = models.CharField(
         max_length=24, blank=True,

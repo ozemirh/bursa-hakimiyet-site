@@ -15,7 +15,7 @@ değiştirilemez. §24.8'in beş zorunlu alanı burada okunuyor.{% endcomment %}
 
       <dl class="kunye-liste log-dokum">
         <dt>Zaman</dt><dd>{{ kayit.zaman|date:"d.m.Y H:i:s" }}</dd>
-        <dt>Kullanıcı</dt><dd>{{ kayit.kullanici.get_username }}{% if kayit.kullanici.get_full_name %} ({{ kayit.kullanici.get_full_name }}){% endif %}</dd>
+        <dt>Kullanıcı</dt><dd>{% if kayit.kullanici_id %}{{ kayit.kullanici.get_username }}{% if kayit.kullanici.get_full_name %} ({{ kayit.kullanici.get_full_name }}){% endif %}{% else %}— (kullanıcı kaydı yok){% endif %}</dd>
         <dt>Fiil</dt><dd>{{ kayit.get_fiil_display }}</dd>
         <dt>Hedef türü</dt><dd>{{ kayit.hedef_tur|default:"—" }}</dd>
         <dt>Hedef</dt><dd>{{ kayit.hedef_id|default:"—" }}</dd>
