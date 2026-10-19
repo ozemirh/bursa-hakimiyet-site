@@ -263,11 +263,11 @@ class ArsivSayilariSablonaGomulmuyor(TestCase):
 
     def setUp(self):
         from . import views
-        views._sayim_bellek = None
+        views.onbellek.sil(views.SAYIM_ANAHTARI)
 
     def tearDown(self):
         from . import views
-        views._sayim_bellek = None
+        views.onbellek.sil(views.SAYIM_ANAHTARI)
 
     def test_sayilar_veritabanindan_geliyor(self):
         from medya.models import Yazar
@@ -315,7 +315,7 @@ class ArsivSayilariSablonaGomulmuyor(TestCase):
             self.assertContains(yanit, "Arşivden gelen 0 galeri")
 
             # sayım kilide takılırsa cümle hiç basılmamalı, sayfa ayakta kalmalı
-            views._sayim_bellek = None
+            views.onbellek.sil(views.SAYIM_ANAHTARI)
             # `KoseYazisi` anasayfada YALNIZ sayımda kullanılıyor; bu yüzden
             # doğru dikiş yeri burası. `FotoGaleri`yi kesmek sayfanın kendi
             # galeri sorgusunu da düşürürdü (ilk denemede öyle oldu).

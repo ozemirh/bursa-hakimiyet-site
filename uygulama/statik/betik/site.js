@@ -47,8 +47,24 @@
 
     if(!toplam){ return; }
 
+    // Ertelenen kareler (19 Ekim 2026): gizli slayt `visibility:hidden` olsa da
+    // tarayici `loading="lazy"`ye ragmen gorselini indiriyordu - 20 slaytin
+    // 18'i ilk acilista iniyordu. Sablon onlara `data-srcset` basar; slayt
+    // etkinlesince o ve SIRADAKI yuklenir, gecis aninda bos kare kalmaz.
+    function yukle(s){
+      if(!s){ return; }
+      dizi('img[data-srcset]', s).forEach(function(im){
+        im.setAttribute('srcset', im.getAttribute('data-srcset'));
+        im.setAttribute('src', im.getAttribute('data-src'));
+        im.removeAttribute('data-srcset');
+        im.removeAttribute('data-src');
+      });
+    }
+
     function goster(i){
       aktif = ((i % toplam) + toplam) % toplam;
+      yukle(slaytlar[aktif]);
+      yukle(slaytlar[(aktif + 1) % toplam]);
       slaytlar.forEach(function(s, j){ s.setAttribute('data-aktif', j === aktif ? 'true' : 'false'); });
       noktalar.forEach(function(b, j){
         if(j === aktif){ b.setAttribute('aria-current', 'true'); }

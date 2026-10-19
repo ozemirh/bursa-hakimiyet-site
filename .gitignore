@@ -50,3 +50,6 @@ dist/
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Ajan çalışma kopyaları
+.claude/worktrees/

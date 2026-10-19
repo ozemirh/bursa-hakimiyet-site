@@ -18,6 +18,7 @@ from django.contrib.auth import views as kimlik_gorunum
 
 from cekirdek import durum as durum_gorunum
 
+from icerik import gorsel_turev
 from icerik import panel as panel_gorunum
 from icerik import reklam as reklam_gorunum
 from icerik import views as icerik_gorunum
@@ -28,6 +29,10 @@ urlpatterns = [
     # servis eder; yayinda bunu web sunucusu ustlenir.
     re_path(r"^arsiv-gorsel/(?P<path>.*)$", serve,
             {"document_root": settings.ARSIV_GORSEL_KOK}),
+    # Gorsel turevleri (19 Ekim 2026): /gorsel/<genislik|og>/<kaynak yol>.webp
+    # Ilk istekte uretir, diske yazar; yayinda nginx dosyadan verir.
+    re_path(r"^gorsel/(?P<boyut>\d{3,4}|og)/(?P<yol>.+)$", gorsel_turev.gorunum,
+            name="gorsel-turev"),
     path("yonetim/", admin.site.urls),
     # Saglik ucu (19 Ekim 2026). `\w` alt cizgiyi de yakaladigi icin
     # kategori kalibindan ONCE olmak zorunda; `/saglik` bir kategori slug'i.

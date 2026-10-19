@@ -15,12 +15,10 @@ işe yaradığı ölçülen çözümün anasayfa uyarlaması.
 """
 
 import json
-import time
 from urllib.parse import urlsplit
 
 from django.core.paginator import Paginator
 from django.utils.functional import cached_property
-from django.db import DatabaseError
 from django.db.models import F, Max, Min, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
@@ -35,8 +33,9 @@ from .arama_metni import sorgu_coz
 from .canli import anasayfa_verisi, oku, puan_ligleri, puan_takibi
 from . import bursaspor as bursaspor_bolumu
 from . import eczane as eczane_sayfa
-from . import okunma
+from . import okunma, onbellek
 from .models import Haber, ResmiIlan
+from .sayfa_onbellegi import sayfa_onbellegi
 
 # Manşet slaydındaki sayfa sayısı. §35'te 15'ten 5'e inmişti; 30 Ağustos
 # 2026'da kullanıcı kararıyla yeniden 15 oldu.
@@ -92,7 +91,10 @@ SAYIM_BELLEK_SANIYE = 300
 # Sayım kilide takılırsa sonuç bu kadar süre beklet: her istek kilide
 # yeniden girmesin, ama kilit kalkınca sayfa dakikalarca eksik kalmasın.
 HATA_BELLEK_SANIYE = 20
-_sayim_bellek: tuple[float, dict] | None = None
+# 19 Ekim 2026: modül değişkeninden paylaşılan önbelleğe (icerik/onbellek.py).
+SAYIM_ANAHTARI = "bh:arsiv-sayilari:v1"
+_SAYILAMADI = {"yazar_adedi": None, "kose_adedi": None,
+               "galeri_adedi": None, "video_adedi": None}
 
 
 def arsiv_sayilari() -> dict:
@@ -108,39 +110,32 @@ def arsiv_sayilari() -> dict:
     None ile 0 **ayrı şeylerdir**: "sayılamadı" ile "arşivde hiç yok" aynı
     cümleyi doğurmamalı. Şablon bu yüzden `is not None` ile bakar; `{% if %}`
     ile baksaydı gerçek bir sıfır da gizlenirdi (test bunu yakaladı).
+
+    Hata da ÖNBELLEĞE yazılır (`HATA_BELLEK_SANIYE`). Yazılmadığı sürece,
+    göç gibi uzun bir yazma işi sürerken her istek kilide yeniden giriyor
+    ve SQLite'ın bekleme süresi kadar duruyordu. Kısa bir pencere seçildi:
+    kilit geçici, sayfa da uzun süre eksik kalmasın.
     """
-    global _sayim_bellek
-    simdi = time.monotonic()
-    if _sayim_bellek and simdi - _sayim_bellek[0] < SAYIM_BELLEK_SANIYE:
-        return _sayim_bellek[1]
-    try:
-        sayilar = {
-            "yazar_adedi": Yazar.listedekiler().count(),
-            "kose_adedi": KoseYazisi.yayindakiler().count(),
-            "galeri_adedi": FotoGaleri.yayindakiler().count(),
-            "video_adedi": Video.yayindakiler().count(),
-        }
-    except DatabaseError:
-        # Hata da ÖNBELLEĞE yazılır. Yazılmadığı sürece, göç gibi uzun bir
-        # yazma işi sürerken her istek kilide yeniden giriyor ve SQLite'ın
-        # bekleme süresi kadar duruyordu (3 Eylül 2026'da `baglam` tarafında
-        # ölçüldü ve orada baştan doğru kuruldu). Kısa bir pencere seçildi:
-        # kilit geçici, sayfa da uzun süre eksik kalmasın.
-        son_bilinen = _sayim_bellek[1] if _sayim_bellek else {
-            "yazar_adedi": None, "kose_adedi": None,
-            "galeri_adedi": None, "video_adedi": None}
-        _sayim_bellek = (simdi - SAYIM_BELLEK_SANIYE + HATA_BELLEK_SANIYE,
-                         son_bilinen)
-        return son_bilinen
-    _sayim_bellek = (simdi, sayilar)
-    return sayilar
+    return onbellek.hesapla(SAYIM_ANAHTARI, _arsiv_say,
+                            taze=SAYIM_BELLEK_SANIYE, hata=HATA_BELLEK_SANIYE,
+                            yedek=lambda: dict(_SAYILAMADI))
+
+
+def _arsiv_say() -> dict:
+    return {
+        "yazar_adedi": Yazar.listedekiler().count(),
+        "kose_adedi": KoseYazisi.yayindakiler().count(),
+        "galeri_adedi": FotoGaleri.yayindakiler().count(),
+        "video_adedi": Video.yayindakiler().count(),
+    }
 
 
 def _liste(sinirsiz=False):
     """Ortak sorgu: yayındaki haberler, adres kurmak için gereken ilişkilerle.
 
-    `kategori__turler` prefetch'i şart: `get_absolute_url` kategorinin
-    slug'ını oradan okuyor, yoksa haber başına bir sorgu daha açılıyor.
+    `kategori__turler` ön çekimi 19 Ekim 2026'da KALKTI: adres slug'ı
+    süreç içi eşlemeden geliyor (`taksonomi/slug_eslemesi.py`). Her liste
+    için açılan KategoriTur sorgusu gitti (anasayfada 7 sorgu).
     """
     # NOT — `.defer("govde")` DENENDİ VE GERİ ALINDI (28 Ağustos 2026).
     # Gerekçe kâğıt üzerinde sağlamdı: gövde ortalama 1.481 karakter ve liste
@@ -150,11 +145,10 @@ def _liste(sinirsiz=False):
     # Buna karşılık ertelenmiş alan sessiz bir tuzak taşıyor: gövdeye
     # yanlışlıkla erişen bir kod satır başına ek sorgu açar ve bu fark
     # edilmez. Ölçülemeyen kazanç için tuzak taşınmaz.
-    return (Haber.yayindakiler()
-            .select_related("kategori", "ilce")
-            .prefetch_related("kategori__turler"))
+    return Haber.yayindakiler().select_related("kategori", "ilce")
 
 
+@sayfa_onbellegi
 def anasayfa(request):
     """§1'deki sırayı besler. Tek sorgudan dilimlenir; sayılar sözleşmedendir.
 
@@ -495,6 +489,7 @@ def _bolum_servisi(slug="", ilce=None):
     return None
 
 
+@sayfa_onbellegi
 def kategori(request, slug):
     """Kategori listesi. Slug **tür satırından** gelir, kategori adından değil."""
     kategori = get_object_or_404(Kategori, turler__tur=Kategori.TUR_HABER,
@@ -520,6 +515,7 @@ def kategori(request, slug):
     })
 
 
+@sayfa_onbellegi
 def ilce(request, slug):
     ilce = get_object_or_404(Ilce, slug=slug)
     sorgu = _liste().filter(ilce=ilce)
@@ -1007,6 +1003,11 @@ from .models import Konu  # noqa: E402
 KONU_SAYFA_BOYU = 30
 
 
+# Konu dizini ve dosya sayfası da sayfa önbelleğinde (19 Ekim 2026): 300
+# üyelik bir dosyanın sayfası 265 KB ve çizimi sıcak süreçte 128–159 ms
+# (sorgusu artık `konuhaber_sira` indeksinden). Konu ya da bağ
+# kaydedilince yayın sürümü değişir, sayfa anında tazelenir.
+@sayfa_onbellegi
 def konular(request):
     """Onaylı dosyaların dizini; en son gelişme önde."""
     sorgu = Konu.yayindakiler().order_by("-bitis", "-id")
@@ -1018,6 +1019,7 @@ def konular(request):
     })
 
 
+@sayfa_onbellegi
 def konu(request, slug):
     kayit = Konu.yayindakiler().filter(slug=slug).first()
     if kayit is None:

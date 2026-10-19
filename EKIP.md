@@ -35,6 +35,9 @@ Bu üç şey birlikte okunur:
 | Bursaspor sayfası | **Yeşil · beyaz** | `--yesil` `--yesil-koyu` `--yesil-ak` `--yesil-cizgi` |
 | Seçili diğer sayfalar | **Sayfaya özel tasarım** | Sayfa başına yeni Türkçe adlı değişken takımı |
 
+**Seçilen sayfalar (kullanıcı, 19 Ekim 2026):** Bursaspor (yapıldı) · **köşe yazıları**
+· **ekonomi** (kategori 4) · **teknoloji** (kategori 9). Listeye ekleme kullanıcı kararıdır.
+
 **Sayfaya özel tasarım** kararı §63'teki "bölüm renk temaları geri alındı"
 kuralını ve §68'deki "Bursaspor tek istisnadır" notunu **günceller**: Bursaspor
 artık tek istisna değil, ilk örnektir. Mekanizma §68'deki
@@ -82,6 +85,12 @@ Bunlar dışındaki kararlar ekip içinde verilir (koordinatör: `haber-sistemi-
 ## Değişmez kararlar — yeniden önerme
 
 - Geliştirme yalnız **Yön 1 (klasik)** üzerinde; `tasarim-2-*`, `tasarim-3-*` donduruldu.
+- **Haberler yeni panelden girilir** (19 Ekim 2026); eski CMS'ten düzenli içe alma kurulmaz.
+  Yeni kimlikler eski sitenin aralığıyla çakışmayan bir tabandan verilir.
+- **Yedek alınmaz, zamanlanmış görevler açılmaz** (19 Ekim 2026, kullanıcı kararı) —
+  ajanlar görev kurmaz/açmaz; yeniden önerilmez.
+- Optimizasyon ve altyapıda **köklü değişiklik izinli** (19 Ekim 2026); push ve canlıya
+  dokunma yine eşik konudur.
 - **Adres deseni** `/{kategori-slug}/{slug}-{id}` korunur; birincil anahtar = eski kimlik.
 - Mimari: **Django + PostgreSQL, sunucu render.** Tailwind, React, bundler önerilmez.
 - Sınıf adları ve CSS değişken adları **Türkçe**; renk her zaman değişkenden, hex yazılmaz.

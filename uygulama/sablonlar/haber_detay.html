@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load static site_etiket %}
+{% load static site_etiket gorsel_etiket %}
 
 {% block baslik %}{{ haber.baslik }} — Bursa Hakimiyet{% endblock %}
 {% block aciklama %}{{ haber.spot|striptags|truncatechars:300 }}{% endblock %}
@@ -37,19 +37,26 @@
               </div>
             </div>
 
+            {% comment %}Ana görsel (19 Ekim 2026): `{% gorsel %}` etiketi srcset/sizes ve
+               gerçek ölçüyü basar; LCP adayı olduğu için öncelikli. Foto altı
+               `foto_alti` süzgecinden: arşivin 1.038.222 haberinde alt metin
+               "Google News" ve okura foto altı diye basılıyordu — anlamsız
+               sabitler boş sayılır, veri değişmez.{% endcomment %}
             {% if haber.gorsel_yolu %}
               <div class="foto ana-gorsel">
-                <img src="{{ haber.gorsel_yolu }}" alt="{{ haber.gorsel_alt|default:haber.baslik }}" width="1280" height="720" decoding="async">
+                {% gorsel haber "detay" oncelikli=True %}
               </div>
-              {% if haber.gorsel_alt %}<p class="foto-alt">{{ haber.gorsel_alt }}</p>{% endif %}
+              {% with fa=haber|foto_alti %}{% if fa %}<p class="foto-alt">{{ fa }}</p>{% endif %}{% endwith %}
             {% else %}
               {% comment %}2023-07 öncesi görseller sağlayıcı tarafından silindi ve
                  kurtarılamıyor (URUN-PLANI.md F3 notu). Kırık görsel yerine
-                 kategori temsilî çizimi konur.{% endcomment %}
+                 kategori temsilî çizimi konur. "Silinmiş" notu YALNIZ arşiv
+                 haberine: panelden girilen fotoğrafsız haberde yanlış olurdu.{% endcomment %}
               <div class="foto ana-gorsel {{ haber|kart_rengi }}">
                 <svg role="img" aria-label="{{ haber.kategori.ad|baslikla }} haberini temsil eden çizim"><use href="#{{ haber.kategori|simge_adi }}"/></svg>
               </div>
-              <p class="foto-alt">Görsel temsilîdir: bu haberin arşiv fotoğrafı kaynak sunucudan silinmiş.</p>
+              {% if haber|arsiv_gorseli_kayip %}<p class="foto-alt">Görsel temsilîdir: bu haberin arşiv fotoğrafı kaynak sunucudan silinmiş.</p>
+              {% else %}<p class="foto-alt">Görsel temsilîdir.</p>{% endif %}
             {% endif %}
 
             {% include "parca/seslendirme.html" %}

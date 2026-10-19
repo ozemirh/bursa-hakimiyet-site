@@ -16,7 +16,7 @@ from datetime import timedelta
 
 from django.contrib.auth.models import Group, User
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from taksonomi.models import Kategori, KategoriTur
@@ -104,15 +104,41 @@ class NeSayilir(OkunmaTemeli):
         self.assertTrue(okunma.sayilmali(birinci, 7))
         self.assertTrue(okunma.sayilmali(ikinci, 7))
 
+    @override_settings(GUVENILIR_VEKILLER=["127.0.0.1"])
     def test_vekil_arkasindaki_okurlar_ayrisiyor(self):
-        """`REMOTE_ADDR` vekilde herkeste aynıdır; ileten başlık ayrıştırır."""
+        """`REMOTE_ADDR` vekilde herkeste aynıdır; ileten başlık ayrıştırır.
+
+        19 Ekim 2026'dan beri yalnız GÜVENİLİR vekilden gelen istekte."""
         ortak = {"HTTP_USER_AGENT": TARAYICI, "REMOTE_ADDR": "127.0.0.1"}
-        birinci = self._istek(HTTP_X_FORWARDED_FOR="203.0.113.7, 127.0.0.1",
-                              **ortak)
-        ikinci = self._istek(HTTP_X_FORWARDED_FOR="203.0.113.8, 127.0.0.1",
-                             **ortak)
+        birinci = self._istek(HTTP_X_FORWARDED_FOR="203.0.113.7", **ortak)
+        ikinci = self._istek(HTTP_X_FORWARDED_FOR="203.0.113.8", **ortak)
         self.assertTrue(okunma.sayilmali(birinci, 7))
         self.assertTrue(okunma.sayilmali(ikinci, 7))
+        self.assertEqual(okunma.ziyaretci_adresi(birinci), "203.0.113.7")
+
+    def test_guvenilir_vekil_yoksa_ileten_baslik_okunmuyor(self):
+        """Başlığı herkes yazabilir: koşulsuz güvenilseydi aynı okur her
+        istekte başka bir adres yazıp tekrar süzgecini atlatırdı."""
+        ortak = {"HTTP_USER_AGENT": TARAYICI, "REMOTE_ADDR": "198.51.100.4"}
+        birinci = self._istek(HTTP_X_FORWARDED_FOR="203.0.113.7", **ortak)
+        ikinci = self._istek(HTTP_X_FORWARDED_FOR="203.0.113.8", **ortak)
+        self.assertEqual(okunma.ziyaretci_adresi(birinci), "198.51.100.4")
+        self.assertTrue(okunma.sayilmali(birinci, 7))
+        self.assertFalse(okunma.sayilmali(ikinci, 7))
+
+    @override_settings(GUVENILIR_VEKILLER=["10.0.0.0/8"])
+    def test_zincir_sagdan_okunuyor_taklit_sol_uc_atlanir(self):
+        """Okur başlığa kendi sahte adresini yazarsa zincirin SOL ucunda
+        durur; okurun gerçek adresi güvenilir vekilin eklediği sağ uçtadır."""
+        istek = self._istek(HTTP_USER_AGENT=TARAYICI, REMOTE_ADDR="10.0.0.2",
+                            HTTP_X_FORWARDED_FOR="1.2.3.4, 198.51.100.9, 10.0.0.1")
+        self.assertEqual(okunma.ziyaretci_adresi(istek), "198.51.100.9")
+
+    def test_guvenilmeyen_kaynaktan_gelen_vekil_basligi_yok_sayilir(self):
+        with override_settings(GUVENILIR_VEKILLER=["127.0.0.1"]):
+            istek = self._istek(HTTP_USER_AGENT=TARAYICI, REMOTE_ADDR="198.51.100.4",
+                                HTTP_X_FORWARDED_FOR="203.0.113.7")
+            self.assertEqual(okunma.ziyaretci_adresi(istek), "198.51.100.4")
 
 
 class TamponVeKova(OkunmaTemeli):
