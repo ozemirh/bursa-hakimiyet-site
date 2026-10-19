@@ -6,13 +6,15 @@
 <title>{% block baslik %}Bursa Hakimiyet — Bursa'nın günlük haber gazetesi{% endblock %}</title>
 <meta name="description" content="{% block aciklama %}Bursa Hakimiyet: Bursa gündemi, ilçe haberleri, ekonomi, Bursaspor, hava durumu, namaz vakitleri, nöbetçi eczane, resmî ilanlar.{% endblock %}">
 {% block kanonik %}{% endblock %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 {% comment %}Roboto Serif YALNIZ haber gövdesi ve spot için (§35): gazeteye
 ses veren tek tipografik hamle, listelerde ve başlıklarda sans kalır.
-İtalik kesim alınmadı — ağırlık getirisi yok. Tek istek: üç aile aynı
-bağlantıda. İnternetsizde Georgia'ya düşer, sayfa açılmaya devam eder.{% endcomment %}
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500;700&family=Roboto+Serif:wght@400;700&display=swap" rel="stylesheet">
+İtalik kesim alınmadı — ağırlık getirisi yok. Yazı tipleri 19 Ekim 2026'dan
+beri YERELDEN (statik/fontlar/, stil/fontlar.css): Google'a istek yok.
+Preload yalnız en çok metni çizen iki dosyaya: başlık ve gövde, Latin dilimi.
+`crossorigin` aynı kökende de şart; yoksa tarayıcı dosyayı iki kez indirir.{% endcomment %}
+<link rel="preload" href="{% static 'fontlar/roboto-condensed-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{% static 'fontlar/roboto-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{% static 'stil/fontlar.css' %}">
 <link rel="stylesheet" href="{% static 'stil/site.css' %}">
 {% if reklam_dugmesi %}{% comment %}Reklam anahtarinin tercihi sayfa cizilmeden
   okunur; sonradan okunsaydi panolar bir an gorunup kaybolurdu. Dugmenin

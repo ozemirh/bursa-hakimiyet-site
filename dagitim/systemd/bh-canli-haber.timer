@@ -1,0 +1,14 @@
+# /etc/systemd/system/bh-canli-haber.timer — günün nöbetçi eczane haberi.
+# 08:20 (URUN-PLANI §41'deki Windows görevinin saati). YALNIZ DOSYA.
+# Bu birim veritabanına HABER YAZAR: açmak ayrıca yayın kararıdır.
+
+[Unit]
+Description=Bursa Hakimiyet gunun nobetci eczane haberi
+
+[Timer]
+OnCalendar=*-*-* 08:20:00 Europe/Istanbul
+Persistent=true
+Unit=bh-canli@haber.service
+
+[Install]
+WantedBy=timers.target

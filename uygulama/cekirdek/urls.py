@@ -16,6 +16,8 @@ from django.views.static import serve
 
 from django.contrib.auth import views as kimlik_gorunum
 
+from cekirdek import durum as durum_gorunum
+
 from icerik import gorsel_turev
 from icerik import panel as panel_gorunum
 from icerik.giris_guvenligi import GirisGorunumu
@@ -33,6 +35,9 @@ urlpatterns = [
     re_path(r"^gorsel/(?P<boyut>\d{3,4}|og)/(?P<yol>.+)$", gorsel_turev.gorunum,
             name="gorsel-turev"),
     path("yonetim/", admin.site.urls),
+    # Saglik ucu (19 Ekim 2026). `\w` alt cizgiyi de yakaladigi icin
+    # kategori kalibindan ONCE olmak zorunda; `/saglik` bir kategori slug'i.
+    path("_durum", durum_gorunum.durum, name="durum"),
 
     # --- Yonetim paneli (F5). Site adreslerinden ONCE: "panel" tek dilimli
     # oldugu icin en sondaki kategori kalibina da uyar.

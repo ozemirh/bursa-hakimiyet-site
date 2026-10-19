@@ -34,6 +34,10 @@ foreach ($b in $betikler) {
 # yayimlanir. Komut kendi kapisini da tasiyor: bayat listeyi
 # yayimlamiyor, ayni gun iki kez kosarsa ikinci kayit acmiyor.
 if ($Grup -eq "haber") {
+  # Ayarlar 19 Ekim 2026'dan beri fail-closed: BH_ORTAM yoksa URETIM sayilir
+  # ve anahtarsiz acilmaz. Bu betik yalniz bu Windows makinesinde kosar
+  # (uretimde systemd birimleri var, dagitim/systemd/), o yuzden gelistirme.
+  if (-not $env:BH_ORTAM) { $env:BH_ORTAM = "gelistirme" }
   $yonet = Join-Path (Split-Path -Parent $kok) "uygulama\manage.py"
   & $py $yonet eczane_haberi
   if ($LASTEXITCODE -ne 0) { $hata = 1; Write-Output "HATA: eczane haberi yayimlanmadi" }

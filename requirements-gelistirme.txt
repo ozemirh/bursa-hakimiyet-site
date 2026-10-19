@@ -1,0 +1,13 @@
+# Geliştirme ve CI ek bağımlılıkları.
+#   python -m pip install -r requirements-gelistirme.txt
+-r requirements.txt
+
+# Test kapsamı: coverage run manage.py test && coverage report
+coverage==7.16.2
+
+# Başsız Chrome ölçüm testleri (BH_PANEL_OLCUM=1, icerik/tests_panel_olcum.py).
+# Varsayılan test turunda yüklenmez; CI'da kapalı.
+websocket-client==1.9.0
+
+# Kullanılmayan içe aktarma / tanımsız ad denetimi (CI "denetim" adımı).
+pyflakes==4.0.0

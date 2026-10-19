@@ -1,0 +1,14 @@
+# /etc/systemd/system/bh-canli-saatlik.timer — hava + eczane, saat başı +5 dk.
+# YALNIZ DOSYA, kurulmadı.
+
+[Unit]
+Description=Bursa Hakimiyet canli veri - saatlik
+
+[Timer]
+OnCalendar=*-*-* *:05:00
+Persistent=true
+RandomizedDelaySec=120
+Unit=bh-canli@saatlik.service
+
+[Install]
+WantedBy=timers.target

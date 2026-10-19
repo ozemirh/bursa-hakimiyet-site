@@ -1,0 +1,29 @@
+# Satır sonları: depoda LF (bugün de öyle: 705/705 metin dosyası i/lf).
+# Çalışma kopyası da LF; Windows'ta editörler LF'i sorunsuz okur. Yalnız
+# Windows betikleri CRLF.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.sh  text eol=lf
+
+# İkili dosyalar: satır sonu çevrimi ve metin farkı yok.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.avif  binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.pdf   binary
+*.zip   binary
+*.gz    binary
+*.br    binary
+*.xlsx  binary
+*.sqlite3 binary
+*.mp3   binary
+*.wav   binary

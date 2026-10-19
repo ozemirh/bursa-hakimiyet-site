@@ -1,0 +1,38 @@
+# Bursa Hakimiyet — uygulama bağımlılıkları (üretim + geliştirme ortak).
+#
+# Sürümler sabit: bugün çalışan ortamla (.venv, 19 Ekim 2026) aynı. Yükseltme
+# ayrı bir commit'tir ve test turundan geçer. Kurulum:
+#   python -m pip install -r requirements.txt
+#
+# `arac/requirements.txt` ayrı kalır (yapay zekâ aracının isteğe bağlı
+# `anthropic` paketi). Venv'deki pyinstaller, pywebview, pandas, numpy,
+# SQLAlchemy vb. bu uygulamaya ait değildir ve bilerek listede yok.
+
+Django==5.2.17
+asgiref==3.12.1
+sqlparse==0.6.0
+
+# Saat dilimi verisi. Linux'ta sistemde var; Windows'ta YOK ve `zoneinfo`
+# "Europe/Istanbul"u bulamaz. Gizli bağımlılıktı (DEGERLENDIRME §4 DevOps).
+tzdata==2025.3
+
+# PostgreSQL sürücüsü (BH_VERITABANI). Kaynaktan derlenir: Linux'ta
+# `libpq-dev` + derleyici ister (dagitim/KURULUM.md, CI'da apt ile kurulur).
+psycopg2==2.9.10
+
+# Statik teslim: özetli adlar, .gz/.br, uzun önbellek (cekirdek/depolama.py).
+whitenoise==6.12.0
+# `.br` dosyalarını üretmek için; yoksa WhiteNoise yalnız gzip yazar.
+Brotli==1.2.0
+
+# Görsel türevleri (/gorsel/…, paket D).
+Pillow==13.0.0
+
+# Paylaşılan önbellek İSTEĞE BAĞLI: yalnız BH_REDIS verilirse gerekir
+# (settings "başarım" bloğu; yoksa dosya önbelleği). Redis seçilirse:
+#   python -m pip install redis==8.1.0
+# redis==8.1.0
+
+# Uygulama sunucusu — YALNIZ Linux üretimi. Windows'ta çalışmaz (fork),
+# işaretle kurulmaz; geliştirmede `runserver` kullanılır.
+gunicorn==26.2.0; sys_platform != "win32"
