@@ -52,6 +52,11 @@ kuralı) **kelime başı** eşleşmesidir — kök zaten kelimenin başıdır
 - **SQLite** (yedek yol): aynı normalize başlıkta `LIKE '% kök%'`,
   pencere `yayin_zamani` indeksinden. Anlam iki motorda aynı.
 
+Sonra (aynı ölçüm düzeni, 300 rastgele haber detayı, sayfa önbelleği
+kapalı, PG tamponu sıcak): sayfa p50 40 ms, p95 63 ms; sayfanın bütün
+SQL'i p95 19 ms. PG yeniden başlatıldıktan hemen sonra (tampon boş):
+p50 53, p95 104 ms.
+
 Sonuç kimlik listesi olarak 6 saat önbelleklenir (süreçler arasında
 paylaşılan önbellek, `settings.py` başarım bloğu).
 """
