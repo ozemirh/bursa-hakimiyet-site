@@ -35,6 +35,7 @@ from django.utils import timezone
 
 from icerik import eczane as eczane_metni
 from icerik.arama_metni import slugla
+from icerik.kimlik import yeni_kayit_kaydet
 from icerik.models import Haber
 from taksonomi.models import Etiket, Kategori, Kaynak
 
@@ -126,9 +127,9 @@ class Command(BaseCommand):
         koşuda ilerler.
         """
         simdi = timezone.now()
+        # Yeni kaydın kimliği tek kaynaktan (`icerik/kimlik.py`): eski
+        # sitenin aralığıyla çakışmayan taban + `force_insert`.
         haber = var_olan or Haber(
-            id=(Haber.objects.order_by("-id")
-                .values_list("id", flat=True).first() or 0) + 1,
             slug=slug,
             yayin_zamani=self._yayin_zamani(panel["gun"], simdi),
         )
@@ -150,7 +151,10 @@ class Command(BaseCommand):
         # Nöbet listesi ilçe üstü: haber Bursa geneli. İlçe alanı boş
         # bırakılıyor ki ilçe sayfaları günlük eczane kaydıyla dolmasın.
         haber.ilce = None
-        haber.save()
+        if var_olan is None:
+            yeni_kayit_kaydet(haber)
+        else:
+            haber.save()
 
         kaynak, _ = Kaynak.objects.get_or_create(
             ad=KAYNAK_ADI, defaults={"tur": Kaynak.TUR_DIS_YAYIN})

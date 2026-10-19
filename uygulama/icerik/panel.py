@@ -30,6 +30,7 @@ from .formlar import (BildirimForm, FotoGaleriForm, GazeteForm, HaberForm,
                       ReklamKampanyasiForm, ReklamYuvasiForm, ResmiIlanForm,
                       SonDakikaForm, VideoForm, YazarForm, YorumForm)
 from . import okunma, yz_kopru
+from .kimlik import yeni_kayit_kaydet
 from .arama_metni import slugla
 from .models import (YZ_BASLIK_ISARETI, Bildirim, Gazete, Haber, IkiAdimli,
                      LogKaydi, ReklamKampanyasi, ReklamYuvasi, ResmiIlan,
@@ -555,8 +556,9 @@ def _kaydet(form, request):
     """Yeni kayda kimlik ve slug verir.
 
     **Kimlik adresin parçasıdır** ve göçte eski kimlikler korunmuştur; yeni
-    haberler mevcut en büyük kimliğin üstünden devam eder ki eski adreslerle
-    hiç çakışmasın.
+    haberler eski sitenin aralığıyla çakışmayan bir tabandan alır
+    (`icerik/kimlik.py`, varsayılan 5.000.000). "En büyük + 1" kuralı
+    1696272–74'te canlıdaki haberlerle çakışmıştı.
 
     **Slug bir kez yazılır.** Django'nun `slugify`'ı burada kullanılmıyor:
     Türkçe harfi çevirmez, atar ("Nilüfer Çayı" → `nilfer-ay`) ve arşivdeki
@@ -565,14 +567,17 @@ def _kaydet(form, request):
     gerçek başlık değil, yer tutucudur; slug ilk gerçek başlıkta kurulur.
     """
     haber = form.save(commit=False)
-    if haber.pk is None:
-        en_buyuk = Haber.objects.order_by("-id").values_list("id", flat=True).first()
-        haber.id = (en_buyuk or 0) + 1
+    yeni = haber.pk is None
     if not haber.slug and not haber.baslik.startswith(YZ_BASLIK_ISARETI):
-        haber.slug = slugla(haber.baslik, 220) or f"haber-{haber.id}"
+        # Yedek slug kimlik taşımaz: kimlik çakışmada yeniden denenebilir
+        # ve adres zaten `-{id}` ile biter.
+        haber.slug = slugla(haber.baslik, 220) or "haber"
     if haber.olusturan_id is None:
         haber.olusturan = request.user
-    haber.save()
+    if yeni:
+        yeni_kayit_kaydet(haber)
+    else:
+        haber.save()
     form.save_m2m()
     form._kategori_degisimini_yonlendir(haber)
     _sosyal_kuyrugu_esitle(form, haber, request)

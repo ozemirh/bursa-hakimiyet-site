@@ -43,6 +43,7 @@ from taksonomi.models import Ilce, Kategori, Kaynak
 from . import goc_kaynak
 from .arama_metni import anahtar
 from .formlar import etiketleri_kur
+from .kimlik import yeni_kayit_kaydet
 from .models import YZ_BASLIK_ISARETI, Haber
 
 ARAC_KOK = Path(settings.BASE_DIR).parent / "arac"
@@ -362,7 +363,6 @@ def taslak_yaz(paket: dict, kullanici):
                       "cümleleri tezgahta duruyor.")
 
     haber = Haber(
-        id=_yeni_kimlik(),
         slug="",                       # editörün yazacağı başlıktan kurulacak
         baslik=baslik,
         spot=(taslak.get("spot") or "").strip(),
@@ -381,7 +381,9 @@ def taslak_yaz(paket: dict, kullanici):
         seo_baslik=(taslak.get("seo_baslik") or "").strip()[:200],
         kelime_sayisi=_kelime_say(govde),
     )
-    haber.save()
+    # Kimlik tek kaynaktan (`icerik/kimlik.py`): eski sitenin aralığıyla
+    # çakışmayan taban, `force_insert` ve çakışmada yeniden deneme.
+    yeni_kayit_kaydet(haber)
 
     if kaynak_kaydi is not None:
         haber.kaynaklar.set([kaynak_kaydi])
@@ -395,12 +397,6 @@ def taslak_yaz(paket: dict, kullanici):
     paket["panel_notlari"] = notlar
     paket_kaydet(paket, haber.pk)
     return haber, notlar
-
-
-def _yeni_kimlik() -> int:
-    """Yeni kimlik = en büyük kimlik + 1 (`panel._kaydet` ile aynı kural)."""
-    en_buyuk = Haber.objects.order_by("-id").values_list("id", flat=True).first()
-    return (en_buyuk or 0) + 1
 
 
 def taslak_al(adres: str, kullanici, saglayici: str = "kural"):

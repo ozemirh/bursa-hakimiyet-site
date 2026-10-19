@@ -306,11 +306,17 @@ class TaslakYazma(KopruTemel):
         self.assertEqual(haber.gorsel_dosya, "")
         self.assertEqual(haber.gorsel_url, "https://ornek-yayin.com/foto/1.jpg")
 
-    def test_kimlik_en_buyuk_kimligin_ustunden_devam_eder(self):
-        Haber.objects.create(id=900000, slug="x", baslik="X",
-                             kategori=Kategori.objects.get(ad="GÜNDEM"))
+    def test_kimlik_eski_aralikla_cakismaz(self):
+        """Eski sitenin kimlikleri hesaba girmez; panel kendi tabanından
+        sayar (`icerik/kimlik.py`). "En büyük + 1" 1696272–74'te canlıdaki
+        haberlerle çakışmıştı."""
+        gundem = Kategori.objects.get(ad="GÜNDEM")
+        Haber.objects.create(id=1_732_500, slug="x", baslik="X", kategori=gundem)
         haber, _ = yz_kopru.taslak_yaz(paket_kur(), self.editor)
-        self.assertEqual(haber.pk, 900001)
+        self.assertEqual(haber.pk, 5_000_000)
+        Haber.objects.create(id=5_000_010, slug="y", baslik="Y", kategori=gundem)
+        ikinci, _ = yz_kopru.taslak_yaz(paket_kur(), self.editor)
+        self.assertEqual(ikinci.pk, 5_000_011)
 
     def test_paket_diske_yazilir_ve_geri_okunur(self):
         haber, _ = yz_kopru.taslak_yaz(paket_kur(), self.editor)
