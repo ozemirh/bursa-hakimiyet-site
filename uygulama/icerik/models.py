@@ -16,7 +16,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
-from .temizle import govde_temizle
+from .temizle import duz_metni_paragrafla, gomulu_kartlari, govde_temizle
 from .yetkiler import OZEL_IZINLER
 
 from taksonomi.models import Etiket, Ilce, Kategori, Kaynak
@@ -315,6 +315,18 @@ class Haber(models.Model):
                 .exclude(hazirlik=""))
 
     @classmethod
+    def yayina_hazirlar(cls):
+        """Bugün ekranının üçüncü kuyruğu: Pasif + Yayına hazır (Paket H).
+
+        Muhabir haberi "Yayına hazır" işaretleyip masaya bırakıyor ama
+        haber hiçbir masa ekranında görünmüyordu (DEGERLENDIRME-2026-10
+        §4). `hazirlik <> ''` terimi `masadakiler`deki gerekçeyle AYNEN
+        duruyor: `haber_masa_kismi` kısmi indeksi ancak öyle seçiliyor.
+        """
+        return (cls.objects.filter(durum=cls.DURUM_PASIF, hazirlik="hazir")
+                .exclude(hazirlik=""))
+
+    @classmethod
     def yayindakiler(cls):
         """Sayfada gösterilebilir haberler.
 
@@ -359,9 +371,47 @@ class Haber(models.Model):
     def govde_guvenli(self):
         """Şablonda basılacak hâli. Beyaz liste dışındaki HTML düşer.
 
+        Etiketsiz düz metin gövde (panelden kaydı Paket H'den önce yapılmış
+        olan) boş satırlardan paragraflanır; HTML gövdeye dokunulmaz.
         Ayrıntı ve ölçüm `icerik/temizle.py` içinde.
         """
-        return govde_temizle(self.govde)
+        return govde_temizle(duz_metni_paragrafla(self.govde))
+
+    def gomulu_kartlari(self) -> list[dict]:
+        """Gömülü koddan tanınan YouTube/X/Instagram bağlantıları — ham kod
+        ASLA basılmaz (`temizle.gomulu_kartlari`)."""
+        return gomulu_kartlari(self.gomulu_kod)
+
+    #: İmza satırının yedeği — hiçbir kaynak bilgisi yoksa.
+    IMZA_MERKEZ = "Haber Merkezi"
+
+    def imza(self) -> dict:
+        """Okura basılan imza satırı (Paket H, 19 Ekim 2026).
+
+        Önceden şablonda sabit "Haber Merkezi" yazıyordu; muhabir, ajans ve
+        alıntı kaynağı okura yansımıyordu. Sıra:
+
+        1. muhabir alanı dolu → muhabirin adı
+        2. kaynak türü Ajans → ajans kaydının adı (ajans türündeki kayıtlar
+           önce; yoksa seçili kaynakların hepsi)
+        3. kaynak türü Dış yayın → "Kaynak: X"
+        4. hiçbiri → "Haber Merkezi"
+
+        **Meta Yazar Bilgisi okura BASILMAZ** — yasal sonucu hukuki teyit
+        bekliyor (PANEL-NOTLARI §7, EKIP.md eşik 5). `kaynaklar` ön
+        çekimliyse ek sorgu açmaz (haber detay görünümü çekiyor).
+        """
+        muhabir = " ".join((self.muhabir or "").split())
+        if muhabir:
+            return {"tur": "muhabir", "metin": muhabir}
+        kaynaklar = list(self.kaynaklar.all()) if self.pk else []
+        if self.kaynak_turu == self.KAYNAK_AJANS and kaynaklar:
+            ajanslar = [k for k in kaynaklar if k.tur == Kaynak.TUR_AJANS] or kaynaklar
+            return {"tur": "ajans", "metin": ", ".join(k.ad for k in ajanslar)}
+        if self.kaynak_turu == self.KAYNAK_DIS_YAYIN and kaynaklar:
+            return {"tur": "kaynak",
+                    "metin": "Kaynak: " + ", ".join(k.ad for k in kaynaklar)}
+        return {"tur": "merkez", "metin": self.IMZA_MERKEZ}
 
 
 # ===========================================================================

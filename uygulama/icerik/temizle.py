@@ -14,6 +14,7 @@ sunucudan silindi (URUN-PLANI.md F3 notu); gövdedeki `<img>` etiketleri ölü
 adrese bakıyor ve kırık görsel olarak çizilirdi.
 """
 
+import re
 from html import escape
 from html.parser import HTMLParser
 from urllib.parse import urlparse
@@ -110,6 +111,36 @@ class _Temizleyici(HTMLParser):
         return None
 
 
+#: Metinde HTML etiketi var mı: `<p`, `</p`, `<br`, `<!--`. "5 < 6" gibi
+#: düz metindeki küçüktür işareti etiket sayılmaz.
+_ETIKET_IZI = re.compile(r"<[a-zA-Z/!]")
+_BOS_SATIR = re.compile(r"\r?\n[ \t]*\r?\n+")
+
+
+def duz_metni_paragrafla(ham: str) -> str:
+    """Düz metin gövdeyi `<p>` paragraflarına çevirir (Paket H, 19 Ekim 2026).
+
+    Panel formunun gövde alanı düz bir metin kutusu; editör paragrafları boş
+    satırla ayırıyor. Temizleyici etiketsiz metni tek parça kaçırıyordu ve
+    sayfada tek paragraf görünüyordu (DEGERLENDIRME-2026-10, full stack).
+
+    * **Etiket taşıyan gövdeye dokunulmaz** — arşivin 1 milyon gövdesi HTML.
+    * Boş satır paragraf sınırı, tek satır sonu `<br>`.
+    * Metin kaçırılır; sonuç yine `govde_temizle`den geçer, yani beyaz
+      liste dışına çıkan hiçbir şey üretilmez.
+
+    Yayın kapısının paragraf sayımı (`yayin_kapisi.paragraf_sayisi`) düz
+    metinde de boş satırı sayıyor; çeviri o sayıyı değiştirmez.
+    """
+    if not ham or _ETIKET_IZI.search(ham):
+        return ham
+    bloklar = [b.strip() for b in _BOS_SATIR.split(ham.strip()) if b.strip()]
+    return "".join(
+        "<p>" + "<br>".join(escape(s.strip(), quote=False)
+                            for s in blok.splitlines() if s.strip()) + "</p>"
+        for blok in bloklar)
+
+
 def govde_temizle(ham: str) -> str:
     """Beyaz listeye indirgenmiş, şablonda `|safe` ile basılabilir HTML."""
     if not ham:
@@ -184,3 +215,63 @@ def metin_duzelt(ham: str, bosluk: bool = False) -> str:
     metin = metin.replace("i̇", "i")
     metin = GORUNMEZ.sub("", metin)
     return BOSLUKLAR.sub(" ", metin) if bosluk else metin
+
+
+# ===========================================================================
+# Gömülü kod — beyaz liste (Paket H, 19 Ekim 2026)
+#
+# Panelin "Gömülü kod" alanı (§4 alan 23-26) serbest HTML kabul ediyor ve
+# sitede hiç okunmuyordu. Ham basmak betik enjeksiyonu demek; panel
+# kullanıcısının hesabı ele geçerse okurun tarayıcısı da geçer.
+#
+# KARAR: kod BASILMAZ, yalnız içinden tanınan üç kalıbın KİMLİĞİ çıkarılır
+# ve bağlantı kartı bizim şablonumuzdan kurulur:
+#
+#     YouTube    embed / watch / shorts / youtu.be → 11 karakterlik video kimliği
+#     X          twitter.com|x.com/<hesap>/status/<sayı>
+#     Instagram  instagram.com/(p|reel|tv)/<kod>
+#
+# Gerçek gömme (iframe, platform betiği) YAPILMIYOR: CSP `frame-src 'self'`
+# ve betik kökeni yalnız site; üçüncü taraf çerçevesi okurun tarayıcısına
+# platform çerezi bırakır (KVKK). İkisi de bu paketin kararı değil —
+# → devops-altyapi-muhendisi (CSP) ve hukuk-guvenlik-uyum-uzmani (çerez).
+# Kart internetsiz de açılır ve hiçbir dış kaynak yüklemez.
+# ===========================================================================
+
+_GOMULU_KALIPLARI = (
+    ("youtube", re.compile(
+        r"(?:youtube(?:-nocookie)?\.com/(?:embed/|shorts/|watch\?(?:[^\"'\s<>]*&)?v=)"
+        r"|youtu\.be/)([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])", re.I)),
+    ("x", re.compile(
+        r"(?:twitter|x)\.com/([A-Za-z0-9_]{1,15})/status(?:es)?/(\d{5,25})", re.I)),
+    ("instagram", re.compile(
+        r"instagram\.com/(p|reel|tv)/([A-Za-z0-9_-]{5,40})", re.I)),
+)
+GOMULU_EN_COK = 5
+
+
+def gomulu_kartlari(ham: str) -> list[dict]:
+    """Gömülü koddan tanınan içerikler: `[{"tur", "adres", "etiket"}]`.
+
+    Tanınmayan her şey düşer. Adres girdiden kopyalanmaz, kimlikten
+    yeniden kurulur — nitelik enjeksiyonu yolu kalmaz.
+    """
+    if not ham:
+        return []
+    kartlar, gorulen = [], set()
+    for tur, kalip in _GOMULU_KALIPLARI:
+        for m in kalip.finditer(ham):
+            if tur == "youtube":
+                adres = f"https://www.youtube.com/watch?v={m.group(1)}"
+                etiket = "Videoyu YouTube'da izleyin"
+            elif tur == "x":
+                adres = f"https://x.com/{m.group(1)}/status/{m.group(2)}"
+                etiket = f"@{m.group(1)} gönderisini X'te görün"
+            else:
+                adres = f"https://www.instagram.com/{m.group(1).lower()}/{m.group(2)}/"
+                etiket = "Gönderiyi Instagram'da görün"
+            if adres in gorulen:
+                continue
+            gorulen.add(adres)
+            kartlar.append({"tur": tur, "adres": adres, "etiket": etiket})
+    return kartlar[:GOMULU_EN_COK]

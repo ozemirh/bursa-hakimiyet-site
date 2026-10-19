@@ -499,3 +499,18 @@ BH_OTURUM_MUTLAK_SANIYE = int(os.environ.get("BH_OTURUM_MUTLAK_SAAT", "8")) * 36
 BH_OTURUM_BOSTA_SANIYE = int(os.environ.get("BH_OTURUM_BOSTA_DAKIKA", "60")) * 60
 SESSION_COOKIE_AGE = BH_OTURUM_MUTLAK_SANIYE
 MIDDLEWARE = MIDDLEWARE + ["icerik.giris_guvenligi.OturumSuresi"]
+
+
+# --- Anasayfa dizilimi (Paket H, 19 Ekim 2026) ------------------------------
+#
+# Ayrıntı ve gerekçe: icerik/anasayfa_dizilimi.py.
+#
+#   BH_MANSET_BURSA_ORANI    ilk 15 manşetin en az kaçı Bursa haberi olsun
+#                            ("10/15" biçiminde; varsayılan 10/15). Bayraklı
+#                            haberler sayıya dâhildir; düşüş kuralı eksiği
+#                            Bursa haberiyle tamamlar.
+#   BH_MANSET_BAYRAK_SAAT    bayrağın öncelik süresi (varsayılan 48 saat).
+#                            Süresi geçen bayrak silinmez, yalnız önceliğini
+#                            yitirir ve haber düşüş havuzunda sıralanır.
+MANSET_BURSA_ORANI = os.environ.get("BH_MANSET_BURSA_ORANI", "10/15").strip() or "10/15"
+MANSET_BAYRAK_SAAT = int(os.environ.get("BH_MANSET_BAYRAK_SAAT", "48"))

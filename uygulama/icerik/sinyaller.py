@@ -31,9 +31,10 @@ def _surum(**_):
 def _kategori_degisti(**_):
     from taksonomi import slug_eslemesi
 
-    from . import baglam, onbellek
+    from . import anasayfa_dizilimi, baglam, onbellek
     slug_eslemesi.sifirla()
     onbellek.sil(baglam.MENU_ANAHTARI)
+    onbellek.sil(anasayfa_dizilimi.BURSA_KATEGORI_ANAHTARI)
     onbellek.surumu_artir()
 
 

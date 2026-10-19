@@ -65,6 +65,120 @@ MOBIL_BANT = {"BURSA", "BURSASPOR", "GÜNDEM", "SPOR"}
 SON_DAKIKA_ADET = 7
 
 
+class BantKalemi:
+    """Bandın tek satırı — kaynağı `SonDakika` kaydı ya da haber olabilir.
+
+    Şablon yalnız bu üç alanı okur; iki kaynağın alan adları farklı
+    (`baslangic` / `yayin_zamani`, `yol` / `get_absolute_url`).
+    """
+
+    __slots__ = ("baslik", "yol", "zaman")
+
+    def __init__(self, baslik, yol, zaman):
+        self.baslik, self.yol, self.zaman = baslik, yol, zaman
+
+
+def guvenli_bant_adresi(adres: str) -> bool:
+    """Serbest adres yalnız site içi yol (`/…`, `//` değil) ya da http(s).
+
+    `SonDakika.adres` serbest metin; `javascript:` gibi bir şema bağlantıya
+    basılırsa okurun tarayıcısında çalışırdı. Form da aynı kuralla reddeder
+    (`formlar.SonDakikaForm.clean_adres`); burası eski kayda karşı ikinci kat.
+    """
+    adres = (adres or "").strip()
+    if adres.startswith("/"):
+        return not adres.startswith("//")
+    return adres.lower().startswith(("https://", "http://"))
+
+
+class SonDakikaBandi:
+    """Bandın kalemleri — TEMBEL: sorgu ancak şablon bandı çizerken açılır.
+
+    Bağlam işlemcisi HER sayfada çalışır ama bant yalnız ray taşıyan
+    sayfalarda (anasayfa, haber detay, köşe yazısı) çizilir; eskiden de
+    tembel bir QuerySet'ti. Liste gibi davranır (`son_dakika.0`, döngü,
+    `|slice`), ayrıca `etiket` ve `canli` taşır.
+    """
+
+    def __init__(self):
+        self._deger = None
+
+    def _kur(self):
+        if self._deger is None:
+            self._deger = _son_dakika_kur()
+        return self._deger
+
+    @property
+    def kalemler(self) -> list:
+        return self._kur()[0]
+
+    @property
+    def etiket(self) -> str:
+        return self._kur()[1]
+
+    @property
+    def canli(self) -> bool:
+        return self._kur()[2]
+
+    def __iter__(self):
+        return iter(self.kalemler)
+
+    def __len__(self):
+        return len(self.kalemler)
+
+    def __bool__(self):
+        return bool(self.kalemler)
+
+    def __getitem__(self, i):
+        return self.kalemler[i]
+
+
+def son_dakika_bandi() -> SonDakikaBandi:
+    return SonDakikaBandi()
+
+
+def _son_dakika_kur() -> tuple:
+    """Bandın kalemleri ve etiketi (19 Ekim 2026, Paket H).
+
+    Önceden bant `SonDakika` tablosunu HİÇ okumuyordu, en yeni yedi haberi
+    "SON DAKİKA" diye basıyordu (DEGERLENDIRME-2026-10 §3 bulgu 5). Şimdi:
+
+    1. Masanın kayıtları (`SonDakika.bandakiler`: etkin, başlamış, süresi
+       dolmamış), sıra alanı ve başlangıçla. Bağlı haber yayından
+       çekildiyse ve serbest adres yoksa satır düşer — okur 404'e
+       gönderilmez. Etiket **SON DAKİKA**, "CANLI" pili yanar.
+    2. Tablo boşsa son haberler — ama etiket **SON HABERLER** ve pil
+       yok: masanın vermediği "son dakika" kararını site vermez.
+       Nöbetçi eczane servis haberi (§41) bu listeye GİRMEZ; günlük
+       otomatik kayıt bant için gürültü. Python'da elenir: `slug LIKE`
+       koşulu SQLite'ta indeks sırasını bozabiliyor (sayımı 2,7 sn
+       ölçüldü); servis haberi günde bir tane, iki fazla satır yeter.
+    """
+    from .anasayfa_dizilimi import servis_haberi_mi
+    from .models import SonDakika
+
+    kalemler = []
+    for kayit in (SonDakika.bandakiler()
+                  .select_related("haber")[:SON_DAKIKA_ADET * 2]):
+        if not kayit.adres and kayit.haber_id and not kayit.haber.yayinda_mi():
+            continue
+        yol = kayit.yol
+        if not guvenli_bant_adresi(yol):
+            continue
+        kalemler.append(BantKalemi(kayit.baslik, yol, kayit.baslangic))
+        if len(kalemler) == SON_DAKIKA_ADET:
+            break
+    if kalemler:
+        return kalemler, "SON DAKİKA", True
+
+    # Adres slug'ı süreç içi eşlemeden (`slug_eslemesi`): kategori
+    # birleştirmesine gerek yok.
+    haberler = [h for h in Haber.yayindakiler()[:SON_DAKIKA_ADET + 2]
+                if not servis_haberi_mi(h)]
+    return ([BantKalemi(h.baslik, h.get_absolute_url(), h.yayin_zamani)
+             for h in haberler[:SON_DAKIKA_ADET]], "SON HABERLER", False)
+
+
 def site(request):
     yol = request.path
 
@@ -101,8 +215,8 @@ def site(request):
         "tum_kategoriler": _tum_kategoriler(),
         "kunye_arsiv": _kunye_arsiv(),
         # Son dakika ÖNBELLEKLENMEZ: gazetede eski manşet kabul edilemez
-        # (§21). Sorgu `haber_okur_kismi` indeksinden ilk 7 satırdır.
-        "son_dakika": Haber.yayindakiler().select_related("kategori")[:SON_DAKIKA_ADET],
+        # (§21). Önce masanın `SonDakika` kayıtları, yoksa son haberler.
+        "son_dakika": son_dakika_bandi(),
         "ilceler": _ilceler(),
         "reklam_dugmesi": sunum_araci_mi(request),
         # Reklam demo agi. Bayrak kapaliyken taban.html hicbir dis betik

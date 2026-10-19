@@ -4,9 +4,9 @@ Hepsi veritabanından render eder; şablonlarda gömülü haber başlığı ya d
 gövdesi yoktur (F4 bitti ölçütü, madde a).
 
 Anasayfa düzeni URUN-PLANI.md §1'deki bileşen sözleşmesine bağlıdır:
-manşet **5 slayt + 10 başlıklık liste**, ikinci alan **5**, dörtlü kutucuk
-**4**, haber kutuları **11** (biri geniş). Sayılar burada sabit durur ki
-şablon hâli aynı ölçümü versin.
+manşet **15 slayt + 10 başlıklık liste**, ikinci alan **5**, dörtlü kutucuk
+**4**, haber kutuları **11** (biri geniş). Sayılar `anasayfa_dizilimi`nde
+sabit durur ki şablon hâli ve panelin manşet ekranı aynı ölçümü versin.
 
 30 Ağustos 2026 (§35): manşet 15'ten 5'e indi. Plan §4 madde 1 ölçümü
 "5'ten sonrası neredeyse görülmüyor" diyordu; kalan 10 kayıt slaytın
@@ -38,23 +38,16 @@ from . import okunma, onbellek
 from .models import Haber, ResmiIlan
 from .sayfa_onbellegi import sayfa_onbellegi
 
-# Manşet slaydındaki sayfa sayısı. §35'te 15'ten 5'e inmişti; 30 Ağustos
-# 2026'da kullanıcı kararıyla yeniden 15 oldu.
-MANSET = 15
-# Slaytın altındaki "GÜNÜN MANŞETLERİ" listesi. Slayta girmeyen 10 kayıt,
-# taranabilir bir başlık dizisine dönüyor — dilim slayttan SONRA alındığı
-# için liste hiçbir manşeti tekrarlamaz.
-MANSET_LISTE = 10
-IKINCIL = 5
-DORTLU = 4
-# 11 = 1 geniş + 10 kart. 10 kalsaydı ilk kart iki sütuna yayılınca son
-# hücre öksüz kalıyordu (iki sütunlu ızgarada 1 + 9 tek satırı yarım bırakır).
-KUTU = 11
-# "En çok okunanlar" rayı. 29 Ağustos görsel denetimi: `havuz[:5]` manşetin
-# ilk beşinin birebir kopyasıydı — aynı başlık sayfada üç kez görünüyordu
-# (slayt, son dakika şeridi, ray). Kutu artık havuzun manşet/ikincil/dörtlü/
-# kutu dilimlerinden SONRAKİ beş kaydını alır.
-EN_COK = 5
+# Yuva sayıları (§1 bileşen sözleşmesi) 19 Ekim 2026'dan beri dizilim
+# modülünde duruyor; anasayfa ve panelin manşet ekranı aynı sayıyı okusun:
+#
+#   MANSET 15        manşet slaytı (§35'te 5'e inmiş, 30 Ağustos'ta 15)
+#   MANSET_LISTE 10  slaytın altındaki "GÜNÜN MANŞETLERİ"
+#   IKINCIL 5        yan slayt (kare manşet) · DORTLU 4 (tepe manşet)
+#   KUTU 11          1 geniş + 10 kart (10'da son hücre öksüz kalıyordu)
+#   EN_COK 5         "en çok okunanlar"; sayfadaki hiçbir kaydı tekrarlamaz
+from .anasayfa_dizilimi import DORTLU, EN_COK, IKINCIL, KUTU, MANSET, MANSET_LISTE  # noqa: E402,F401
+from . import anasayfa_dizilimi  # noqa: E402
 # Anasayfada gösterilen resmî ilan adedi. İki sütunda dört satır: bölüm
 # haber akışının önüne geçmeden süzgeci anlamlı kılacak kadar kayıt.
 ILAN = 8
@@ -151,26 +144,19 @@ def _liste(sinirsiz=False):
 
 @sayfa_onbellegi
 def anasayfa(request):
-    """§1'deki sırayı besler. Tek sorgudan dilimlenir; sayılar sözleşmedendir.
+    """§1'deki sırayı besler; sayılar sözleşmedendir.
 
-    Manşet ile aşağıdaki bloklar aynı havuzdan gelir ve **tekrar etmemeleri**
-    gerekir; bu yüzden tek listeden ardışık dilimler alınır.
+    19 Ekim 2026 (Paket H): yuvalar masanın manşet bayraklarından ve "önce
+    Bursa" düşüş kuralından dolar (`icerik/anasayfa_dizilimi.py`). Panelin
+    manşet ekranı AYNI işlevi çağırır. Bloklar birbirini **tekrar etmez**:
+    dizilim her haberi tek yuvaya yerleştirir.
     """
-    gerekli = MANSET + MANSET_LISTE + IKINCIL + DORTLU + KUTU + EN_COK
-    havuz = list(_liste()[:gerekli])
-
-    kes = 0
-    def al(adet):
-        nonlocal kes
-        parca = havuz[kes:kes + adet]
-        kes += adet
-        return parca
-
-    manset = al(MANSET)
-    manset_liste = al(MANSET_LISTE)
-    ikincil = al(IKINCIL)
-    dortlu = al(DORTLU)
-    kutular = al(KUTU)
+    dizilim = anasayfa_dizilimi.kur()
+    manset = dizilim.manset
+    manset_liste = dizilim.manset_liste
+    ikincil = dizilim.ikincil
+    dortlu = dizilim.dortlu
+    kutular = dizilim.kutular
 
     # "En çok okunanlar" — artık gerçek sayaçtan (icerik/okunma.py).
     # Sayaç yeterli veriyi toplayana kadar liste eski kuralına düşer:
@@ -180,8 +166,8 @@ def anasayfa(request):
     # veriyle daha da gerekli: en çok okunan haber çoğu zaman manşetin
     # kendisidir ve liste onu tekrarlarsa 29 Ağustos'ta ölçülen kusur
     # (aynı başlık sayfada üç kez) geri gelirdi.
-    kullanilan = [h.pk for h in havuz[:kes]]
-    en_cok = okunma.en_cok(_liste(), EN_COK, haric=kullanilan) or al(EN_COK)
+    kullanilan = dizilim.kullanilan
+    en_cok = okunma.en_cok(_liste(), EN_COK, haric=kullanilan) or dizilim.kalan[:EN_COK]
 
     # Yazar kuşağı (§35): sağ raydaki beş satırlık silik liste, tam
     # genişlikte portreli bir şeride dönüştü — 10 yazar sığıyor.
