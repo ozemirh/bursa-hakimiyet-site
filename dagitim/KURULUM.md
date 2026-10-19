@@ -20,10 +20,10 @@ okur ──► (Cloudflare, isteğe bağlı) ──► nginx :443
                                          │  /static/sitemap/*  → disk (özetsiz, 5 dk) ↘ yoksa Django
                                          │  /arsiv-gorsel/*    → disk (30 gün)
                                          │  /gorsel/*          → disk türev ↘ yoksa Django + 30 gün önbellek
-                                         │  anonim HTML        → 10 sn mikro önbellek → gunicorn
+                                         │  okur HTML          → gunicorn (uygulama içi 30 sn sayfa önbelleği; nginx önbelleği KAPALI, §7a)
                                          │  /panel /yonetim    → önbelleksiz → gunicorn
                                          ▼
-                              gunicorn (systemd, unix soketi, 2×çekirdek+1 sync işçi)
+                              gunicorn (systemd, 127.0.0.1:8001, 2×çekirdek+1 sync işçi)
                                          │
                               Django 5.2 ─┼─ PostgreSQL 16 (yerel)
                                          └─ canlı veri JSON (systemd timer'lar yazar, site okur)
@@ -34,7 +34,7 @@ okur ──► (Cloudflare, isteğe bağlı) ──► nginx :443
 | Uygulama sunucusu | gunicorn sync | Sunucu render, kısa istek; nginx tamponlar. Async gerekmez. |
 | Ters vekil | nginx | Statik/görsel diskten, mikro önbellek, TLS, hız sınırı. |
 | Statik | collectstatic + WhiteNoise depolaması | Özetli ad + .gz/.br derleme anında; nginx `gzip_static` ile verir. WhiteNoise nginx'siz kurulumda da aynı işi yapar. |
-| Önbellek | nginx mikro önbellek (HTML) + Django CACHES (paket A) | Trafik günü yükünü nginx emer. |
+| Önbellek | Django CACHES (paket A): `default` veri + `sayfa` 30 sn HTML; Redis (`BH_REDIS`) ya da dosya | Okunma sayımı bu katmanda; nginx HTML önbelleği varsayılan kapalı (§7a). |
 | Veritabanı | PostgreSQL, aynı makinede | Tek makine ölçeği; ağ gecikmesi yok. |
 | Zamanlanmış işler | systemd timer | `Persistent=true` kaçan koşuyu telafi eder; oturuma ve pile bağlı değil. |
 | Günlük | journald (uygulama, timer) + nginx dosyası | `journalctl -u bursahakimiyet`. |
@@ -70,7 +70,7 @@ sudo timedatectl set-timezone Europe/Istanbul
 # hizmet kullanıcısı ve dizinler
 sudo adduser --system --group --home /srv/bursahakimiyet bh
 sudo usermod -aG www-data bh
-sudo mkdir -p /srv/bursahakimiyet/{kod,statik,sitemap,canli-veri,arsiv/gorseller,turev,medya,gunluk}
+sudo mkdir -p /srv/bursahakimiyet/{kod,statik,sitemap,canli-veri,arsiv/gorseller,turev,medya,gunluk,onbellek}
 sudo chown -R bh:bh /srv/bursahakimiyet
 sudo chmod 0755 /srv/bursahakimiyet /srv/bursahakimiyet/{statik,sitemap,arsiv,turev}
 
@@ -115,6 +115,8 @@ sudoedit /etc/bursahakimiyet/ortam
 #   BH_CANLI_VERI_KOK=/srv/bursahakimiyet/canli-veri   BH_CANLI_KOK=(aynısı)
 #   BH_SITE_HARITASI_KOK=/srv/bursahakimiyet/sitemap
 #   BH_REKLAM_TEST=0
+#   BH_GUVENILIR_VEKIL=127.0.0.1,::1          ZORUNLU (yoksa bütün okurlar tek IP)
+#   BH_ONBELLEK_KOK=/srv/bursahakimiyet/onbellek   (ya da BH_REDIS=redis://127.0.0.1:6379/0 + pip install redis)
 
 cd /srv/bursahakimiyet/kod/uygulama
 sudo -u bh sh -c 'set -a; . /etc/bursahakimiyet/ortam; set +a;
@@ -167,6 +169,8 @@ etkinleştirme komutu:
 ```bash
 sudo systemctl enable --now bh-canli-sik.timer bh-canli-saatlik.timer \
      bh-canli-gunluk.timer bh-site-haritasi.timer
+# BH_OKUNMA_YAZIM=komut seçildiyse okunma kuyruğu dakikada bir:
+sudo systemctl enable --now bh-okunma-bosalt.timer
 # haber yazan iş ayrıca karar ister (veritabanına günlük eczane haberi açar):
 sudo systemctl enable --now bh-canli-haber.timer
 systemctl list-timers 'bh-*'
@@ -184,11 +188,29 @@ Bu Windows makinesinde Görev Zamanlayıcı görevleri **kapalı kalır**
 | Canlı veri | `/_durum` → `canli_veri.bayat` | Döviz 24 sa, hava 3 sa (dosyadaki eşik) |
 | Zamanlanmış iş | `OnFailure=bh-uyari@` → journald `crit` + `BH_UYARI_ADRESI` | Her başarısızlık |
 | Disk | `/_durum` → `disk` | < %10 ya da < 10 GB uyarı, < %2 → 503 |
-| Önbellek isabeti | `X-Onbellek` başlığı; `awk` ile nginx günlüğü | Trafik gününde HIT oranı ≥ %90 hedef |
+| Önbellek isabeti | Uygulama sayfa önbelleği (paket A); nginx katmanı açılırsa `X-Onbellek` başlığı | Trafik gününde HIT oranı ≥ %90 hedef |
 | Hatalar | `journalctl -u bursahakimiyet -p err`, `/var/log/nginx/bh.error.log` | — |
 
 `/_durum` yetkisize yalnız `{"genel": …}` döner; ayrıntı personel oturumu ya
 da anahtarla. Önbelleğe alınmaz.
+
+## 7a. Önbellek katmanları ve okunma sayımı
+
+Uygulamanın kendi sayfa önbelleği var (paket A, `CACHES["sayfa"]`, 30 sn,
+haber kaydında anında geçersizleşir) ve **okunma sayımı o katmanda**
+yapılıyor: önbellekten dönen sayfa da Django'dan geçtiği için sayılır.
+
+nginx'teki mikro önbellek (`snippets/bh-mikro-onbellek.conf`) bunun üstüne
+ikinci bir katman olur ve nginx'ten dönen istek Django'ya hiç ulaşmaz →
+**okunma sayısı düşer**. Bu yüzden `bursahakimiyet.conf`ta `include`
+satırları **yorumlu, varsayılan KAPALI**.
+
+Açmanın koşulu: sayımın HTML isteğinden ayrılması — sayfa yüklenince
+tarayıcının çağırdığı küçük bir işaret ucu (ör. `POST /okunma/<id>`,
+önbelleksiz). Öneri → `backend-gelistirici` (paket A). O gelene kadar trafik
+günü yükünü uygulama içi önbellek (Redis önerilir: süreçler arası paylaşılır)
+ve `proxy_cache_use_stale` olmadan gunicorn taşır; deprem/seçim gecesi için
+bu kararın yeniden ele alınması gerekir.
 
 ## 8. Güncelleme ve kod geri dönüşü
 
@@ -222,7 +244,8 @@ kaynakla eşleşiyor; (c) geri dönüş **bir kez denenmiş**.
 6. **Geri dönüş provası** (F8/c): hazırlıkta "kesim → geri dön" bir kez
    yapılır, süre ölçülür (§10).
 7. Yük denemesi: anasayfa ve 20 haber adresine 200 eşzamanlı istek;
-   p95 ve `X-Onbellek` HIT oranı yazılır.
+   p95 ve önbellek isabet oranı yazılır; okunma sayısı istek sayısıyla
+   karşılaştırılır.
 
 **T−2**
 8. DNS kayıtlarının TTL'i 300 sn'ye indirilir (eski değer not edilir).

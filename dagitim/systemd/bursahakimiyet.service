@@ -36,7 +36,7 @@ ProtectHome=yes
 ProtectKernelTunables=yes
 ProtectControlGroups=yes
 RestrictSUIDSGID=yes
-ReadWritePaths=/srv/bursahakimiyet/turev /srv/bursahakimiyet/medya /srv/bursahakimiyet/gunluk
+ReadWritePaths=/srv/bursahakimiyet/turev /srv/bursahakimiyet/medya /srv/bursahakimiyet/gunluk /srv/bursahakimiyet/onbellek
 
 [Install]
 WantedBy=multi-user.target

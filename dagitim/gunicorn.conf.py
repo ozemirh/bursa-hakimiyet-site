@@ -11,8 +11,10 @@ sınırlıyor ve `timeout` takılan işçiyi 30 sn'de öldürüp yeniler.
 import multiprocessing
 import os
 
-bind = "unix:/run/bursahakimiyet/gunicorn.sock"
-umask = 0o007  # soket yalnız bh kullanıcısı ve www-data grubuna açık
+# TCP, yalnız yerel arayüz. Unix soketi yerine TCP: Django'nun okunma
+# sayacı vekil başlığına yalnız REMOTE_ADDR güvenilir vekilse bakar
+# (BH_GUVENILIR_VEKIL=127.0.0.1,::1); unix soketinde REMOTE_ADDR boş gelir.
+bind = "127.0.0.1:8001"
 
 workers = int(os.environ.get("BH_ISCI", multiprocessing.cpu_count() * 2 + 1))
 worker_class = "sync"

@@ -49,5 +49,5 @@ sudo systemctl reload bursahakimiyet
 sleep 3
 curl -fsS -m 10 -H "Host: $ALAN" http://127.0.0.1/_durum >/dev/null
 curl -fsS -m 30 -o /dev/null -H "Host: $ALAN" -H "X-Forwarded-Proto: https" \
-  --unix-socket /run/bursahakimiyet/gunicorn.sock http://localhost/
+  http://127.0.0.1:8001/
 echo "yayinda: $YENI (geri almak icin: yayinla.sh $ONCEKI)"

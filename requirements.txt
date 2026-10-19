@@ -28,9 +28,10 @@ Brotli==1.2.0
 # Görsel türevleri (/gorsel/…, paket D).
 Pillow==13.0.0
 
-# Paylaşılan önbellek (CACHES, isteğe bağlı). Yalnız Redis'li bir önbellek
-# ayarı kullanılırsa gerekir; kurulu durması zarar vermez.
-redis==8.1.0
+# Paylaşılan önbellek İSTEĞE BAĞLI: yalnız BH_REDIS verilirse gerekir
+# (settings "başarım" bloğu; yoksa dosya önbelleği). Redis seçilirse:
+#   python -m pip install redis==8.1.0
+# redis==8.1.0
 
 # Uygulama sunucusu — YALNIZ Linux üretimi. Windows'ta çalışmaz (fork),
 # işaretle kurulmaz; geliştirmede `runserver` kullanılır.

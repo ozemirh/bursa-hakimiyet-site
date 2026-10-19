@@ -1,0 +1,24 @@
+# /etc/systemd/system/bh-okunma-bosalt.service — okunma kuyruğunu veritabanına
+# taşır (`manage.py okunma_bosalt`, paket A). Yalnız BH_OKUNMA_YAZIM=komut
+# iken anlamlı; "istek" kipinde kuyruk boştur ve iş hiçbir şey yapmaz.
+# YALNIZ DOSYA, kurulmadı.
+
+[Unit]
+Description=Bursa Hakimiyet okunma kuyrugu bosaltma
+After=postgresql.service
+OnFailure=bh-uyari@%n.service
+
+[Service]
+Type=oneshot
+User=bh
+Group=bh
+EnvironmentFile=/etc/bursahakimiyet/ortam
+WorkingDirectory=/srv/bursahakimiyet/kod/uygulama
+ExecStart=/srv/bursahakimiyet/venv/bin/python manage.py okunma_bosalt
+TimeoutStartSec=5min
+Nice=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/bursahakimiyet/onbellek
