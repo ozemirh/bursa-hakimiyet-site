@@ -437,7 +437,13 @@ yaşanmıştı.{% endcomment %}
             yüksekliğine döner.{% endcomment %}
             <div class="servis-dilim" id="panel-vakit">
               <h3>NAMAZ VAKİTLERİ{% if namaz.yer.ad %}<span class="yer">{{ namaz.yer.ad }}</span>{% endif %}</h3>
-              {% if namaz %}
+              {% comment %}19 Ekim 2026: vakitler BUGÜNÜN satırından
+              (`namaz.bugun`, `canli.namaz_verisi`) — `gunler.0` değil. Site
+              vakti istek anında hesaplıyor; bugünün satırı yalnız elle
+              giriş tablosu bittiğinde eksik kalır ve o zaman panel tarih
+              uydurmaz, "güncel değil" der.{% endcomment %}
+              {% if namaz and not namaz.bugun %}<p class="bos">Vakit bilgisi güncel değil.</p>
+              {% elif namaz %}
                 <figure class="vakit-foto">
                   {% comment %}Fotoğraf 31 Ağustos 2026'da kullanıcı isteğiyle
                   değişti. Eskisi (`yesil.jpg`) minarenin ŞEREFESİNE yakın bir
@@ -456,13 +462,13 @@ yaşanmıştı.{% endcomment %}
                   <figcaption class="vakit-simdi">
                     <span class="etiket">ŞİMDİ</span>
                     <b>{{ namaz.vakit_adlari|sozluk:namaz_simdiki }}</b>
-                    <span class="saat">{{ namaz.gunler.0.vakitler|sozluk:namaz_simdiki }}</span>
+                    <span class="saat">{{ namaz.bugun.vakitler|sozluk:namaz_simdiki }}</span>
                   </figcaption>
                   {% endif %}
                 </figure>
                 <ul class="vakit">
                   {% for anahtar, ad in namaz.vakit_adlari.items %}
-                    <li{% if anahtar == namaz_simdiki %} class="simdi"{% endif %}><span>{{ ad }}</span><span>{{ namaz.gunler.0.vakitler|sozluk:anahtar }}</span></li>
+                    <li{% if anahtar == namaz_simdiki %} class="simdi"{% endif %}><span>{{ ad }}</span><span>{{ namaz.bugun.vakitler|sozluk:anahtar }}</span></li>
                   {% endfor %}
                 </ul>
               {% else %}<p class="bos">Namaz vakitleri şu an alınamıyor.</p>{% endif %}
@@ -546,16 +552,21 @@ yaşanmıştı.{% endcomment %}
               (18-20 satır) ve maç altta kalsa okur onu hiç görmezdi. Skor
               yalnız maç oynandıysa basılır; oynanmadıysa tarih ve saat
               gösterilir — kaynakta olmayan sonuç uydurulmaz.{% endcomment %}
-              {% if puan_takip.mac %}{% with mac=puan_takip.mac %}
+              {% comment %}19 Ekim 2026: maç `canli.mac_takvimi`nden (fikstürle
+              aynı kaynak) ve `durum` taşır: sonuc · bekliyor · bilgi_yok.
+              Tarihi geçmiş, skoru olmayan maç "bekliyor" diye basılmaz;
+              bayat veride tarih ve "güncel değil" yazılır.{% endcomment %}
+              {% if puan_takip.mac %}{% with mac=puan_takip.mac t=puan_takip.tazelik %}
               <div class="skor">
-                <span class="hafta">{{ puan_takip.lig_adi }}{% if puan_takip.hafta %} &middot; {{ puan_takip.hafta }}. hafta{% endif %}</span>
+                <span class="hafta">{{ puan_takip.lig_adi }}{% if mac.hafta %} &middot; {{ mac.hafta }}. hafta{% elif puan_takip.hafta %} &middot; {{ puan_takip.hafta }}. hafta{% endif %}</span>
                 <div class="takimlar">
                   <b{% if mac.ev_kulup_id == puan_takip.kulup_id %} class="bizim"{% endif %}>{{ mac.ev|baslikla }}</b>
-                  {% if mac.skor_var %}<span class="sonuc">{{ mac.ev_gol }} - {{ mac.deplasman_gol }}</span>
+                  {% if mac.durum == "sonuc" %}<span class="sonuc">{{ mac.ev_gol }} - {{ mac.deplasman_gol }}</span>
+                  {% elif mac.durum == "bilgi_yok" %}<span class="sonuc bekliyor" aria-label="sonuç bilgisi yok">&ndash;</span>
                   {% else %}<span class="sonuc bekliyor">{{ mac.saat|default:"&ndash;" }}</span>{% endif %}
                   <b{% if mac.deplasman_kulup_id == puan_takip.kulup_id %} class="bizim"{% endif %}>{{ mac.deplasman|baslikla }}</b>
                 </div>
-                <span class="durum">{% if mac.skor_var %}Tamamlandı &middot; {% endif %}{% if mac.tarih_g %}<time datetime="{{ mac.tarih_g|date:"Y-m-d" }}">{{ mac.tarih_g|date:"j F Y, l" }}</time>{% else %}{{ mac.tarih }}{% endif %}</span>
+                <span class="durum">{% if mac.durum == "sonuc" %}Tamamlandı &middot; {% endif %}{% if mac.tarih_g %}<time datetime="{{ mac.tarih_g|date:"Y-m-d" }}">{{ mac.tarih_g|date:"j F Y, l" }}</time>{% else %}{{ mac.tarih }}{% endif %}{% if mac.durum == "bilgi_yok" %} &middot; <b>güncel bilgi yok</b>{% if t.guncelleme %}, son güncelleme {{ t.guncelleme|date:"j F Y" }}{% endif %}{% elif t.durum != "taze" %} &middot; <b>güncel değil</b>{% if t.guncelleme %}, son güncelleme {{ t.guncelleme|date:"j F Y" }}{% endif %}{% endif %}</span>
                 <span class="konum">{{ puan_takip.ad|baslikla }} &middot; {{ puan_takip.sira }}. sıra &middot; {{ puan_takip.puan }} puan &middot; O{{ puan_takip.oynadi }} G{{ puan_takip.galibiyet }} B{{ puan_takip.beraberlik }} M{{ puan_takip.maglubiyet }} &middot; Av {{ puan_takip.averaj }}</span>
               </div>
               {% endwith %}{% endif %}
@@ -564,6 +575,7 @@ yaşanmıştı.{% endcomment %}
               sekmeleri `.sek` öğesinin ANA öğesinde arıyor; sarmalayıcı
               olmasa lig sekmeleri panellerin içindeki grup sekmelerini de
               toplar ve iki sekme kümesi birbirine karışırdı.{% endcomment %}
+              {% if puan_ligler and puan.tazelik.durum != "taze" %}<p class="canli-bayat">Puan durumu {{ puan.tazelik.metin }}.</p>{% endif %}
               <div class="lig-sek">
                 <div class="sek" role="tablist" aria-label="Lig seçimi">
                   {% for lig in puan_ligler %}<button type="button" role="tab" id="sek-{{ lig.anahtar }}" aria-selected="{{ lig.acik|yesno:"true,false" }}" aria-controls="puan-{{ lig.anahtar }}" tabindex="{{ lig.acik|yesno:"0,-1" }}">{{ lig.ad|kisa_lig }}</button>{% endfor %}
@@ -654,7 +666,11 @@ yaşanmıştı.{% endcomment %}
            adrese bağlanmak sayfanın internetsiz açılması kuralına aykırı.
            Kaynakta olmayan alan (tür, yaş sınırı, dağıtımcı) hiç basılmaz —
            uydurma değer yazmaktansa boş bırakmak doğru.{% endcomment %}
+        {% comment %}19 Ekim 2026: geçmiş tarihli film `vizyon_filmleri`
+           içinde süzülür; liste bayatsa tarihiyle "güncel değil" denir,
+           kalan filmlerin vizyon tarihi dağıtımcıda değişmiş olabilir.{% endcomment %}
         <div class="kutu-ic">
+          {% if vizyon and vizyon.tazelik.durum != "taze" %}<p class="canli-bayat">Vizyon takvimi {{ vizyon.tazelik.metin }}; tarihleri sinemadan doğrulayın.</p>{% endif %}
           {% if vizyon_filmler %}
           <div class="vizyon-izgara">
             {% for f in vizyon_filmler %}
@@ -670,7 +686,7 @@ yaşanmıştı.{% endcomment %}
             {% endfor %}
           </div>
           {% else %}
-          <p class="bos">Vizyon takvimi şu an alınamıyor.</p>
+          <p class="bos">{% if vizyon %}Önümüzdeki haftalar için vizyon bilgisi yok.{% else %}Vizyon takvimi şu an alınamıyor.{% endif %}</p>
           {% endif %}
         </div>
       </section>
