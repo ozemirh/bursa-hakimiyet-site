@@ -674,8 +674,10 @@ def nobetci_eczane(request, slug=""):
     if slug and not Ilce.objects.filter(slug=slug).exists():
         raise Http404("İlçe yok")
     baglam = eczane_sayfa.sayfa_baglami(slug)
-    baglam["yapisal_veri"] = json.dumps(
-        eczane_sayfa.yapisal_veri(baglam), ensure_ascii=False)
+    # `<`, `>`, `&` kaçışlı (icerik/jsonld.py); şablonda `|safe` yok.
+    # Eczane adı/adresi dış kaynaktan geliyor: `</script>` enjeksiyonu.
+    from .jsonld import betik_json
+    baglam["yapisal_veri"] = betik_json(eczane_sayfa.yapisal_veri(baglam))
     return render(request, "nobetci_eczane.html", baglam)
 
 

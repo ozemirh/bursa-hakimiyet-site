@@ -79,4 +79,4 @@ bilmeli.{% endcomment %}
 `taban.html`de o blok kanonik bağlantı için ayrılmış. Yalnız dosyada OLAN
 alanlar yazılır — telefonu olmayan eczanede `telephone` anahtarı hiç
 açılmaz.{% endcomment %}
-{% block betik %}{% if eczaneler %}<script type="application/ld+json">{{ yapisal_veri|safe }}</script>{% endif %}{% endblock %}
+{% block betik %}{% if eczaneler %}<script type="application/ld+json">{{ yapisal_veri }}</script>{% endif %}{% endblock %}
