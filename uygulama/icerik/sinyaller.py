@@ -24,8 +24,11 @@ from django.db.models.signals import post_delete, post_save
 
 
 def _surum(**_):
-    from . import onbellek
+    from . import baglam, onbellek
     onbellek.surumu_artir()
+    # Son dakika bandının masa kayıtları (Paket H): kayıt ya da bağlı
+    # haber değişince bant bir sonraki istekte yeniden kurulur.
+    onbellek.sil(baglam.SON_DAKIKA_ANAHTARI)
 
 
 def _kategori_degisti(**_):

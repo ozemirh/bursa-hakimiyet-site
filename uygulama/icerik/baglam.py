@@ -72,8 +72,6 @@ class BantKalemi:
     (`baslangic` / `yayin_zamani`, `yol` / `get_absolute_url`).
     """
 
-    __slots__ = ("baslik", "yol", "zaman")
-
     def __init__(self, baslik, yol, zaman):
         self.baslik, self.yol, self.zaman = baslik, yol, zaman
 
@@ -137,6 +135,39 @@ def son_dakika_bandi() -> SonDakikaBandi:
     return SonDakikaBandi()
 
 
+#: Masanın son dakika kayıtları kısa süre önbellekte durur (Paket H).
+#: Kayıt (ya da bağlı haber) kaydedilince anahtar ANINDA silinir
+#: (`sinyaller.py`); süre yalnız ZAMANLA değişen şeyler için — başlangıcı
+#: gelen / bitişi geçen kayıt en geç bu kadar sonra görünür. Sayfa mikro
+#: önbelleğiyle aynı süre (§21: "beş dakika eski manşet kabul edilemez").
+#: Gerekçe ölçüm: tablo okunmaya başlayınca ray taşıyan her sayfa (haber
+#: detay, köşe yazısı) bir sorgu daha açıyordu; tablo çoğu zaman BOŞ.
+SON_DAKIKA_ANAHTARI = "bh:son-dakika-kayitlari:v1"
+SON_DAKIKA_TAZE_SANIYE = 30
+
+
+def _masa_kalemleri() -> list:
+    return onbellek.hesapla(SON_DAKIKA_ANAHTARI, _masa_kalemleri_kur,
+                            taze=SON_DAKIKA_TAZE_SANIYE, bayat=SON_DAKIKA_TAZE_SANIYE,
+                            hata=5, yedek=list)
+
+
+def _masa_kalemleri_kur() -> list:
+    from .models import SonDakika
+    kalemler = []
+    for kayit in (SonDakika.bandakiler()
+                  .select_related("haber")[:SON_DAKIKA_ADET * 2]):
+        if not kayit.adres and kayit.haber_id and not kayit.haber.yayinda_mi():
+            continue
+        yol = kayit.yol
+        if not guvenli_bant_adresi(yol):
+            continue
+        kalemler.append(BantKalemi(kayit.baslik, yol, kayit.baslangic))
+        if len(kalemler) == SON_DAKIKA_ADET:
+            break
+    return kalemler
+
+
 def _son_dakika_kur() -> tuple:
     """Bandın kalemleri ve etiketi (19 Ekim 2026, Paket H).
 
@@ -155,19 +186,8 @@ def _son_dakika_kur() -> tuple:
        ölçüldü); servis haberi günde bir tane, iki fazla satır yeter.
     """
     from .anasayfa_dizilimi import servis_haberi_mi
-    from .models import SonDakika
 
-    kalemler = []
-    for kayit in (SonDakika.bandakiler()
-                  .select_related("haber")[:SON_DAKIKA_ADET * 2]):
-        if not kayit.adres and kayit.haber_id and not kayit.haber.yayinda_mi():
-            continue
-        yol = kayit.yol
-        if not guvenli_bant_adresi(yol):
-            continue
-        kalemler.append(BantKalemi(kayit.baslik, yol, kayit.baslangic))
-        if len(kalemler) == SON_DAKIKA_ADET:
-            break
+    kalemler = _masa_kalemleri()
     if kalemler:
         return kalemler, "SON DAKİKA", True
 
@@ -214,8 +234,9 @@ def site(request):
         "band_kategorileri": bant,
         "tum_kategoriler": _tum_kategoriler(),
         "kunye_arsiv": _kunye_arsiv(),
-        # Son dakika ÖNBELLEKLENMEZ: gazetede eski manşet kabul edilemez
-        # (§21). Önce masanın `SonDakika` kayıtları, yoksa son haberler.
+        # Son dakika: önce masanın `SonDakika` kayıtları, yoksa son
+        # haberler. Tembel: yalnız bandı çizen sayfa sorgu açar. Masanın
+        # kayıtları 30 sn önbellekte, kayıt değişince anında düşer (§21).
         "son_dakika": son_dakika_bandi(),
         "ilceler": _ilceler(),
         "reklam_dugmesi": sunum_araci_mi(request),

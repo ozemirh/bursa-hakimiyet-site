@@ -1429,6 +1429,9 @@ def toplu_islem(request):
     # sayfa mikro önbelleği burada açıkça geçersizleşir ki yayına alınan /
     # çekilen haber okura ANINDA yansısın (icerik/sinyaller.py notu).
     onbellek.surumu_artir()
+    # Son dakika bandı yayından çekilen habere bağlıysa o da düşsün (Paket H).
+    from .baglam import SON_DAKIKA_ANAHTARI
+    onbellek.sil(SON_DAKIKA_ANAHTARI)
     _toplu_denetim(request, fiil, onceki, ozet)
     return _toplu_don(request, ozet)
 

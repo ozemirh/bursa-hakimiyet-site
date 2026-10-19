@@ -75,7 +75,7 @@ kural elindekiyle yetinir; havuz dışına ek sorgu açılmaz — `kategori IN
 
 ## Sorgu bütçesi (ölçüm 19 Ekim 2026, 1.038.477 haber, salt okunur kopya)
 
-    bayrak kimlikleri  3 sorgu × 0,3 ms   kısmi indeks (0006)
+    bayrak kimlikleri  1 sorgu  ~1 ms     üç kısmi indeks, UNION ALL (0006)
     bayraklı kayıtlar  1 sorgu  ~1,4 ms   yalnız bayrak varsa
     bayrak zamanları   1 sorgu            yalnız bayrak varsa
     havuz              1 sorgu  ~4,5 ms   son 80 haber
@@ -265,13 +265,22 @@ class Dizilim:
 
 
 def _bayrakli_kimlikler() -> dict:
-    """Bayrak alanı → kimlikler. Üç ayrı kısmi indeksli sorgu (OR değil,
-    `panel.mansetler` notu); `.order_by()` şart, yoksa Meta sıralaması
-    planlayıcıyı `haber_siralama`ya çekiyor."""
+    """Bayrak alanı → kimlikler. TEK sorgu: üç kısmi indeksli SELECT'in
+    `UNION ALL`ı (OR değil — `panel.mansetler` notu: OR'u hiçbir kısmi
+    indeks karşılamıyor, 752 ms tam tarama). Plan ölçüldü (kopya
+    veritabanı): her kol kendi `haber_manset_*_kismi` indeksini tarıyor,
+    ~1 ms. `.order_by()` şart: Meta sıralaması planlayıcıyı
+    `haber_siralama`ya çekiyor."""
+    from django.db.models import CharField, Value
+
     from .models import Haber
-    return {alan: list(Haber.objects.filter(**{alan: True}).order_by()
-                       .values_list("pk", flat=True))
-            for alan, _ in BAYRAK_YUVASI}
+    kollar = [Haber.objects.filter(**{alan: True}).order_by()
+              .annotate(_bayrak=Value(alan, output_field=CharField()))
+              .values_list("pk", "_bayrak") for alan, _ in BAYRAK_YUVASI]
+    sonuc = {alan: [] for alan, _ in BAYRAK_YUVASI}
+    for pk, alan in kollar[0].union(*kollar[1:], all=True):
+        sonuc[alan].append(pk)
+    return sonuc
 
 
 def _bayrak_zamanlari(kimlikler) -> dict:
