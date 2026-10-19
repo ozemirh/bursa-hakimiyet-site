@@ -10,6 +10,7 @@ Testler dışarıya ÇIKMAZ. İki yol kullanılır:
 
 import gzip
 import http.server
+import logging
 import tempfile
 import threading
 from pathlib import Path
@@ -25,6 +26,18 @@ from . import dis_istek, yz_kopru
 from .models import Haber
 
 GENEL_IP = "93.184.216.34"
+_SESSIZ = logging.NullHandler()
+
+
+def setUpModule():
+    # Reddedilen istekler bilerek günlüğe yazılıyor; test çıktısını kirletmesin.
+    logging.getLogger("bh.dis_istek").addHandler(_SESSIZ)
+
+
+def tearDownModule():
+    logging.getLogger("bh.dis_istek").removeHandler(_SESSIZ)
+
+
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
 JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 64
 SVG = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'

@@ -5,3 +5,6 @@ uygulama/db.sqlite3
 canli-veri/veri/
 
 canli-veri/gizli.json
+
+# Yerel yayinci jetonu (arac/yayinci.py) — depoya girmez.
+arac/.yayinci-jetonu

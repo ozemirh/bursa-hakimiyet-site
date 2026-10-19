@@ -2462,6 +2462,15 @@ window.BHVeri = {
 </script>
 
 <script>
+/* Yerel yayıncı (arac/yayinci.py) — 19 Ekim 2026: koken + jeton denetimi.
+   Sayfa yayıncının kendisinden açılınca (http://127.0.0.1:8787/) jeton
+   sayfaya gömülü gelir ve istekler aynı kökene gider. Dosyadan açılan
+   sayfada jeton yoktur; yayıncı isteği reddeder, sayfa yine çalışır. */
+const YAYINCI_KOK = (location.protocol === "http:" &&
+                     /^(127\.0\.0\.1|localhost)$/.test(location.hostname))
+  ? location.origin : "http://127.0.0.1:8787";
+const YAYINCI_JETONU = (document.querySelector('meta[name="bh-yayinci-jetonu"]') || {}).content || "";
+
 /* Örnek paketler: arac/haber_taslak.py çıktısının birebir aynısı. */
 const ORNEKLER = {
  "icardi-7-yil-sonra-geri-donuyor": {
@@ -3532,9 +3541,9 @@ const ORNEKLER = {
       $("yontem-not").textContent = "Bu taslağı üreten: " + adlar[yontem] + " · " + sn + " sn.";
     }
 
-    fetch("http://127.0.0.1:8787/ayikla", {
+    fetch(YAYINCI_KOK + "/ayikla", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: {"Content-Type": "application/json", "X-Yayinci-Jetonu": YAYINCI_JETONU},
       body: JSON.stringify({adres: adres, yontem: yontem})
     }).then(function(y){ return y.json(); }).then(function(c){
       bitir();
@@ -3570,7 +3579,8 @@ const ORNEKLER = {
         "Bu sayfa tarayıcıda çalıştığı için rastgele bir siteyi doğrudan çekemez " +
         "(tarayıcı güvenlik kısıtı) ve yerel yayıncı da kapalı.\n\nİki yol var:\n\n" +
         "1) Yayıncıyı başlatın:\n     python arac/yayinci.py\n" +
-        "   Sonra adresi yeniden gönderin; kaynağı o indirir.\n\n" +
+        "   Sonra bu sayfayı yayıncının adresinden açın (http://127.0.0.1:8787/)\n" +
+        "   ve adresi yeniden gönderin; kaynağı o indirir.\n\n" +
         "2) Haberin metnini kopyalayıp aşağıdaki “Metni yapıştır” kutusuna bırakın — " +
         "taslak burada, kural motoruyla kurulur."
       );
@@ -3668,7 +3678,7 @@ const ORNEKLER = {
 
   /* Yayın, yerel yayıncıya yazdırır: python arac/yayinci.py
      Sunucu kapalıyken sayfa aynen çalışır, yalnızca düğme uyarı verir. */
-  const YAYIN_UCU = "http://127.0.0.1:8787/yayinla";
+  const YAYIN_UCU = YAYINCI_KOK + "/yayinla";
 
   $("yayin-btn").addEventListener("click", function(){
     if (!paket) return;
@@ -3684,7 +3694,7 @@ const ORNEKLER = {
     $("eylem-not").textContent = "Yayınlanıyor…";
     fetch(YAYIN_UCU, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: {"Content-Type": "application/json", "X-Yayinci-Jetonu": YAYINCI_JETONU},
       body: JSON.stringify(paket)
     }).then(function(y){ return y.json(); }).then(function(c){
       const not = $("eylem-not");
@@ -3700,7 +3710,8 @@ const ORNEKLER = {
       });
     }).catch(function(){
       $("eylem-not").textContent =
-        "Yayın sunucusu kapalı. Terminalde çalıştırın: python arac/yayinci.py";
+        "Yayın sunucusu kapalı ya da sayfa yayıncıdan açılmadı. Terminalde " +
+        "çalıştırın: python arac/yayinci.py — sonra http://127.0.0.1:8787/ adresini açın.";
     });
   });
 
