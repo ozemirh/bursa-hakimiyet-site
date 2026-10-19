@@ -33,11 +33,31 @@ import hashlib
 from django.contrib.syndication.views import Feed
 from django.http import Http404
 from django.utils.feedgenerator import Rss201rev2Feed
+from django.utils.xmlutils import SimplerXMLGenerator
 
 from icerik.models import Haber
 from taksonomi.models import Kategori
 
 from . import ayarlar
+from .xml_karakter import xml_temizle
+
+
+class TemizXMLYazici(SimplerXMLGenerator):
+    """XML 1.0'da geçersiz karakterleri yazmadan önce atan yazıcı.
+
+    Django'nun yazıcısı denetim karakterinde hata fırlatıyor; tek bir
+    spottaki `\\x1d` bütün beslemeyi 500'e düşürüyordu (19 Ekim 2026).
+    Temizlik metinde ve nitelik değerlerinde yapılır — her alanı ayrı ayrı
+    temizlemek bir alanı unutmayı davet ederdi.
+    """
+
+    def characters(self, content):
+        super().characters(xml_temizle(content))
+
+    def startElement(self, name, attrs):
+        if attrs:
+            attrs = {k: xml_temizle(v) for k, v in attrs.items()}
+        super().startElement(name, attrs)
 
 
 def guid_uret(kimlik: int) -> str:
@@ -54,6 +74,18 @@ def guid_uret(kimlik: int) -> str:
 
 class HakimiyetRss(Rss201rev2Feed):
     """Canlı beslemenin ad alanlarını ve iki ek etiketini ekler."""
+
+    def write(self, outfile, encoding):
+        """`RssFeed.write` ile aynı akış; yalnız yazıcı temizleyen sürüm."""
+        handler = TemizXMLYazici(outfile, encoding, short_empty_elements=True)
+        handler.startDocument()
+        self.add_stylesheets(handler)
+        handler.startElement("rss", self.rss_attributes())
+        handler.startElement("channel", self.root_attributes())
+        self.add_root_elements(handler)
+        self.write_items(handler)
+        self.endChannelElement(handler)
+        handler.endElement("rss")
 
     def rss_attributes(self):
         nitelikler = super().rss_attributes()

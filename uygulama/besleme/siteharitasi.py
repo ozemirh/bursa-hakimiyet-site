@@ -45,7 +45,17 @@ from django.utils import timezone
 
 from . import ayarlar
 from .aileler import Aile, AyOzeti, dosya_adi, kayitli_aileler
+from .xml_karakter import xml_temizle
 from .zaman import zaman_yaz
+
+
+def _xml(metin: str) -> str:
+    """Kaçış + XML 1.0'da geçersiz karakter temizliği (`xml_karakter`).
+
+    Başlıktaki tek bir `\\x1d` dosyayı geçersiz XML yapar ve arama motoru
+    tüm dosyayı atar — RSS'te aynı karakter 500 veriyordu (19 Ekim 2026).
+    """
+    return escape(xml_temizle(metin))
 
 # Canlı sitede sitemap dosyaları `/static/sitemap/` altında duruyor ve
 # arama motorlarının kayıtlı olduğu adres bu. Değiştirmek, F8'in bütün
@@ -104,7 +114,7 @@ def _loc(kok: str, yol: str) -> str:
     da sorgu parametresi dosyayı bozar ve arama motoru **tüm dosyayı**
     atar — tek adresi değil.
     """
-    return escape(f"{kok}{yol}")
+    return _xml(f"{kok}{yol}")
 
 
 # -- indeks ---------------------------------------------------------------
@@ -128,7 +138,7 @@ def indeks_parcalari(kok: str, ozetler: dict[str, list[AyOzeti]] | None = None,
         for ozet in aylar:
             adres = dosya_adresi(kok, dosya_adi(aile, ozet.ay))
             yield ("\t<sitemap>\n"
-                   f"\t\t<loc>{escape(adres)}</loc>\n"
+                   f"\t\t<loc>{_xml(adres)}</loc>\n"
                    f"\t\t<lastmod>{zaman_yaz(ozet.son_degisiklik)}</lastmod>\n"
                    "\t</sitemap>\n")
     yield _INDEKS_SON
@@ -177,8 +187,8 @@ def google_news_parcalari(kok: str, aile: Aile, saat: int = 48,
     """
     if aile.son_kayitlar is None:
         raise ValueError(f"{aile.ad} ailesi son kayıt akışı vermiyor.")
-    ad = escape(ayarlar.yayin_adi())
-    dil = escape(ayarlar.dil())
+    ad = _xml(ayarlar.yayin_adi())
+    dil = _xml(ayarlar.dil())
     yield _HABER_URLSET_BAS
     adet = 0
     for kayit in aile.son_kayitlar(saat):
@@ -192,7 +202,7 @@ def google_news_parcalari(kok: str, aile: Aile, saat: int = 48,
                f"      <news:language>{dil}</news:language>\n"
                "    </news:publication>\n"
                f"    <news:publication_date>{zaman_yaz(an)}</news:publication_date>\n"
-               f"    <news:title>{escape(kayit.baslik)}</news:title>\n"
+               f"    <news:title>{_xml(kayit.baslik)}</news:title>\n"
                "  </news:news>\n"
                "</url>\n")
     yield _URLSET_SON
