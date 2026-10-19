@@ -123,20 +123,28 @@ class Command(BaseCommand):
             silinecek = silinecek.filter(onay=Konu.ONAY_BEKLIYOR)
         silinecek.delete()
 
-        # Onaylı dosyaların üyeleri: örtüşen öneri yazılmaz.
+        # Onaylı dosyaların üyeleri: örtüşen öneri yazılmaz. Haber → dosya
+        # dizini: her öneri yalnız kendi üyeleri kadar bakar. Önceki biçim
+        # her öneriyi her onaylı dosyayla kesiştiriyordu (22 bin × 19 bin;
+        # 19 Ekim 2026 tam taramasında yazma evresi 11 dakika sürdü).
         onayli_uyeler: dict[int, set[int]] = {}
         korunan = (KonuHaber.objects.filter(konu__onay=Konu.ONAY_ONAYLI)
                    | KonuHaber.objects.filter(konu__onay=Konu.ONAY_BEKLIYOR)
                    .exclude(konu__geri_alma=""))
         for konu_id, haber_id in korunan.values_list("konu_id", "haber_id"):
             onayli_uyeler.setdefault(konu_id, set()).add(haber_id)
+        haber_dosya: dict[int, list[int]] = {}
+        for konu_id, uyeler in onayli_uyeler.items():
+            for haber_id in uyeler:
+                haber_dosya.setdefault(haber_id, []).append(konu_id)
 
         mevcut_sluglar = set(Konu.objects.values_list("slug", flat=True))
         simdi = timezone.now()
         yazilan = atlanan = onaylanan = 0
         for k in konular:
             uyeler = {h.kimlik for h in k.uyeler}
-            if any(len(uyeler & u) * 2 > len(uyeler) for u in onayli_uyeler.values()):
+            ortak = Counter(d for h in uyeler for d in haber_dosya.get(h, ()))
+            if ortak and ortak.most_common(1)[0][1] * 2 > len(uyeler):
                 atlanan += 1
                 continue
             onayli = onay_esigi is not None and k.guven >= onay_esigi

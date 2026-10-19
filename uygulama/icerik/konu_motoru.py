@@ -392,7 +392,8 @@ _CEKIMLI = re.compile(
     r"müş|acak|ecek|acağı|eceği|yor|ıyor|iyor|arak|erek|ınca|ince|unca|ünce|"
     r"yken|ken|ması|mesi|malı|meli|sa|se|"
     r"ndan|nden|ndaki|ndeki|daki|deki|taki|teki|nda|nde|yla|yle|larla|lerle|"
-    r"nın|nin|nun|nün|ğını|ğini|ğunu|ğünü)$")
+    r"nın|nin|nun|nün|ğını|ğini|ğunu|ğünü|"
+    r"ına|ine|una|üne|sına|sine|suna|süne|ya|ye)$")
 
 
 # Olay sözcüğü olarak bir şey söylemeyen sıfat ve zarflar.
@@ -996,11 +997,15 @@ class Motor:
         yerine "davası", "beşiktaş" yerine "Beşiktaş"."""
         yuzeyler = self.yuzey.get(kok)
         if yuzeyler:
-            # Tümü büyük harf yüzey ("MÜDÜRLÜĞÜ") ancak başka biçim yoksa:
-            # büyük harfli başlıktan gelir, adın kendisi öyle değildir.
+            # Tümü büyük harf yüzey ("MÜDÜRLÜĞÜ") çoğunluk değilse büyük
+            # harfli bir başlıktan gelmiştir; adın kendisi öyle değildir.
+            # Çoğunluksa kısaltmadır ("FETÖ", "BUSKİ") ve öyle kalır.
+            toplam = sum(yuzeyler.values())
+            buyuk = sum(n for y, n in yuzeyler.items() if _tumu_buyuk(y))
+            tercih_buyuk = buyuk * 2 >= toplam
             obek, _ = max(yuzeyler.items(), key=lambda ci: (
-                not _tumu_buyuk(ci[0]), ci[1], len(ci[0])))
-            return _harf_bicimi(obek) if _tumu_buyuk(obek) else obek
+                _tumu_buyuk(ci[0]) == tercih_buyuk, ci[1], len(ci[0])))
+            return _harf_bicimi(obek) if _tumu_buyuk(obek) and not tercih_buyuk else obek
         sayac: Counter = Counter()
         for h in uyeler:
             for p in parcala(h.baslik):

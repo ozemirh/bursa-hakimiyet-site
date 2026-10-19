@@ -188,6 +188,15 @@ class DosyaAdi(SimpleTestCase):
         self.assertEqual(konu_motoru._harf_bicimi("ASELSAN"), "ASELSAN")
         self.assertEqual(konu_motoru._harf_bicimi("Ece Gürel"), "Ece Gürel")
 
+    def test_kisaltma_buyuk_kalir_buyuk_harfli_baslik_duzelir(self):
+        from collections import Counter
+        m = konu_motoru.Motor()
+        m.yuzey["fetö"] = Counter({"FETÖ": 5, "Fetö": 2})
+        m.yuzey["müdürlüğ"] = Counter({"MÜDÜRLÜĞÜ": 1, "Müdürlüğü": 4})
+        self.assertEqual(m._ad("fetö"), "FETÖ")
+        self.assertEqual(m._ad("müdürlüğ"), "Müdürlüğü")
+        self.assertTrue(konu_motoru._CEKIMLI.search("davasına"))
+
     def test_ece_gurel_adi_korunur(self):
         konular = konu_motoru.tara(sentetik())
         self.assertEqual(konular[0].ad, "Ece Gürel")
