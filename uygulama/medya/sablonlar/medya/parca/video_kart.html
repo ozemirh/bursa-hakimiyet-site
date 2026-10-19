@@ -1,4 +1,4 @@
-{% load site_etiket %}
+{% load site_etiket gorsel_etiket %}
 {% comment %}
 Video kartı — tasarımdaki `.video-kart` + `.oynat` yapısı birebir.
 
@@ -22,7 +22,7 @@ geçiriyor. O kuralı kaldırırsan videonun en çok tıklanacak yeri ölür.
   <div class="foto {{ v|kart_rengi }}">
     <a class="foto-bag" href="{{ v.get_absolute_url }}" tabindex="-1" aria-hidden="true">
       {% if v.gorsel_yolu %}
-        <img src="{{ v.gorsel_yolu }}" alt="{{ v.gorsel_alt|default:v.baslik }}" loading="lazy">
+        {% gorsel v "galeri" %}
       {% else %}
         <svg role="img" aria-label="{{ v.baslik }} videosunu temsil eden çizim"><use href="#{{ v.kategori|simge_adi }}"/></svg>
       {% endif %}

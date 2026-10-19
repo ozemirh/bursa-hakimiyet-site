@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load site_etiket %}
+{% load site_etiket gorsel_etiket %}
 {% comment %}
 Foto galeri detayı.
 
@@ -36,9 +36,9 @@ görünmüyor; eksik olanın ne olduğunu gizlemek yerine yazıyoruz.
 
         {% if galeri.gorsel_yolu %}
           <div class="foto ana-gorsel">
-            <img src="{{ galeri.gorsel_yolu }}" alt="{{ galeri.gorsel_alt|default:galeri.baslik }}" width="1280" height="720" decoding="async">
+            {% gorsel galeri "detay" oncelikli=True %}
           </div>
-          {% if galeri.gorsel_alt %}<p class="foto-alt">{{ galeri.gorsel_alt }}</p>{% endif %}
+          {% with fa=galeri|foto_alti %}{% if fa %}<p class="foto-alt">{{ fa }}</p>{% endif %}{% endwith %}
         {% else %}
           <div class="foto ana-gorsel {{ galeri|kart_rengi }}">
             <svg role="img" aria-label="{{ galeri.baslik }} galerisini temsil eden çizim"><use href="#{{ galeri.kategori|simge_adi }}"/></svg>
@@ -51,7 +51,7 @@ görünmüyor; eksik olanın ne olduğunu gizlemek yerine yazıyoruz.
           <div class="galeri-izgara">
             {% for kare in kareler %}
             <figure class="galeri-kart">
-              <div class="foto"><img src="{{ kare.gorsel_yolu }}" alt="{{ kare.alt|default:galeri.baslik }}" loading="lazy"></div>
+              <div class="foto">{% gorsel kare "galeri" alt=kare.alt|anlamli_alt|default:galeri.baslik %}</div>
               {% if kare.aciklama %}<figcaption class="adet">{{ kare.aciklama }}</figcaption>{% endif %}
             </figure>
             {% endfor %}
