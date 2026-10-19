@@ -36,7 +36,7 @@ bilmeli.{% endcomment %}
             <p class="eczane-ozet{% if panel.bayat %} bayat{% endif %}">
               <b><time datetime="{{ panel.gun|date:'Y-m-d' }}">{{ panel.gun|date:"j F Y" }}</time> nöbeti</b>
               {% if panel.pencere %}&middot; çoğu eczanede {{ panel.pencere }} ({{ panel.pencere_adet }} eczane){% endif %}
-              {% if panel.bayat %}&middot; <b>liste tazelenemedi, saatleri eczaneden doğrulayın</b>{% endif %}
+              {% if panel.bayat %}&middot; <b>elimizdeki son liste; bugünkü nöbetçi eczaneyi Bursa Eczacı Odası'ndan doğrulayın</b>{% endif %}
             </p>
           {% else %}
             {% comment %}Veri yokken sayfa 404 DEĞİL 200 döner (görünümde

@@ -1,16 +1,17 @@
-"""Paket L1 (19 Ekim 2026): dünden eski nöbet listesi gösterilmez.
+"""Eski nöbet listesi: sayfalarda SON LİSTE gösterilir, haber olarak çıkmaz.
 
-Nöbetçi eczane günde bir devreder. 12 Eylül listesi 37 gün boyunca
-"tazelenemedi" uyarısıyla basılmıştı: uyarı okuru kapalı eczaneye gitmekten
-korumuyordu. Kural tek yerde, `canli.tazelik(gecerlik_gun=…)` ve
-`canli.GECERLIK_GUN`:
+Tarihçe: Paket L1 (19 Ekim 2026) dünden eski listeyi gizliyordu. Aynı
+akşam kullanıcı kararı: "güncel veriye sahip olmadığın alanlar için sahip
+olduğun son günü göster, boş kalmasın". Kural tek yerde:
 
-* liste dünden eskiyse eczane satırı HİÇ basılmaz (anasayfa paneli,
-  `/nobetci-eczane`, ilçe sayfası servis paneli);
-* yerine "Nöbet listesi güncel değil — Bursa Eczacı Odası" bağlantısı ve son
-  güncelleme tarihi;
-* sayfa başlığı eski tarihi taşımaz, JSON-LD eski eczaneleri yazmaz;
-* günlük haber komutunun paketi geçersiz listeyi "veri yok" sayar.
+* `canli.GECERLIK_GUN` BOŞ — liste dünden eski olsa da basılır; listenin
+  hangi güne ait olduğu ve "elimizdeki son liste; bugünkü nöbetçiyi Eczacı
+  Odası'ndan doğrulayın" uyarısı yazılır (anasayfa paneli, `/nobetci-eczane`,
+  ilçe sayfası servis paneli);
+* `tazelik(gecerlik_gun=…)` düzeneği duruyor: bir bileşen yeniden gizlenmek
+  istenirse sözlüğe yazılır (sözleşme testleri aşağıda);
+* günlük HABER komutu ayrı ve katı: dünden eski liste bayrakla bile haber
+  olmaz (`tests_eczane.EczaneHaberi.test_bayat_liste_yayimlanmiyor`).
 
 Puan servis panelinin başlığı: bayat tabloda hafta numarasının yanında
 "güncel değil" yazılır.
@@ -72,14 +73,15 @@ class GecerlikKurali(SimpleTestCase):
         self.assertEqual(t["durum"], "bayat")
         self.assertTrue(t["gecerli"])
 
-    def test_kural_yalniz_eczanede(self):
-        self.assertEqual(canli.GECERLIK_GUN, {"nobetci-eczane": 1})
+    def test_hicbir_bilesen_gizlenmiyor(self):
+        """Kullanıcı kararı: son veri her bileşende gösterilir."""
+        self.assertEqual(canli.GECERLIK_GUN, {})
 
-    def test_panel_eczane_basmaz_kaynak_ve_tarih_verir(self):
+    def test_eski_liste_panelde_bayat_ama_dolu(self):
         panel = canli.eczane_paneli(_eczane(ESKI))
-        self.assertTrue(panel["gecersiz"])
-        self.assertEqual(panel["eczaneler"], [])
-        self.assertEqual(panel["sayi"], 0)
+        self.assertFalse(panel["gecersiz"])
+        self.assertTrue(panel["bayat"])
+        self.assertEqual(panel["sayi"], 1)
         self.assertEqual(panel["kaynak_adresi"], "https://www.beo.org.tr/nobetci-eczaneler")
         self.assertEqual(panel["kaynak_adi"], "Bursa Eczacı Odası")
         self.assertEqual(timezone.localtime(panel["guncelleme"]).date().isoformat(), "2026-09-12")
@@ -125,51 +127,49 @@ class _Klasorlu(TestCase):
         return yanit.content.decode()
 
 
-class GecersizListeSayfalarda(_Klasorlu):
+class EskiListeSayfalarda(_Klasorlu):
+    """Eski liste boş bırakılmaz: eczane, günü ve uyarısıyla görünür."""
 
-    def _gecersiz_mi(self, metin):
-        self.assertIn("Nöbet listesi güncel değil", metin)
-        self.assertIn('href="https://www.beo.org.tr/nobetci-eczaneler"', metin)
-        self.assertIn("Son güncelleme:", metin)
-        self.assertIn("12 Eylül 2026, 22:12", metin)
-        self.assertNotIn("Deneme Eczanesi", metin)
-        self.assertNotIn("0224 999 88 77", metin)
-        self.assertNotIn("liste tazelenemedi", metin)
+    def _son_liste_mi(self, metin):
+        self.assertIn("Deneme Eczanesi", metin)
+        self.assertIn("0224 999 88 77", metin)
+        self.assertIn("12 Eylül 2026", metin)
+        self.assertIn("elimizdeki son liste", metin.lower())
+        self.assertNotIn("Nöbet listesi güncel değil", metin)
 
     def test_anasayfa(self):
         self.yaz("nobetci-eczane", _eczane(ESKI))
-        self._gecersiz_mi(self.sayfa("/"))
+        self._son_liste_mi(self.sayfa("/"))
 
     def test_nobetci_eczane_sayfasi(self):
         self.yaz("nobetci-eczane", _eczane(ESKI))
-        metin = self.sayfa("/nobetci-eczane")
-        self._gecersiz_mi(metin)
-        baslik = metin.split("<title>")[1].split("</title>")[0]
-        self.assertNotIn("Eylül", baslik)
-        self.assertNotIn("Pharmacy", metin)
+        self._son_liste_mi(self.sayfa("/nobetci-eczane"))
 
-    def test_ilce_eczane_sayfasi_yok_demez(self):
+    def test_ilce_eczane_sayfasi(self):
         self.yaz("nobetci-eczane", _eczane(ESKI))
-        metin = self.sayfa("/nobetci-eczane/osmangazi")
-        self._gecersiz_mi(metin)
-        self.assertNotIn("nöbetçi eczane görünmüyor", metin)
+        metin = self.sayfa("/nobetci-eczane/nilufer")
+        self.assertIn("Deneme Eczanesi", metin)
+        self.assertIn("elimizdeki son liste", metin.lower())
 
     def test_ilce_sayfasi_servis_paneli(self):
         self.yaz("nobetci-eczane", _eczane(ESKI))
-        self._gecersiz_mi(self.sayfa("/ilce/nilufer"))
+        self._son_liste_mi(self.sayfa("/ilce/nilufer"))
 
-    def test_taze_liste_aynen(self):
+    def test_taze_liste_uyarisiz(self):
         self.yaz("nobetci-eczane", _eczane(_yerel(0, 0)))
         metin = self.sayfa("/nobetci-eczane")
         self.assertIn("Deneme Eczanesi", metin)
-        self.assertNotIn("Nöbet listesi güncel değil", metin)
+        self.assertNotIn("elimizdeki son liste", metin.lower())
 
-    def test_haber_paketi_gecersizi_veri_yok_sayar(self):
+    def test_sayfa_paketi_eski_listeyi_verir(self):
+        """Sayfa paketi doludur; HABER komutunun katı kuralı ayrı yerde."""
         self.yaz("nobetci-eczane", _eczane(ESKI))
         with override_settings(CANLI_VERI_KOK=self.kok):
             _bellek.clear()
-            self.assertIsNone(eczane.gunun_paketi())
-            self.assertTrue(eczane.gunun_paketi(gecersizi_de=True)["gecersiz"])
+            paket = eczane.gunun_paketi()
+            self.assertIsNotNone(paket)
+            self.assertFalse(paket["gecersiz"])
+            self.assertTrue(paket["bayat"])
         _bellek.clear()
 
 

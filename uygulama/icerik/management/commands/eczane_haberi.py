@@ -50,6 +50,10 @@ VARSAYILAN_KATEGORI = "saglik"
 # doğru eksen — ajans değil.
 KAYNAK_ADI = eczane_metni.KAYNAK_ADI
 
+# Haber olarak yayımlanabilecek en eski liste: dünün (sabah 08:30'a kadar
+# geçerli olabilir). Sayfalardaki gösterim kuralından AYRI tutulur.
+HABER_EN_ESKI_GUN = 1
+
 
 class Command(BaseCommand):
     help = "Günün nöbetçi eczane haberini yayımlar (varsa tazeler)."
@@ -80,6 +84,17 @@ class Command(BaseCommand):
             y(self.style.WARNING(
                 "Yayımlanacak nöbetçi eczane verisi yok "
                 "(dosya okunamadı, boş ya da istenen günü taşımıyor)."))
+            raise SystemExit(1)
+        # HABER için katı kural, sayfadan bağımsız (19 Ekim 2026 akşamı):
+        # sayfalar artık dünden eski listeyi de "elimizdeki son liste" diye
+        # gösteriyor (`canli.GECERLIK_GUN` boş, kullanıcı kararı). Ama eski
+        # listeyi "bugünün nöbetçi eczaneleri" diye YENİ HABER olarak
+        # yayımlamak yanlış bilgidir: dünden eskisi bayrakla bile çıkmaz.
+        gun_farki = (panel.get("tazelik") or {}).get("gun_farki")
+        if gun_farki is None or gun_farki > HABER_EN_ESKI_GUN:
+            y(self.style.WARNING(
+                "Yayımlanacak nöbetçi eczane verisi yok: liste dünden eski "
+                "ya da tarihi bilinmiyor; eski liste haber olarak yayımlanmaz."))
             raise SystemExit(1)
         if panel["bayat"] and not s["bayat_da_yayimla"]:
             y(self.style.WARNING(

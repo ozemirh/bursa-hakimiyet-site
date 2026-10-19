@@ -503,7 +503,7 @@ yaşanmıştı.{% endcomment %}
                   {% comment %}`gun` kaynakta ISO metin ("2026-08-29");
                   panel onu `date` nesnesine çevirip veriyor.{% endcomment %}
                   <p class="eczane-damga{% if eczane_panel.bayat %} bayat{% endif %}">
-                    <time datetime="{{ eczane_panel.gun|date:'Y-m-d' }}">{{ eczane_panel.gun|date:"j F Y" }}</time> nöbeti{% if eczane_panel.pencere %} &middot; çoğu eczanede {{ eczane_panel.pencere }} ({{ eczane_panel.pencere_adet }} eczane){% endif %}{% if eczane_panel.bayat %} &middot; <b>liste tazelenemedi, saatleri eczaneden doğrulayın</b>{% endif %}
+                    <time datetime="{{ eczane_panel.gun|date:'Y-m-d' }}">{{ eczane_panel.gun|date:"j F Y" }}</time> nöbeti{% if eczane_panel.pencere %} &middot; çoğu eczanede {{ eczane_panel.pencere }} ({{ eczane_panel.pencere_adet }} eczane){% endif %}{% if eczane_panel.bayat %} &middot; <b>elimizdeki son liste; bugünkü nöbetçiyi Eczacı Odası'ndan doğrulayın</b>{% endif %}
                   </p>
 
                   <div class="eczane-suzgec" hidden>
@@ -687,7 +687,7 @@ yaşanmıştı.{% endcomment %}
               <p class="film-meta">
                 {% if f.tur %}{{ f.tur }}{% endif %}
                 {% if f.tur and f.yas_siniri %} &middot; {% endif %}{% if f.yas_siniri %}{{ f.yas_siniri }}{% endif %}
-                {% if f.tarih %}{% if f.tur or f.yas_siniri %} &middot; {% endif %}<time datetime="{{ f.tarih|date:'Y-m-d' }}">{{ f.tarih|date:'j F Y' }}</time>{% endif %}
+                {% if f.tarih %}{% if f.tur or f.yas_siniri %} &middot; {% endif %}{% if f.gecmis %}vizyona girdi: {% endif %}<time datetime="{{ f.tarih|date:'Y-m-d' }}">{{ f.tarih|date:'j F Y' }}</time>{% endif %}
               </p>
             </article>
             {% endfor %}

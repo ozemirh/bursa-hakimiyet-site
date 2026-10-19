@@ -82,10 +82,15 @@ VARSAYILAN_ESIK = {
 }
 
 # Güncellemesi bu kadar TAKVİM GÜNÜNDEN eski veri gösterilmez (`gecerli`
-# False). Nöbetçi eczane: dünkü liste bu sabah 08:30'a kadar geçerli
-# olabilir, daha eskisi kesin yanlış (19 Ekim 2026: 12 Eylül listesi 37 gün
-# "tazelenemedi" uyarısıyla basılmıştı). Listede olmayan bileşen hep geçerli.
-GECERLIK_GUN = {"nobetci-eczane": 1}
+# False). Listede olmayan bileşen hep geçerli.
+#
+# BOŞ — kullanıcı kararı (19 Ekim 2026 akşamı): "güncel veriye sahip
+# olmadığın alanlar için sahip olduğun son günü göster, boş kalmasın".
+# Nöbetçi eczane bir süre `{"nobetci-eczane": 1}` ile dünden eski listeyi
+# gizliyordu; artık son liste HANGİ GÜNE AİT OLDUĞU açıkça yazılarak
+# basılır (şablonlarda `bayat` uyarısı). Düzenek duruyor: bir bileşen
+# yeniden gizlenmek istenirse buraya yazılır.
+GECERLIK_GUN: dict[str, int] = {}
 
 
 def _kok() -> Path:
@@ -330,22 +335,26 @@ def vizyon_filmleri(vizyon: dict | None, adet: int = 4,
     girecekler" diyor; dosya donunca 18 Eylül filmi Ekim'de hâlâ "yakında"
     görünüyordu. Bugün giren film kalır. Tarihi çözülemeyen film kalır —
     süzgeç bilmediği tarihi geçmiş saymaz.
+
+    **Bölüm boş kalmaz** (19 Ekim 2026 akşamı, kullanıcı kararı: "sahip
+    olduğun son günü göster"): süzgeçten hiç film çıkmazsa dosyadaki EN SON
+    tarihli filmler `gecmis: True` ile döner; şablon onları "vizyona girdi"
+    diye basar, bayat uyarısı listenin üstünde zaten duruyor.
     """
     if not vizyon:
         return []
     bugun = bugun or bugunun_tarihi()
     filmler: list[dict] = []
+    gecmisler: list[dict] = []
     for hafta in vizyon.get("haftalar") or []:
         for film in hafta.get("filmler") or []:
             ad = (film.get("ad") or "").strip()
             if not ad:
                 continue
             tarih = _tarihe_cevir(film.get("tarih") or hafta.get("tarih"))
-            if tarih is not None and tarih < bugun:
-                continue
             # Kaynakta olmayan alan doldurulmaz; şablon boş olanı hiç basmaz.
             turler = [t for t in (film.get("tur") or []) if t]
-            filmler.append({
+            kayit = {
                 "ad": ad,
                 # `date` süzgeci düz metinle çalışmaz; tarih burada çözülür ki
                 # sayfada "4 Aralık 2026" yazsın, "2026-12-04" değil.
@@ -353,10 +362,19 @@ def vizyon_filmleri(vizyon: dict | None, adet: int = 4,
                 "tur": " · ".join(turler),
                 "yas_siniri": film.get("yas_siniri") or "",
                 "dagitimci": film.get("dagitimci") or "",
-            })
+                "gecmis": False,
+            }
+            if tarih is not None and tarih < bugun:
+                gecmisler.append(dict(kayit, gecmis=True))
+                continue
+            filmler.append(kayit)
             if len(filmler) >= adet:
                 return filmler
-    return filmler
+    if filmler:
+        return filmler
+    # Yedek: en yeni vizyon tarihi önde, elimizdeki son filmler.
+    gecmisler.sort(key=lambda f: f["tarih"], reverse=True)
+    return gecmisler[:adet]
 
 
 # Bursa'nın 17 ilçesi + il adı. Grup usulü liglerde (2. ve 3. Lig) hangi grubun
@@ -909,7 +927,7 @@ def eczane_paneli(eczane: dict | None, simdi: datetime | None = None):
     simdi = simdi or datetime.now()
     taze = eczane.get("tazelik") or tazelik(
         eczane, VARSAYILAN_ESIK["nobetci-eczane"],
-        gecerlik_gun=GECERLIK_GUN["nobetci-eczane"])
+        gecerlik_gun=GECERLIK_GUN.get("nobetci-eczane"))
     kaynak = eczane.get("kaynak") or {}
     if not taze.get("gecerli", True):
         return {

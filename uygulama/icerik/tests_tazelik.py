@@ -290,11 +290,25 @@ class VizyonSuzgeci(KlasorluTest):
         self.assertNotIn("Film 2026-09-18", metin)
         self.assertIn(f"Film {ileri}", metin)
 
-    def test_hepsi_gecmisse_bos_durum_sahte_kart_yok(self):
-        self.yaz("vizyon-takvimi", self._vizyon("2026-09-12T15:12:35+03:00", "2026-09-18"))
+    def test_hepsi_gecmisse_son_filmler_gosterilir(self):
+        """Kullanıcı kararı (19 Ekim 2026 akşamı): bölüm boş kalmaz; elimizdeki
+        son filmler "vizyona girdi" diye, bayat uyarısının altında durur."""
+        self.yaz("vizyon-takvimi", self._vizyon("2026-09-12T15:12:35+03:00",
+                                                "2026-09-11", "2026-09-18"))
         metin = self.sayfa()
-        self.assertIn("Önümüzdeki haftalar için vizyon bilgisi yok.", metin)
-        self.assertNotIn("vizyon-izgara", metin)
+        self.assertIn("vizyon-izgara", metin)
+        self.assertIn("Film 2026-09-18", metin)
+        self.assertIn("vizyona girdi:", metin)
+        self.assertIn("güncel değil", metin)
+        self.assertNotIn("Önümüzdeki haftalar için vizyon bilgisi yok.", metin)
+        # En yeni vizyon tarihi önde.
+        self.assertLess(metin.index("Film 2026-09-18"), metin.index("Film 2026-09-11"))
+
+    def test_ileri_film_varsa_gecmisler_basilmaz(self):
+        ileri = (timezone.localdate() + timedelta(days=3)).isoformat()
+        filmler = canli.vizyon_filmleri(self._vizyon(_damga(), "2026-09-18", ileri))
+        self.assertEqual([f["ad"] for f in filmler], [f"Film {ileri}"])
+        self.assertFalse(filmler[0]["gecmis"])
 
     def test_taze_listede_uyari_yok(self):
         ileri = (timezone.localdate() + timedelta(days=4)).isoformat()
@@ -350,11 +364,14 @@ def _hava(guncelleme, kisa="MGM"):
 class HavaVeEczane(KlasorluTest):
     """Davranış aynı kaldı (damga + "tazelenemedi"), kaynak artık sözleşme."""
 
-    def test_bayat_hava_damgali_ust_seritte_yok(self):
+    def test_bayat_hava_ust_seritte_tarihiyle(self):
+        """Kullanıcı kararı (19 Ekim 2026 akşamı): şerit boş kalmaz; son
+        ölçüm, günüyle birlikte basılır."""
         self.yaz("hava-durumu", _hava("2026-09-12T22:12:11+03:00"))
         metin = self.sayfa()
         self.assertIn("veri tazelenemedi", metin)
-        self.assertNotIn("Bursa 24°C", metin)
+        self.assertIn("Bursa 24°C", metin)
+        self.assertIn("12 Eyl ölçümü", metin)
 
     def test_taze_hava_ust_seritte(self):
         self.yaz("hava-durumu", _hava(_damga(5)))
@@ -391,18 +408,18 @@ class HavaVeEczane(KlasorluTest):
 
     def test_bayat_eczane_uyarili(self):
         self.yaz("nobetci-eczane", self._eczane(self._dun_sabah()))
-        self.assertIn("liste tazelenemedi", self.sayfa())
-        self.assertIn("liste tazelenemedi", self.sayfa("/nobetci-eczane"))
+        self.assertIn("elimizdeki son liste", self.sayfa())
+        self.assertIn("elimizdeki son liste", self.sayfa("/nobetci-eczane"))
 
     def test_elle_girilen_taze_eczane_uyarisiz(self):
         self.yaz("nobetci-eczane", self._eczane(_damga(5), kisa="panel"))
         metin = self.sayfa()
         self.assertIn("Deneme Eczanesi", metin)
-        self.assertNotIn("liste tazelenemedi", metin)
+        self.assertNotIn("elimizdeki son liste", metin)
 
     def test_ilce_servis_panelinde_de_uyari(self):
         self.yaz("nobetci-eczane", self._eczane(self._dun_sabah()))
-        self.assertIn("Liste tazelenemedi", self.sayfa("/ilce/nilufer"))
+        self.assertIn("Elimizdeki son liste", self.sayfa("/ilce/nilufer"))
 
 
 # -- 6. betikler: asgari eşik ve kaynak sağlığı -----------------------------------------
