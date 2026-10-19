@@ -14,7 +14,9 @@ JSON dosyasına. Paket kurulumu yok.
 | `doviz.py` | Döviz bandının beş kalemi (TCMB + `piyasa.json`) |
 | `piyasa.py` | Gram altın ve BIST 100 — TCMB EVDS (resmî kapanış) + üç piyasa yedeği, 15 dk'da bir |
 | `hava_durumu.py` | Bursa hava durumu — şu an + 5 gün + saatlik |
-| `namaz_vakitleri.py` | Namaz vakitleri (Diyanet ölçütleriyle hesap) |
+| `namaz_vakitleri.py` | Namaz vakitleri (Diyanet ölçütleriyle hesap) — dosyaya yazar, elle giriş, `--dogrula` |
+| `namaz_hesap.py` | Hesabın kendisi: saf Python, içe aktarma yok. **Site bunu istek anında yükler** (19 Ekim 2026) |
+| `ornekler/` | Ayrıştırıcı testleri için kırpılmış örnek sayfalar (Başka Sinema) |
 | `nobetci_eczane.py` | Bursa nöbetçi eczaneleri |
 | `puan_durumu.py` | Dört lig puan durumu + takip edilen takımın haftalık maçı + **sezon fikstürü** (12 Eylül 2026) |
 | `vizyon_takvimi.py` | Türkiye vizyon takvimi |
@@ -40,17 +42,49 @@ python canli-veri\vizyon_takvimi.py
 Faz F6'nın bitti ölçütü her bileşen için üç satır ister. Bu klasörün
 kapsadığı bileşenler:
 
-| Bileşen | Kaynak | Sıklık · bayat eşiği | Kaynak düştüğünde |
-|---|---|---|---|
-| **Döviz bandı** (dolar·euro·sterlin) | TCMB günlük kur bülteni — `tcmb.gov.tr/kurlar/today.xml` | Günde bir; TCMB bülteni iş günü 15:30'da açıklanır. Eşik **24 saat** | Önceki dosya korunur, `durum-doviz.json` → `eski`, çıkış kodu **2**. Bant son bülteni tarihiyle gösterir. Hiç veri yoksa `yok` + kod **1** |
-| **Gram altın · BIST 100** | TCMB EVDS → Google Finance → doviz.com → Mynet Finans (`piyasa.py`); hiçbiri gelmezse `doviz-elle.json` | **15 dakikada bir** (gün içi hareket ediyor). Eşik **45 dk** — iki koşu kaçarsa hâlâ geçerli, üçüncüde bayat | Bir sonraki kaynağa geçilir. Dördü birden düşerse önceki dosya korunur, `durum-piyasa.json` → `eski`, kod **2**; hiç veri yoksa `yok` + kod **1**. `doviz.py` bayat `piyasa.json`u kullanmaz, kutuyu boş bırakır |
-| **Hava durumu** | MGM açık uçları — `servis.mgm.gov.tr` | Saatte bir (son durum saatlik güncelleniyor). Eşik **3 saat** | Aynı davranış. Kalıcı düşmede `--kaynak elle` → `hava-elle.json` |
-| **Namaz vakitleri** | **Kaynak yok, hesap var.** Diyanet ölçütleriyle astronomik hesap; ağ gerektirmez | Günde bir yeter (gece yarısından sonra). Eşik **48 saat** — bu eşik kaynak düşmesini değil, zamanlayıcının durduğunu yakalar | Hesap düşmez. Yine de `--kaynak elle` → `namaz-elle.json` yolu var |
-| **Nöbetçi eczane** | Bursa Eczacı Odası — `beo.org.tr/nobetci-eczaneler` | Nöbet günde bir devrediliyor (ölçüldü: 18:30 → ertesi gün 08:30). Günde iki kez yeter. Eşik **24 saat** | Aynı davranış. Kalıcı düşmede `--kaynak elle` → `eczane-elle.json` |
-| **Puan durumu** | TFF — `www.tff.org` | Maç günü saatte bir, diğer gün günde bir. Eşik **48 saat** | Önceki dosya korunur, `durum-puan-durumu.json` → `eski`, kod **2**; hiç veri yoksa `yok` + kod **1** || **Vizyon takvimi** | **Dağıtımcı duyuruları** (varsayılan) — Başka Sinema `/basin/` + Bir Film `/sinemalarda` · Wikidata · elle · TMDB ve Box Office TR (ikisi de kilitli) | Haftada bir (perşembe akşamı yeter). Eşik **7 gün** | Bir dağıtımcı düşerse öteki yayına devam eder; ikisi de düşerse önceki dosya korunur, `durum-vizyon-takvimi.json` → `eski`, kod **2**. Kalıcı düşmede `--kaynak elle` |
+Sıklık sütunu **çalışan tanımdır** (19 Ekim 2026'da koda hizalandı):
+Windows'ta `tazele.ps1` grupları, sunucuda `dagitim/systemd/bh-canli-*.timer`.
+İkisi aynı grupları aynı sırayla çağırır. Bu makinedeki dört Görev
+Zamanlayıcı görevi 19 Ekim 2026'da **kullanıcı kararıyla kapalı**; veriler
+12 Eylül'de dondu ve site bunu bileşen bileşen "güncel değil" diye söylüyor.
 
-Çıkış kodları: **0** taze veri · **2** çekilemedi ama önceki dosya duruyor ·
-**1** çekilemedi ve elde veri de yok. Zamanlayıcı 2'yi uyarı, 1'i hata sayar.
+| Bileşen | Kaynak | Sıklık (grup) · bayat eşiği · asgari kayıt | Kaynak düştüğünde |
+|---|---|---|---|
+| **Döviz bandı** (dolar·euro·sterlin) | TCMB günlük kur bülteni — `tcmb.gov.tr/kurlar/today.xml` | **15 dk** (`sik`, `piyasa.py`'den sonra). Bülten iş günü 15:30'da değişir; ara koşular aynı bülteni okur. Eşik **24 saat** · asgari **3/3 TCMB kalemi** | Önceki dosya korunur, `durum-doviz.json` → `eski`, kod **2**. Bant tarihi ve "güncel değil"i gösterir. Hiç veri yoksa `yok` + kod **1** |
+| **Gram altın · BIST 100** | TCMB EVDS → doviz.com → Mynet Finans (`piyasa.py`; Google kodda duruyor, varsayılan sırada değil); hiçbiri gelmezse `doviz-elle.json` | **15 dk** (`sik`). Eşik **45 dk** · asgari **1 asıl kalem** | Bir sonraki kaynağa geçilir. Hepsi düşerse önceki dosya korunur, `eski`, kod **2**; hiç veri yoksa `yok` + kod **1**. `doviz.py` bayat `piyasa.json`u kullanmaz |
+| **Hava durumu** | MGM açık uçları — `servis.mgm.gov.tr` | **Saat başı :05** (`saatlik`). Eşik **3 saat** · asgari **son durum + 3 gün tahmin** | Aynı davranış. Eşik altı paket yazılmaz → `supheli`. Kalıcı düşmede `--kaynak elle` → `hava-elle.json` |
+| **Namaz vakitleri** | **Kaynak yok, hesap var.** Diyanet ölçütleriyle astronomik hesap (`namaz_hesap.py`) | **Site istek anında hesaplar** (19 Ekim 2026); betik (`gunluk`, 05:10) yalnız dosya/elle giriş içindir. Eşik **48 saat** | Hesap düşmez. `--kaynak elle` → `namaz-elle.json`; elle tabloda bugünün satırı yoksa panel "güncel değil" der |
+| **Nöbetçi eczane** | Bursa Eczacı Odası — `beo.org.tr/nobetci-eczaneler` | **Saat başı :05** (`saatlik`) + 08:20 (`haber`). Nöbet 18:30'da devrediliyor. Eşik **24 saat** · asgari **20 eczane** (il geneli; ölçülen 30-40) | Aynı davranış. Eşik altı → `supheli`, önceki liste korunur. Kalıcı düşmede `--kaynak elle` → `eczane-elle.json` |
+| **Puan durumu** | TFF — `www.tff.org` | **Günde bir, 05:10** (`gunluk`). Maç günü saatlik koşu **yok** (öneri, aşağıda). Eşik **48 saat** · asgari **grup başına 12 takım** ve aynı lig+sezonda önceki koşudan az değil | Önceki dosya korunur, `eski`/`supheli`, kod **2**; hiç veri yoksa `yok` + kod **1**. Elle giriş yolu **yok** |
+| **Vizyon takvimi** | **Bir Film** `/sinemalarda` (varsayılan) · Başka Sinema `/filmler?tab=yakinda` (yalnız `--baska-sinema-izni`) · Wikidata · elle · TMDB ve Box Office TR (kilitli) | **Günde bir, 05:10** (`gunluk`); haftada bir yeterdi. Eşik **7 gün** · asgari **kaynak başına 1 film** | Bir kaynak 0 film ya da hata dönerse koşu `supheli`: yarım liste yazılmaz, önceki dosya korunur (kod **2**). Bilinçli tek kaynak: `--dagitimci birfilm`. Kalıcı düşmede `--kaynak elle` |
+
+Çıkış kodları: **0** taze veri · **2** çekilemedi ya da eşik altında kaldı
+ama önceki dosya duruyor · **1** elde veri de yok. Zamanlayıcı 2'yi uyarı,
+1'i hata sayar.
+
+### Kaynak sağlığı — `durum-*.json` (19 Ekim 2026)
+
+Durum dosyası artık yalnız "taze/eski/yok" demiyor. Dört durum:
+`taze` · `supheli` (kaynak cevap verdi ama **asgari kayıt eşiğinin altında**;
+yeni veri yazılmadı, önceki iyi dosya korundu) · `eski` (kaynak düştü) ·
+`yok`. Ve iki yeni alan (`ortak.saglik`):
+
+```json
+"esik": {"alan": "eczane", "asgari": 20, "gelen": 34, "gecti": true},
+"kaynaklar": [{"ad": "Bursa Eczacı Odası", "sonuc": "tamam", "kayit": 34, "asgari": 20}]
+```
+
+`sonuc`: `tamam` · `bos` (0 kayıt ya da eşik altı) · `hata` · `atlandi`.
+Gerekçe: Başka Sinema 6 Eylül'de site değiştirdi, 0 film döndürdü ve durum
+dosyası 37 gün "taze" dedi. `/_durum` ucu bu alanları, eşik altı koşuları
+(`sorunlu_kosu`) ve son denemesi eşikten eski bileşenleri
+(`zamanlayici_durdu`) ayrıca listeler — durum dosyası kendiliğinden
+yaşlanmadığı için ikincisi şart.
+
+Site tarafı tek sözleşmeden okur (`uygulama/icerik/canli.py`, `tazelik()`):
+her bileşen `taze | bayat | yok`; bayat veri **tarih + "güncel değil"** ile
+basılır ya da gizlenir (üst şeritteki sıcaklık gizlenir, tarih basacak yer
+yok). Damgası okunamayan veri de bayattır.
 
 ### Kullanım şartları — hukuk teyidine giden üç kaynak
 
@@ -586,8 +620,16 @@ tarihi ve saati (TFF henüz programlamadıysa saat boş). Aynı TFF sayfası
 `pageID=142&hafta=7`, 38 hafta bağlantısı); gruplu ligde `&grupID` de
 eklenir.
 
-**Oynanmış hafta yeniden istenmez.** Skor bir daha değişmez; önceki
-dosyadan taşınır. İlk koşu 38 istek (ölçüldü: 67 sn), sonraki koşular yalnız
+**Oynanmış hafta her koşuda yeniden istenmez**, önceki dosyadan taşınır —
+ama 19 Ekim 2026'dan beri iki koşulla: (1) taşıma yalnız **aynı lig + aynı
+sezon + aynı grup** için yapılır (`fikstur_anahtari`; yeni sezonda ya da
+lig değişince eski skorlar taşınmaz); (2) her kayıt `dogrulandi` tarihi
+taşır, **7 günden eski** olan en fazla **4** oynanmış hafta her koşuda
+yeniden okunur (TFF hükmen sonuç ve tescil düzeltmesi işliyor). Sayfa
+geldiği hâlde maç bulunamazsa oynanmış skor silinmez, önceki kayıt kalır.
+Sitede tarihi geçmiş, skoru olmayan maç "bekliyor" değil **"güncel bilgi
+yok"** diye basılır; haftanın maçı ile fikstürün sıradaki maçı tek işlevden
+(`canli.mac_takvimi`) gelir. İlk koşu 38 istek (ölçüldü: 67 sn), sonraki koşular yalnız
 oynanmamış haftaları okur — TFF erteleme ve saat değişikliğini oraya işliyor.
 Bir haftanın sayfası düşerse o hafta önceki dosyadan taşınır ve devam edilir;
 tek bir haftanın düşmesi fikstürü düşürmez. Fikstür hiç alınamazsa `takip`
@@ -666,6 +708,27 @@ sınıflandırma portalı (`robots.txt` `Allow: /` ve resmî, ama tamamen
 istemci tarafı çiziliyor ve tuttuğu tarih **sınıflandırma** tarihi, vizyon
 tarihi değil), Cinens (repertuar gösterimleri, ulusal takvim değil).
 
+> **19 Ekim 2026 — Başka Sinema şartları değişti.** Site Eylül 2026'da
+> yeniden yapıldı (Next.js) ve eski `/gelecek-filmler/` · `/basin/` yolları
+> 6 Eylül'den beri **0 film** döndürüyordu. Yeni adres
+> `https://baskasinema.com/filmler?tab=yakinda` tek istekle ölçüldü (441 KB):
+> film kataloğu sayfadaki `self.__next_f` akışında, kayıt başına ISO vizyon
+> tarihi (`guncellik`), `status`, `ntl`, `carsambaGrubu`. Ayrıştırıcı
+> (`_bs_yeni_ayikla`) yalnız `status=yakinda`, NTL ve Başka Çarşamba dışı
+> kayıtları alır; ölçüm: **11 film** (20 Ekim 2026 – 5 Şubat 2027). Kırpılmış
+> örnek sayfa `ornekler/baskasinema-yakinda.html`, test
+> `uygulama/icerik/tests_tazelik.py`.
+>
+> Ama yeni sitede **Kullanım Şartları** var (son güncelleme Eylül 2026):
+> md. 4 *"Site içeriğinin tamamı veya bir kısmı, önceden izin alınmadan
+> çoğaltılamaz … başka bir mecrada yeniden yayınlanamaz"*, md. 7 kabul
+> edilmeyen kullanım: *"Site'yi otomatik araçlarla tarayarak toplu veri
+> çekmek (scraping) veya içeriği kendi sitenizde yeniden yayınlamak"*.
+> 29 Ağustos kararının dayanağı ("kısıtlayan koşul yok") kalktı; Box Office
+> TR ile aynı kalıp. Bu yüzden Başka Sinema **varsayılan değil**, yalnız
+> `--baska-sinema-izni` ile çalışır. İzin yazışması: `info@baskasinema.com`.
+> `robots.txt` yalnız `/admin`, `/api`, `/dcp-indirme`'yi kapatıyor.
+
 **Kullanılan iki kaynak hukuken farklı bir şeydir:** filmi vizyona sokan
 **dağıtımcının kendi duyuru/basın sayfası**. "Filmimiz şu tarihte vizyonda"
 duyurusu zaten basının yayınlaması için yapılır. İkisinde de içeriğin
@@ -675,7 +738,7 @@ ve `robots.txt` bu yolları açık bırakıyor.
 
 | Dağıtımcı | Adres | Ne veriyor |
 |---|---|---|
-| **Başka Sinema** | `/gelecek-filmler/` + `/basin/` | Türkçe ad, orijinal ad, **yıllı** vizyon tarihi, tür |
+| **Başka Sinema** | `/filmler?tab=yakinda` (19 Ekim 2026'dan beri; izinle) | Türkçe ad, orijinal ad, ISO vizyon tarihi, tür |
 | **Bir Film** | `/sinemalarda` → film sayfası | ad, **yıllı** vizyon tarihi, tür |
 
 Bir Film'in liste sayfası günü ve ayı veriyor ama **yılı vermiyor**
@@ -687,8 +750,11 @@ Bir koşuda açılan film sayfası **25 ile sınırlı** (`BIR_AZAMI_SAYFA`).
 değil, yalnız bu iki dağıtımcının getirdiği filmler. Sayfa bunu okura
 `kapsam_uyarisi` alanıyla söyler. Eksik film **uydurulmaz**.
 
-Biri düşerse öteki yayına devam eder; ikisi birden düşerse önceki dosya
-korunur ve çıkış kodu **2** olur.
+19 Ekim 2026'dan beri **kaynak başına asgari 1 film** eşiği var: denenen
+bir dağıtımcı 0 film ya da hata dönerse koşu `supheli` olur, yarım liste
+yazılmaz ve önceki dosya korunur (kod **2**). Bilinçli olarak tek kaynakla
+yayınlamak için `--dagitimci birfilm`. Sitede geçmiş tarihli film süzülür;
+bayat liste tarihiyle "güncel değil" der.
 
 ### boxofficeturkiye neden kilitli
 
@@ -768,18 +834,18 @@ Bu betikler kendi başına zamanlayıcı içermez. Sunucuda `cron`/Görev
 Zamanlayıcı çağırır. Aynı anda tek koşu; iki koşu birbirinin dosyasını
 bozmaz (atomik yazım) ama kaynağa gereksiz yük biner.
 
-Önerilen sıklık:
+Çalışan sıklık (`tazele.ps1` = `dagitim/systemd/bh-canli-*.timer`):
 
-| Betik | Ne sıklıkla |
-|---|---|
-| `doviz.py` | iş günü 15:35 ve 16:35 (bülten 15:30'da çıkar) |
-| `piyasa.py` | **15 dakikada bir** — borsa açıkken 09:30-18:30 yeter, gün boyu da zararsız |
-| `hava_durumu.py` | saat başı |
-| `namaz_vakitleri.py` | günde bir, gece yarısından sonra (`--gun 30`) |
-| `nobetci_eczane.py` | günde iki kez — 08:00 ve 18:00 (nöbet 18:30'da devrediliyor) |
-| `tazele.ps1 -Grup haber` | günde bir — 08:20. Listeyi tazeler, sonra `manage.py eczane_haberi` ile o günün nöbetçi eczane haberini yayımlar (URUN-PLANI.md §41). Sıra bağlayıcı: tersi dünün listesini yayımlar. Görev Zamanlayıcı kaydı: `BH eczane haberi` |
-| `puan_durumu.py` | maç günü saatte bir, diğer gün günde bir. Sezon fikstürü aynı koşuda; oynanmış haftalar yeniden istenmez |
-| `vizyon_takvimi.py` | haftada bir, perşembe akşamı |
+| Grup | Betikler | Ne zaman |
+|---|---|---|
+| `sik` | `piyasa.py` → `doviz.py` (sıra bağlayıcı) | 15 dakikada bir |
+| `saatlik` | `hava_durumu.py`, `nobetci_eczane.py` | saat başı :05 |
+| `gunluk` | `namaz_vakitleri.py`, `puan_durumu.py`, `vizyon_takvimi.py` | 05:10 |
+| `haber` | `nobetci_eczane.py` → `manage.py eczane_haberi` | 08:20 |
+
+Önerilen ama **kurulmamış** (dış kaynağa yük bindirir, önce ölçülmeli):
+maç günü `puan_durumu.py --lig 1lig` için saatlik koşu (18:00-23:00). Bir
+koşu fikstürle ~3-8 istek; yeniden doğrulama sınırı (4 hafta) bunu aşmaz.
 
 ## F6'nın durumu
 
@@ -808,7 +874,9 @@ girdi; gün içi canlı rakamı doviz.com ve Mynet zaten veriyor. Google'ın tek
 Sıradan çıkarmak için `VARSAYILAN_SIRA`'dan `"google"` silmek yeter, başka
 değişiklik gerekmez; koşu süresi de **19 sn'den 0,3 sn'ye** iner (ölçüldü).
 Bir kaynağı listeden çıkarmak ürün kararı olduğu için bu adım **bilerek
-atılmadı**, karar sizde.
+atılmadı**, karar sizde. *(19 Ekim 2026 notu: kod bu paragrafın gerisinde
+değil önünde — `piyasa.py` `VARSAYILAN_SIRA = ["evds", "doviz", "mynet"]`;
+Google yalnız `--kaynak google` ile elle çağrılıyor.)*
 
 **Dolar/euro tarafı EVDS'ye taşınmadı — gerekçe ölçüldü.** EVDS'nin gösterge
 ucu kurları bir gün *ileri* etiketliyor: 26.08.2026 tarihli 2026/159 numaralı

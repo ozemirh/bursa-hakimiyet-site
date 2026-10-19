@@ -30,7 +30,8 @@ from .templatetags.site_etiket import baslikla
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 
 from .arama_metni import sorgu_coz
-from .canli import anasayfa_verisi, oku, puan_ligleri, puan_takibi
+from .canli import (anasayfa_verisi, namaz_verisi, oku, puan_ligleri,
+                    puan_takibi)
 from . import bursaspor as bursaspor_bolumu
 from . import temalar
 from . import eczane as eczane_sayfa
@@ -434,6 +435,10 @@ def _nobet_ozeti(slug="", ad=""):
         # sorusunu paneli terk etmeden yanıtlıyor.
         "pencere": panel.get("pencere") if panel else "",
         "kaynak": panel.get("kaynak") if panel else None,
+        # Bayatlık sözleşmesi (`canli.tazelik`): eski liste künyede
+        # anasayfadaki panelle aynı uyarıyı taşır (19 Ekim 2026).
+        "tazelik": panel.get("tazelik") if panel else None,
+        "bayat": bool(panel and panel.get("bayat")),
     }
 
 
@@ -733,7 +738,10 @@ def _canli_kunyeler():
     """
     kalemler = []
     for ad, bilesen in CANLI_KALEMLER:
-        veri = oku(bilesen) or {}
+        # Namaz dosyadan değil istek anında hesaptan gelir (19 Ekim 2026);
+        # beyan da sitenin gerçekte gösterdiğini söylemeli.
+        veri = (namaz_verisi() if bilesen == "namaz-vakitleri"
+                else oku(bilesen)) or {}
         kaynak = veri.get("kaynak")
         if isinstance(kaynak, dict):
             ham = [kaynak]

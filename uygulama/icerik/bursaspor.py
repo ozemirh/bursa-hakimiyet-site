@@ -23,6 +23,8 @@ burada**.
 
 from datetime import date, datetime
 
+from . import canli
+
 # Maç merkezindeki "son sonuçlar" ve "sıradaki maçlar" adedi (şablon şu an
 # yalnız `sonraki`yi işaretliyor; sayılar veri sözleşmesinin parçası).
 SON_MACLAR = 3
@@ -61,7 +63,7 @@ def _mac_duzelt(mac: dict, kulup_id) -> dict:
     return k
 
 
-def fikstur_hazirla(puan: dict | None) -> dict | None:
+def fikstur_hazirla(puan: dict | None, bugun: date | None = None) -> dict | None:
     """`takip.fikstur` listesini tabloya hazırlar.
 
     Döner: `maclar` (sezonun tamamı, hafta sırasıyla), `sonraki` (ilk
@@ -75,17 +77,33 @@ def fikstur_hazirla(puan: dict | None) -> dict | None:
     kulup_id = takip.get("kulup_id")
     maclar = sorted((_mac_duzelt(m, kulup_id) for m in ham),
                     key=lambda m: (m.get("hafta") or 0, m["tarih_g"] or date.max))
+    # 19 Ekim 2026: "sıradaki" ve maç durumu (sonuc · bekliyor · bilgi_yok)
+    # anasayfadaki haftanın maçıyla AYNI işlevden gelir (`canli.mac_takvimi`):
+    # tarihi geçmiş, skoru olmayan maç "oynanmadı" değil "sonuç bilgisi yok"
+    # sayılır ve sıradaki maç bugünden ileriye bakar.
+    takvim = canli.mac_takvimi(puan, bugun) or {}
+    durumlar = {m.get("mac_id"): m["durum"] for m in takvim.get("maclar") or []}
+    for m in maclar:
+        m["durum"] = durumlar.get(m.get("mac_id"),
+                                  "sonuc" if m["skor_var"] else "bekliyor")
     oynananlar = [m for m in maclar if m["skor_var"]]
-    oynanmayanlar = [m for m in maclar if not m["skor_var"]]
+    siradakiler = [m for m in maclar if m["durum"] == "bekliyor"]
+    sonraki_id = (takvim.get("sonraki") or {}).get("mac_id")
+    sonraki = next((m for m in maclar if sonraki_id is not None
+                    and m.get("mac_id") == sonraki_id), None)
+    taze = (puan or {}).get("tazelik") or canli.tazelik(
+        puan, canli.VARSAYILAN_ESIK["puan-durumu"])
     return {
         "maclar": maclar,
-        "sonraki": oynanmayanlar[0] if oynanmayanlar else None,
-        "siradakiler": oynanmayanlar[:SIRADAKI_MACLAR],
+        "sonraki": sonraki,
+        "siradakiler": siradakiler[:SIRADAKI_MACLAR],
         "son_maclar": list(reversed(oynananlar[-SON_MACLAR:])),
         "oynanan": len(oynananlar),
+        "bilgi_yok": sum(1 for m in maclar if m["durum"] == "bilgi_yok"),
         "toplam": len(maclar),
         "guncelleme": (puan or {}).get("guncelleme"),
-        "bayat": bool((puan or {}).get("bayat")),
+        "tazelik": taze,
+        "bayat": taze["durum"] != canli.TAZE,
         "kaynak": (puan or {}).get("kaynak"),
     }
 

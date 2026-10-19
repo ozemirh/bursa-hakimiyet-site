@@ -355,10 +355,14 @@ def calistir(kok: Path) -> int:
             kok, BILESEN, cikti, f"TCMB bulteni cozulemedi: {e}")
 
     eksik = [t["kod"] for t in KALEMLER if t["kod"] and t["kod"] not in kurlar]
+    tcmb_kodlu = [t for t in KALEMLER if t["kod"]]
     if eksik:
+        gelen = len(tcmb_kodlu) - len(eksik)
         return ortak.dusme_ile_bitir(
             kok, BILESEN, cikti,
-            "TCMB bulteninde su kodlar yok: " + ", ".join(eksik))
+            "TCMB bulteninde su kodlar yok: " + ", ".join(eksik),
+            ortak.saglik("tcmb_kalem", gelen, len(tcmb_kodlu), [
+                ortak.kaynak_sonucu("TCMB", gelen, asgari=len(tcmb_kodlu))]))
 
     ortak.log(f"  Bülten {kunye['no']} / {kunye['tarih']}, "
               f"{len(kurlar)} para birimi")
@@ -420,7 +424,12 @@ def calistir(kok: Path) -> int:
     }
 
     ortak.json_yaz(cikti, veri)
-    ortak.durum_yaz(kok, BILESEN, "taze")
+    # Saglik: TCMB'nin uc kalemi esiktir (eksikse yukarida dusuldu);
+    # gram altin/BIST piyasa.py'nin kendi durum dosyasinda izlenir.
+    ortak.durum_yaz(kok, BILESEN, "taze", saglik=ortak.saglik(
+        "tcmb_kalem", len(tcmb_gelen), len(tcmb_kodlu), [
+            ortak.kaynak_sonucu("TCMB", len(tcmb_gelen),
+                                asgari=len(tcmb_kodlu))]))
 
     for k in kalemler:
         if k["deger"] is None:

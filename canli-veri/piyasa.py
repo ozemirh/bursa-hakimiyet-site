@@ -763,6 +763,20 @@ def tcmb_karsilastir(kok: Path, kalemler: list) -> dict:
     return cik
 
 
+def _kaynak_sagligi(denenen: list) -> list:
+    """`denenen_kaynaklar` -> durum dosyasinin kaynak basina satirlari."""
+    satirlar = []
+    for d in denenen:
+        if d.get("sonuc") == "atlandi":
+            satirlar.append({"ad": d["kaynak"], "sonuc": "atlandi",
+                             "kayit": None})
+            continue
+        satirlar.append(ortak.kaynak_sonucu(
+            d["kaynak"], len(d.get("alinan") or []),
+            d.get("hata", "") if d.get("sonuc") == "dustu" else ""))
+    return satirlar
+
+
 def calistir(kok: Path, sira: list) -> int:
     cikti = kok / (BILESEN + ".json")
     basladi = time.time()
@@ -857,7 +871,8 @@ def calistir(kok: Path, sira: list) -> int:
         hatalar = "; ".join("%s: %s" % (d["kaynak"], d.get("hata", d["sonuc"]))
                             for d in denenen)
         return ortak.dusme_ile_bitir(
-            kok, BILESEN, cikti, "hicbir kaynaktan veri alinamadi (%s)" % hatalar)
+            kok, BILESEN, cikti, "hicbir kaynaktan veri alinamadi (%s)" % hatalar,
+            ortak.saglik("asil_kalem", 0, 1, _kaynak_sagligi(denenen)))
 
     kalemler = []
     for t in KALEMLER:
@@ -923,7 +938,11 @@ def calistir(kok: Path, sira: list) -> int:
     }
 
     ortak.json_yaz(cikti, veri)
-    ortak.durum_yaz(kok, BILESEN, "taze")
+    # Sira usulu kaynakta tek kaynagin dusmesi olagandir (bir sonrakine
+    # gecilir); esik yalniz "asil kalemlerden en az biri geldi mi".
+    saglik = ortak.saglik("asil_kalem", veri["denetim"]["asil_kalem_dolu"], 1)
+    saglik["kaynaklar"] = _kaynak_sagligi(denenen)
+    ortak.durum_yaz(kok, BILESEN, "taze", saglik=saglik)
 
     for k in kalemler:
         if k["deger"] is None:
