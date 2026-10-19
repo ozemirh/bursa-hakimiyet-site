@@ -648,7 +648,11 @@ class EczanePaneli(TestCase):
     """
 
     def _paket(self, eczaneler=None, **degis):
+        # `guncelleme` şimdi: 19 Ekim 2026'dan beri zamanı bilinmeyen ya da
+        # dünden eski liste panel açmıyor (`canli.GECERLIK_GUN`,
+        # tests_nobet_gecerlik). Buradaki iddialar geçerli liste içindir.
         paket = {
+            "guncelleme": datetime.now(timezone.utc).isoformat(),
             "gun": "2026-08-31",
             "kaynak": {"ad": "Bursa Eczacı Odası", "kisa": "BEO"},
             "eczaneler": eczaneler if eczaneler is not None else [
