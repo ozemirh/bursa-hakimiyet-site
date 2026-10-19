@@ -1,0 +1,16 @@
+# Test kapsamı (Paket K, 19 Ekim 2026). Bilgi amaçlı; CI turu düşürmez.
+#   python -m coverage run manage.py test && python -m coverage report
+[run]
+source = .
+omit =
+    */migrations/*
+    */tests.py
+    */tests_*.py
+    manage.py
+    cekirdek/asgi.py
+    cekirdek/wsgi.py
+
+[report]
+skip_empty = true
+sort = cover
+precision = 1

@@ -8,13 +8,15 @@
 # Başsız Chrome ölçüm testleri (BH_PANEL_OLCUM=1) burada KAPALI: Chrome ve
 # gerçek veri ister, birim turunun parçası değil.
 #
-# Bilinen kırılgan bağımlılık (DEGERLENDIRME Test B8): bazı testler gerçek
-# `canli-veri/veri/*.json` dosyalarını okur; o klasör git'te yok. Ölçüldü
-# (19 Ekim 2026, klasör ve arşiv yokken): 929 testten 1'i düşer —
-# icerik.tests_bolum_bloklari.BolumBloklari.test_servis_panelleri_kaldi
-# (/saglik sayfasında eczane ızgarası bekliyor, nobetci-eczane.json ister).
-# Test kodu burada değiştirilmedi; düzeltme test-kalite-muhendisi'nde.
-# O düzelene kadar SQLite işi bu tek testle kırmızıdır.
+# Hermetik paket (Paket K, 19 Ekim 2026): test ayarı canlı veriyi depodaki
+# fixture'a (uygulama/icerik/test_verisi/canli/), arşiv ve türev kökünü var
+# olmayan geçici yola yönlendirir; BH_CANLI_VERI_KOK / BH_ARSIV_KOK testte
+# yok sayılır (cekirdek/tests_hermetik.py). Eskiden bu iş
+# test_servis_panelleri_kaldi yüzünden kırmızıydı.
+#
+# Sıra: `--shuffle` ile rastgele; tohum günlükte yazar, düşen sıra
+# `--shuffle <tohum>` ile yerelde aynen yeniden kurulur.
+# Kapsam raporu bilgi amaçlı (uygulama/.coveragerc), turu düşürmez.
 
 name: test
 
@@ -90,12 +92,18 @@ jobs:
 
       - name: Testler
         working-directory: uygulama
-        run: python -m coverage run --source=. manage.py test --noinput -v 1
+        env:
+          # Hermetiklik kanıtı: gerçek kökler var olmayan yeri gösterir.
+          BH_CANLI_VERI_KOK: ${{ github.workspace }}/.ci-canli-veri-yok
+        run: python -m coverage run manage.py test --noinput -v 1 --shuffle
 
-      - name: Kapsam özeti
+      - name: Kapsam özeti (bilgi)
         if: always()
+        continue-on-error: true
         working-directory: uygulama
-        run: python -m coverage report --skip-empty | tail -n 25
+        run: |
+          python -m coverage report | tail -n 40
+          python -m coverage report --format=total | xargs -I{} echo "Toplam kapsam: %{}"
 
   denetim:
     name: üretim ayarları + statik derleme

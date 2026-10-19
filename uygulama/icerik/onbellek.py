@@ -33,7 +33,9 @@ sürece farklı bir sıfırdan sayar ve paylaşılan önbellekte anlamsızdır.
 
 from __future__ import annotations
 
+import itertools
 import logging
+import os
 import time
 from typing import Any, Callable
 
@@ -144,9 +146,23 @@ def yayin_surumu() -> str:
     return deger
 
 
+_surum_sayaci = itertools.count()
+
+
+def yeni_surum() -> str:
+    """Her çağrıda FARKLI bir sürüm değeri.
+
+    Yalnız zaman damgası yetmiyordu: Windows'ta `time.time()` çözünürlüğü
+    15,625 ms ve aynı dilimdeki iki kayıt aynı sürümü yazıyor, ikincisi
+    önbellekte görünmüyordu (`tests_kararlilik` başındaki kök neden).
+    Süreç kimliği + süreç içi sayaç çakışmayı kapatır.
+    """
+    return f"{time.time():.6f}-{os.getpid()}-{next(_surum_sayaci)}"
+
+
 def surumu_artir() -> str:
     # Sayı değil zaman damgası: iki süreç aynı anda artırırsa ikisi de
     # FARKLI ve yeni bir değer yazar; `incr` dosya önbelleğinde atomik değil.
-    deger = f"{time.time():.6f}"
+    deger = yeni_surum()
     caches[SAYFA].set(SURUM_ANAHTARI, deger, None)
     return deger

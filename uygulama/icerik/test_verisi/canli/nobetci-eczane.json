@@ -1,0 +1,376 @@
+{
+ "_not": "Bursa Eczacı Odası'nın açık nöbet sayfasından çekildi. Yayınlanırken kaynak belirtilir. Telefonu ya da harita konumu kaynakta olmayan eczane boş alanla geçer; uydurulmaz.",
+ "guncelleme": "2026-09-12T22:12:11+03:00",
+ "bayat_esik_dakika": 1440,
+ "kaynak": {
+  "ad": "Bursa Eczacı Odası",
+  "kisa": "BEO",
+  "adres": "https://www.beo.org.tr/nobetci-eczaneler",
+  "kosullar": "https://www.beo.org.tr/robots.txt",
+  "kunye": "Kaynak: Bursa Eczacı Odası."
+ },
+ "gun": "2026-09-12",
+ "sayfa_basligi": "12 Eylül 2026 Bugün Nöbetçi Eczaneler",
+ "ilce_suzgeci": "",
+ "ilceler": [
+  {
+   "kimlik": "1277",
+   "ad": "MERKEZ"
+  },
+  {
+   "kimlik": "1292",
+   "ad": "BÜYÜKORHAN"
+  },
+  {
+   "kimlik": "1290",
+   "ad": "GEMLİK"
+  },
+  {
+   "kimlik": "1289",
+   "ad": "GÜRSU"
+  },
+  {
+   "kimlik": "1288",
+   "ad": "HARMANCIK"
+  },
+  {
+   "kimlik": "1280",
+   "ad": "İNEGÖL"
+  },
+  {
+   "kimlik": "1291",
+   "ad": "İZNİK"
+  },
+  {
+   "kimlik": "1287",
+   "ad": "KARACABEY"
+  },
+  {
+   "kimlik": "1286",
+   "ad": "KELES"
+  },
+  {
+   "kimlik": "1285",
+   "ad": "KESTEL"
+  },
+  {
+   "kimlik": "1296",
+   "ad": "NİLÜFER - ÇALI"
+  },
+  {
+   "kimlik": "1294",
+   "ad": "MUDANYA - GÜZELYALI"
+  },
+  {
+   "kimlik": "1278",
+   "ad": "MUDANYA"
+  },
+  {
+   "kimlik": "1284",
+   "ad": "MUSTAFAKEMALPAŞA"
+  },
+  {
+   "kimlik": "1283",
+   "ad": "ORHANELİ"
+  },
+  {
+   "kimlik": "1282",
+   "ad": "ORHANGAZİ"
+  },
+  {
+   "kimlik": "1293",
+   "ad": "OSMANGAZİ - DEMİRTAŞ"
+  },
+  {
+   "kimlik": "1297",
+   "ad": "OSMANGAZİ - OVAAKÇA"
+  },
+  {
+   "kimlik": "1281",
+   "ad": "YENİŞEHİR"
+  }
+ ],
+ "eczane_sayisi": 23,
+ "eczaneler": [
+  {
+   "ad": "ÖRNEK 1 ECZANESİ",
+   "ilce": "NİLÜFER",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:1",
+   "telefon": "0224 000 00 01",
+   "enlem": 40.22,
+   "boylam": 28.97,
+   "nobet_metni": "12.09.2026 17:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T17:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 2 ECZANESİ",
+   "ilce": "NİLÜFER",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:2",
+   "telefon": "0224 000 00 02",
+   "enlem": 40.22,
+   "boylam": 28.99,
+   "nobet_metni": "12.09.2026 17:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T17:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 3 ECZANESİ",
+   "ilce": "OSMANGAZİ",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:3",
+   "telefon": "0224 000 00 03",
+   "enlem": 40.19,
+   "boylam": 29.06,
+   "nobet_metni": "12.09.2026 17:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T17:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 4 ECZANESİ",
+   "ilce": "OSMANGAZİ",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:4",
+   "telefon": "0224 000 00 04",
+   "enlem": 40.2,
+   "boylam": 29.04,
+   "nobet_metni": "12.09.2026 17:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T17:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 5 ECZANESİ",
+   "ilce": "YILDIRIM",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:5",
+   "telefon": "0224 000 00 05",
+   "enlem": 40.18,
+   "boylam": 29.09,
+   "nobet_metni": "12.09.2026 17:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T17:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 6 ECZANESİ",
+   "ilce": "YILDIRIM",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:6",
+   "telefon": "0224 000 00 06",
+   "enlem": 40.19,
+   "boylam": 29.12,
+   "nobet_metni": "12.09.2026 17:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T17:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 7 ECZANESİ",
+   "ilce": "BÜYÜKORHAN",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:7",
+   "telefon": "0224 000 00 07",
+   "enlem": 39.77,
+   "boylam": 28.88,
+   "nobet_metni": "12.09.2026 17:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T17:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 8 ECZANESİ",
+   "ilce": "GEMLİK",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:8",
+   "telefon": "0224 000 00 08",
+   "enlem": 40.43,
+   "boylam": 29.16,
+   "nobet_metni": "12.09.2026 15:00 / 13.09.2026 00:00",
+   "nobet_baslangic": "2026-09-12T15:00",
+   "nobet_bitis": "2026-09-13T00:00"
+  },
+  {
+   "ad": "ÖRNEK 9 ECZANESİ",
+   "ilce": "GEMLİK",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:9",
+   "telefon": "0224 000 00 09",
+   "enlem": 40.43,
+   "boylam": 29.19,
+   "nobet_metni": "12.09.2026 15:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T15:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 10 ECZANESİ",
+   "ilce": "GÜRSU",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:10",
+   "telefon": "0224 000 00 10",
+   "enlem": 40.22,
+   "boylam": 29.19,
+   "nobet_metni": "12.09.2026 15:30 / 13.09.2026 09:00",
+   "nobet_baslangic": "2026-09-12T15:30",
+   "nobet_bitis": "2026-09-13T09:00"
+  },
+  {
+   "ad": "ÖRNEK 11 ECZANESİ",
+   "ilce": "HARMANCIK",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:11",
+   "telefon": "0224 000 00 11",
+   "enlem": 39.68,
+   "boylam": 29.16,
+   "nobet_metni": "12.09.2026 08:30 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T08:30",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 12 ECZANESİ",
+   "ilce": "İNEGÖL",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:12",
+   "telefon": "0224 000 00 12",
+   "enlem": 40.11,
+   "boylam": 29.52,
+   "nobet_metni": "12.09.2026 17:00 / 13.09.2026 01:00",
+   "nobet_baslangic": "2026-09-12T17:00",
+   "nobet_bitis": "2026-09-13T01:00"
+  },
+  {
+   "ad": "ÖRNEK 13 ECZANESİ",
+   "ilce": "İNEGÖL",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:13",
+   "telefon": "0224 000 00 13",
+   "enlem": 40.07,
+   "boylam": 29.5,
+   "nobet_metni": "12.09.2026 17:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T17:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 14 ECZANESİ",
+   "ilce": "İZNİK",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:14",
+   "telefon": "0224 000 00 14",
+   "enlem": 40.43,
+   "boylam": 29.72,
+   "nobet_metni": "12.09.2026 08:30 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T08:30",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 15 ECZANESİ",
+   "ilce": "KARACABEY",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:15",
+   "telefon": "0224 000 00 15",
+   "enlem": 40.21,
+   "boylam": 28.36,
+   "nobet_metni": "12.09.2026 15:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T15:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 16 ECZANESİ",
+   "ilce": "KESTEL",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:16",
+   "telefon": "0224 000 00 16",
+   "enlem": 40.2,
+   "boylam": 29.21,
+   "nobet_metni": "12.09.2026 14:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T14:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 17 ECZANESİ",
+   "ilce": "MUDANYA - GÜZELYALI",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:17",
+   "telefon": "0224 000 00 17",
+   "enlem": 40.35,
+   "boylam": 28.93,
+   "nobet_metni": "12.09.2026 08:30 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T08:30",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 18 ECZANESİ",
+   "ilce": "MUDANYA",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:18",
+   "telefon": "0224 000 00 18",
+   "enlem": 40.38,
+   "boylam": 28.88,
+   "nobet_metni": "12.09.2026 08:30 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T08:30",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 19 ECZANESİ",
+   "ilce": "MUSTAFAKEMALPAŞA",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:19",
+   "telefon": "0224 000 00 19",
+   "enlem": 40.03,
+   "boylam": 28.41,
+   "nobet_metni": "12.09.2026 17:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T17:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 20 ECZANESİ",
+   "ilce": "ORHANELİ",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:20",
+   "telefon": "0224 000 00 20",
+   "enlem": 39.9,
+   "boylam": 28.99,
+   "nobet_metni": "12.09.2026 08:30 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T08:30",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 21 ECZANESİ",
+   "ilce": "ORHANGAZİ",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:21",
+   "telefon": "0224 000 00 21",
+   "enlem": 40.5,
+   "boylam": 29.3,
+   "nobet_metni": "12.09.2026 15:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T15:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 22 ECZANESİ",
+   "ilce": "OSMANGAZİ - DEMİRTAŞ",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:22",
+   "telefon": "0224 000 00 22",
+   "enlem": 40.27,
+   "boylam": 29.08,
+   "nobet_metni": "12.09.2026 17:00 / 13.09.2026 08:30",
+   "nobet_baslangic": "2026-09-12T17:00",
+   "nobet_bitis": "2026-09-13T08:30"
+  },
+  {
+   "ad": "ÖRNEK 23 ECZANESİ",
+   "ilce": "YENİŞEHİR",
+   "adres": "DENEME MAH. ÖRNEK SOK. NO:23",
+   "telefon": "0224 000 00 23",
+   "enlem": 40.27,
+   "boylam": 29.63,
+   "nobet_metni": "12.09.2026 08:00 / 13.09.2026 08:00",
+   "nobet_baslangic": "2026-09-12T08:00",
+   "nobet_bitis": "2026-09-13T08:00"
+  }
+ ],
+ "denetim": {
+  "eczane": 23,
+  "ilce": 18,
+  "ilce_dagilimi": {
+   "NİLÜFER": 2,
+   "OSMANGAZİ": 2,
+   "YILDIRIM": 2,
+   "BÜYÜKORHAN": 1,
+   "GEMLİK": 2,
+   "GÜRSU": 1,
+   "HARMANCIK": 1,
+   "İNEGÖL": 2,
+   "İZNİK": 1,
+   "KARACABEY": 1,
+   "KESTEL": 1,
+   "MUDANYA - GÜZELYALI": 1,
+   "MUDANYA": 1,
+   "MUSTAFAKEMALPAŞA": 1,
+   "ORHANELİ": 1,
+   "ORHANGAZİ": 1,
+   "OSMANGAZİ - DEMİRTAŞ": 1,
+   "YENİŞEHİR": 1
+  },
+  "telefonsuz": 0,
+  "konumsuz": 0,
+  "nobet_saati_cozulemeyen": 0
+ }
+}

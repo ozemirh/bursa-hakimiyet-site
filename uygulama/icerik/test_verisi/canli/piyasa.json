@@ -1,0 +1,225 @@
+{
+ "_not": "Gram altın ve BIST 100 için dört kaynak sırayla denenir: TCMB EVDS (resmi kapanış), Google Finance (başsız Chrome), doviz.com, Mynet Finans. Hangi kalemin hangi kaynaktan geldiği kalem başına yazılır. EVDS resmî kapanış verir, gün içi fiyat vermez: gün içinde canlı kotasyon öne geçer, kapanış o güne aitse EVDS öne geçer (kaynak_durumu alanı ve capraz_kontrol.resmi_kapanis_piyasa_farki bunu gösterir). Dolar ve euro yayın için değil, TCMB kuruyla karşılaştırıp kaynağı doğrulamak için çekilir. Değer uydurulmaz.",
+ "guncelleme": "2026-09-12T21:57:05+03:00",
+ "bayat_esik_dakika": 45,
+ "kaynak_sirasi": [
+  "evds",
+  "doviz",
+  "mynet"
+ ],
+ "kaynak": [
+  {
+   "ad": "TCMB Elektronik Veri Dağıtım Sistemi (EVDS)",
+   "kisa": "TCMB EVDS",
+   "adres": "https://evds2.tcmb.gov.tr/",
+   "kunye": "Kaynak: TCMB EVDS. BIST 100 ve altın kapanış serilerini EVDS'ye Borsa İstanbul sağlar.",
+   "anahtar": "evds"
+  },
+  {
+   "ad": "doviz.com",
+   "kisa": "doviz.com",
+   "adres": "https://www.doviz.com/",
+   "kunye": "Kaynak: doviz.com.",
+   "anahtar": "doviz"
+  }
+ ],
+ "denenen_kaynaklar": [
+  {
+   "kaynak": "evds",
+   "sonuc": "tamam",
+   "alinan": [
+    "gram_altin",
+    "bist100"
+   ],
+   "sure_sn": 0.2,
+   "ek": {
+    "uc": "https://evds3.tcmb.gov.tr/igmevdsms-dis/fe",
+    "seri": {
+     "gram_altin": "TP.ALTINPIYASA.KAP02",
+     "bist100": "TP.MK.F.BILESIK"
+    },
+    "frekans": "İŞ GÜNÜ",
+    "aralik": [
+     "22-08-2026",
+     "12-09-2026"
+    ],
+    "donen_gozlem": 15,
+    "gram_serisi_kontrolu": {
+     "seri": "TP.ALTINPIYASA.KAP05",
+     "tarih": "25-08-2026",
+     "kote_edilen_tl_gram": 7150.0,
+     "not": "Seyrek dolu olduğu için yayına girmez; birim çevrimini doğrulamak için okunur."
+    }
+   }
+  },
+  {
+   "kaynak": "doviz",
+   "sonuc": "tamam",
+   "alinan": [
+    "gram_altin",
+    "bist100",
+    "dolar",
+    "euro",
+    "sterlin"
+   ],
+   "sure_sn": 0.1
+  },
+  {
+   "kaynak": "mynet",
+   "sonuc": "atlandi",
+   "not": "asil kalemler yeterli kaynakla doldu"
+  }
+ ],
+ "kalemler": [
+  {
+   "anahtar": "gram_altin",
+   "ad": "Gram altın",
+   "birim": "TL",
+   "rol": "yayin",
+   "deger": 6784.88,
+   "onceki": null,
+   "degisim": 48.5,
+   "degisim_yuzde": 0.72,
+   "yon": "yukari",
+   "kaynak": "doviz",
+   "kaynak_durumu": "taze",
+   "kaynak_zamani": "",
+   "kaynak_sembol": "gram-altin"
+  },
+  {
+   "anahtar": "bist100",
+   "ad": "BIST 100",
+   "birim": "puan",
+   "rol": "yayin",
+   "deger": 14467.25,
+   "onceki": null,
+   "degisim": 73.41,
+   "degisim_yuzde": 0.51,
+   "yon": "yukari",
+   "kaynak": "doviz",
+   "kaynak_durumu": "taze",
+   "kaynak_zamani": "",
+   "kaynak_sembol": "XU100"
+  },
+  {
+   "anahtar": "dolar",
+   "ad": "Dolar",
+   "birim": "TL",
+   "rol": "dogrulama",
+   "deger": 48.525,
+   "onceki": null,
+   "degisim": 0.0,
+   "degisim_yuzde": 0.0,
+   "yon": "esit",
+   "kaynak": "doviz",
+   "kaynak_durumu": "taze",
+   "kaynak_zamani": "",
+   "kaynak_sembol": "USD"
+  },
+  {
+   "anahtar": "euro",
+   "ad": "Euro",
+   "birim": "TL",
+   "rol": "dogrulama",
+   "deger": 56.3246,
+   "onceki": null,
+   "degisim": -0.1695,
+   "degisim_yuzde": -0.3,
+   "yon": "asagi",
+   "kaynak": "doviz",
+   "kaynak_durumu": "taze",
+   "kaynak_zamani": "",
+   "kaynak_sembol": "EUR"
+  },
+  {
+   "anahtar": "sterlin",
+   "ad": "Sterlin",
+   "birim": "TL",
+   "rol": "dogrulama",
+   "deger": 65.7182,
+   "onceki": null,
+   "degisim": 0.046,
+   "degisim_yuzde": 0.07,
+   "yon": "yukari",
+   "kaynak": "doviz",
+   "kaynak_durumu": "taze",
+   "kaynak_zamani": "",
+   "kaynak_sembol": "GBP"
+  }
+ ],
+ "gram_altin_cevrimi": {
+  "birim": "TL / gram",
+  "ons_gram": 31.1034768,
+  "not": "Doğrudan kote eden kaynak varsa çevrim YAPILMAZ. Yalnız Google yolunda gerekir: Google'da TRY cinsi altın kotasyonu yoktur, COMEX vadeli ons fiyatından ons_usd * usd_try / 31,1034768 ile hesaplanır ve 'hesaplanan' damgasıyla işaretlenir."
+ },
+ "capraz_kontrol": {
+  "tcmb": {
+   "yapildi": true,
+   "bulten": "11.09.2026",
+   "karsilastirma": [
+    {
+     "kalem": "dolar",
+     "piyasa": 48.525,
+     "tcmb": 48.525,
+     "sapma_yuzde": 0.0,
+     "tutuyor": true
+    },
+    {
+     "kalem": "euro",
+     "piyasa": 56.3246,
+     "tcmb": 56.3246,
+     "sapma_yuzde": 0.0,
+     "tutuyor": true
+    },
+    {
+     "kalem": "sterlin",
+     "piyasa": 65.7182,
+     "tcmb": 65.7182,
+     "sapma_yuzde": 0.0,
+     "tutuyor": true
+    }
+   ]
+  },
+  "resmi_kapanis_piyasa_farki": [
+   {
+    "kalem": "gram_altin",
+    "resmi_kapanis": 6808.7,
+    "resmi_kaynak": "evds",
+    "resmi_seri": "TP.ALTINPIYASA.KAP02",
+    "resmi_tarih": "11-09-2026",
+    "piyasa": 6784.88,
+    "piyasa_kaynak": "doviz",
+    "sapma_yuzde": -0.35,
+    "yayina_giden": "piyasa"
+   },
+   {
+    "kalem": "bist100",
+    "resmi_kapanis": 14393.85,
+    "resmi_kaynak": "evds",
+    "resmi_seri": "TP.MK.F.BILESIK",
+    "resmi_tarih": "10-09-2026",
+    "piyasa": 14467.25,
+    "piyasa_kaynak": "doviz",
+    "sapma_yuzde": 0.51,
+    "yayina_giden": "piyasa"
+   }
+  ]
+ },
+ "denetim": {
+  "kalem": 5,
+  "dolu": 5,
+  "asil_kalem_dolu": 2,
+  "hesaplanan": [],
+  "resmi_kapanis": [],
+  "bos": [],
+  "kaynak_dagilimi": {
+   "gram_altin": "doviz",
+   "bist100": "doviz",
+   "dolar": "doviz",
+   "euro": "doviz",
+   "sterlin": "doviz"
+  },
+  "google_engel_izi": [],
+  "toplam_sure_sn": 0.3
+ }
+}
