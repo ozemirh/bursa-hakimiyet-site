@@ -58,12 +58,13 @@ paylaşılan önbellek, `settings.py` başarım bloğu).
 
 from __future__ import annotations
 
+import time
 from datetime import datetime, timedelta
 from functools import lru_cache
 
 from django.core.cache import cache
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Q, Value
 from django.db.models.expressions import RawSQL
 from django.utils import timezone
 
@@ -130,10 +131,20 @@ def _tsquery(terimler: list[list[str]]) -> str:
 UC_ORNEK = 51
 
 
-def _uc_kimligi(an: datetime, ileri: bool) -> int | None:
-    """Pencere ucunun kimliği: zaman sırasında `an`dan içeri doğru ilk
-    UC_ORNEK kaydın en küçüğü (alt uç) ya da en büyüğü (üst uç) — AYKIRI
-    kimlik ayıklanarak (kapsayan indeksten, ~0,2 ms).
+def _uc_sorgusu(an: datetime, ileri: bool):
+    """Pencere ucundan içeri doğru ilk UC_ORNEK kaydın kimliği (kapsayan
+    indeksten). `uc` sütunu birleşik sorguda hangi uca ait olduğunu söyler."""
+    sorgu = Haber.yayindakiler().annotate(uc=Value(int(ileri)))
+    if ileri:
+        sorgu = sorgu.filter(yayin_zamani__lte=an).order_by("-yayin_zamani", "-id")
+    else:
+        sorgu = sorgu.filter(yayin_zamani__gte=an).order_by("yayin_zamani", "id")
+    return sorgu.values_list("id", "uc")[:UC_ORNEK]
+
+
+def _uc_kimligi(kimlikler: list[int], ileri: bool) -> int | None:
+    """Uçtaki kimliklerden pencere ucu: en küçük (alt) / en büyük (üst) —
+    AYKIRI kimlik ayıklanarak.
 
     Düz en küçük/en büyük yetmiyor: arşivde sonradan yeniden tarihlenmiş
     birkaç eski kayıt var ve uçları savuruyor (ölçüldü: 2022-10 penceresinin
@@ -141,14 +152,9 @@ def _uc_kimligi(an: datetime, ileri: bool) -> int | None:
     arasında). Uçtaki ardışık kayıtların kimliği birbirine yakındır; ortancaya
     `10 × UC_ORNEK`ten uzak kimlik aykırı sayılır.
     """
-    sorgu = Haber.yayindakiler()
-    if ileri:
-        sorgu = sorgu.filter(yayin_zamani__lte=an).order_by("-yayin_zamani", "-id")
-    else:
-        sorgu = sorgu.filter(yayin_zamani__gte=an).order_by("yayin_zamani", "id")
-    kimlikler = sorted(sorgu.values_list("id", flat=True)[:UC_ORNEK])
     if not kimlikler:
         return None
+    kimlikler = sorted(kimlikler)
     ortanca, pay = kimlikler[len(kimlikler) // 2], 10 * UC_ORNEK
     if ileri:
         return max(k for k in kimlikler if k <= ortanca + pay)
@@ -162,14 +168,23 @@ def kimlik_araligi(bas: datetime, son: datetime) -> tuple[int, int | None] | Non
     pencerenin ÇEKİRDEĞİDİR. Zamanı pencerede ama kimliği çekirdeğin
     dışında kalan tek tük kayıt (yeniden tarihlenmiş arşiv kaydı ya da
     uçtaki sıra kayması) aday olmaz — kesin zaman süzgeci ayrıca uygulanır.
-    Bugüne değen pencerede üst sınır yok (None).
+    Bugüne değen pencerede üst sınır yok (None). İki uç PostgreSQL'de TEK
+    sorguda (`UNION ALL`) okunur; SQLite birleşik sorguda dilim kabul etmez.
     """
-    alt = _uc_kimligi(bas, ileri=False)
+    acik_uc = son >= timezone.now()
+    alt_sorgu = _uc_sorgusu(bas, ileri=False)
+    if acik_uc:
+        satirlar = list(alt_sorgu)
+    elif connection.features.supports_slicing_ordering_in_compound:
+        satirlar = list(alt_sorgu.union(_uc_sorgusu(son, ileri=True), all=True))
+    else:
+        satirlar = list(alt_sorgu) + list(_uc_sorgusu(son, ileri=True))
+    alt = _uc_kimligi([k for k, uc in satirlar if uc == 0], ileri=False)
     if alt is None:
         return None
-    if son >= timezone.now():
+    if acik_uc:
         return alt, None
-    ust = _uc_kimligi(son, ileri=True)
+    ust = _uc_kimligi([k for k, uc in satirlar if uc == 1], ileri=True)
     if ust is None or ust < alt:
         return None
     return alt, ust
@@ -201,12 +216,21 @@ def siklik() -> dict[str, float]:
         # oranı); zip onları kelimesiz bırakır.
         return dict(zip(satir[0], satir[1]))
 
+    # Süreç içi bellek + paylaşılan önbellek: istatistik günde bir kez
+    # değişir (ANALYZE); istek başına sorgu açmasın.
+    simdi = time.monotonic()
+    if _SIKLIK and simdi - _SIKLIK[0] < SIKLIK_ONBELLEK_SN:
+        return _SIKLIK[1]
     anahtar = "ilgili:siklik"
     deger = cache.get(anahtar)
     if deger is None:
         deger = uret()
         cache.set(anahtar, deger, SIKLIK_ONBELLEK_SN)
+    _SIKLIK[:] = [simdi, deger]
     return deger
+
+
+_SIKLIK: list = []
 
 
 def agir_mi(terim: list[str], sozluk: dict[str, float]) -> bool:

@@ -42,7 +42,7 @@ SAYFA_ACIK = override_settings(
 #             ölçülen az kayıt / 4 kat kayıt
 TAVAN = {
     "anasayfa": 30,             # 22 / 22 (L2: yazar kuşağı tek sorgu)
-    "haber_detay": 12,          # 11 / 11
+    "haber_detay": 12,          # 11 / 11 (PG 12: ilgili habere kimlik aralığı, L2)
     "kategori_bursa": 12,       #  7 / 7
     "kategori_ekonomi": 12,     #  9 / 7
     "kategori_bursaspor": 12,   #  7 / 7
