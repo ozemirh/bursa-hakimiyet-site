@@ -134,7 +134,10 @@ class MenuStiliVeBetigi(TestCase):
         kural = re.search(r"([^\n}]*summary:focus-visible[^{]*)\{([^}]*)\}", self.CSS)
         self.assertIsNotNone(kural, "summary:focus-visible kuralı yok")
         self.assertIn("outline", kural.group(2))
-        self.assertIn("var(--kirmizi)", kural.group(2))
+        # 19 Ekim 2026: halka rengi rol değişkeninden (`--tema-odak`,
+        # varsayılanı --kirmizi); koyu zeminde beyaza döner (tests_temalar).
+        self.assertIn("var(--tema-odak)", kural.group(2))
+        self.assertIn("--tema-odak:var(--kirmizi)", self.CSS)
 
     def test_mega_levha_banda_asili(self):
         """30 Ağustos 2026 (§35): sağdan kayan sidebar, banda asılı beyaz

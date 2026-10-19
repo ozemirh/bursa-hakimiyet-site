@@ -26,10 +26,12 @@ bağlantıda. İnternetsizde Georgia'ya düşer, sayfa açılmaya devam eder.{% 
   tarayiciyla olcmek icin.{% endcomment %}
 <script>try{var bhq=new URLSearchParams(location.search).get('reklam-test');if(bhq==='acik'||bhq==='kapali'){localStorage.setItem('bh-reklam-test',bhq);}if(localStorage.getItem('bh-reklam-test')==='acik'){document.documentElement.setAttribute('data-reklam-test','acik');}}catch(e){}</script>
 {% endif %}</head>
-{% comment %}`govde_nitelik`: sayfa gövdeye nitelik ekleyebilir. Bugün tek
-kullanıcı Bursaspor bölümü (`data-bolum="bursaspor"`, yeşil-beyaz kabuk,
-12 Eylül 2026). Boş kalınca etiket eskisi gibi düz `<body>`.{% endcomment %}
-<body{% block govde_nitelik %}{% endblock %}>
+{% comment %}`data-bolum`: sayfaya özel tasarım (19 Ekim 2026). Değer
+görünümün verdiği `tema`dan gelir ve tema TEK KAYITTAN seçilir
+(`icerik/temalar.py`); şablonlar slug'a bakarak nitelik yazmaz. Tema yoksa
+etiket düz `<body>`. Kurallar `site.css` sonunda, `body[data-bolum] main`
+altında: üst kabuk `main`in dışında olduğu için temadan etkilenmez.{% endcomment %}
+<body{% block govde_nitelik %}{% if tema %} data-bolum="{{ tema.anahtar }}"{% endif %}{% endblock %}>
 <a class="atla" href="#ana-icerik">İçeriğe atla</a>
 {% include "parca/simgeler.html" %}
 {% include "parca/ust_bant.html" %}

@@ -17,6 +17,7 @@ from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
 
+from icerik import temalar
 from icerik.models import Haber
 from taksonomi.models import Kategori, KategoriTur
 
@@ -81,6 +82,8 @@ def yazar(request, dilim_slug, dilim_id):
         "yazar": kayit,
         "baslik": kayit.ad,
         "sayfa": sayfa,
+        # Sayfaya özel tasarım (19 Ekim 2026): köşe yazıları teması.
+        "tema": temalar.kose_temasi(),
     })
 
 
@@ -108,6 +111,7 @@ def kose_yazisi(request, dilim_slug, dilim_id, slug, kimlik):
                        .select_related("kategori")
                        .prefetch_related("kategori__turler")[:5],
         "ray_yazarlar": Yazar.listedekiler()[:5],
+        "tema": temalar.kose_temasi(),
     })
 
 
@@ -122,6 +126,7 @@ def yazar_listesi(request):
     return render(request, "medya/yazar_listesi.html", {
         "baslik": "Yazarlar",
         "yazarlar": yazarlar,
+        "tema": temalar.kose_temasi(),
     })
 
 

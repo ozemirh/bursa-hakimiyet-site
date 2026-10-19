@@ -1,0 +1,6 @@
+{% load site_etiket %}{% comment %}
+Köşe arşivi satırı (19 Ekim 2026, sayfaya özel tasarım). Kart ızgarası
+yerine tarih sütunlu cetvel: köşe yazısının fotoğrafı yok, ikinci anlamlı
+bilgi tarih. Spot yalnız başlıktan FARKLIYSA basılır — arşivdeki köşe
+yazılarının %99'unda ikisi aynı cümle. Okuma süresi kelime sayısından.
+{% endcomment %}<li>{% if y.yayin_zamani %}<time datetime="{{ y.yayin_zamani|date:'c' }}">{{ y.yayin_zamani|date:'j M Y' }}</time>{% else %}<span></span>{% endif %}<a href="{{ y.get_absolute_url }}">{{ y.baslik }}</a><span class="sure">{% if y.kelime_sayisi %}{{ y.kelime_sayisi|okuma_dakikasi }} dk{% endif %}</span>{% if y.spot and y.spot != y.baslik %}<p>{{ y.spot|truncatechars:160 }}</p>{% endif %}</li>

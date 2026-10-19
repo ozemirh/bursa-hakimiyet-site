@@ -151,7 +151,7 @@ class BursasporSayfasi(TestCase):
 
     def test_kural_sablonda_degil_gorunumde(self):
         kok = views.__file__.rsplit("icerik", 1)[0] + "sablonlar"
-        with open(kok + "/parca/bursaspor_bolumu.html", encoding="utf-8") as d:
+        with open(kok + "/parca/bolum/bursaspor.html", encoding="utf-8") as d:
             sablon = d.read()
         self.assertNotIn("slug ==", sablon)
         self.assertNotIn("kategori.slug", sablon)

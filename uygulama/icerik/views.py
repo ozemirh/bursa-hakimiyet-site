@@ -34,6 +34,7 @@ from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 from .arama_metni import sorgu_coz
 from .canli import anasayfa_verisi, oku, puan_ligleri, puan_takibi
 from . import bursaspor as bursaspor_bolumu
+from . import temalar
 from . import eczane as eczane_sayfa
 from . import okunma
 from .models import Haber, ResmiIlan
@@ -394,13 +395,11 @@ SERVIS_NOBET = {"saglik"}
 # Kulüp sayfası: sezon fikstürü ve yeşil-beyaz kabuk yalnız burada.
 BURSASPOR_SLUG = "bursaspor"
 
-# NOT — BÖLÜME ÖZEL RENK denendi ve GERİ ALINDI (7 Eylül 2026, §62 → §63).
-# Dört bölüm kendi vurgusunu alıyordu: kulüp yeşili (bursaspor), kent
-# mavisi (bursa + ilçeler), piyasa amberi (ekonomi), sağlık turkuazı
-# (saglik). Kullanıcı kararıyla düzeneğin tamamı kalktı; bölüm sayfaları
-# gazetenin lacivert-kırmızısında. Aynı kararın ikinci yarısı OLDUĞU GİBİ
-# DURUYOR: servis panelleri (piyasa ızgarası, puan penceresi, eczane
-# kartları) yerinde — giden yalnız renkti.
+# NOT — BÖLÜME ÖZEL RENK 7 Eylül 2026'da geri alınmıştı (§62 → §63); 19
+# Ekim 2026 kullanıcı kararıyla sayfaya özel tasarım geri geldi, ama bu
+# sefer TEK KAYITTAN: `icerik/temalar.py`. Burada bölüm→renk sözlüğü
+# tutulmaz (eski `BOLUM_TEMA` / `ILCE_TEMA` dönmesin); görünüm yalnız
+# kaydın verdiği `tema`yı bağlama koyar.
 
 
 def _bolum_gorselleri(kategori):
@@ -501,7 +500,7 @@ def kategori(request, slug):
                                  turler__slug=slug, aktif=True)
     sorgu = _liste().filter(kategori=kategori)
     sayfa = _sayfala(request, sorgu, sinirli=True)
-    return render(request, "kategori.html", {
+    baglam = {
         "kategori": kategori,
         "baslik": baslikla(kategori.ad),
         "sayfa": sayfa,
@@ -517,7 +516,11 @@ def kategori(request, slug):
         "bursaspor": (bursaspor_bolumu.bolum_verisi(oku("puan-durumu"))
                       if slug == BURSASPOR_SLUG else None),
         **_bolum_gorselleri(kategori),
-    })
+    }
+    # Sayfaya özel tasarım (19 Ekim 2026): `tema` ve temanın düzen verisi.
+    # Hangi bölümün tema aldığı tek kayıtta (`icerik/temalar.py`).
+    baglam.update(temalar.kategori_baglami(slug, kategori, sayfa, baglam))
+    return render(request, "kategori.html", baglam)
 
 
 def ilce(request, slug):

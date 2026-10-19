@@ -21,40 +21,37 @@ kutusu çiziliyor; sayfa internetsiz de açılmalı ve kırık görsel görünme
         </ol>
       </nav>
 
-      <section class="kutu">
-        <div class="kutu-bas vurgu">
-          <h1>{{ yazar.ad|buyult }}</h1>
-          <span class="tumu">{{ sayfa.paginator.count }} yazı</span>
-        </div>
-        <div class="kutu-ic">
-          <div class="yazarlar">
-            <div class="yazar">
-              {% if yazar.gorsel_yolu %}
-                <span class="foto vesika"><img src="{{ yazar.gorsel_yolu }}" alt="{{ yazar.ad }}" width="58" height="58"></span>
-              {% else %}
-                <span class="vesika" aria-hidden="true">{{ yazar.basharfler }}</span>
-              {% endif %}
-              <span>
-                <b>{{ yazar.ad }}</b>
-                {% if yazar.unvan %}<span class="sutun-ad">{{ yazar.unvan }}</span>{% endif %}
-                {% if yazar.ozgecmis %}<p>{{ yazar.ozgecmis }}</p>{% endif %}
-              </span>
-            </div>
+      {% comment %}YAZARIN KÜNYESİ (19 Ekim 2026, sayfaya özel tasarım): köşe
+      yazısının sütun başının büyük hâli. Sayfanın h1'i yazarın adı; altında
+      yalnız arşivden gelen bilgi — yazı sayısı, son yazının tarihi, varsa
+      köşe adı ve özgeçmiş. Köşe adı ve özgeçmiş bugün 37 yazarın hiçbirinde
+      dolu değil (ölçüldü); boş alan için satır basılmaz.{% endcomment %}
+      <section class="kutu gorus-yazar" aria-labelledby="yazar-bas">
+        <header class="gorus-bas">
+          {% if yazar.gorsel_yolu %}<span class="portre"><img src="{{ yazar.gorsel_yolu }}" alt="{{ yazar.ad }}" width="120" height="120" decoding="async"></span>
+          {% else %}<span class="portre vesika" aria-hidden="true">{{ yazar.basharfler }}</span>{% endif %}
+          <div class="gorus-kimlik">
+            <span class="gorus-tur">KÖŞE YAZARI</span>
+            <h1 id="yazar-bas">{{ yazar.ad }}</h1>
+            {% if yazar.unvan %}<span class="gorus-kose">{{ yazar.unvan }}</span>{% endif %}
+            <span class="gorus-sayi">{{ sayfa.paginator.count }} köşe yazısı{% if sayfa.number == 1 and sayfa.0.yayin_zamani %} &middot; son yazı <time datetime="{{ sayfa.0.yayin_zamani|date:'c' }}">{{ sayfa.0.yayin_zamani|date:'j F Y' }}</time>{% endif %}</span>
           </div>
-        </div>
+        </header>
+        {% if yazar.ozgecmis %}<p class="gorus-ozgecmis">{{ yazar.ozgecmis }}</p>{% endif %}
         {% if not yazar.sayfasi_tarandi %}
         <p class="yer-not">Bu yazarın künyesi henüz arşivden alınmadı; kayıt köşe yazılarından türetildi.</p>
         {% endif %}
       </section>
 
-      <section class="kutu">
-        <div class="kutu-bas"><h2>KÖŞE YAZILARI</h2></div>
+      <section class="kutu gorus-arsiv" aria-labelledby="yazilar-bas">
+        <div class="kutu-bas"><h2 id="yazilar-bas">KÖŞE YAZILARI</h2>{% if sayfa.paginator.num_pages > 1 %}<span class="tumu">{{ sayfa.number }}. sayfa / {{ sayfa.paginator.num_pages }}</span>{% endif %}</div>
         <div class="kutu-ic">
-          <div class="kutu-izgara">
-            {% for y in sayfa %}{% include "medya/parca/yazi_kart.html" with y=y %}
-            {% empty %}<p class="bos">Bu yazarın arşivde yazısı yok.</p>
+          {% if sayfa %}
+          <ol class="gorus-liste">
+            {% for y in sayfa %}{% include "medya/parca/yazi_satiri.html" with y=y %}
             {% endfor %}
-          </div>
+          </ol>
+          {% else %}<p class="bos">Bu yazarın arşivde yazısı yok.</p>{% endif %}
         </div>
       </section>
 

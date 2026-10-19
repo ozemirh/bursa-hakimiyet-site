@@ -1,0 +1,66 @@
+{% load site_etiket %}
+{% comment %}EKONOMİ BÖLÜM BAŞI — sayfaya özel tasarım (19 Ekim 2026).
+
+Temanın `bas` yuvası: varsayılan servis panelinin (`parca/bolum_servis.html`,
+beş gözlü piyasa ızgarası) YERİNE iki cetvel.
+
+1) PİYASA CETVELİ. Aynı veri (`servis.doviz`, `canli.oku("doviz")`), tablo
+   düzeninde: kalem · son · değişim · alış · satış. Renk yalnız değişim
+   sütununda ve bilgi taşıyor (yeşil ▲ / kırmızı ▼ / gri); kural tablonun
+   altında tek cümle. Veri bayatsa tablonun ÜSTÜNDE tarihle söylenir.
+   Kaynağı bulunamayan kalem çizgiyle gösterilir (uydurma değer yok);
+   alış/satış yalnız TCMB'nin verdiği kalemlerde dolu, diğerlerinde hücre
+   BOŞ kalır — tabloda boş hücre "uygulanmaz" demektir.
+2) BURSA EKONOMİSİ. "Önce Bursa": bölümün Bursa'yı anan son haberleri
+   (`temalar.bursa_listesi`). Seçim kuralı listenin altında yazılı.
+
+Tema kayıttan kalkarsa sayfa varsayılan servis paneline döner; o parça
+bilerek silinmedi.{% endcomment %}
+{% if yer == "bas" %}{% if servis and servis.tur == "doviz" or bursa_listesi %}
+<div class="eko-bas">
+  {% if servis and servis.tur == "doviz" %}{% with d=servis.doviz %}
+  <section class="kutu bolum-servis s-doviz piyasa-cetveli" aria-labelledby="servis-bas">
+    <div class="kutu-bas">
+      <h2 id="servis-bas">PİYASA</h2>
+      <span class="tumu">{% if d.bulten.tarih %}TCMB bülteni {{ d.bulten.tarih }}{% if d.bulten.no %} &middot; {{ d.bulten.no }}{% endif %} &middot; {% endif %}<a href="/veri-kaynaklari">Veri kaynakları &rarr;</a></span>
+    </div>
+    <div class="kutu-ic">
+      {% if d.bayat %}<p class="piyasa-bayat"><b>GÜNCEL DEĞİL.</b> Bu tablo {% if d.guncelleme %}{{ d.guncelleme|iso_tarih|date:"j F Y" }}, {{ d.guncelleme|slice:"11:16" }} tarihli; veri o günden beri tazelenmedi.{% else %}son güncelleme zamanını taşımıyor.{% endif %}</p>{% endif %}
+      <div class="cetvel-sar" role="region" tabindex="0" aria-label="Piyasa cetveli">
+      <table class="cetvel">
+        <caption class="gorsel-gizli">Piyasa: son değer, bir önceki bültene göre değişim, alış ve satış</caption>
+        <thead><tr><th scope="col">Kalem</th><th scope="col">Son</th><th scope="col">Değişim</th><th scope="col" class="alis">Alış</th><th scope="col" class="satis">Satış</th></tr></thead>
+        <tbody>
+          {% for k in d.kalemler %}
+          <tr class="cetvel-kalem{% if k.yon == 'yukari' %} artiyor{% elif k.yon == 'asagi' %} azaliyor{% endif %}">
+            <th scope="row">{{ k.ad }}{% if k.alis and k.satis %}<span class="dar-as">Alış {{ k.alis|floatformat:2 }} &middot; Satış {{ k.satis|floatformat:2 }}</span>{% endif %}</th>
+            <td class="deger">{% if k.deger %}{{ k.deger|floatformat:2 }} <span class="birim">{% if k.birim == "TL" %}&#8378;{% else %}{{ k.birim }}{% endif %}</span>{% else %}<span class="veri-yok" title="Kaynak bulunamadı, panelden elle girilir">&ndash;</span>{% endif %}</td>
+            <td class="fark">{% if k.degisim_yuzde is not None and k.deger %}<span aria-hidden="true">{% if k.yon == 'yukari' %}&#9650;{% elif k.yon == 'asagi' %}&#9660;{% else %}&ndash;{% endif %}</span> %{{ k.degisim_yuzde|mutlak|floatformat:2 }}<span class="gorsel-gizli">{% if k.yon == 'yukari' %} yükseldi{% elif k.yon == 'asagi' %} geriledi{% else %} değişmedi{% endif %}</span>{% endif %}</td>
+            <td class="alis">{% if k.alis and k.satis %}{{ k.alis|floatformat:2 }}{% endif %}</td>
+            <td class="satis">{% if k.alis and k.satis %}{{ k.satis|floatformat:2 }}{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      <p class="servis-kunye">Değişim bir önceki bültene göre: yeşil &#9650; yükseliş, kırmızı &#9660; düşüş, gri değişmedi.
+        {% if d.kaynak.kunye %}{{ d.kaynak.kunye }}{% endif %}
+        {% if d.guncelleme %}Son güncelleme {{ d.guncelleme|iso_tarih|date:"j F Y" }} {{ d.guncelleme|slice:"11:16" }}.{% endif %}</p>
+    </div>
+  </section>
+  {% endwith %}{% endif %}
+
+  {% if bursa_listesi %}
+  <section class="kutu bursa-listesi" aria-labelledby="bursa-eko-bas">
+    <div class="kutu-bas"><h2 id="bursa-eko-bas">BURSA EKONOMİSİ</h2></div>
+    <div class="kutu-ic">
+      <ol class="bursa-cetvel">
+        {% for h in bursa_listesi %}<li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|date:"j M Y" }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>{% if h.ilce %}<span class="bolum-ad">{{ h.ilce.ad|baslikla }}</span>{% else %}<span></span>{% endif %}</li>
+        {% endfor %}
+      </ol>
+      <p class="servis-kunye">Ekonomi bölümünden, başlığında Bursa ya da BTSO geçen veya bir ilçeye bağlı en yeni haberler.</p>
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endif %}{% endif %}

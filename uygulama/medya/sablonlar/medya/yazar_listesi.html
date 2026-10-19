@@ -23,8 +23,12 @@ diye karşılanır, böylece bu sayfa bekleme sayfasının yerini erkenden alabi
           <div class="yazarlar">
             {% for y in yazarlar %}
             <div class="yazar">
+              {% comment %}`.portre` sarmalayıcısı (19 Ekim 2026): kare
+              `object-fit` afişin ORTASINI kesiyordu ve 18 yazarda yüz yerine
+              harita ve ad harfleri görünüyordu. Kırpım anasayfa kuşağının
+              ölçülmüş penceresiyle (`site.css`, `.portre img[src*="-afis"]`).{% endcomment %}
               {% if y.gorsel_yolu %}
-                <span class="foto vesika"><img src="{{ y.gorsel_yolu }}" alt="{{ y.ad }}" width="58" height="58" loading="lazy"></span>
+                <span class="portre"><img src="{{ y.gorsel_yolu }}" alt="{{ y.ad }}" width="58" height="58" loading="lazy"></span>
               {% else %}
                 <span class="vesika" aria-hidden="true">{{ y.basharfler }}</span>
               {% endif %}
@@ -35,7 +39,7 @@ diye karşılanır, böylece bu sayfa bekleme sayfasının yerini erkenden alabi
                 `with` bir kez çağırıp sonucu tutar. Sorguyu tümden kaldırmak DENENDİ
                 ve geri alındı: tek sorguyla harita kurmak 6.713 satır çekiyor ve
                 42,9 ms sürüyor; yazar başına indeks araması 19,0 ms.{% endcomment %}
-                {% with son=y.son_yazi %}{% if son %}<p>{{ son }}</p>{% endif %}{% endwith %}
+                {% with son=y.son_yazi %}{% if son %}<p class="son-yazi">{{ son }}</p>{% endif %}{% endwith %}
               </span>
             </div>
             {% empty %}
