@@ -274,11 +274,16 @@ class BolumBloklari(TestCase):
         ]
         with self._oku(doviz=doviz):
             metin = self.client.get("/ekonomi").content.decode()
-        self.assertEqual(metin.count("piyasa-kalem"), 2)
-        self.assertIn("Alış 48,23", metin)
-        # Alış/satışı OLMAYAN kalemde alan hiç basılmaz: boş bir "Alış –"
-        # okura yanlış bir eksiklik duygusu verirdi.
-        self.assertEqual(metin.count("alis-satis"), 1)
+        # 19 Ekim 2026: ekonomi teması kalemleri tablo satırı olarak basar
+        # (`parca/bolum/ekonomi.html`); her kalem bir satır, alış ve satış
+        # kendi sütununda.
+        self.assertEqual(metin.count('class="cetvel-kalem'), 2)
+        self.assertIn('<td class="alis">48,23</td>', metin)
+        self.assertIn('<td class="satis">48,32</td>', metin)
+        # Alış/satışı OLMAYAN kalemde hücre BOŞ kalır; uydurma değer ya da
+        # "Alış –" basılmaz.
+        self.assertEqual(metin.count('<td class="alis"></td>'), 1)
+        self.assertEqual(metin.count("dar-as"), 1)
 
     def test_puan_paneli_mac_ve_pencere_veriyor(self):
         puan = self.PUAN
@@ -333,46 +338,35 @@ class BolumBloklari(TestCase):
         # Adet PANELİN GÖSTERDİĞİ değil, bugünkü TOPLAM.
         self.assertIn("6 eczanenin tamamı", metin)
 
-    # -- renk temaları geri alındı (7 Eylül 2026, §63) --------------------
+    # -- bölüm teması: kayıttan (19 Ekim 2026; §63 → §69) -----------------
 
-    def test_bolume_ozel_renk_yok(self):
-        """Kullanıcı kararı: "farklı renk temalarını geri al".
-
-        §62'de dört bölüm kendi vurgusunu almıştı (kulüp yeşili, kent
-        mavisi, piyasa amberi, sağlık turkuazı); düzeneğin tamamı kalktı.
-        Bu test kararı tutuyor: düzenek geri gelirse burada düşer ve
-        kullanıcıya yeniden sorulması gerektiği anlaşılır.
-
-        §35'in "site lacivert-kırmızı kalır" kuralı böylece sürüyor. İki
-        istisna var, ikisi de ayrıca kararlaştırıldı: anasayfadaki
-        `#bursaspor` kutusu (29 Ağustos 2026) ve **Bursaspor bölüm sayfası**
-        (12 Eylül 2026, kullanıcı: "bursaspor sayfasını da yeşil beyaz
-        renklerine büründür"). O sayfa `data-bolum="bursaspor"` taşır;
-        başka bölüm taşımaz, CSS'te başka değer geçmez."""
-        for yol in ("/bursa", "/ekonomi", "/saglik",
-                    "/gundem", f"/ilce/{self.ilce.slug}"):
+    def test_bolum_temasi_kayittan(self):
+        """Eskiden `test_bolume_ozel_renk_yok`: §63'te bölüm renkleri geri
+        alınmıştı ve test düzeneğin dönmesini yakalıyordu. 19 Ekim 2026
+        kullanıcı kararıyla sayfaya özel tasarım geldi (Bursaspor + köşe
+        yazıları, ekonomi, teknoloji); test KAYIT TABANLI oldu: tema yalnız
+        `icerik/temalar.py`de kayıtlı bölümde ve kaydın değeriyle basılır.
+        Ayrıntılı sözleşme (takım, kontrast, kabuk) `tests_temalar.py`de."""
+        from . import temalar
+        for yol in ("/bursa", "/saglik", "/gundem", f"/ilce/{self.ilce.slug}"):
             self.assertNotIn("data-bolum", self.client.get(yol).content.decode(), yol)
+        self.assertIn('<body data-bolum="ekonomi">', self.client.get("/ekonomi").content.decode())
+        self.assertEqual(temalar.KATEGORI_TEMALARI["ekonomi"], "ekonomi")
         self.assertFalse(hasattr(views, "BOLUM_TEMA"))
         self.assertFalse(hasattr(views, "ILCE_TEMA"))
         from pathlib import Path
+        import re
         kok = Path(__file__).resolve().parent.parent
         stil = (kok / "statik" / "stil" / "site.css").read_text(encoding="utf-8")
-        # Yorumlar ayıklanıyor: kararın NEDEN geri alındığı dosyada yazılı
-        # kalmalı ve o metinde `[data-bolum]` geçiyor. Aranan şey KURAL.
-        import re
         kural = re.sub(r"/\*.*?\*/", "", stil, flags=re.S)
-        for iz in ("--bolum-vurgu", "--bolum-koyu", "--bolum-ak", "--bolum-cizgi",
-                   "--saglik"):
-            self.assertNotIn(iz, kural, iz)
-        # `data-bolum` yalnız Bursaspor değeriyle geçer; genel düzenek yok.
         degerler = set(re.findall(r'data-bolum(?:="([^"]*)"|\])', kural))
-        self.assertEqual(degerler, {"bursaspor"})
-        taban = (kok / "sablonlar" / "taban.html").read_text(encoding="utf-8")
-        self.assertNotIn("ana_nitelik", taban)
+        self.assertEqual(degerler, set(temalar.TEMALAR))
 
     def test_servis_panelleri_kaldi(self):
         """Geri alınan RENKTİ, panel değil: §62'nin birinci yarısı duruyor."""
         with self._oku(doviz=self.DOVIZ):
-            self.assertIn("piyasa-izgara", self.client.get("/ekonomi").content.decode())
+            # Ekonomi teması (19 Ekim 2026) paneli CETVEL olarak basar; beş
+            # gözlü ızgara temasız düzende (`parca/bolum_servis.html`) duruyor.
+            self.assertIn("piyasa-cetveli", self.client.get("/ekonomi").content.decode())
         self.assertIn("eczane-izgara", self.client.get("/saglik").content.decode())
 

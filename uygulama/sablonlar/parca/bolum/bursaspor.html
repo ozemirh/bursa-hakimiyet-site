@@ -10,8 +10,12 @@ penceresi servis panelinde (`parca/bolum_servis.html`).
 Sezonun tamamı tek tabloda: oynananlarda skor ve sonuç kutusu (G/B/M),
 oynanmayanlarda tarih ve varsa saat; sıradaki maç işaretli. Skor
 kaynaktaki yönüyle basılır, çevrilmez. Kural görünümde
-(`icerik/bursaspor.py`), burada yalnız çizim.{% endcomment %}
-{% if bursaspor.fikstur %}{% with f=bursaspor.fikstur %}
+(`icerik/bursaspor.py`), burada yalnız çizim.
+
+19 Ekim 2026: dosya `parca/bursaspor_bolumu.html` idi; sayfaya özel
+tasarım düzeneğinin ilk örneği olarak `parca/bolum/bursaspor.html` oldu
+ve temanın `alt` yuvasına girer (`icerik/temalar.py`).{% endcomment %}
+{% if yer == "alt" and bursaspor.fikstur %}{% with f=bursaspor.fikstur %}
 <section class="kutu bs-fikstur" id="fikstur" aria-labelledby="bs-fikstur-bas">
   <div class="kutu-bas"><h2 id="bs-fikstur-bas">FİKSTÜR VE SONUÇLAR</h2><span class="tumu">{{ f.oynanan }}/{{ f.toplam }} maç oynandı</span></div>
   <div class="kutu-ic">

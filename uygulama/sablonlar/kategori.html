@@ -3,11 +3,12 @@
 
 {% block baslik %}{{ baslik }} — Bursa Hakimiyet{% endblock %}
 {% block aciklama %}{{ baslik }} başlığındaki son haberler — Bursa Hakimiyet.{% endblock %}
-{% comment %}Yeşil-beyaz kabuk YALNIZ Bursaspor sayfasında (12 Eylül 2026,
-kullanıcı kararı: "bursaspor sayfasını da yeşil beyaz renklerine
-büründür"). §63'ün "bölüm rengi yok" kuralının tek istisnası; başka bölüm
-renk almaz. Nitelik gövdeye iner, kurallar `site.css` sonunda.{% endcomment %}
-{% block govde_nitelik %}{% if bursaspor %} data-bolum="bursaspor"{% endif %}{% endblock %}
+{% comment %}SAYFAYA ÖZEL TASARIM (19 Ekim 2026). Gövde niteliği `taban.html`
+yazar; bu şablon yalnız temanın DÜZEN parçasını yuvalarına koyar:
+`parca/bolum/<anahtar>.html`, `yer="bas"` (kırıntının altı, varsayılan
+servis panelinin yerine) ve `yer="alt"` (haber kutusunun altı). Hangi
+temanın hangi yuvayı kullandığı kayıtta (`icerik/temalar.py`); burada
+slug'a bakan bir koşul yok.{% endcomment %}
 
 {% comment %}BÖLÜM SAYFASI — üç kademeli yerleşim (2 Eylül 2026, §46).
 
@@ -50,7 +51,8 @@ yok.{% endcomment %}
       bölmüyor, sayfayı açan okur bölümün kimliğini ilk ekranda görüyor.
       Hangi bölümün ne göreceği görünümde (`_bolum_servisi`); veri yoksa
       şerit hiç çizilmez ve sayfa aynen eski hâlinde durur.{% endcomment %}
-      {% include "parca/bolum_servis.html" %}
+      {% if tema and "bas" in tema.yuvalar %}{% include tema.duzen with yer="bas" %}
+      {% else %}{% include "parca/bolum_servis.html" %}{% endif %}
 
       <section class="kutu bolum">
         <div class="kutu-bas vurgu">
@@ -160,10 +162,10 @@ yok.{% endcomment %}
         </div>
       </section>
 
-      {% comment %}BURSASPOR FİKSTÜRÜ (12 Eylül 2026): haber kutusunun
-      altında, görüntü kuşağının üstünde. Yalnız `/bursaspor` bağlam
-      taşır (`views.kategori`), diğer bölümlerde parça boş döner.{% endcomment %}
-      {% if bursaspor %}{% include "parca/bursaspor_bolumu.html" %}{% endif %}
+      {% comment %}TEMANIN ALT YUVASI: haber kutusunun altında, görüntü
+      kuşağının üstünde. Bugün tek kullanıcı Bursaspor fikstürü (12 Eylül
+      2026; `parca/bolum/bursaspor.html`).{% endcomment %}
+      {% if tema and "alt" in tema.yuvalar %}{% include tema.duzen with yer="alt" %}{% endif %}
 
       {% comment %}GÖRÜNTÜ KUŞAĞI (6 Eylül 2026, §59, kullanıcı isteği:
       "kategori sayfalarının içeriğini çeşitlendir"). Akışın ALTINDA, "daha
