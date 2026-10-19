@@ -1,5 +1,5 @@
 {% extends "taban.html" %}
-{% load site_etiket gorsel_etiket %}
+{% load site_etiket gorsel_etiket seo_etiket %}
 {% comment %}
 Foto galeri detayı.
 
@@ -11,7 +11,13 @@ görünmüyor; eksik olanın ne olduğunu gizlemek yerine yazıyoruz.
 
 {% block baslik %}{{ galeri.baslik }} — Bursa Hakimiyet{% endblock %}
 {% block aciklama %}{{ galeri.spot|striptags|truncatechars:300|default:galeri.baslik }}{% endblock %}
-{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ galeri.get_absolute_url }}">{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ site_koku }}{{ galeri.get_absolute_url }}">{% endblock %}
+{% block og_tur %}article{% endblock %}
+{% block og_baslik %}{{ galeri.baslik }}{% endblock %}
+{% block paylasim_gorseli %}{% include "parca/og_gorsel.html" with nesne=galeri %}{% endblock %}
+{% block og_ek %}{% include "parca/og_makale.html" with kayit=galeri bolum="Foto Galeri" %}{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld "galeri" galeri kareler %}</script>
+<script type="application/ld+json">{% jsonld_medya_kirinti galeri "Foto galeri" "/galeriler" %}</script>{% endblock %}
 
 {% block icerik %}
       <nav class="kirinti" aria-label="Kırıntı navigasyonu">

@@ -1,7 +1,8 @@
 {% extends "taban.html" %}
 
 {% block baslik %}{{ baslik }} — Bursa Hakimiyet{% endblock %}
-{% block kanonik %}<meta name="robots" content="noindex,follow">{% endblock %}
+{% block robots %}noindex, follow{% endblock %}
+{% block kanonik %}{% endblock %}
 
 {% block icerik %}
       <nav class="kirinti" aria-label="Neredesiniz">

@@ -17,7 +17,9 @@ from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
 
+from cekirdek.adres_duzeni import kalici
 from icerik import temalar
+from icerik.sayfa_no import sayfa_getir
 from icerik.models import Haber
 from taksonomi.models import Kategori, KategoriTur
 
@@ -28,7 +30,8 @@ YAZAR_SAYFA_BOYU = 15
 
 
 def _sayfala(request, sorgu, boyut=SAYFA_BOYU):
-    sayfa = Paginator(sorgu, boyut).get_page(request.GET.get("sayfa") or 1)
+    # Geçersiz/aralık dışı ?sayfa= → 404 (Paket G, icerik/sayfa_no.py).
+    sayfa = sayfa_getir(Paginator(sorgu, boyut), request.GET.get("sayfa"))
     # icerik._sayfala ile aynı sözleşme: parca/sayfalama.html numaraları
     # bu listeden çizer (29 Ağustos, numaralı sayfalama).
     sayfa.numaralar = (list(sayfa.paginator.get_elided_page_range(
@@ -41,7 +44,7 @@ def _kanoniklestir(request, kayit):
     """Adres kaydın kanonik adresi değilse 301 döndürür, değilse None."""
     kanonik = kayit.get_absolute_url()
     if request.path.rstrip("/") != kanonik:
-        return redirect(kanonik, permanent=True)
+        return kalici(request, kanonik)     # utm korunur (Paket G)
     return None
 
 

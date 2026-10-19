@@ -88,8 +88,27 @@ def etiketleri_kur(haber, adet: int) -> str:
     return " ".join(yazilan)
 
 
-def haber_adresi(haber) -> str:
-    return settings.SITE_KOKU.rstrip("/") + haber.get_absolute_url()
+#: Platform → `utm_source` (Paket G, 19 Ekim 2026). Sosyal trafik analitikte
+#: kanal kanal ayrılsın. Kanonik etiket UTM'siz kalır (icerik/seo.py) ve
+#: sayfa önbelleği UTM'yi anahtara katmaz; adres çoğalmaz.
+UTM_KAYNAK = {
+    SosyalHesap.X: "x",
+    SosyalHesap.FACEBOOK: "facebook",
+    SosyalHesap.INSTAGRAM: "instagram",
+    SosyalHesap.YOUTUBE: "youtube",
+}
+
+
+def utm_ekle(adres: str, platform: str | None) -> str:
+    kaynak = UTM_KAYNAK.get(platform or "")
+    if not kaynak or not adres:
+        return adres
+    ayrac = "&" if "?" in adres else "?"
+    return f"{adres}{ayrac}utm_source={kaynak}&utm_medium=social"
+
+
+def haber_adresi(haber, platform: str | None = None) -> str:
+    return utm_ekle(settings.SITE_KOKU.rstrip("/") + haber.get_absolute_url(), platform)
 
 
 def gorsel_adresi(haber) -> str:
@@ -145,7 +164,7 @@ def gonderi_metni(haber, hesap) -> str:
 
     baslik = (haber.baslik or "").strip()
     spot = (haber.spot or "").strip()
-    adres = haber_adresi(haber)
+    adres = haber_adresi(haber, platform)
     etiketler = etiketleri_kur(haber, ETIKET_SAYISI.get(platform, 3))
 
     metin = _doldur(kalip, baslik, spot, adres, etiketler)

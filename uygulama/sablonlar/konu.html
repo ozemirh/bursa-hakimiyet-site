@@ -1,9 +1,14 @@
 {% extends "taban.html" %}
-{% load site_etiket %}
+{% load site_etiket seo_etiket %}
+
+{% comment %}İnce konu dosyası (Paket G): INCE_KONU_ESIGI'nin (5) altında haber
+taşıyan dosya `noindex, follow` — sayfa okura açık, bağlantıları izlenir.{% endcomment %}
+{% block robots %}{% if konu|ince_konu %}noindex, follow{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld_kirinti "Konu Dosyaları" "/konular" konu.ad konu.get_absolute_url %}</script>{% endblock %}
 
 {% block baslik %}{{ konu.ad }} — Konu Dosyası — Bursa Hakimiyet{% endblock %}
 {% block aciklama %}{{ konu.ad }} dosyası: {{ konu.haber_sayisi }} haber, {{ konu.baslangic|date:"j F Y" }} – {{ konu.bitis|date:"j F Y" }}.{% endblock %}
-{% block kanonik %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ konu.get_absolute_url }}">{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ site_koku }}{{ konu.get_absolute_url }}">{% endblock %}
 
 {% comment %}KONU DOSYASI SAYFASI (5 Eylül 2026).
 

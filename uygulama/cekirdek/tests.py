@@ -385,8 +385,11 @@ class SiteHaritasiAdresleri(TestCase):
 
 # --- 5-6. sayfa: sıkıştırma, CSP, dış kaynak ---------------------------------
 
+# `rel="canonical"` ve `rel="alternate"` kaynak değil, adres beyanıdır; tarayıcı
+# onları indirmez ve mutlak olmaları gerekir (Paket G).
 _DIS_KAYNAK = re.compile(
-    r"""<(?:script|img|iframe|source|link)\b[^>]*\b(?:src|href|srcset)=["']https?://""",
+    r"""<(?:script|img|iframe|source|link)\b(?![^>]*\brel=["'](?:canonical|alternate)["'])"""
+    r"""[^>]*\b(?:src|href|srcset)=["']https?://""",
     re.I)
 
 

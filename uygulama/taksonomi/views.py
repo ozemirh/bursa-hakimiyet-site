@@ -17,6 +17,8 @@ F2'de içerik modelleri henüz yok, o yüzden:
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 
+from cekirdek.adres_duzeni import kalici
+
 from icerik import ilgili as ilgili_yardimci
 from icerik import konu as konu_yardimci
 from icerik import okunma
@@ -55,7 +57,9 @@ def haber(request, kategori, slug, kimlik):
     kayit = Yonlendirme.objects.filter(eski_yol=f"/{kategori}/").first()
     if kayit is not None:
         hedef = f"{kayit.yeni_yol.rstrip('/')}/{slug}-{kimlik}"
-        return redirect(hedef, permanent=kayit.kod == 301)
+        if kayit.kod == 301:
+            return kalici(request, hedef)
+        return redirect(hedef, permanent=False)
 
     # Kategori slug'i hic taninmiyorsa adres gecerli degil. Surec ici
     # eslemeden bakiliyor (taksonomi/slug_eslemesi.py): istek basina bir
@@ -77,7 +81,8 @@ def haber(request, kategori, slug, kimlik):
 
     kanonik = kayit.get_absolute_url()
     if request.path.rstrip("/") != kanonik:
-        return redirect(kanonik, permanent=True)
+        # Sorgu dizesi (utm) korunur — Paket G.
+        return kalici(request, kanonik)
 
     # Konu akışı önce: ilgili haberler kutusu akışta zaten görünenleri
     # atlar, aynı başlık sayfada iki kez basılmaz (5 Eylül 2026).

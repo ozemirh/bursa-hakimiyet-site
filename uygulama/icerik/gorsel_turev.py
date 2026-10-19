@@ -65,6 +65,19 @@ GENISLIKLER = (320, 480, 640, 960, 1280)
 #: Sosyal paylaşım (og:image / twitter:image) için sabit kırpım.
 OG_OLCU = (1200, 630)
 
+#: Sabit oranlı kırpımlar — JPEG, ortadan. `og` paylaşım kartı içindir;
+#: üç oran (16:9, 4:3, 1:1) NewsArticle JSON-LD'sinin `image` dizisi için
+#: (Paket G, 19 Ekim 2026): Google haber ve Discover için bu üç oranı
+#: istiyor ve en az 1200 px genişlik öneriyor. Arşivin `_large` dosyası
+#: 1280×853; 4:3 ve 1:1 kırpımda boy hafifçe büyütülür — oran tutarlılığı
+#: burada çözünürlükten önemli. Türevler istek gelince üretilir.
+KIRPIMLAR = {
+    "og": OG_OLCU,
+    "16x9": (1200, 675),
+    "4x3": (1200, 900),
+    "1x1": (1200, 1200),
+}
+
 WEBP_KALITE = 78
 OG_KALITE = 82
 
@@ -151,7 +164,7 @@ def kaynak_coz(kaynak_yol: str) -> Path:
 
 def turev_adi(boyut: str, kaynak_yol: str) -> str:
     """Adresin `/gorsel/<boyut>/` sonrası: kaynak yol + çıktı uzantısı."""
-    return kaynak_yol + (".jpg" if boyut == "og" else ".webp")
+    return kaynak_yol + (".jpg" if boyut in KIRPIMLAR else ".webp")
 
 
 def adres(boyut, kaynak_yol: str) -> str:
@@ -163,9 +176,9 @@ def istek_coz(boyut: str, yol: str) -> tuple[str, Path, Path]:
     """Adres parçalarından (boyut, kaynak, hedef). Beyaz liste burada."""
     # Kanonik yazım şart: "0480" kabul edilseydi aynı türevin ikinci bir
     # kopyası üretilir, disk ve önbellek boşuna dolardı.
-    if boyut != "og" and boyut not in {str(g) for g in GENISLIKLER}:
+    if boyut not in KIRPIMLAR and boyut not in {str(g) for g in GENISLIKLER}:
         raise GecersizIstek("boyut beyaz listede değil")
-    son_ek = ".jpg" if boyut == "og" else ".webp"
+    son_ek = ".jpg" if boyut in KIRPIMLAR else ".webp"
     if not yol.endswith(son_ek):
         raise GecersizIstek("çıktı uzantısı")
     kaynak_yol = yol[: -len(son_ek)]
@@ -249,13 +262,13 @@ def _kucult(im, genislik: int):
     return im.resize((genislik, boy), Image.LANCZOS, reducing_gap=3.0)
 
 
-def _og(im):
+def _og(im, olcu=OG_OLCU):
     from PIL import Image, ImageOps
     if im.mode == "RGBA":
         zemin = Image.new("RGB", im.size, (255, 255, 255))
         zemin.paste(im, mask=im.getchannel("A"))
         im = zemin
-    return ImageOps.fit(im, OG_OLCU, Image.LANCZOS, centering=(0.5, 0.5))
+    return ImageOps.fit(im, olcu, Image.LANCZOS, centering=(0.5, 0.5))
 
 
 def _yaz(im, hedef: Path, og: bool) -> None:
@@ -330,10 +343,11 @@ def turev_hazirla(boyut: str, yol: str) -> Path:
             return hedef
         with _URETIM_SINIRI:
             with _ac(kaynak) as im:
-                hedef_en = None if boyut == "og" else int(boyut)
-                hazir = _hazirla(im, hedef_en if boyut != "og" else OG_OLCU[0])
-                cikti = _og(hazir) if boyut == "og" else _kucult(hazir, hedef_en)
-                _yaz(cikti, hedef, og=(boyut == "og"))
+                kirpim = KIRPIMLAR.get(boyut)
+                hedef_en = kirpim[0] if kirpim else int(boyut)
+                hazir = _hazirla(im, hedef_en)
+                cikti = _og(hazir, kirpim) if kirpim else _kucult(hazir, hedef_en)
+                _yaz(cikti, hedef, og=bool(kirpim))
     return hedef
 
 
@@ -356,17 +370,19 @@ def tum_turevler(kaynak_yol: str, boyutlar=None, og=True) -> dict:
     if not eksik:
         return sonuc
     with _ac(kaynak) as im:
-        en_buyuk = max((int(b) for b, _ in eksik if b != "og"), default=OG_OLCU[0])
-        if any(b == "og" for b, _ in eksik):
+        en_buyuk = max((int(b) for b, _ in eksik if b not in KIRPIMLAR),
+                       default=OG_OLCU[0])
+        if any(b in KIRPIMLAR for b, _ in eksik):
             en_buyuk = max(en_buyuk, OG_OLCU[0])
         hazir = _hazirla(im, en_buyuk)
-        for b, hedef in sorted(eksik, key=lambda x: -(int(x[0]) if x[0] != "og" else 9999)):
+        for b, hedef in sorted(eksik, key=lambda x: -(int(x[0]) if x[0] not in KIRPIMLAR else 9999)):
             with _kilit(hedef):
                 if _taze(hedef, kaynak):
                     sonuc["atlanan"] += 1
                     continue
-                cikti = _og(hazir) if b == "og" else _kucult(hazir, int(b))
-                _yaz(cikti, hedef, og=(b == "og"))
+                kirpim = KIRPIMLAR.get(b)
+                cikti = _og(hazir, kirpim) if kirpim else _kucult(hazir, int(b))
+                _yaz(cikti, hedef, og=bool(kirpim))
                 sonuc["uretilen"] += 1
                 sonuc["bayt"] += hedef.stat().st_size
     return sonuc
