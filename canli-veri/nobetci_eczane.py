@@ -59,6 +59,13 @@ BEO = "https://www.beo.org.tr/nobetci-eczaneler"
 # Bir gunden eski liste yanlis eczaneyi gosterir; sayfa uyarmali.
 BAYAT_ESIK_DAKIKA = 1440  # 24 saat
 
+# Asgari kayit esigi (19 Ekim 2026). Olculen gunluk nobet listesi il
+# genelinde 30-40 eczane (31 Agustos: 34, 12 Eylul: 34). 20'nin altindaki
+# sonuc ayristirma kirilmasi ya da yarim sayfa demektir: yazilmaz, onceki
+# iyi dosya korunur, durum "supheli". Tek ilce sorgusunda (--ilce) ve elle
+# giriste esik 1'dir - orada az kayit olagan.
+ASGARI_ECZANE = 20
+
 ELLE_DOSYA = "eczane-elle.json"
 
 _BLOK = re.compile(
@@ -251,20 +258,29 @@ def elle_cek(kok: Path) -> dict:
 
 # -- akis -----------------------------------------------------------------
 
-def calistir(kok: Path, kaynak_adi: str, tarih: str, ilce: str) -> int:
+def calistir(kok: Path, kaynak_adi: str, tarih: str, ilce: str,
+             asgari: int | None = None) -> int:
     cikti = kok / f"{BILESEN}.json"
+    kaynak_ad = "Elle giriş" if kaynak_adi == "elle" else "Bursa Eczacı Odası"
+    if asgari is None:
+        asgari = 1 if (kaynak_adi == "elle" or ilce) else ASGARI_ECZANE
     try:
         paket = elle_cek(kok) if kaynak_adi == "elle" else beo_cek(tarih, ilce)
     except ortak.CekmeHatasi as e:
-        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, str(e))
+        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, str(e), ortak.saglik(
+            "eczane", 0, asgari, [ortak.kaynak_sonucu(kaynak_ad, None, str(e))]))
     except Exception as e:
-        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, repr(e))
+        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, repr(e), ortak.saglik(
+            "eczane", 0, asgari, [ortak.kaynak_sonucu(kaynak_ad, None, repr(e))]))
 
     eczaneler = paket["eczaneler"]
-    if not eczaneler:
-        return ortak.dusme_ile_bitir(
+    saglik = ortak.saglik("eczane", len(eczaneler), asgari, [
+        ortak.kaynak_sonucu(kaynak_ad, len(eczaneler), asgari=asgari)])
+    if len(eczaneler) < asgari:
+        return ortak.esik_alti_bitir(
             kok, BILESEN, cikti,
-            f"{kaynak_adi} kaynagi hic nobetci eczane dondurmedi")
+            f"{kaynak_adi} kaynagi {len(eczaneler)} nobetci eczane dondurdu "
+            f"(asgari {asgari})", saglik)
 
     ilce_sayisi: dict[str, int] = {}
     for e in eczaneler:
@@ -297,7 +313,7 @@ def calistir(kok: Path, kaynak_adi: str, tarih: str, ilce: str) -> int:
     }
 
     ortak.json_yaz(cikti, veri)
-    ortak.durum_yaz(kok, BILESEN, "taze")
+    ortak.durum_yaz(kok, BILESEN, "taze", saglik=saglik)
 
     d = veri["denetim"]
     ortak.log(f"  {veri['sayfa_basligi']}")
@@ -322,6 +338,9 @@ def main() -> int:
                          help="YYYY-AA-GG (varsayilan: bugun)")
     ayristi.add_argument("--ilce", default="",
                          help="tek ilce (varsayilan: il geneli)")
+    ayristi.add_argument("--asgari", type=int, default=None,
+                         help="asgari eczane sayisi (varsayilan: il geneli "
+                              f"{ASGARI_ECZANE}, ilce/elle 1)")
     ayristi.add_argument("--kok", default=None,
                          help="cikti koku (ortam degiskeni: BH_CANLI_KOK)")
     arg = ayristi.parse_args()
@@ -329,7 +348,7 @@ def main() -> int:
     kok = ortak.kok_coz(arg.kok)
     ortak.log_kur(kok, BILESEN)
     ortak.log(f"Nöbetçi eczaneler çekiliyor (kaynak: {arg.kaynak}) -> {kok}")
-    return calistir(kok, arg.kaynak, arg.tarih, arg.ilce)
+    return calistir(kok, arg.kaynak, arg.tarih, arg.ilce, arg.asgari)
 
 
 if __name__ == "__main__":

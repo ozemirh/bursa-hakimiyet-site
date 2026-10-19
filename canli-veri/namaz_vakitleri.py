@@ -242,7 +242,9 @@ def calistir(kok: Path, kaynak_adi: str, yer: dict, gun_sayisi: int) -> int:
     }
 
     ortak.json_yaz(cikti, veri)
-    ortak.durum_yaz(kok, BILESEN, "taze")
+    ortak.durum_yaz(kok, BILESEN, "taze", saglik=ortak.saglik(
+        "gun", len(gunler), 1,
+        [ortak.kaynak_sonucu(kaynak["ad"], len(gunler), asgari=1)]))
 
     ilk = gunler[0]
     ortak.log("  " + ilk["tarih"] + "  " + "  ".join(

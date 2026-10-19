@@ -12,12 +12,14 @@ yerel yer tutucu gosterir. Afisi yayina koymak icin hak sahibinden
 Bes kaynak var, hicbiri otekinin yerine gecmez:
 
   dagitimci Filmi vizyona sokan DAGITIMCININ kendi duyuru/basin sayfasi:
-            Baska Sinema (/basin/) ve Bir Film (/sinemalarda). VARSAYILAN.
-            Anahtarsiz. Ikisinde de icerigi kisitlayan kullanim kosullari
-            sayfasi YOK ve robots.txt bu yollari acik birakiyor (29 Agustos
-            2026 olcumu). Kapsam DAR ve bilerek dar: ulusal takvimin tamami
-            degil, yalnizca bu iki dagitimcinin getirdigi filmler.
-            Olcum (29 Agustos 2026): 9 film, 6 vizyon gunu.
+            Bir Film (/sinemalarda) VARSAYILAN; Baska Sinema
+            (/filmler?tab=yakinda) yalniz --baska-sinema-izni ile.
+            Anahtarsiz. 29 Agustos 2026'da ikisinde de kisitlayan kosul
+            yoktu; 19 Ekim 2026'da Baska Sinema'nin yeni sitesinde
+            otomatik cekmeyi yasaklayan kullanim sartlari cikti (bkz.
+            `_baska_cek` ustu). Kapsam DAR ve bilerek dar: ulusal takvimin
+            tamami degil, yalnizca bu dagitimcilarin getirdigi filmler.
+            Kaynak basina asgari 1 film esigi var (ASGARI_FILM_KAYNAK).
   tmdb      The Movie Database. Ucretsiz API anahtari ister. ELENDI
             (29 Agustos 2026): TMDB'nin sartlari reklam geliri olan
             siteleri "commercial use" sayiyor ve ayri yazili anlasma
@@ -376,18 +378,10 @@ def _coz(s: str) -> str:
 # Kapsam bilerek dar: yalnizca bu iki dagitimcinin getirdigi filmler.
 # Listede olmayan film UYDURULMAZ.
 
-BASKA_KOK = "http://www.baskasinema.com"
 BIR_KOK = "https://www.birfilm.net"
 
 # Bir Film'de her film ayri sayfada; bir kosuda acilacak azami sayfa.
 BIR_AZAMI_SAYFA = 25
-
-# Baska Sinema: WordPress, film bloklari tek kalipta basiliyor.
-_BS_BLOK = re.compile(r'<div class="movie_box.*?(?=<div class="movie_box|\Z)', re.S)
-_BS_AD = re.compile(r'class="movie_title"[^>]*><span>(.*?)</span>', re.S)
-_BS_SLUG = re.compile(r'href="[^"]*/filmler/([^"/]+)/"')
-_BS_TARIH = re.compile(r'<strong>\s*(\d{1,2})\s+([^\s<]+)\s+(\d{4})\s*</strong>')
-_BS_TUR = re.compile(r'Tür:\s*([^<]*)')
 
 # Bir Film: Wix galerisi. Baglanti film sayfasina, aciklama vizyon gunune.
 _BF_OGE = re.compile(
@@ -409,48 +403,93 @@ def _satirlar(html_metni: str) -> list[str]:
     return [s.strip() for s in unescape(g).split("\n") if s.strip()]
 
 
-def _bs_ayikla(html_metni: str) -> list[dict]:
-    """Baska Sinema sayfasindaki film bloklarini okur."""
-    cikti = []
-    for blok in _BS_BLOK.findall(html_metni):
-        ad_e = _BS_AD.search(blok)
-        tar = _BS_TARIH.search(blok)
-        if not (ad_e and tar):
+# -- Baska Sinema, yeni site (19 Ekim 2026 olcumu) --------------------------
+#
+# Site Eylul 2026'da Next.js'e tasindi; eski WordPress yollari
+# (/gelecek-filmler/, /basin/) 6 Eylul'den beri 0 film donduruyordu ve
+# durum dosyasi yine "taze" diyordu. Yeni adres tek sayfa:
+#   https://baskasinema.com/filmler?tab=yakinda
+# Olcum (tek istek, 441 KB): film verisi sayfanin `self.__next_f.push`
+# akisinda bir katalog dizisi olarak duruyor - her kayit `id`, `title`,
+# `altTitle`, `genres`, `guncellik` (ISO vizyon tarihi), `status`
+# (yakinda | vizyonda | arsiv), `ntl` (National Theatre Live) ve
+# `carsambaGrubu` (Baska Carsamba repertuar gosterimi) tasiyor. Vizyon
+# takvimine yalniz status=yakinda, ntl=false, carsambaGrubu=false girer:
+# NTL tiyatro kaydi ve carsamba repertuari vizyon filmi degil.
+#
+# KULLANIM SARTLARI DEGISTI. Yeni sitede /kullanim-sartlari var (son
+# guncelleme Eylul 2026). Madde 4: icerik "onceden izin alinmadan
+# cogaltilamaz ... baska bir mecrada yeniden yayinlanamaz"; madde 7
+# "Site'yi otomatik araclarla tarayarak toplu veri cekmek (scraping)"
+# kabul edilmeyen kullanim. 29 Agustos kararinin dayanagi ("kisitlayan
+# kosul sayfasi yok") ortadan kalkti; Box Office TR (madde 14) ile ayni
+# kalip. Bu yuzden Baska Sinema VARSAYILAN DEGIL: yalniz
+# --baska-sinema-izni bayragiyla (yazili izin alindiysa) cagrilir.
+# Izin yazismasi: info@baskasinema.com (sartlarin 13. maddesi).
+
+BASKA_YENI = "https://baskasinema.com/filmler?tab=yakinda"
+
+_BS_AKIS = re.compile(r'self\.__next_f\.push\(\[1,("(?:[^"\\]|\\.)*")\]\)')
+
+
+def _bs_katalog(html_metni: str) -> list[dict]:
+    """Next.js akisindaki `{"id": ..., "guncellik": ...}` kayitlarini toplar."""
+    parcalar = []
+    for p in _BS_AKIS.findall(html_metni):
+        try:
+            parcalar.append(json.loads(p))
+        except ValueError:
             continue
-        ay = _ay_no(tar.group(2).lower())
-        if not ay:
+    akis = "".join(parcalar)
+    kayitlar = []
+    for m in re.finditer(r'\{"id":"', akis):
+        i, derinlik, j = m.start(), 0, m.start()
+        for j in range(i, min(len(akis), i + 20000)):
+            if akis[j] == "{":
+                derinlik += 1
+            elif akis[j] == "}":
+                derinlik -= 1
+                if derinlik == 0:
+                    break
+        try:
+            o = json.loads(akis[i:j + 1])
+        except ValueError:
             continue
-        # Baslik "Orijinal Ad / Turkce Ad" kalibinda gelir; tek adli da olur.
-        tam = _coz(ad_e.group(1))
-        ozgun, ad = "", tam
-        if " / " in tam:
-            ozgun, ad = [p.strip() for p in tam.split(" / ", 1)]
-        tur_e = _BS_TUR.search(blok)
-        slug = _BS_SLUG.search(blok)
-        cikti.append(film_kaydi(
-            ad,
-            "%04d-%02d-%02d" % (int(tar.group(3)), ay, int(tar.group(1))),
-            ozgun_ad=ozgun,
-            tur=[p.strip() for p in _coz(tur_e.group(1)).split(" - ")
-                 if p.strip()] if tur_e else [],
-            # Sayfa "Dagitimci:" diye bir alan basmiyor; alan sayfanin kendi
-            # kimliginden geliyor - burasi Baska Sinema'nin kendi duyurusu.
+        # Katalog kaydi ISO tarihli olandir; kart kayitlari ("releaseLabel":
+        # "23 Ekim 2026") ayni filmin tekrari, atlanir.
+        if isinstance(o, dict) and "guncellik" in o and "status" in o:
+            kayitlar.append(o)
+    return kayitlar
+
+
+def _bs_yeni_ayikla(html_metni: str) -> list[dict]:
+    """Yeni Baska Sinema sayfasindan YAKINDA gelecek vizyon filmleri."""
+    cikti: dict[str, dict] = {}
+    for o in _bs_katalog(html_metni):
+        if o.get("status") != "yakinda" or o.get("ntl") or o.get("carsambaGrubu"):
+            continue
+        tarih = str(o.get("guncellik") or "")
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", tarih):
+            continue
+        ad = _coz(str(o.get("title") or ""))
+        if not ad:
+            continue
+        ozgun = _coz(str(o.get("altTitle") or ""))
+        turler = o.get("genres") if isinstance(o.get("genres"), list) else []
+        cikti[str(o.get("id"))] = film_kaydi(
+            ad, tarih,
+            ozgun_ad="" if ozgun == ad else ozgun,
+            tur=[_coz(str(t)) for t in turler if t],
             dagitimci="Başka Sinema",
-            kaynak_kimlik="baskasinema:" + (slug.group(1) if slug else ""),
-        ))
-    return cikti
+            kaynak_kimlik="baskasinema:" + str(o.get("id") or ""),
+        )
+    return list(cikti.values())
 
 
 def _baska_cek(bas: str, son: str) -> list[dict]:
-    tekil: dict[tuple, dict] = {}
-    for yol in ("/gelecek-filmler/", "/basin/"):
-        adres = BASKA_KOK + yol
-        ortak.log(f"  {adres}")
-        for f in _bs_ayikla(ortak.getir(adres)):
-            if bas <= f["tarih"] <= son:
-                tekil[(f["ad"].lower(), f["tarih"])] = f
-        ortak.bekle()
-    return list(tekil.values())
+    ortak.log(f"  {BASKA_YENI}")
+    return [f for f in _bs_yeni_ayikla(ortak.getir(BASKA_YENI))
+            if bas <= f["tarih"] <= son]
 
 
 def _birfilm_cek(bas: str, son: str) -> list[dict]:
@@ -522,44 +561,74 @@ def _birfilm_cek(bas: str, son: str) -> list[dict]:
     return filmler
 
 
-def dagitimci_cek(ay_sayisi: int) -> tuple[list[dict], dict]:
+# Kaynak basina asgari film esigi (19 Ekim 2026). Bir dagitimcinin uc
+# aylik penceresinde hic film olmamasi olagan degil (olculen: Bir Film 6,
+# Baska Sinema 11); 0 donmesi ayristirmanin kirildigini gosterir. Esik
+# altinda kalan kaynak varsa kosu "taze" sayilmaz, dosya yazilmaz.
+ASGARI_FILM_KAYNAK = 1
+
+
+def dagitimci_cek(ay_sayisi: int, baska_izni: bool = False,
+                  secilen: list[str] | None = None):
+    """(filmler, kaynak, kaynak_satirlari) dondurur.
+
+    Baska Sinema yalniz `baska_izni` ile denenir (bkz. kullanim sartlari
+    notu, `_baska_cek` ustu). `secilen` verilirse yalniz o dagitimcilar.
+    """
     bas, son = aralik(ay_sayisi)
     ortak.log(f"  Dagitimci duyurulari: {bas} .. {son}")
+    tanimlar = [
+        ("Başka Sinema", "baska", _baska_cek, BASKA_YENI),
+        ("Bir Film", "birfilm", _birfilm_cek, BIR_KOK + "/sinemalarda"),
+    ]
     filmler: list[dict] = []
-    dusen = []
-    # Biri dusunce oteki yayina devam etsin; ikisi birden dusunce hata.
-    for ad, islev in (("Başka Sinema", _baska_cek), ("Bir Film", _birfilm_cek)):
+    satirlar: list[dict] = []
+    kullanilan = []
+    for ad, kisa, islev, adres in tanimlar:
+        if secilen and kisa not in secilen:
+            continue
+        if kisa == "baska" and not baska_izni:
+            ortak.log("    Başka Sinema atlandi: kullanim sartlari otomatik "
+                      "cekmeyi yasakliyor (--baska-sinema-izni)")
+            continue
         try:
             bulunan = islev(bas, son)
             ortak.log(f"    {ad}: {len(bulunan)} film")
             filmler.extend(bulunan)
+            satirlar.append(ortak.kaynak_sonucu(
+                ad, len(bulunan), asgari=ASGARI_FILM_KAYNAK))
         except Exception as e:
-            dusen.append(f"{ad} ({e!r})")
             ortak.log(f"    UYARI: {ad} alinamadi ({e!r})")
-    if not filmler and dusen:
+            satirlar.append(ortak.kaynak_sonucu(ad, None, repr(e)))
+        kullanilan.append((ad, adres))
+        if len(kullanilan) < len(tanimlar):
+            ortak.bekle()
+    if not satirlar:
+        raise ortak.CekmeHatasi("denenecek dagitimci kaynagi kalmadi")
+    if not filmler:
         raise ortak.CekmeHatasi(
-            "dagitimci kaynaklarinin hepsi dustu: " + " | ".join(dusen))
+            "dagitimci kaynaklarinin hepsi bos ya da dustu: " + " | ".join(
+                f"{s['ad']} ({s.get('hata') or s['sonuc']})" for s in satirlar))
 
+    adlar = " · ".join(ad for ad, _ in kullanilan)
     kaynak = {
         "ad": "Dağıtımcı vizyon duyuruları",
-        "kisa": "Başka Sinema · Bir Film",
-        "adres": f"{BASKA_KOK}/basin/ · {BIR_KOK}/sinemalarda",
-        "kosullar": ("Her iki sitede de içeriğin kullanımını kısıtlayan bir "
-                     "kullanım koşulları sayfası yok (29 Ağustos 2026'da site "
-                     "haritalarının tamamı tarandı); robots.txt bu yolları "
-                     "açık bırakıyor."),
-        "kunye": "Vizyon tarihleri: Başka Sinema ve Bir Film duyuruları.",
-        "kaynaklar": [
-            {"ad": "Başka Sinema", "adres": BASKA_KOK + "/basin/",
-             "kosullar": "", "kunye": "Kaynak: Başka Sinema"},
-            {"ad": "Bir Film", "adres": BIR_KOK + "/sinemalarda",
-             "kosullar": "", "kunye": "Kaynak: Bir Film"},
-        ],
+        "kisa": adlar,
+        "adres": " · ".join(adres for _, adres in kullanilan),
+        "kosullar": ("Bir Film'de içeriğin kullanımını kısıtlayan bir kullanım "
+                     "koşulları sayfası yok (29 Ağustos 2026'da site "
+                     "haritasının tamamı tarandı); robots.txt yolu açık "
+                     "bırakıyor. Başka Sinema'nın Eylül 2026 tarihli kullanım "
+                     "şartları otomatik çekmeyi yasaklıyor; yalnız yazılı "
+                     "izinle kullanılır."),
+        "kunye": f"Vizyon tarihleri: {adlar} duyuruları.",
+        "kaynaklar": [{"ad": ad, "adres": adres, "kosullar": "",
+                       "kunye": f"Kaynak: {ad}"} for ad, adres in kullanilan],
         "kapsam_uyarisi": ("Bu liste ulusal vizyon takviminin tamamı değildir; "
-                           "yalnızca bu iki dağıtımcının getirdiği filmleri "
+                           f"yalnızca {adlar} dağıtımının getirdiği filmleri "
                            "kapsar."),
     }
-    return filmler, kaynak
+    return filmler, kaynak, satirlar
 
 
 # -- kaynak: elle girilen -------------------------------------------------
@@ -593,8 +662,11 @@ def elle_cek(kok: Path) -> tuple[list[dict], dict]:
 
 # -- akis -----------------------------------------------------------------
 
-def calistir(kok: Path, kaynak_adi: str, ay_sayisi: int, izin_var: bool) -> int:
+def calistir(kok: Path, kaynak_adi: str, ay_sayisi: int, izin_var: bool,
+             baska_izni: bool = False,
+             dagitimcilar: list[str] | None = None) -> int:
     cikti = kok / f"{BILESEN}.json"
+    satirlar: list[dict] = []
     try:
         if kaynak_adi == "tmdb":
             filmler, kaynak = tmdb_cek(ay_sayisi)
@@ -603,17 +675,26 @@ def calistir(kok: Path, kaynak_adi: str, ay_sayisi: int, izin_var: bool) -> int:
         elif kaynak_adi == "boxoffice":
             filmler, kaynak = boxoffice_cek(ay_sayisi, izin_var)
         elif kaynak_adi == "dagitimci":
-            filmler, kaynak = dagitimci_cek(ay_sayisi)
+            filmler, kaynak, satirlar = dagitimci_cek(
+                ay_sayisi, baska_izni, dagitimcilar)
         else:
             filmler, kaynak = elle_cek(kok)
-    except ortak.CekmeHatasi as e:
-        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, str(e))
     except Exception as e:
-        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, repr(e))
+        hata = str(e) if isinstance(e, ortak.CekmeHatasi) else repr(e)
+        return ortak.dusme_ile_bitir(kok, BILESEN, cikti, hata, ortak.saglik(
+            "film", 0, 1, [ortak.kaynak_sonucu(kaynak_adi, None, hata)]))
 
-    if not filmler:
-        return ortak.dusme_ile_bitir(
-            kok, BILESEN, cikti, f"{kaynak_adi} kaynagi bos liste dondurdu")
+    if not satirlar:
+        satirlar = [ortak.kaynak_sonucu(kaynak_adi, len(filmler), asgari=1)]
+    saglik = ortak.saglik("film", len(filmler), 1, satirlar)
+    if not saglik["esik"]["gecti"]:
+        # Bir dagitimci 0 film dondurdu (ya da dustu): sessiz kirilma.
+        # Yarim liste yazilmaz; onceki dosya kendi tarihiyle kalir.
+        # Bilincli olarak tek kaynakla yayinlamak icin --dagitimci birfilm.
+        return ortak.esik_alti_bitir(
+            kok, BILESEN, cikti, "kaynak basina esik altinda: " + ", ".join(
+                f"{s['ad']} {s['kayit'] if s['kayit'] is not None else 'hata'}"
+                for s in satirlar if s["sonuc"] != "tamam"), saglik)
 
     # Ayni film iki sayfada gecebilir; ad + tarih ikilisi tekil anahtardir.
     tekil = {}
@@ -636,7 +717,7 @@ def calistir(kok: Path, kaynak_adi: str, ay_sayisi: int, izin_var: bool) -> int:
     }
 
     ortak.json_yaz(cikti, veri)
-    ortak.durum_yaz(kok, BILESEN, "taze")
+    ortak.durum_yaz(kok, BILESEN, "taze", saglik=saglik)
     ortak.log(f"Bitti: {len(filmler)} film, {len(veri['haftalar'])} vizyon gunu "
               f"({bas} .. {son}) -> {cikti}")
     return 0
@@ -653,6 +734,12 @@ def main() -> int:
                          help="kac ay ileriye bakilacak (varsayilan: 3)")
     ayristi.add_argument("--yazili-izin-var", action="store_true",
                          help="boxoffice kaynagi icin: yazili izin alindi")
+    ayristi.add_argument("--baska-sinema-izni", action="store_true",
+                         help="Baska Sinema'dan yazili izin alindi; "
+                              "dagitimci kaynagina eklenir")
+    ayristi.add_argument("--dagitimci", nargs="*", default=None,
+                         choices=["baska", "birfilm"],
+                         help="yalniz bu dagitimcilar (varsayilan: hepsi)")
     ayristi.add_argument("--kok", default=None,
                          help="cikti koku (ortam degiskeni: BH_CANLI_KOK)")
     arg = ayristi.parse_args()
@@ -660,7 +747,8 @@ def main() -> int:
     kok = ortak.kok_coz(arg.kok)
     ortak.log_kur(kok, BILESEN)
     ortak.log(f"Vizyon takvimi cekiliyor (kaynak: {arg.kaynak}) -> {kok}")
-    return calistir(kok, arg.kaynak, max(1, arg.ay), arg.yazili_izin_var)
+    return calistir(kok, arg.kaynak, max(1, arg.ay), arg.yazili_izin_var,
+                    arg.baska_sinema_izni, arg.dagitimci)
 
 
 if __name__ == "__main__":
