@@ -36,6 +36,11 @@ class DenetimTemel(TestCase):
             u.groups.add(Group.objects.get(name=rol))
             cls.k[rol] = u
 
+    def setUp(self):
+        # Giriş sınırı sayaçları önbellekte; testler birbirini kilitlemesin.
+        from django.core.cache import cache
+        cache.clear()
+
     def gir(self, rol):
         self.client.force_login(self.k[rol])
 

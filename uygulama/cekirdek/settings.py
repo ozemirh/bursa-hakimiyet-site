@@ -255,3 +255,20 @@ except json.JSONDecodeError:
 LOGIN_URL = "/panel/giris"
 LOGIN_REDIRECT_URL = "/panel/"
 LOGOUT_REDIRECT_URL = "/panel/giris"
+
+# --- Panel oturum süresi (Paket F madde 8, 19 Ekim 2026) -----------------
+#
+# Ayrıntı ve gerekçe: icerik/giris_guvenligi.py. Bu blok YALNIZ oturum
+# süresini ayarlar; güvenlik başlıkları ve çerez bayrakları DevOps bloğunda.
+#
+#   BH_OTURUM_MUTLAK_SAAT    girişten en çok (varsayılan 8 saat)
+#   BH_OTURUM_BOSTA_DAKIKA   hiç istek yoksa düşme (varsayılan 60 dk)
+#
+# Başarısız giriş sınırının varsayılanları kodda (kullanıcı adı + IP 5,
+# yalnız IP 20 deneme; 15 dk pencere ve kilit). Ezmek için settings'e:
+# BH_GIRIS_KULLANICI_SINIRI, BH_GIRIS_IP_SINIRI, BH_GIRIS_PENCERE_SANIYE,
+# BH_GIRIS_KILIT_SANIYE. Sayaçlar varsayılan önbellekte (CACHES).
+BH_OTURUM_MUTLAK_SANIYE = int(os.environ.get("BH_OTURUM_MUTLAK_SAAT", "8")) * 3600
+BH_OTURUM_BOSTA_SANIYE = int(os.environ.get("BH_OTURUM_BOSTA_DAKIKA", "60")) * 60
+SESSION_COOKIE_AGE = BH_OTURUM_MUTLAK_SANIYE
+MIDDLEWARE = MIDDLEWARE + ["icerik.giris_guvenligi.OturumSuresi"]

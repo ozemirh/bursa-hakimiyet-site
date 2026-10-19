@@ -178,7 +178,9 @@ def _giris(sender, request, user, **kw):
 
 def _cikis(sender, request, user, **kw):
     if user is not None and getattr(user, "pk", None):
-        yaz(request, "cikis", kullanici=user, hedef_tur="kullanici", hedef_id=user.pk)
+        # Oturum süresi dolduysa nedeni `giris_guvenligi.OturumSuresi` bırakır.
+        yaz(request, "cikis", kullanici=user, hedef_tur="kullanici", hedef_id=user.pk,
+            gerekce=getattr(request, "_bh_cikis_nedeni", "") if request else "")
 
 
 def _basarisiz(sender, credentials, request=None, **kw):
