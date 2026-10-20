@@ -1676,7 +1676,11 @@ footer strong{color:var(--kagit)}
 .kunye-alt{border-top:1px solid var(--kunye-cizgi);margin-top:24px;padding-top:14px;font-size:12px;line-height:1.75}
 .kunye-alt a{color:var(--kagit);text-decoration:underline;text-underline-offset:2px}
 
-.yukari{position:fixed;right:16px;bottom:16px;z-index:60;background:var(--lacivert);color:var(--kagit);border:2px solid var(--kagit);font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.8px;padding:10px 13px;cursor:pointer;opacity:0;visibility:hidden;transition:opacity .18s ease}
+/* "Başa dön" (`parca/yukari.html`, 20 Ekim 2026): yalnız yukarı
+   kaydırırken görünür (`site.js`); betiksiz hiç çizilmez. 44 px dokunma
+   hedefi (WCAG 2.5.5); yazı kaynakta küçük harf, ad olarak öyle okunur. */
+.yukari{position:fixed;right:16px;bottom:16px;z-index:60;background:var(--lacivert);color:var(--kagit);border:2px solid var(--kagit);font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.8px;text-transform:uppercase;min-height:44px;padding:10px 13px;cursor:pointer;opacity:0;visibility:hidden;transition:opacity .18s ease,visibility .18s}
+html:not(.js-var) .yukari{display:none}
 .yukari[data-gorunur="true"]{opacity:1;visibility:visible}
 .yukari:hover{background:var(--kirmizi)}
 @media(prefers-reduced-motion:reduce){.yukari{transition:none}}
@@ -1971,8 +1975,10 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .kirinti [aria-current="page"]{color:var(--tema-murekkep);font-weight:var(--tema-kirinti-agirlik)}
 .detay{background:var(--tema-kagit);border:1px solid var(--tema-yuzey-cizgi);padding:20px 22px 24px}
 .detay .rozet-k{color:var(--kagit)}
-.detay h1{font-family:var(--tema-baslik-aile);font-size:34px;line-height:1.09;font-weight:900;letter-spacing:-.3px;margin:9px 0 12px}
-.detay .spot{font-size:16.5px;line-height:1.5;border-left:4px solid var(--tema-isaret);padding-left:12px;margin-bottom:14px}
+/* H1 34 → 38 px (20 Ekim 2026, R3): H1 ÷ gövde 1,89 → 2,11. Dar ekranda
+   25 px aşağıdaki kuralda. Spotun yazı ölçüsü "gövde serifi" bölümünde. */
+.detay h1{font-family:var(--tema-baslik-aile);font-size:38px;line-height:1.09;font-weight:900;letter-spacing:-.3px;margin:9px 0 12px}
+.detay .spot{border-left:4px solid var(--tema-isaret);padding-left:12px;margin-bottom:14px}
 /* Paket H (19 Ekim 2026): panel alanlarının sitedeki karşılığı — ikinci
    başlık, imza, etiket listesi (bağlantısız: etiket sayfası yok), gömülü
    kod kartı (dış çerçeve yüklemez). Biçim kararı → web-tasarim-direktoru. */
@@ -1993,6 +1999,15 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .arac{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .arac button,.arac a{border:1px solid var(--cizgi);background:var(--yumusak);font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.5px;padding:5px 9px;cursor:pointer;color:var(--tema-koyu)}
 .arac button:hover,.arac a:hover{background:var(--tema-dolgu);color:var(--kagit);border-color:var(--tema-dolgu)}
+/* Araç düğmeleri betikle çalışır (20 Ekim 2026, `site.js` "haber araç
+   çubuğu"): betik yokken çizilmez; paylaşım bağlantıları (`a`) betiksiz
+   çalıştığı için kalır. `js-var` `taban.html` başında konur — düğmeler
+   sonradan belirip künye satırını kaydırmaz. Sınırdaki A−/A+ `disabled`;
+   kopyalanınca düğme bir an dolu renkte (boyut değişmez, kayma yok). */
+html:not(.js-var) .arac button{display:none}
+.arac button:disabled{opacity:.45;cursor:default}
+.arac button:disabled:hover{background:var(--yumusak);color:var(--tema-koyu);border-color:var(--cizgi)}
+.arac button[data-durum="tamam"]{background:var(--tema-dolgu);color:var(--kagit);border-color:var(--tema-dolgu)}
 /* Paylaşım grubu (20 Ekim 2026, `parca/paylas.html`): WhatsApp · X ·
    Facebook · bağlantıyı kopyala. Betiksiz düz bağlantı; marka rengi YOK,
    araç çubuğunun kendi dili (yazı/simge --tema-koyu, üstüne gelince
@@ -2018,6 +2033,13 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .ana-gorsel{height:auto;aspect-ratio:var(--cerceve-orani)}
 .ana-gorsel.kapak{aspect-ratio:var(--kapak-orani)}
 .foto-alt{font-size:12.5px;color:var(--gri);border-bottom:1px solid var(--cizgi);padding:8px 0 10px;margin-bottom:16px}
+/* Üst şerit detayda ana görselin altında (20 Ekim 2026, K1 (b);
+   `parca/ust_serit.html`). Kutu boyu tabandakiyle aynı sınıftan
+   (`.reklam.tam` 250 · 120 · 44 px). Makalenin iç dolgusunu yanlardan
+   aşar: 1440'ta 712 yerine 756 px, 728x90 sığsın; yan çizgisi makalenin
+   kendi kenarına dayandığı için yalnız alt-üst kesik çizgi kalır. */
+.detay>.reklam.tam{margin:16px -22px;border-left:0;border-right:0}
+@media(max-width:600px){.detay>.reklam.tam{margin:14px -14px}}
 /* ---- haber seslendirme ---- */
 .seslendirme{border:1px solid var(--cizgi);border-left:4px solid var(--kirmizi);background:var(--yumusak);padding:10px 12px;margin-bottom:16px}
 .seslendirme.ses-acik{border-left-color:var(--lacivert)}
@@ -2062,8 +2084,13 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
    yazı tipinden bağımsızdır. Sitedeki öbür `ch` ölçüleri de aynı
    gerekçeyle `em`'e çevrildi (Roboto "0" = 0,562em). */
 .metin{font-size:18px;line-height:1.62;max-width:38em}
-.metin[data-boyut="kucuk"]{font-size:16px;line-height:1.66}
-.metin[data-boyut="buyuk"]{font-size:20px;line-height:1.6}
+/* Okurun yazı boyu (A− / A+, 20 Ekim 2026): dört kademe, varsayılan 18.
+   Tercih `<html data-yazi-boyu>` üzerinde; `taban.html` başındaki satır içi
+   betik sayfa çizilmeden koyar (kayma yok), düğmeler `site.js`te. Ölçü
+   `em`: satır boyu (38em) yazıyla birlikte büyür, sütun yine sınırlar. */
+html[data-yazi-boyu="kucuk"] .metin{font-size:16px;line-height:1.66}
+html[data-yazi-boyu="buyuk"] .metin{font-size:20px;line-height:1.6}
+html[data-yazi-boyu="cok-buyuk"] .metin{font-size:22px;line-height:1.58}
 .metin p{margin-bottom:14px}
 .metin h2{font-family:var(--display);font-size:24px;line-height:1.2;font-weight:700;color:var(--lacivert);margin:20px 0 10px}
 .alinti{border-left:5px solid var(--kirmizi);background:var(--yumusak);padding:14px 16px;margin:18px 0;font-family:var(--display);font-size:19px;line-height:1.34;font-weight:700;color:var(--lacivert)}
@@ -2706,7 +2733,14 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
    ve serifte farklı çıkıyor (§34 K5 dersi). Değer ölçümden sonra
    güncellenir. */
 .metin{font-family:var(--serif);line-height:1.66;letter-spacing:.1px}
-.detay .spot{font-family:var(--serif);font-size:17px;line-height:1.55}
+/* Spot gövdeden BELİRGİN (20 Ekim 2026, R3): 17/400 iken gövdeden (18/400)
+   küçüktü, ayıran tek şey fitildi. Aile aynı (§35 "spot serif"); ayrım
+   ağırlık + ölçüyle: 20/500 → spot ÷ gövde 1,11. Dar ekranda gövdeyle eş
+   ölçü (18), ayrım ağırlıkta — 390'da spot zaten 8 satırdı, 20 px 10'a
+   çıkarırdı. 601-1000'de 19. */
+.detay .spot{font-family:var(--serif);font-weight:500;font-size:20px;line-height:1.45}
+@media(max-width:1000px){.detay .spot{font-size:19px}}
+@media(max-width:600px){.detay .spot{font-size:18px;line-height:1.45}}
 
 @media(max-width:768px){
   .yazar-kusak{grid-auto-columns:minmax(158px,1fr)}

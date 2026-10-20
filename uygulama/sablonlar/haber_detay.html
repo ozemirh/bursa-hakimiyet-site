@@ -14,6 +14,10 @@ JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
 {% block rss_bolum %}<link rel="alternate" type="application/rss+xml" title="Bursa Hakimiyet — {{ haber.kategori.ad|baslikla }}" href="{{ site_koku }}/rss/{{ haber.kategori.slug_al }}">{% endblock %}
 {% block yapisal %}<script type="application/ld+json">{% jsonld "haber" haber %}</script>
 <script type="application/ld+json">{% jsonld "haber_kirinti" haber %}</script>{% endblock %}
+{% comment %}K1 (b), 20 Ekim 2026: üst şerit haberin ÜSTÜNDE değil, ana görselin
+altında — 1440'ta H1 478 px'te başlıyordu. Taban yuvası burada boş; aynı
+parça aşağıda, `ust_serit.html` tek tanım.{% endcomment %}
+{% block ust_serit %}{% endblock %}
 
 {% block icerik %}
       <nav class="kirinti" aria-label="Kırıntı navigasyonu">
@@ -82,6 +86,8 @@ JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
               {% if haber|arsiv_gorseli_kayip %}<p class="foto-alt">Görsel temsilîdir: bu haberin arşiv fotoğrafı kaynak sunucudan silinmiş.</p>
               {% else %}<p class="foto-alt">Görsel temsilîdir.</p>{% endif %}
             {% endif %}
+
+            {% include "parca/ust_serit.html" %}
 
             {% include "parca/seslendirme.html" %}
 
@@ -165,6 +171,7 @@ JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
           {% endif %}
         </aside>
       </div>
+      {% include "parca/yukari.html" %}
 {% endblock %}
 
 {% block betik %}<script src="{% static 'betik/seslendirme.js' %}"></script>{% endblock %}

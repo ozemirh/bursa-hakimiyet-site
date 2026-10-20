@@ -68,7 +68,7 @@ paylaşım görseli yazarın portresi.{% endcomment %}
               {% if yazi.kategori %}<span>{{ yazi.kategori.ad|baslikla }}</span>{% endif %}
               {% if yazi.kelime_sayisi %}<span>{{ yazi.kelime_sayisi|okuma_dakikasi }} dk okuma</span>{% endif %}
               <div class="arac">
-                <button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button>
+                <div class="paylas" role="group" aria-label="Yazıyı paylaş">{% include "parca/paylas.html" with adres=site_koku|add:yazi.get_absolute_url metin=yazi.baslik %}<button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button></div>
                 <button type="button" class="yazi-kucult" aria-label="Yazı boyutunu küçült">A&minus;</button>
                 <button type="button" class="yazi-buyut" aria-label="Yazı boyutunu büyüt">A+</button>
                 <button type="button" class="yazdir">YAZDIR</button>

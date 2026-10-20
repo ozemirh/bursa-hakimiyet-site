@@ -38,6 +38,7 @@ görünmüyor; eksik olanın ne olduğunu gizlemek yerine yazıyoruz.
           <span>Haber Merkezi</span>
           {% if galeri.yayin_zamani %}<span><time datetime="{{ galeri.yayin_zamani|date:'c' }}">{{ galeri.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
           {% if kareler %}<span>{{ kareler|length }} fotoğraf</span>{% endif %}
+          <div class="arac"><div class="paylas" role="group" aria-label="Galeriyi paylaş">{% include "parca/paylas.html" with adres=site_koku|add:galeri.get_absolute_url metin=galeri.baslik %}<button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button></div></div>
         </div>
 
         {% if galeri.gorsel_yolu %}
