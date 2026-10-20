@@ -57,7 +57,7 @@ TEMALAR: dict[str, Tema] = {t.anahtar: t for t in (
     Tema("bursaspor", "Bursaspor", "12 Eylül 2026 — \"bursaspor sayfasını da yeşil "
          "beyaz renklerine büründür\" (§68)", "/bursaspor", ("alt",), kosul="bursaspor"),
     Tema("ekonomi", "Ekonomi", "19 Ekim 2026 — seçili sayfalar: köşe yazıları, "
-         "ekonomi, teknoloji", "/ekonomi", ("bas",)),
+         "ekonomi, teknoloji", "/ekonomi, /piyasa/<enstrüman> (20 Ekim 2026)", ("bas",)),
     Tema("teknoloji", "Teknoloji", "19 Ekim 2026 — seçili sayfalar: köşe yazıları, "
          "ekonomi, teknoloji", "/teknoloji", ("bas",)),
     Tema("kose", "Köşe yazıları", "19 Ekim 2026 — seçili sayfalar: köşe yazıları, "
@@ -128,6 +128,13 @@ def kategori_temasi(slug: str, baglam: dict | None = None) -> Tema | None:
 
 def kose_temasi() -> Tema:
     return TEMALAR["kose"]
+
+
+def piyasa_temasi() -> Tema:
+    """Enstrüman sayfaları (`/piyasa/dolar` …) ekonomi bölümünün parçası;
+    aynı renk takımını alır. Düzen parçası (`bas` yuvası) orada basılmaz —
+    sayfanın kendi şablonu var (`piyasa.html`)."""
+    return TEMALAR["ekonomi"]
 
 
 # ---------------------------------------------------------------------------

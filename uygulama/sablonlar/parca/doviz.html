@@ -24,7 +24,8 @@ anasayfadaki hâliyle birebir aynı kalsın diye blok olduğu gibi taşındı.{%
   <dl>
     {% for k in doviz.kalemler %}
       <div>
-        <dt>{{ k.ad }}</dt>
+        {# 20 Ekim 2026: sayfası olan kalem (dolar, euro, gram altın) kalıcı enstrüman sayfasına bağlanır; bağ gözün tamamını kaplar (site.css). #}
+        <dt>{% with a=k.anahtar|piyasa_adresi %}{% if a %}<a href="{{ a }}">{{ k.ad }}</a>{% else %}{{ k.ad }}{% endif %}{% endwith %}</dt>
         <dd>
           {% if k.deger %}{{ k.deger|floatformat:2 }}{% if k.birim == "TL" %} &#8378;{% endif %}
             {% if k.degisim_yuzde %}<span class="fark {% if k.yon == 'yukari' %}artis{% else %}azalis{% endif %}" aria-label="yüzde {{ k.degisim_yuzde|mutlak|floatformat:2 }} {% if k.yon == 'yukari' %}yükseldi{% else %}geriledi{% endif %}">{% if k.yon == 'yukari' %}&#9650;{% else %}&#9660;{% endif %} %{{ k.degisim_yuzde|mutlak|floatformat:2 }}</span>{% endif %}

@@ -166,6 +166,36 @@ Elle giriş yolu **duruyor** ve değişmedi:
 
 `onceki` verilirse değişim ve yön (`yukari`/`asagi`/`esit`) hesaplanır.
 
+### Enstrüman sayfaları — sitenin okuduğu alanlar (20 Ekim 2026)
+
+`/piyasa/dolar` · `/piyasa/euro` · `/piyasa/gram-altin` bu dosyayı okur
+(`uygulama/icerik/piyasa.py`). Okunan alanlar: kalemin `deger`, `kaynak`,
+`kaynak_durumu`, `piyasa_damgasi` (saniyeli zaman), `degisim`,
+`degisim_yuzde`, `yon`, `alis`/`satis` (yalnız TCMB), `veri_tarihi`,
+`girildi`; dosyanın `bulten` ve `guncelleme` alanları. `piyasa.json`dan yalnız
+`kaynak` listesi (okunur kaynak adı) ve `capraz_kontrol.resmi_kapanis_piyasa_farki`
+(gram altının EVDS resmî kapanışı). Bu adlardan biri değişirse sayfa o alanı
+sessizce çizmez — `uygulama/icerik/tests_piyasa.py` sözleşmeyi kilitler.
+
+**Geçmiş seri — sözleşme hazır, yazan betik yok.** Kalem şu iki alanı
+taşırsa sayfa son 10 gözlemin tablosunu ve 30 gözleme kadar çizgi grafiği
+çizer; taşımazsa bölüm hiç yoktur:
+
+```json
+"gecmis": [{"tarih": "2026-09-10", "deger": 48.4712},
+           {"tarih": "2026-09-11", "deger": 48.5178}],
+"gecmis_kaynak": "TCMB günlük bülten (döviz satış)"
+```
+
+`gecmis_kaynak` zorunlu (kaynağı yazılmamış seri basılmaz); tarih ISO ya da
+EVDS biçimi (`GG-AA-YYYY`). Seriyi yazmak betik işidir ve iki yol var:
+gram altın için `piyasa.py`nin EVDS isteği bugün 21 günlük aralığı ZATEN
+alıyor (12 Eylül koşusunda `donen_gozlem` 15) ve son ikisi dışında atıyor —
+ek istek gerekmez;
+dolar/euro için ya günlük TCMB bültenleri (gün başına bir istek; önceki
+dosyadan taşınırsa depolama demektir) ya da EVDS `TP.DK.*` serileri (bülten
+tarihini bir iş günü kaydırdığı ölçülmüştü, yukarı bakın).
+
 ---
 
 ## Piyasa — gram altın ve BIST 100

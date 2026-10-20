@@ -37,6 +37,9 @@ from . import bursaspor as bursaspor_bolumu
 from . import temalar
 from . import eczane as eczane_sayfa
 from . import okunma, onbellek
+from . import piyasa as piyasa_sayfa
+from . import seo
+from .jsonld import betik_json
 from .models import Haber, ResmiIlan
 from .sayfa_onbellegi import sayfa_onbellegi
 from .sayfa_no import sayfa_getir
@@ -686,6 +689,59 @@ def nobetci_eczane(request, slug=""):
     from .jsonld import betik_json
     baglam["yapisal_veri"] = betik_json(eczane_sayfa.yapisal_veri(baglam))
     return render(request, "nobetci_eczane.html", baglam)
+
+
+# Enstrüman sayfasındaki "ekonomiden son haberler" listesi.
+PIYASA_HABER = 6
+# Listenin bölümü: kategori TÜR SATIRININ slug'ı (`kategori` görünümüyle aynı
+# sözleşme). Kimlik süreç içi eşlemeden okunur — ek sorgu açmaz.
+PIYASA_BOLUM = "ekonomi"
+
+
+def _piyasa_haberleri():
+    from taksonomi import slug_eslemesi
+    kimlik = next((k for (k, tur), s in slug_eslemesi.eslem().items()
+                   if tur == Kategori.TUR_HABER and s == PIYASA_BOLUM), None)
+    if kimlik is None:
+        return []
+    return list(_liste().filter(kategori_id=kimlik)[:PIYASA_HABER])
+
+
+def piyasa_enstrumani(request, slug):
+    """Kalıcı enstrüman sayfası — `/piyasa/dolar`, `/piyasa/euro`,
+    `/piyasa/gram-altin` (20 Ekim 2026). Ayrıntı: `icerik/piyasa.py`.
+
+    **Veri yoksa da 200 döner** (`nobetci_eczane` ile aynı gerekçe): adres
+    arama motoruna kayıtlı olacak; betik bir tur kaçırdı diye 404 vermek
+    sayfayı dizinden düşürür. Bilinmeyen enstrüman adres tablosuna hiç
+    girmez (kalıp açık listedir) — 404.
+
+    Sayfa önbelleği (`sayfa_onbellegi`) BİLEREK yok: çevirici `?miktar=`
+    ile çalışır ve önbellek anahtarı yalnız `?sayfa` taşır. Görünümün
+    maliyeti bir JSON (30 sn süreç belleği) ve tek liste sorgusu.
+    """
+    enstruman = piyasa_sayfa.ENSTRUMANLAR.get(slug)
+    if enstruman is None:
+        raise Http404("Enstrüman yok")
+    paket = piyasa_sayfa.sayfa_verisi(enstruman, oku("doviz"), oku("piyasa"))
+    yol = piyasa_sayfa.adres(enstruman.anahtar)
+    aciklama = piyasa_sayfa.aciklama(enstruman, paket)
+    tazelik = paket.get("tazelik") or {}
+    return render(request, "piyasa.html", {
+        "baslik": enstruman.soru,
+        "enstruman": enstruman,
+        "veri": paket,
+        "bayat": bool(paket.get("var") and tazelik.get("durum") != "taze"),
+        "cevirici": piyasa_sayfa.cevir(request.GET, paket, enstruman),
+        "digerleri": [(e.ad, piyasa_sayfa.adres(e.anahtar))
+                      for e in piyasa_sayfa.ENSTRUMANLAR.values() if e is not enstruman],
+        "haberler": _piyasa_haberleri(),
+        "yol": yol,
+        "aciklama": aciklama,
+        "yapisal_veri": betik_json(seo.veri_sayfasi(
+            enstruman.soru, yol, aciklama, tazelik.get("guncelleme"))),
+        "tema": temalar.piyasa_temasi(),
+    })
 
 
 def ilceler(request):
