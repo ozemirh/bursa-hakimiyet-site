@@ -18,6 +18,7 @@ bağımsız olsun diye canlı bileşenlerin İÇERİĞİ denetlenmez.
 from __future__ import annotations
 
 import os
+import re
 from datetime import timedelta
 
 from django.core.management import call_command
@@ -71,7 +72,33 @@ def tavan(ad: str) -> int:
     return TAVAN[ad] + (PG_EK.get(ad, 0) if connection.vendor == "postgresql" else 0)
 
 #: Anasayfa HTML'i (sıkıştırmasız) en çok bu kadar.
+#:
+#: DİKKAT (20 Ekim 2026 ölçümü): bu tavan bu dosyanın KÜÇÜK verisiyle
+#: sınanıyor. Gerçek veriyle (PG, 1.038.474 haber) anasayfa 229–234 KB
+#: açılmış / 35 KB gzip — 200 KB'ı aşıyor. Payı ardışık boşluk (%17),
+#: `<img>` srcset'leri (%22) ve SVG sembol kütüphanesi (%8) yiyor. Gerçek
+#: veri tavanı `tests_sayfa_butcesi.HTML_TAVAN_KB` (tarayıcıda, isteğe bağlı).
 ANASAYFA_HTML_TAVAN = 200 * 1024
+
+#: Diğer sayfaların HTML'i (sıkıştırmasız, bu dosyanın verisiyle). 20 Ekim
+#: 2026'ya kadar detayda HİÇ tavan yoktu (referans kütüphanesi fark matrisi,
+#: satır 3). Ölçülen değer yanında; pay ~%25 — şablona yeni bir blok girer,
+#: bir sembol kütüphanesi ya da gömülü veri yığını girmez. Gerçek veriyle
+#: ölçüm ve tavan: `tests_sayfa_butcesi`.
+HTML_TAVAN = {              # KB   ölçülen az kayıt / 4 kat kayıt (B)
+    "haber_detay": 58,      #      45.940 / 45.961  (gerçek veri: 58 KB)
+    "kategori_ekonomi": 65,  #     46.973 / 51.940  (gerçek veri: 83 KB)
+    "ilce": 64,             #      50.490 / 50.467  (gerçek veri: 72 KB)
+}
+
+#: Okurun sayfası kaç ayrı betik/stil DOSYASI istiyor (sunum araçları hariç:
+#: test istemcisinin Host'u yerel değil, `baglam.sunum_araci_mi` kapalı).
+#: 20 Ekim 2026 tarayıcı ölçümü: her sayfada 1 betik (site.js) + okunan
+#: metinde seslendirme.js; 2 stil (site.css, fontlar.css). Yeni bir dosya
+#: her ziyarette bir istek daha demek — bilinçli eklenir, sayı da artırılır.
+BETIK_TAVAN = {"haber_detay": 2, "kose_yazisi": 2}
+BETIK_TAVAN_VARSAYILAN = 1
+STIL_TAVAN = 2
 
 
 class Temel(TestCase):
@@ -167,6 +194,31 @@ class SorguTavani(Temel):
         _, yanit = self.sorgu_say("/")
         self.assertLessEqual(len(yanit.content), ANASAYFA_HTML_TAVAN,
                              f"anasayfa {len(yanit.content)} bayt")
+
+    def test_detay_kategori_ilce_html_boyutu(self):
+        yollar = self.yollar()
+        olcum = {}
+        for ad, tavan_kb in HTML_TAVAN.items():
+            with self.subTest(ad):
+                _, yanit = self.sorgu_say(yollar[ad])
+                olcum[ad] = len(yanit.content)
+                self.assertLessEqual(len(yanit.content), tavan_kb * 1024,
+                                     f"{ad}: {len(yanit.content)} bayt")
+        if os.environ.get("BH_BUTCE_RAPOR") == "1":
+            print(type(self).__name__, "html", olcum)
+
+    def test_betik_ve_stil_dosyasi_sayisi(self):
+        for ad, yol in self.yollar().items():
+            with self.subTest(ad):
+                _, yanit = self.sorgu_say(yol)
+                html = yanit.content.decode("utf-8")
+                betik = re.findall(r"<script\b[^>]*\bsrc=\"([^\"]+)\"", html)
+                stil = re.findall(r"<link\b[^>]*\brel=\"stylesheet\"[^>]*>", html)
+                self.assertLessEqual(len(betik), BETIK_TAVAN.get(ad, BETIK_TAVAN_VARSAYILAN),
+                                     f"{ad}: {betik}")
+                self.assertLessEqual(len(stil), STIL_TAVAN, f"{ad}: {stil}")
+                # Okur görünümünde sunum aracı yok — bu sayımın ön koşulu.
+                self.assertNotIn("reklam-test.js", html, ad)
 
 
 class SorguTavaniCokKayit(SorguTavani):
