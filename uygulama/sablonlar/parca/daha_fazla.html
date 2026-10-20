@@ -27,11 +27,13 @@ Beklenen değişkenler:
                 sayfalarında düğme aynı sayfanın devamına gider, o yüzden
                 adresi yalnız anasayfa açıkça yollar.
   daha_hedef  — kalemlerin ekleneceği kabın CSS seçicisi
-  daha_metin  — düğme metni (boşsa "Daha fazla haber göster"){% endcomment %}
+  daha_metin  — düğme metni (boşsa "Daha fazla haber göster")
+  daha_son    — arşivin sonundaki satır (boşsa betikteki "…tüm haberler
+                yüklendi."); köşe yazıları akışı "yazılar" der{% endcomment %}
 {% if devam %}
 <div class="daha-fazla-kap">
   <a class="daha-fazla" href="{% if daha_adres %}{{ daha_adres }}{% else %}?sayfa={{ sonraki }}{% endif %}" rel="next"
-     data-uc="{{ daha_uc }}" data-hedef="{{ daha_hedef }}" data-sayfa="{{ sonraki }}">{% if daha_metin %}{{ daha_metin }}{% else %}Daha fazla haber göster{% endif %}</a>
+     data-uc="{{ daha_uc }}" data-hedef="{{ daha_hedef }}" data-sayfa="{{ sonraki }}"{% if daha_son %} data-son="{{ daha_son }}"{% endif %}>{% if daha_metin %}{{ daha_metin }}{% else %}Daha fazla haber göster{% endif %}</a>
   {% comment %}Yükleme HATASINI bildiren alan. Başarı durumunda yazı yok
   (7 Eylül 2026, kullanıcı isteği: "20 haber eklendi… yazısını kaldır") —
   aynı gün odak yeni yığının ilk kalemine taşınmaya başladı ve ekran

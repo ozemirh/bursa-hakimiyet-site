@@ -227,7 +227,8 @@ class TemaSayfalari(TestCase):
 
     def test_nitelik_kayittan(self):
         for yol, beklenen in (("/ekonomi", "ekonomi"), ("/teknoloji", "teknoloji"),
-                              ("/yazarlar", "kose"), (self.yazar.get_absolute_url(), "kose"),
+                              ("/yazarlar", "kose"), ("/kose-yazilari", "kose"),
+                              (self.yazar.get_absolute_url(), "kose"),
                               (self.yazi.get_absolute_url(), "kose")):
             self.assertIn(f'<body data-bolum="{beklenen}">', self._govde(yol), yol)
         for yol in ("/gundem", "/bursa", f"/ilce/{self.ilce.slug}", "/"):

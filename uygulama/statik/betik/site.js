@@ -525,7 +525,9 @@
           if(parca.getAttribute('data-devam') !== '1'){
             /* Kalem geldiyse odak ONA gider, nota değil: not listenin
                sonunda ve okuru oraya atmak yeni gelenleri atlatırdı. */
-            bitir(haber ? 'Bu listedeki tüm haberler yüklendi.'
+            /* `data-son`: listenin kendi sözü (köşe yazıları akışı
+               "yazılar" der); yoksa haber listelerinin cümlesi. */
+            bitir(haber ? (dugme.getAttribute('data-son') || 'Bu listedeki tüm haberler yüklendi.')
                         : 'Başka haber yok.', !haber);
             yeniyeIn(ilkYeni);
             return;

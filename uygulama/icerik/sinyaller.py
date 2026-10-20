@@ -2,8 +2,8 @@
 
 Kayıt değişince ona dayanan önbellek anında düşer:
 
-* **Sayfa mikro önbelleği** — haber, kategori, ilçe, konu, son dakika ya
-  da resmî ilan kaydedilince yayın sürümü değişir; bütün sayfa anahtarları
+* **Sayfa mikro önbelleği** — haber, kategori, ilçe, konu, son dakika,
+  resmî ilan, köşe yazısı ya da yazar kaydedilince yayın sürümü değişir; bütün sayfa anahtarları
   bir sonraki istekte yeniden kurulur (`onbellek.surumu_artir`).
 * **Kategori özeti / ilçe listesi** — menü, bant ve künye.
 * **Slug eşlemesi** — bu süreçte hemen; öbür süreçlerde en geç
@@ -78,7 +78,12 @@ def bagla() -> None:
 
     from .models import Haber, Konu, KonuHaber, ResmiIlan, SonDakika
 
-    for model in (Haber, Konu, KonuHaber, ResmiIlan, SonDakika):
+    # Köşe yazısı ve yazar (19 Ekim 2026): `/kose-yazilari` sayfa
+    # önbelleğinde ve anasayfanın yazar kuşağı son yazıyı basıyor; panelden
+    # yayımlanan yazı 30 sn beklemeden görünsün.
+    from medya.models import KoseYazisi, Yazar
+
+    for model in (Haber, Konu, KonuHaber, ResmiIlan, SonDakika, KoseYazisi, Yazar):
         for sinyal in (post_save, post_delete):
             sinyal.connect(_surum, sender=model,
                            dispatch_uid=f"bh-surum-{model.__name__}-{sinyal is post_save}")

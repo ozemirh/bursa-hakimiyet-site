@@ -1,0 +1,8 @@
+{% load site_etiket %}{% comment %}
+Köşe yazıları akışının satırı (19 Ekim 2026, `/kose-yazilari`). Yazarın
+kendi arşiv satırının (`yazi_satiri.html`) kardeşi; tek farkı satırın
+YAZARI da söylemesi — bu akışta yazılar birçok yazardan geliyor. Sütunlar
+aynı: tarih · (yazar + başlık) · okuma süresi. Spot yalnız başlıktan
+FARKLIYSA basılır (arşivin %99'unda ikisi aynı cümle).
+`y.yazar` sorgu açmaz: akış `select_related("yazar")` ile gelir.
+{% endcomment %}<li>{% if y.yayin_zamani %}<time datetime="{{ y.yayin_zamani|date:'c' }}">{{ y.yayin_zamani|date:'j M Y' }}</time>{% else %}<span></span>{% endif %}<span class="kose-satir"><a class="kose-satir-yazar" href="{{ y.yazar.get_absolute_url }}">{{ y.yazar.ad }}</a><a href="{{ y.get_absolute_url }}">{{ y.baslik }}</a></span><span class="sure">{% if y.kelime_sayisi %}{{ y.kelime_sayisi|okuma_dakikasi }} dk{% endif %}</span>{% if y.spot and y.spot != y.baslik %}<p>{{ y.spot|truncatechars:160 }}</p>{% endif %}</li>

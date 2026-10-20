@@ -609,7 +609,7 @@ def daha_fazla(request):
     sessizce ayrışması demekti.
     """
     kaynak = request.GET.get("kaynak") or "anasayfa"
-    if kaynak not in {"anasayfa", "son", "kategori", "ilce"}:
+    if kaynak not in {"anasayfa", "son", "kategori", "ilce", "kose"}:
         raise Http404("Bilinmeyen akış")
     slug = request.GET.get("slug") or ""
     if kaynak in {"kategori", "ilce"} and not slug:
@@ -618,6 +618,13 @@ def daha_fazla(request):
         numara = max(int(request.GET.get("sayfa") or 1), 1)
     except (TypeError, ValueError):
         numara = 1
+    if kaynak == "kose":
+        # `/kose-yazilari` akışı (19 Ekim 2026). Kalem haber değil köşe
+        # yazısı; satır şablonu ve dilim boyu sayfanınkiyle aynı
+        # (`KoseYazisi.akis`, `AKIS_BOYU`).
+        kalemler, devam = _dilim(KoseYazisi.akis(), numara, KoseYazisi.AKIS_BOYU)
+        return render(request, "parca/akis_parcasi.html", {
+            "kalemler": kalemler, "devam": devam, "kaynak": kaynak})
     sorgu, kategori = _akis_sorgusu(kaynak, slug)
     if kaynak == "anasayfa":
         kalemler, devam = _dilim(sorgu, numara, ANASAYFA_DAHA, atla=ANASAYFA_ATLA)

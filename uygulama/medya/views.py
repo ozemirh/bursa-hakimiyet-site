@@ -20,6 +20,7 @@ from django.shortcuts import redirect, render
 from cekirdek.adres_duzeni import kalici
 from icerik import temalar
 from icerik.sayfa_no import sayfa_getir
+from icerik.sayfa_onbellegi import sayfa_onbellegi
 from icerik.models import Haber
 from taksonomi.models import Kategori, KategoriTur
 
@@ -117,6 +118,37 @@ def kose_yazisi(request, dilim_slug, dilim_id, slug, kimlik):
                        .select_related("kategori")
                        .prefetch_related("kategori__turler")[:5],
         "ray_yazarlar": Yazar.son_yazisiyla()[:5],
+        "tema": temalar.kose_temasi(),
+    })
+
+
+@sayfa_onbellegi
+def kose_yazilari(request):
+    """`/kose-yazilari` — köşe yazılarının kendisi (19 Ekim 2026, kullanıcı
+    isteği: "köşe yazıları diye bir sayfamız da olsun").
+
+    `/yazarlar` YAZARLARI listeler; bu sayfa YAZILARI. Eski sitede adres
+    tasarlanmış ama sayfası yoktu (`/kose-yazilari/` → 301 → 404, canlıda
+    ölçüldü). İki blok:
+
+    1. **Yazarların son yazıları** — her yazarın en son yazısı, en yeniden
+       eskiye; yalnız 1. sayfada. Tek sorgu (`yazar_basina_son`).
+    2. **Tüm köşe yazıları** — akış, en yeniden eskiye, "daha fazla
+       göster" deseniyle (§58/§61): düğme `?sayfa=N` bağlantısıdır, betik
+       `/daha-fazla?kaynak=kose` ucundan aynı dilimi çeker.
+
+    Sayım yapılır (`Paginator`): 6.713 satırda ucuz ve `?sayfa=N`
+    bağlantı zincirinin arşivin SONUNA kadar inmesini sağlıyor —
+    kategori sayfasının `SinirliSayfalayici`sı 1.000'de keserdi.
+    """
+    sayfa = sayfa_getir(Paginator(KoseYazisi.akis(), KoseYazisi.AKIS_BOYU),
+                        request.GET.get("sayfa"))
+    return render(request, "medya/kose_yazilari.html", {
+        "baslik": "Köşe yazıları",
+        "sayfa": sayfa,
+        "guncel": (list(KoseYazisi.yazar_basina_son())
+                   if sayfa.number == 1 else []),
+        "daha_uc": "/daha-fazla?kaynak=kose",
         "tema": temalar.kose_temasi(),
     })
 

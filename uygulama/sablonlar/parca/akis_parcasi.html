@@ -23,6 +23,11 @@ tuttuğu hesap `icerik/views.py`de `AKIS_RITMI` başlığı altında.{% endcomme
 <div class="akis-parca" data-devam="{% if devam %}1{% else %}0{% endif %}">
 {% for h in kalemler %}{% include "parca/kart.html" with h=h goster_foto=1 zaman_gizle=1 %}
 {% endfor %}</div>
+{% elif kaynak == "kose" %}{% comment %}Köşe yazıları akışı (19 Ekim 2026): çocuklar
+`<li>`; sayfadaki hedef `<ol class="gorus-liste kose-akis">`.{% endcomment %}
+<div class="akis-parca" data-devam="{% if devam %}1{% else %}0{% endif %}">
+{% for y in kalemler %}{% include "medya/parca/kose_satiri.html" with y=y %}
+{% endfor %}</div>
 {% else %}
 <div class="akis-parca" data-devam="{% if devam %}1{% else %}0{% endif %}">
 {% include "parca/akis_bloklari.html" %}</div>

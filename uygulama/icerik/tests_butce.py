@@ -53,6 +53,9 @@ TAVAN = {
     "kose_yazisi": 12,          #  7 / 7
     #  1 / 1 — yazar başına "son yazı" sorgusu kalktı (Paket L2; PG'de 38 idi).
     "yazarlar": 4,
+    # 19 Ekim 2026: sayım + akış dilimi + yazar başına son yazı (tek sorgu,
+    # `KoseYazisi.yazar_basina_son`). Yazar sayısı çok kayıt turunda büyüyor.
+    "kose_yazilari": 6,         #  3 / 3
     "konular": 4,               #  2 / 2
 }
 
@@ -137,6 +140,7 @@ class Temel(TestCase):
             "ilce": "/ilce/osmangazi",
             "kose_yazisi": self.yazi.get_absolute_url(),
             "yazarlar": "/yazarlar",
+            "kose_yazilari": "/kose-yazilari",
             "konular": "/konular",
         }
 
@@ -178,7 +182,8 @@ class SorguTavaniCokKayit(SorguTavani):
 class SayfaOnbellegiButcesi(Temel):
     """Anonim okur: ikinci istek önbellekten, veritabanına HİÇ inmeden."""
 
-    ONBELLEKLI = ("anasayfa", "haber_detay", "kategori_bursa", "ilce", "konular")
+    ONBELLEKLI = ("anasayfa", "haber_detay", "kategori_bursa", "ilce", "konular",
+                  "kose_yazilari")
 
     def test_ikinci_istekte_sorgu_sifir(self):
         for ad in self.ONBELLEKLI:

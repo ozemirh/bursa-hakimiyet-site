@@ -1205,8 +1205,9 @@ class YzKoken(models.Model):
     §4: model taslağı 0,999 benzerlikle neredeyse aynen yayımlanmıştı ve
     bunu gösteren kalıcı bir kayıt yoktu.
 
-    **Okura etiket gösterilmez** — kullanıcı kararı bekliyor. Bu tablo
-    yalnız kayıttır; panel ve denetim için.
+    **Okura etiket gösterilmez** — kullanıcı kararı (19 Ekim 2026):
+    "yapay zekâ destekli" etiketi yok. Bu tablo yalnız kayıttır; panel ve
+    denetim için.
 
     Neden `Haber`e sütun değil: arşiv tablosu 1 milyon satır (bkz.
     `HaberArama`); köken yalnız araçtan gelen birkaç haberde var.

@@ -3037,15 +3037,15 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 
    ÖLÇÜLDÜ (başsız Chrome): bant 1440 px'te 50 px, 390 px'te 82 px.
    Üstüne birkaç piksel nefes payı bırakılıyor. */
-.akis-blok,.son-haberler .kart{scroll-margin-top:58px}
+.akis-blok,.son-haberler .kart,.kose-akis>li{scroll-margin-top:58px}
 @media(max-width:900px){
-  .akis-blok,.son-haberler .kart{scroll-margin-top:92px}
+  .akis-blok,.son-haberler .kart,.kose-akis>li{scroll-margin-top:92px}
 }
 /* Odak da yeni yığına taşınıyor (klavyeyle gezen okur listenin başına
    dönmesin). Blok bir KAP; fare/dokunmayla gelen odakta halka çizmek
    gereksiz gürültü olurdu, klavye okurunda ise şart. */
-.akis-blok:focus{outline:none}
-.akis-blok:focus-visible{outline:3px solid var(--tema-koyu);outline-offset:4px}
+.akis-blok:focus,.kose-akis>li:focus{outline:none}
+.akis-blok:focus-visible,.kose-akis>li:focus-visible{outline:3px solid var(--tema-koyu);outline-offset:4px}
 
 /* =================================================================
    BÖLÜM RENK TEMALARI GERİ ALINDI — 7 Eylül 2026 (§63)
@@ -3374,6 +3374,53 @@ a.gorus-ad:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
 .yazar .portre img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
 .yazar .son-yazi{font-family:var(--serif);font-size:13.5px;line-height:1.38;margin-top:4px;color:var(--murekkep)}
 .yazar b a:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
+
+/* --- köşe yazıları sayfası (/kose-yazilari, 19 Ekim 2026) ---------------
+   Sayfa başı yazar sayfasının künyesiyle aynı dil: display h1, üstte koyu
+   fitil. Vitrin (her yazarın son yazısı) TABLO düzeni: hücreleri boşluk
+   değil çizgi ayırır. Kart başı köşe yazısının sütun başının (`.gorus-bas`)
+   küçük hâli; portre kırpımı yukarıdaki `.gorus-bas .portre` kurallarından
+   gelir, burada yeniden yazılmaz. Akış satırı yazarın arşiv cetvelinin
+   (`.gorus-liste`) kardeşi; tek ek, başlığın üstündeki yazar adı. */
+.kose-sayfa-bas{padding:16px 20px 14px;border-top:4px solid var(--tema-koyu)}
+.kose-sayfa-bas h1{font-family:var(--display);font-size:32px;font-weight:900;letter-spacing:.3px;
+  line-height:1.08;color:var(--tema-koyu)}
+.kose-sayfa-bas p{margin-top:6px;font-size:13.5px;line-height:1.45;color:var(--gri)}
+.kose-sayfa-bas a{display:inline-block;padding:2px 0;font-weight:700;color:var(--tema-vurgu-koyu)}
+.kose-sayfa-bas a:hover{text-decoration:underline}
+.kose-vitrin{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.kose-kart{min-width:0;padding:14px 16px;border-bottom:1px solid var(--tema-cizgi)}
+.kose-kart:not(:nth-child(3n)){border-right:1px solid var(--tema-cizgi)}
+.kose-kart:last-child{border-right:0;border-bottom:0}
+.kose-kart .gorus-bas{gap:12px;padding-bottom:10px;margin-bottom:10px}
+.kose-kart .gorus-bas .portre{width:64px;height:64px}
+.kose-kart .gorus-bas .vesika{font-size:22px}
+.kose-kart .gorus-ad{font-size:17px}
+.kose-kart h3{font-family:var(--tema-baslik-aile);font-size:18px;font-weight:700;line-height:1.28}
+.kose-kart h3 a{color:var(--murekkep)}
+.kose-kart h3 a:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
+.kose-kart p{margin-top:6px;font-family:var(--serif);font-size:14px;line-height:1.5;color:var(--gri);
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.kose-satir{min-width:0}
+.gorus-liste .kose-satir-yazar{display:block;width:max-content;max-width:100%;margin-bottom:2px;
+  font-family:var(--display);font-size:12.5px;font-weight:700;letter-spacing:.4px;line-height:1.3;
+  color:var(--tema-vurgu-koyu)}
+@media(max-width:1000px){
+  .kose-vitrin{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kose-kart:not(:nth-child(3n)){border-right:0}
+  .kose-kart:nth-child(odd):not(:last-child){border-right:1px solid var(--tema-cizgi)}
+}
+@media(max-width:600px){
+  .kose-sayfa-bas{padding:12px 14px 10px}
+  .kose-sayfa-bas h1{font-size:26px}
+  .kose-vitrin{grid-template-columns:minmax(0,1fr)}
+  .kose-kart{padding:12px 0}
+  .kose-kart:nth-child(odd):not(:last-child){border-right:0}
+  .kose-kart:first-child{padding-top:0}
+}
+@media(max-width:560px){
+  .kose-akis .kose-satir{grid-column:1/-1}
+}
 
 @media(max-width:768px){
   .detay.gorus h1{font-size:28px}

@@ -33,8 +33,12 @@ kayıtların bir bölümünü kaydırırdı.
    sorusunu ölçüyle cevaplar.
 """
 
+import re
+from html import unescape
+
 from django.conf import settings
 from django.db import models
+from django.utils.html import strip_tags
 
 from taksonomi.models import Kategori, KategoriTur
 
@@ -48,6 +52,31 @@ from taksonomi.models import Kategori, KategoriTur
 # var. `gorsel_dosya` da bu yüzden **arşiv köküne** göreli saklanır (arşivin
 # JSON'a yazdığı hâliyle birebir), `gorseller/` köküne değil.
 MEDYA_GORSEL_URL = getattr(settings, "MEDYA_GORSEL_URL", "/arsiv-medya/")
+
+# Düz metin girişi için: içeriği okunmayan bloklar (betik, stil, gömme) ve
+# paragraf sınırları. Paragraf kapanışı boşluğa döner; yoksa `strip_tags`
+# iki paragrafı "…sürüyor.Aradan…" diye birleştirir.
+_ICERIKSIZ = re.compile(r"(?is)<(script|style|iframe|noscript)\b.*?(</\1\s*>|$)")
+_BLOK_SONU = re.compile(r"(?i)</(p|div|li|h[1-6]|blockquote|figcaption)\s*>|<br\s*/?>")
+
+
+def duz_giris(html: str, sinir: int) -> str:
+    """HTML gövdenin başından `sinir` karakterlik düz metin giriş.
+
+    Kaynağın kendi cümleleridir, kelime sınırında kesilir ve "…" alır;
+    yeni metin üretilmez. Ham parça bir etiketin ortasında bitebilir
+    (veritabanında `Substr` ile kesildi): yarım kalan son etiket atılır.
+    """
+    ham = html or ""
+    acik = ham.rfind("<")
+    if acik > ham.rfind(">"):
+        ham = ham[:acik]
+    ham = _BLOK_SONU.sub(" ", _ICERIKSIZ.sub(" ", ham))
+    metin = " ".join(unescape(strip_tags(ham)).split())
+    if len(metin) <= sinir:
+        return metin
+    kesik = metin[:sinir + 1].rsplit(" ", 1)[0] if " " in metin[:sinir + 1] else metin[:sinir]
+    return kesik.rstrip(" ,;:–—-") + "…"
 
 
 class ArsivIcerigi(models.Model):
@@ -293,6 +322,17 @@ class KoseYazisi(ArsivIcerigi):
     govde = models.TextField(blank=True)
     kelime_sayisi = models.PositiveIntegerField(default=0)
 
+    #: `/kose-yazilari` akışının dilim boyu — sayfa ve "daha fazla" ucu
+    #: (`icerik.views.daha_fazla`, kaynak=kose) AYNI sayıyı okur; iki ayrı
+    #: sabit olsaydı düğmenin ikinci dilimi birinciyle çakışırdı.
+    AKIS_BOYU = 20
+    #: Vitrin kartındaki giriş metninin üst sınırı (karakter, düz metin).
+    GIRIS_SINIRI = 200
+    #: Girişi kurmak için gövdenin veritabanından alınan baş kısmı. Gövde
+    #: ortalama 4.259 karakter (PG, 19 Ekim 2026); 37 kart için hepsini
+    #: çekmek gereksiz. Etiketler düştükten sonra 200 karakter kalsın diye pay.
+    GIRIS_HAM = 1200
+
     class Meta:
         ordering = ["-yayin_zamani"]
         verbose_name = "köşe yazısı"
@@ -301,6 +341,56 @@ class KoseYazisi(ArsivIcerigi):
 
     def get_absolute_url(self) -> str:
         return f"/yazarlar/{self.yazar.adres_dilimi}/{self.slug}-{self.pk}"
+
+    @classmethod
+    def akis(cls):
+        """`/kose-yazilari` akışı: bütün köşe yazıları, en yeniden eskiye.
+
+        Pasif yazarın yazısı listeye girmez (`Yazar.aktif` "yalnız listeleri
+        süzer"; yazının kendi adresi açık kalır). İkincil sıra kimlik: aynı
+        dakikada yayımlanmış iki yazı dilim sınırına düşerse OFFSET'li
+        dilimleme birini iki kez, öbürünü hiç göstermezdi.
+
+        `defer("govde")`: satır gövde basmıyor ve gövde ortalama 4,3 KB.
+        Gövdeye yanlışlıkla erişen kod satır başına sorgu açar — bunu
+        `tests_kose_yazilari` sorgu sayısı sınırıyla yakalar.
+        """
+        return (cls.yayindakiler().filter(yazar__aktif=True)
+                .select_related("yazar").defer("govde")
+                .order_by("-yayin_zamani", "-pk"))
+
+    @classmethod
+    def yazar_basina_son(cls):
+        """Her (listedeki) yazarın en son yazısı, en yeniden eskiye — TEK sorgu.
+
+        PostgreSQL'in `DISTINCT ON`u yerine ilişkili alt sorgu: SQLite geri
+        dönüşünde de aynı sorgu çalışsın diye. Yazar başına alt sorgu
+        `(yazar, -yayin_zamani)` indeksinden tek satır okur
+        (`Yazar.son_yazisiyla` ile aynı düzen); dış sorgu o kimlikleri
+        `IN` ile alır. Girişi kurmak için gövdenin yalnız başı çekilir
+        (`giris_ham`); gövdenin tamamı ertelenir.
+        """
+        from django.db.models import OuterRef, Subquery
+        from django.db.models.functions import Substr
+        son = (cls.yayindakiler().filter(yazar=OuterRef("pk"))
+               .order_by("-yayin_zamani", "-pk").values("pk")[:1])
+        kimlikler = Yazar.listedekiler().annotate(son_id=Subquery(son)).values("son_id")
+        return (cls.yayindakiler().filter(pk__in=kimlikler)
+                .select_related("yazar").defer("govde")
+                .annotate(giris_ham=Substr("govde", 1, cls.GIRIS_HAM))
+                .order_by("-yayin_zamani", "-pk"))
+
+    @property
+    def giris(self) -> str:
+        """Gövdenin başından kırpılmış düz metin — yeni cümle YAZILMAZ.
+
+        `yazar_basina_son()` ile geldiyse yalnız `giris_ham` okunur; değilse
+        gövdenin kendisi (ertelenmişse bir sorgu açar).
+        """
+        ham = getattr(self, "giris_ham", None)
+        if ham is None:
+            ham = (self.govde or "")[:self.GIRIS_HAM]
+        return duz_giris(ham, self.GIRIS_SINIRI)
 
     def govde_guvenli(self):
         """Şablonda basılacak hâli. Beyaz liste dışındaki HTML düşer.

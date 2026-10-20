@@ -15,7 +15,7 @@ Test KENDİ sunucusunu açar ve kapatır (`manage.py runserver --noreload`,
 "eski süreç portu tutuyordu", "önbellek eski CSS'i verdi" tuzakları
 (URUN-PLANI §12, §14) burada kapanır. Port doluysa test başlamaz.
 
-## Ölçülenler (11 sayfa × 8 genişlik)
+## Ölçülenler (12 sayfa × 8 genişlik; 12.si `/kose-yazilari`, 19 Ekim 2026)
 
 * yatay taşma 0 (`scrollWidth - clientWidth`);
 * `h1` = 1;
@@ -266,6 +266,7 @@ if os.environ.get("BH_SITE_OLCUM") == "1":
             sayfalar = [("anasayfa", "/"), ("haber detay", haber), ("bursa", "/bursa"),
                         ("bursaspor", "/bursaspor"), ("ekonomi", "/ekonomi"),
                         ("teknoloji", "/teknoloji"), ("köşe yazısı", kose),
+                        ("köşe yazıları", "/kose-yazilari"),
                         ("ilçe", "/ilce/osmangazi"), ("konular", "/konular"),
                         ("nöbetçi eczane", "/nobetci-eczane"), ("arama", "/ara?q=bursa")]
             eksik = [ad for ad, yol in sayfalar if not yol]

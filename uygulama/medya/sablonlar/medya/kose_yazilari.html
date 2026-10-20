@@ -1,0 +1,81 @@
+{% extends "taban.html" %}
+{% load site_etiket gorsel_etiket seo_etiket %}
+{% comment %}
+KÖŞE YAZILARI (19 Ekim 2026, kullanıcı isteği: "köşe yazıları diye bir
+sayfamız da olsun"). `/yazarlar` yazarları listeler; bu sayfa yazıları.
+
+Ulusal gazetelerin "Köşe Yazıları" sayfasının klasik düzeni, iki blok:
+
+1. YAZARLARIN SON YAZILARI — her yazarın en son yazısı, en yeniden eskiye.
+   Kart başı köşe yazısı sayfasının sütun başıyla aynı dil (`.gorus-bas`:
+   portre, ad, tarih); altında başlık ve gövdenin başından kırpılmış düz
+   metin (yeni cümle yazılmaz). Yalnız 1. sayfada. Blok "güncel" demiyor:
+   arşivde son yazısı 2021'de kalmış yazarlar da var ve her kartın tarihi
+   görünür (bayat veri gizlenmez, tarihiyle gösterilir).
+2. TÜM KÖŞE YAZILARI — akış, tarih sütunlu cetvel (`.gorus-liste`), "daha
+   fazla göster" deseniyle (§58/§61). Düğme `?sayfa=N` bağlantısıdır;
+   betik `/daha-fazla?kaynak=kose` ucundan aynı satır şablonunu çeker.
+
+SEO (Paket G deseni, kategori sayfasıyla aynı): `?sayfa=N` başlığı ve
+açıklaması "Sayfa N" taşır; kanonik taban.html'den (yol + geçerli sayfa);
+JSON-LD BreadcrumbList. Tema: köşe yazıları teması (`icerik/temalar.py`).
+{% endcomment %}
+
+{% block baslik %}Köşe Yazıları{% if sayfa.number > 1 %} — Sayfa {{ sayfa.number }}{% endif %} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}Bursa Hakimiyet köşe yazarlarının son yazıları ve tüm köşe yazıları, en yeniden eskiye{% if sayfa.number > 1 %}, sayfa {{ sayfa.number }}{% endif %}.{% endblock %}
+{% block og_baslik %}Köşe Yazıları{% if sayfa.number > 1 %} — Sayfa {{ sayfa.number }}{% endif %}{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld_kirinti "Köşe Yazıları" "/kose-yazilari" %}</script>{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <ol>
+          <li><a href="/">Anasayfa</a></li>
+          <li><span aria-current="page">Köşe Yazıları</span></li>
+        </ol>
+      </nav>
+
+      <header class="kutu kose-sayfa-bas">
+        <h1>Köşe Yazıları</h1>
+        <p>Bursa Hakimiyet yazarlarının görüş ve yorumları{% if sayfa.number > 1 %} &middot; {{ sayfa.number }}. sayfa{% endif %} &middot; <a href="/yazarlar">Yazarlar &rarr;</a></p>
+      </header>
+
+      {% if guncel %}
+      <section class="kutu kose-vitrin-kutu" aria-labelledby="kose-son-bas">
+        <div class="kutu-bas"><h2 id="kose-son-bas">YAZARLARIN SON YAZILARI</h2><span class="tumu">{{ guncel|length }} yazar</span></div>
+        <div class="kutu-ic">
+          <ul class="kose-vitrin">
+{% for y in guncel %}            <li class="kose-kart">
+              {% comment %}Portre bezemedir (`alt=""`): yazarın adı hemen yanında
+              bağlantı olarak duruyor — anasayfa kuşağıyla aynı karar. Kırpım
+              `.gorus-bas .portre img[src*="-afis"]` kurallarından.{% endcomment %}
+              <div class="gorus-bas">
+                {% if y.yazar.gorsel_yolu %}<span class="portre">{% gorsel y.yazar "portre" alt="" %}</span>
+                {% else %}<span class="portre vesika" aria-hidden="true">{{ y.yazar.basharfler }}</span>{% endif %}
+                <div class="gorus-kimlik">
+                  <a class="gorus-ad" href="{{ y.yazar.get_absolute_url }}">{{ y.yazar.ad }}</a>
+                  {% if y.yayin_zamani %}<time class="gorus-sayi" datetime="{{ y.yayin_zamani|date:'c' }}">{{ y.yayin_zamani|date:'j F Y' }}</time>{% endif %}
+                </div>
+              </div>
+              <h3><a href="{{ y.get_absolute_url }}">{{ y.baslik }}</a></h3>
+              {% with giris=y.giris %}{% if giris %}<p>{{ giris }}</p>{% endif %}{% endwith %}
+            </li>
+{% endfor %}          </ul>
+        </div>
+      </section>
+      {% endif %}
+
+      <section class="kutu gorus-arsiv" aria-labelledby="kose-tum-bas">
+        <div class="kutu-bas"><h2 id="kose-tum-bas">TÜM KÖŞE YAZILARI</h2><span class="tumu">{{ sayfa.paginator.count }} yazı</span></div>
+        <div class="kutu-ic">
+          {% if sayfa %}
+          <ol class="gorus-liste kose-akis">
+            {% for y in sayfa %}{% include "medya/parca/kose_satiri.html" with y=y %}
+            {% endfor %}
+          </ol>
+          {% comment %}`if` ZORUNLU: `next_page_number` son sayfada EmptyPage
+          fırlatır (kategori.html'deki notun aynısı).{% endcomment %}
+          {% if sayfa.has_next %}{% include "parca/daha_fazla.html" with devam=1 sonraki=sayfa.next_page_number daha_uc=daha_uc daha_hedef=".kose-akis" daha_metin="Daha fazla köşe yazısı göster" daha_son="Tüm köşe yazıları yüklendi." %}{% endif %}
+          {% else %}<p class="bos">Arşivde henüz köşe yazısı yok.</p>{% endif %}
+        </div>
+      </section>
+{% endblock %}

@@ -61,7 +61,8 @@ TEMALAR: dict[str, Tema] = {t.anahtar: t for t in (
     Tema("teknoloji", "Teknoloji", "19 Ekim 2026 — seçili sayfalar: köşe yazıları, "
          "ekonomi, teknoloji", "/teknoloji", ("bas",)),
     Tema("kose", "Köşe yazıları", "19 Ekim 2026 — seçili sayfalar: köşe yazıları, "
-         "ekonomi, teknoloji", "/yazarlar, /yazarlar/<yazar>, /yazarlar/<yazar>/<yazı>"),
+         "ekonomi, teknoloji",
+         "/kose-yazilari, /yazarlar, /yazarlar/<yazar>, /yazarlar/<yazar>/<yazı>"),
 )}
 
 # Bölüm sayfası → tema. Anahtar kategorinin **tür satırı** slug'ıdır

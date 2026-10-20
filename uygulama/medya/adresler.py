@@ -41,6 +41,10 @@ urlpatterns = [
     # önce gelmeliler. Kök tabloda şu an `icerik.bekleyen_aile` bu üç yolu
     # tutuyor; veri geldiğinde onların yerini bunlar alır.
     path("yazarlar", views.yazar_listesi, name="yazarlar"),
+    # Köşe yazıları akışı (19 Ekim 2026). Tek dilimli: kök tablodaki
+    # kategori kalıbı bunu "kose-yazilari adlı kategori" diye yakalayıp
+    # 404 verirdi. Sondaki eğik çizgi Paket G'nin ara katmanında 301 alır.
+    path("kose-yazilari", views.kose_yazilari, name="kose-yazilari"),
     path("galeriler", views.galeri_listesi, name="galeriler"),
     path("videolar", views.video_listesi, name="videolar"),
 

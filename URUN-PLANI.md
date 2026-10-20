@@ -6605,14 +6605,17 @@ düzeltildi (tablolar aynı).
 **Kullanıcı kararı bekleyenler.**
 - Bursa oranı 10/15 ve 48 saatlik bayrak önceliği (varsayılan konuldu).
 - Tepe/kare eşlemesi.
-- Okura "yapay zekâ destekli" etiketi.
+- ~~Okura "yapay zekâ destekli" etiketi.~~ **Karar (19 Ekim akşamı): etiket yok.**
+  Köken yalnız `YzKoken` kaydında, panel ve denetim için kalır.
 - K2 bulgusunu kim kapatabilir.
 - 444 dosyanın editörce değerlendirilmesi.
 - 1696272–74 kimliklerinin taşınması.
 - "Google News" alt metninin veride temizlenmesi.
 - GA4, Search Console ve push abonelerinin taşınması.
 - Gerçek YouTube/X gömme (CSP + KVKK).
-- Etiket sayfası.
+- ~~Etiket sayfası.~~ **Karar (19 Ekim akşamı): yapılmayacak, konu kapandı.**
+  Eski sitede etiket hiçbir yere basılmıyordu (etiket adresleri 404, JSON-LD
+  `keywords` boş); taşınacak etiket mirası yok.
 - Başka Sinema'dan yazılı izin istenip istenmeyeceği.
 - §35 işaret renkleri (turkuaz/amber).
 - Köşe adları ve özgeçmişler: 37 yazarın hiçbirinde yok, yeni içerik ister.
