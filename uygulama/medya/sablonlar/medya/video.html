@@ -39,6 +39,7 @@ iştir (oynatıcı seçimi, çerez/izleme, yaş sınırı).
           <span>Haber Merkezi</span>
           {% if video.yayin_zamani %}<span><time datetime="{{ video.yayin_zamani|date:'c' }}">{{ video.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
           {% if video.sure_yazi %}<span>Süre: {{ video.sure_yazi }}</span>{% endif %}
+          <div class="arac"><div class="paylas" role="group" aria-label="Videoyu paylaş">{% include "parca/paylas.html" with adres=site_koku|add:video.get_absolute_url metin=video.baslik %}<button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button></div></div>
         </div>
 
         <div class="foto ana-gorsel kapak {{ video|kart_rengi }}">

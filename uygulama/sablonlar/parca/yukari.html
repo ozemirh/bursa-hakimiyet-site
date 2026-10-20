@@ -1,0 +1,13 @@
+{% comment %}"Başa dön" düğmesi (20 Ekim 2026). CSS `site.css` `.yukari`, betik
+`site.js` "yukarı çık". Uzun sayfaya tek satırla eklenir.
+
+- Yalnız betikle çalışır: `html.js-var` yokken gizli (`site.css`).
+- YALNIZ YUKARI KAYDIRIRKEN görünür (bir ekrandan aşağıdayken): okur aşağı
+  okurken ekranın köşesini kapatmaz, yapışık öğe bütçesi (`tests_sayfa_butcesi`
+  test_3, 390'da ≤ 90 px) okuma sırasında yine yalnız kategori bandıdır.
+- Basınca sayfa başa döner, odak `#ana-icerik`e taşınır; klavyeyle gezen okur
+  Tab'a bastığında sayfanın başından devam eder. `prefers-reduced-motion`da
+  kaydırma animasyonsuz.
+- Ok glifi bilerek YOK: ↑/▲ sembol yazı tipini indirtiyor (test_5). Ad
+  görünen yazının kendisi (WCAG 2.5.3); büyük harf CSS'ten.{% endcomment %}
+<button type="button" class="yukari" data-gorunur="false">Başa dön</button>

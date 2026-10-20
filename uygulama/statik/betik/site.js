@@ -555,15 +555,149 @@
   }
   dizi('.daha-fazla').forEach(dahaFazlaKur);
 
-  /* ---- yukarı çık ---- */
+  /* ---- haber araç çubuğu: bağlantıyı kopyala · A− / A+ · yazdır ----
+     20 Ekim 2026: düğmeler şablonda vardı, işleyicileri yoktu. Haber
+     detayı, köşe yazısı, galeri ve video aynı `.arac` sınıfını taşır; bu
+     blok hepsine bağlanır. Betik yoksa düğmeler hiç çizilmez
+     (`html.js-var`, taban.html + site.css). */
+  var aracDuyuru = null;
+  function aracDuyur(arac, metin){
+    /* Tek, görünmez canlı bölge: ekran okuyucu sonucu duyar, görsel
+       yerleşim değişmez. Metin önce boşaltılır — aynı cümle ikinci kez
+       yazılınca da okunsun. */
+    if(!aracDuyuru){
+      aracDuyuru = document.createElement('span');
+      aracDuyuru.className = 'gorsel-gizli';
+      aracDuyuru.setAttribute('role', 'status');
+      aracDuyuru.setAttribute('aria-live', 'polite');
+      arac.appendChild(aracDuyuru);
+    }
+    aracDuyuru.textContent = '';
+    window.setTimeout(function(){ aracDuyuru.textContent = metin; }, 60);
+  }
+
+  /* Kopyalanan adres sayfanın KANONİK adresi — paylaşım bağlantılarının
+     (`parca/paylas.html`) kullandığıyla aynı; `?reklam-test=…` gibi
+     sorgu ekleri okura geçmez. */
+  function paylasimAdresi(){
+    var kanonik = document.querySelector('link[rel="canonical"]');
+    return kanonik && kanonik.href ? kanonik.href : window.location.href;
+  }
+  function eskiYoldanKopyala(metin){
+    var alan = document.createElement('textarea');
+    alan.value = metin;
+    alan.setAttribute('readonly', '');
+    alan.className = 'gorsel-gizli';
+    document.body.appendChild(alan);
+    alan.select();
+    var oldu = false;
+    try{ oldu = document.execCommand('copy'); }catch(hata){ oldu = false; }
+    document.body.removeChild(alan);
+    return oldu;
+  }
+
+  var YAZI_BOYLARI = ['kucuk', '', 'buyuk', 'cok-buyuk'];
+  var YAZI_ADLARI = ['küçük', 'normal', 'büyük', 'çok büyük'];
+  function yaziBoyuSirasi(){
+    var i = YAZI_BOYLARI.indexOf(document.documentElement.getAttribute('data-yazi-boyu') || '');
+    return i < 0 ? 1 : i;
+  }
+
+  dizi('.arac').forEach(function(arac){
+    var kopyala = arac.querySelector('.kopyala');
+    var kucult = arac.querySelector('.yazi-kucult');
+    var buyut = arac.querySelector('.yazi-buyut');
+    var yazdir = arac.querySelector('.yazdir');
+
+    if(kopyala){
+      var tamamZamani = null;
+      var bitti = function(oldu){
+        if(oldu){
+          kopyala.setAttribute('data-durum', 'tamam');
+          window.clearTimeout(tamamZamani);
+          tamamZamani = window.setTimeout(function(){ kopyala.removeAttribute('data-durum'); }, 2000);
+          aracDuyur(arac, 'Bağlantı kopyalandı.');
+        } else {
+          /* Son çare: adres seçili hâlde okura gösterilir, kendisi kopyalar. */
+          window.prompt('Bağlantıyı kopyalayın:', paylasimAdresi());
+        }
+      };
+      kopyala.addEventListener('click', function(){
+        var adres = paylasimAdresi();
+        if(navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext){
+          navigator.clipboard.writeText(adres).then(function(){ bitti(true); },
+            function(){ bitti(eskiYoldanKopyala(adres)); });
+        } else {
+          bitti(eskiYoldanKopyala(adres));
+        }
+      });
+    }
+
+    /* Yazı boyu: dört kademe, tercih `localStorage`da. İlk okuma
+       taban.html başında (kayma olmasın diye); burada yalnız düğmeler. */
+    function boyuUygula(sira, duyur){
+      var kok = document.documentElement;
+      if(YAZI_BOYLARI[sira]){ kok.setAttribute('data-yazi-boyu', YAZI_BOYLARI[sira]); }
+      else { kok.removeAttribute('data-yazi-boyu'); }
+      if(kucult){ kucult.disabled = sira <= 0; }
+      if(buyut){ buyut.disabled = sira >= YAZI_BOYLARI.length - 1; }
+      if(duyur){
+        try{
+          if(YAZI_BOYLARI[sira]){ localStorage.setItem('bh-yazi-boyu', YAZI_BOYLARI[sira]); }
+          else { localStorage.removeItem('bh-yazi-boyu'); }
+        }catch(hata){}
+        aracDuyur(arac, 'Yazı boyutu: ' + YAZI_ADLARI[sira] + '.');
+      }
+    }
+    function boyuDegistir(yon, dugme){
+      var sira = Math.max(0, Math.min(YAZI_BOYLARI.length - 1, yaziBoyuSirasi() + yon));
+      boyuUygula(sira, true);
+      /* Sınıra varan düğme `disabled` olur ve odağı düşürür; odak
+         öbür düğmeye geçer ki klavyeyle gezen okur sayfanın başına
+         atılmasın. */
+      if(dugme.disabled){
+        var obur = dugme === kucult ? buyut : kucult;
+        if(obur){ obur.focus(); }
+      }
+    }
+    if(kucult || buyut){
+      boyuUygula(yaziBoyuSirasi(), false);
+      if(kucult){ kucult.addEventListener('click', function(){ boyuDegistir(-1, kucult); }); }
+      if(buyut){ buyut.addEventListener('click', function(){ boyuDegistir(1, buyut); }); }
+    }
+
+    if(yazdir){
+      yazdir.addEventListener('click', function(){ window.print(); });
+    }
+  });
+
+  /* ---- yukarı çık ("Başa dön", parca/yukari.html) ----
+     20 Ekim 2026: düğme YALNIZ okur yukarı kaydırırken ve bir ekrandan
+     aşağıdayken görünür. Aşağı okurken ekranın köşesini kapatmaz; geri
+     dönmek isteyen okur (yukarı kaydıran) onu bulur. Odaktayken
+     gizlenmez. Basınca sayfa başa döner ve odak `#ana-icerik`e geçer;
+     `prefers-reduced-motion`da kaydırma animasyonsuz. */
   var yukari = document.querySelector('.yukari');
   if(yukari){
+    var sonKonum = window.pageYOffset;
+    var donuyor = false;   /* başa dönüş kaydırması sürerken yeniden belirmesin */
     var yukariGoster = function(){
-      yukari.setAttribute('data-gorunur', window.pageYOffset > 420 ? 'true' : 'false');
+      var konum = window.pageYOffset;
+      var fark = konum - sonKonum;
+      if(donuyor){ sonKonum = konum; if(konum <= 0){ donuyor = false; } return; }
+      if(Math.abs(fark) < 8 && konum > 0){ return; }
+      var goster = konum > window.innerHeight && fark < 0;
+      if(document.activeElement === yukari && konum > 0){ goster = true; }
+      yukari.setAttribute('data-gorunur', goster ? 'true' : 'false');
+      sonKonum = konum;
     };
     window.addEventListener('scroll', yukariGoster, {passive: true});
-    yukariGoster();
     yukari.addEventListener('click', function(){
+      var ana = document.getElementById('ana-icerik');
+      donuyor = true;
+      window.setTimeout(function(){ donuyor = false; }, 1500);
+      yukari.setAttribute('data-gorunur', 'false');
+      if(ana){ try{ ana.focus({preventScroll: true}); }catch(hata){ ana.focus(); } }
       window.scrollTo({top: 0, behavior: azalt.matches ? 'auto' : 'smooth'});
     });
   }
