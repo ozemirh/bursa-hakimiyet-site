@@ -46,7 +46,7 @@ SOZLESME = {
     # Paket H: Bugün ekranının tek tık yayını. Kapı yayın yetkisi (Muhabir
     # 403); başkasının haberi için kayıt başına ikinci denetim görünümde.
     "panel-haber-yayinla": "kendi_haberini_yayinlama",
-    # Düzeltme / cevap notu (20 Ekim 2026): okura anında görünür, yani
+    # Düzeltme notu (20 Ekim 2026): okura anında görünür, yani
     # yayımlamaktır — aynı kapı; başkasının haberi görünümde ayrıca.
     "panel-haber-duzeltme": "kendi_haberini_yayinlama",
     "panel-haber-ara": "haber_girme",

@@ -77,8 +77,8 @@ urlpatterns = [
     # tek yayin kapisindan gecer.
     path("panel/haber/<int:kimlik>/yayinla", panel_gorunum.haber_yayinla,
          name="panel-haber-yayinla"),
-    # Düzeltme / cevap notu (20 Ekim 2026). Yalnız POST; formu haber
-    # düzenleme ekranının "Düzeltme ve cevap" bölümünde. Kapı yayın yetkisi.
+    # Düzeltme notu (20 Ekim 2026). Yalnız POST; formu haber düzenleme
+    # ekranının "Düzeltmeler" bölümünde. Kapı yayın yetkisi.
     path("panel/haber/<int:kimlik>/duzeltme", panel_gorunum.haber_duzeltme,
          name="panel-haber-duzeltme"),
 
@@ -230,7 +230,7 @@ urlpatterns = [
     # Kunyedeki beyan sayfasi. Tek dilimli; kategori kalibindan ONCE.
     path("veri-kaynaklari", icerik_gorunum.veri_kaynaklari,
          name="veri-kaynaklari"),
-    # Düzeltme ve cevap dizini (20 Ekim 2026). Tek dilimli: kategori
+    # Düzeltmeler dizini (20 Ekim 2026). Tek dilimli: kategori
     # kalıbından ÖNCE gelmeli, yoksa "duzeltmeler adlı kategori" sanılıp
     # 404 verirdi (`/kose-yazilari` ile aynı tuzak).
     path("duzeltmeler", icerik_gorunum.duzeltmeler, name="duzeltmeler"),

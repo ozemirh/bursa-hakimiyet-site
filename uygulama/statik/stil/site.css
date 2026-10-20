@@ -2817,7 +2817,7 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 .konu-dizin p{font-size:13.5px;color:var(--gri);line-height:1.4}
 
 /* =================================================================
-   DÜZELTME VE CEVAP — 20 Ekim 2026
+   DÜZELTMELER — 20 Ekim 2026
    Haber detayında başlık altındaki işaret (`.duzeltme-isaret`) ve gövde
    sonundaki bölme (`.duzeltme-bolmesi`); `/duzeltmeler` dizini aynı satır
    dilini kullanır (`.duzeltme-ust`, `.duzeltme-metin`). Renkler yalnız
@@ -2841,7 +2841,6 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
   font-family:var(--display);font-size:12.5px;letter-spacing:.3px;color:var(--gri)}
 .duzeltme-tur{color:var(--kirmizi-koyu);text-transform:uppercase;letter-spacing:.6px}
 .duzeltme[data-tur="guncelleme"] .duzeltme-tur{color:var(--tema-koyu)}
-.duzeltme-veren{margin-bottom:4px;font-size:14px;font-weight:700;color:var(--murekkep);overflow-wrap:anywhere}
 .duzeltme-metin{font-family:var(--serif);font-size:16px;line-height:1.55;color:var(--murekkep);overflow-wrap:anywhere}
 .duzeltme-metin p{margin:0 0 8px}
 .duzeltme-metin p:last-child{margin-bottom:0}

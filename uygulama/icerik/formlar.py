@@ -1113,18 +1113,17 @@ class SonDakikaForm(forms.ModelForm):
 
 
 class DuzeltmeForm(forms.ModelForm):
-    """Haber düzenleme ekranındaki "Düzeltme ve cevap" bölümü (20 Ekim 2026).
+    """Haber düzenleme ekranındaki "Düzeltmeler" bölümü (20 Ekim 2026).
 
-    Yalnız üç alan: tür, metin, (cevapta) cevap veren. Yayın zamanı,
-    yayımlayan ve haber görünümde konur; editör elle tarih yazamaz.
-    Metin düz metindir; boş satır paragraf ayırır.
+    Yalnız iki alan: tür ve metin. Yayın zamanı, yayımlayan ve haber
+    görünümde konur; editör elle tarih yazamaz. Metin düz metindir; boş
+    satır paragraf ayırır.
     """
 
     class Meta:
         model = Duzeltme
-        fields = ["tur", "cevap_veren", "metin"]
-        labels = {"tur": "Tür", "cevap_veren": "Cevap veren (kişi/kurum ve sıfatı)",
-                  "metin": "Not metni"}
+        fields = ["tur", "metin"]
+        labels = {"tur": "Tür", "metin": "Not metni"}
         widgets = {"metin": forms.Textarea(attrs={"rows": 5})}
 
     def __init__(self, *args, **kwargs):
@@ -1147,19 +1146,6 @@ class DuzeltmeForm(forms.ModelForm):
             raise forms.ValidationError(
                 f"Not metni en çok {Duzeltme.METIN_EN_COK} karakter olabilir.")
         return metin
-
-    def clean(self):
-        veri = super().clean()
-        tur = veri.get("tur")
-        veren = " ".join((veri.get("cevap_veren") or "").split())
-        if tur == Duzeltme.TUR_CEVAP and not veren:
-            self.add_error("cevap_veren", "Cevap/tekzipte cevabı gönderenin adı "
-                                          "ya da kurumu ve sıfatı yazılmalı.")
-        elif tur != Duzeltme.TUR_CEVAP and veren:
-            self.add_error("cevap_veren", "Cevap veren yalnız cevap/tekzip türünde "
-                                          "yazılır.")
-        veri["cevap_veren"] = veren
-        return veri
 
 
 class KonuForm(forms.ModelForm):

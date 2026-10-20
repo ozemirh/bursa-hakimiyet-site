@@ -73,7 +73,7 @@ def haber(request, kategori, slug, kimlik):
 
     # `kategori__turler` ön çekimi kalktı: slug süreç içi eşlemeden geliyor
     # (taksonomi/slug_eslemesi.py), sayfa başına bir sorgu daha az.
-    # `duzeltme_var` (20 Ekim 2026): düzeltme/cevap notu var mı — aynı
+    # `duzeltme_var` (20 Ekim 2026): düzeltme notu var mı — aynı
     # sorguda EXISTS. Arşivin hemen tamamında not yok; o haberlerde sayfa
     # tek sorgu bile fazla açmaz (`Duzeltme.haber_icin`).
     kayit = (Haber.yayindakiler()
@@ -93,7 +93,7 @@ def haber(request, kategori, slug, kimlik):
     # Konu akışı önce: ilgili haberler kutusu akışta zaten görünenleri
     # atlar, aynı başlık sayfada iki kez basılmaz (5 Eylül 2026).
     akis = konu_yardimci.akis(kayit)
-    # Düzeltme / cevap notları: gövdenin sonundaki blok, başlık altındaki
+    # Düzeltme notları: gövdenin sonundaki blok, başlık altındaki
     # işaret ve JSON-LD `correction` aynı listeden okur (`seo.haber_makalesi`).
     kayit.yayindaki_duzeltmeler = Duzeltme.haber_icin(kayit)
     yanit = render(request, "haber_detay.html", {
