@@ -182,7 +182,10 @@ YAPISKAN_TAVAN_PX = 90
 #: Anasayfada ilk ekranda TAMAMI görünen başlık sayısının alt sınırı.
 #: Ölçülen (okur ve açık): 1440 → 4 (dörtlü), 390 → 1 (manşet). Karar değil,
 #: bugünün alt sınırı — bkz. test_4.
-ILK_EKRAN_BASLIK_ALT = {1440: 4, 390: 1}
+#: 20 Ekim 2026 (tur B, K2 + R5): telefonda dörtlü manşetin hemen altına
+#: geldi ve sayfalayıcı tek satıra indi; 390 okur hâlinde 3 tam başlık
+#: (manşet + dörtlünün iki kartı) ölçüldü. Alt sınır öneri hedefi olan 2.
+ILK_EKRAN_BASLIK_ALT = {1440: 4, 390: 2}
 
 #: Kontrol sayfasının istediği görsel sayısı ve dosyası.
 KONTROL_GORSEL = 5

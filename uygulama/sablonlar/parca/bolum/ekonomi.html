@@ -22,7 +22,7 @@ bilerek silinmedi.{% endcomment %}
 <div class="eko-bas">
   {% if servis and servis.tur == "doviz" %}{% with d=servis.doviz %}
   <section class="kutu bolum-servis s-doviz piyasa-cetveli" aria-labelledby="servis-bas">
-    <div class="kutu-bas">
+    <div class="kutu-bas hafif">
       <h2 id="servis-bas">PİYASA</h2>
       <span class="tumu">{% if d.bulten.tarih %}TCMB bülteni {{ d.bulten.tarih }}{% if d.bulten.no %} &middot; {{ d.bulten.no }}{% endif %} &middot; {% endif %}<a href="/veri-kaynaklari">Veri kaynakları &rarr;</a></span>
     </div>
@@ -54,13 +54,13 @@ bilerek silinmedi.{% endcomment %}
 
   {% if bursa_listesi %}
   <section class="kutu bursa-listesi" aria-labelledby="bursa-eko-bas">
-    <div class="kutu-bas"><h2 id="bursa-eko-bas">BURSA EKONOMİSİ</h2></div>
+    <div class="kutu-bas hafif"><h2 id="bursa-eko-bas">BURSA EKONOMİSİ</h2></div>
     <div class="kutu-ic">
       <ol class="bursa-cetvel">
         {% for h in bursa_listesi %}<li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|date:"j M Y" }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>{% if h.ilce %}<span class="bolum-ad">{{ h.ilce.ad|baslikla }}</span>{% else %}<span></span>{% endif %}</li>
         {% endfor %}
       </ol>
-      <p class="servis-kunye">Ekonomi bölümünden, başlığında Bursa ya da BTSO geçen veya bir ilçeye bağlı en yeni haberler.</p>
+      <details class="yer-not secim-kurali"><summary>Bu liste nasıl seçildi?</summary><p>Ekonomi bölümünden, başlığında Bursa ya da BTSO geçen veya bir ilçeye bağlı en yeni haberler.</p></details>
     </div>
   </section>
   {% endif %}

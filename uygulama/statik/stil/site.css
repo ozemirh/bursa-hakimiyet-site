@@ -560,10 +560,21 @@ main{display:block;padding-top:14px}
    dilinin dışında. Ölçek köşe yazıları sayfa başıyla (`.kose-sayfa-bas
    h1`) aynı: 32/900, ≤600'de 26. Aile temanın başlık ailesi — varsayılan
    ve Bursaspor/ekonomide Roboto Condensed, teknolojide Roboto. Renk
-   çubuğun yazı rengi (`--tema-bant-yazi`), 32 px/900 büyük metin. */
-.bolum>.kutu-bas h1{font-family:var(--tema-baslik-aile);font-weight:900;font-size:32px;
+   çubuğun yazı rengi (`--tema-bant-yazi`), 32 px/900 büyük metin.
+   20 Ekim 2026: seçici GENİŞLEDİ — sayfa başlığı taşıyan her vurgu
+   çubuğu (`.kutu>.kutu-bas.vurgu`). 404, arama, ilçeler, nöbetçi eczane,
+   veri kaynakları, galeri/video/yazar dizinleri ve enstrüman sayfası da
+   tarayıcı varsayılanındaydı. Bölüm sayfasının başlığı K3'ten beri kendi
+   kutusunda (`.bolum-bas`), düzeltme/konu sayfalarınınki `.bolum`da. */
+.kutu>.kutu-bas.vurgu h1{font-family:var(--tema-baslik-aile);font-weight:900;font-size:32px;
   letter-spacing:.3px;line-height:1.1}
-@media(max-width:600px){.bolum>.kutu-bas h1{font-size:26px}}
+@media(max-width:600px){.kutu>.kutu-bas.vurgu h1{font-size:26px}}
+/* Bölüm adı servis şeridinin üstünde (K3). Arkasından doğrudan haber
+   kutusu geliyorsa (servisi olmayan bölüm) iki kutu birleşir: başlık
+   eskisi gibi kutunun tepesinde görünür. `:has` desteklemeyen tarayıcıda
+   aradaki 16 px boşluk kalır, başka bir şey bozulmaz. */
+.bolum-bas:has(+.bolum){margin-bottom:0;border-bottom:0}
+.bolum-bas+.bolum{border-top:0}
 .kutu-ic{padding:12px}
 /* Kart ızgarası zemine oturur (29 Ağustos 2026 denetimi): beyaz kart beyaz
    kutuda yalnız 1,29:1'lik çizgiyle ayrışıyordu — 20 kart tek duvar gibi
@@ -589,7 +600,10 @@ main{display:block;padding-top:14px}
 .kart .ust time{font-family:var(--govde);font-weight:400;font-size:11.5px;color:var(--gri);letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums;white-space:nowrap}
 .kart .ust span+time::before{content:"·";margin-right:6px}
 .kart h3{font-family:var(--tema-baslik-aile);font-size:18px;line-height:1.16;font-weight:700}
-.kart p{font-size:12.5px;color:var(--gri);margin-top:5px}
+/* Kart özeti 14/20 (20 Ekim 2026, R11): 12,5 px gri özet `--zemin`
+   tepsisine yakın kartta okunmuyordu. Anasayfanın küçük kartları özet
+   basmaz; özet bölüm, arama ve akış kartında. */
+.kart p{font-size:14px;line-height:1.43;color:var(--gri);margin-top:5px}
 
 /* --- 6 · dört haber kutucuğu --- */
 .dortlu{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
@@ -678,14 +692,14 @@ main{display:block;padding-top:14px}
 
 /* --- 10 · resmî ilan (BIK yükümlülüğü, editoryal liste) --- */
 .ilan{background:var(--kagit);border:1px solid var(--cizgi);border-left:5px solid var(--lacivert);margin-bottom:16px}
-.ilan-bas{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--yumusak);border-bottom:1px solid var(--cizgi);padding:9px 12px}
-.ilan-bas h2{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:1.1px;color:var(--lacivert)}
+/* Başlık 20 Ekim 2026'dan beri `.kutu-bas.hafif` (K4); zemin, çizgi ve
+   başlık ölçüsü oradan gelir. Burada yalnız dayanak ve dönem için sarma. */
+.ilan-bas{align-items:baseline;gap:4px 10px;flex-wrap:wrap}
 .ilan-bas .dayanak{font-size:11.5px;color:var(--gri)}
 /* Dönem etiketi: kayıtlar arşiv, bitiş tarihi yok. Aralık başlıkta
    durunca okur listeyi "bugünün açık ihaleleri" sanmıyor. */
 .ilan-bas .donem{font-family:var(--display);font-weight:700;font-size:11.5px;letter-spacing:.4px;color:var(--lacivert);background:var(--yumusak);border:1px solid var(--cizgi);padding:2px 8px;white-space:nowrap}
-.ilan-bas .tumu{margin-left:auto;font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.6px;color:var(--kirmizi-koyu);white-space:nowrap}
-.ilan-bas .tumu:hover{text-decoration:underline}
+.ilan-bas .tumu{white-space:nowrap}
 .ilan-liste{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--cizgi)}
 /* Satırın omurgası TARİH. Düz listede altı başlık aynı ağırlıkta duruyordu
    ve okur "bu ne kadar yeni" sorusunu ancak en alttaki gri satırı okuyarak
@@ -790,6 +804,13 @@ main{display:block;padding-top:14px}
    fotoğraf çerçeveye sığacak kadar ölçeklenir, kalan pay düz zemin. */
 .arama-izgara .kart .foto:has(img){background:var(--zemin)}
 .arama-izgara .kart .foto img{object-fit:contain}
+/* Aynı çözüm bölüm sayfasının ilk kademesinde ve anasayfanın Bursaspor
+   şeridinde (20 Ekim 2026): arşiv 3:2 ama yeni haberlerin bir kısmı 16:9
+   ve 3:2 çerçevede `cover` onları %15,6 kırpıyordu (ölçüldü, /bursaspor
+   ve anasayfa). 3:2 fotoğraf çerçeveyi tam doldurur, 16:9'da üstte ve
+   altta ince tepsi bandı kalır. Zemin temanın tepsisi. */
+.liste-izgara .kart .foto:has(img),.bursaspor-haber .kart .foto:has(img){background:var(--tema-zemin)}
+.liste-izgara .kart .foto img,.bursaspor-haber .kart .foto img{object-fit:contain}
 
 /* --- İLÇE SAYFASI: hızlı geçiş şeridi (2 Eylül 2026, §46) -----------
    YALNIZ ilçe sayfasında çizilir. Kategori sayfasında da denendi ve
@@ -820,11 +841,11 @@ main{display:block;padding-top:14px}
    Şerit manşet kademesiyle akış arasına giriyor — sayfanın doğal kesme
    noktası orası; okur "bölümün en'leri" ile "bölümün akışı" arasında
    geçişi orada yapıyor. */
-.en-cok{background:var(--tema-kagit);border:1px solid var(--tema-yuzey-cizgi);
-  border-top:3px solid var(--tema-isaret);padding:12px 16px 14px;margin-top:14px}
-.en-cok h2{font-family:var(--display);font-weight:900;font-size:12.5px;
-  letter-spacing:1.3px;color:var(--tema-murekkep);margin-bottom:10px}
-.en-cok ol{list-style:none;display:grid;
+/* 20 Ekim 2026 (K4): başlık sitenin hafif bölüm başlığı (`.kutu-bas.hafif`);
+   eskiden 12,5 px'lik kendi biçimi ve 3 px'lik işaret çizgisi vardı. Sıra
+   numaraları işaret renginde kalır — renk orada bilgi taşıyor. */
+.en-cok{background:var(--tema-kagit);border:1px solid var(--tema-yuzey-cizgi);margin-top:14px}
+.en-cok ol{list-style:none;display:grid;padding:12px 16px 14px;
   grid-template-columns:repeat(5,minmax(0,1fr));gap:0 16px}
 /* Kalemler dikey çizgiyle ayrılıyor: beş başlık yan yana dizilince
    nerede bitip nerede başladıkları okunmuyordu. İlk kalemde çizgi yok. */
@@ -1777,14 +1798,19 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
   .ara{display:none;order:10;flex:1 1 100%;align-self:auto;margin:0 8px 8px}
   .ara[data-acik="true"]{display:flex}
   .ara input{width:auto}
-  .slayt-pencere{height:360px}
+  /* MANŞET ÇERÇEVESİ ORANLA (20 Ekim 2026, kullanıcı kararı "görsel
+     kırpılmasın"). Ray manşetin yanında durduğu sürece (≥1001) pencere
+     yüksekliği iki sütunun hizasından gelir (485 px sözleşmesi). Ray
+     alta inince o sözleşme yok; sabit 360/300/250 px tablette pencereyi
+     2,4–2,5:1 yapıyor ve 3:2 fotoğrafı %38–48 kırpıyordu (ölçüldü: 768'de
+     %49,7). Oran arşivin oranı. Mini slayt rayın parçası, burada değil. */
+  .manset-slayt .slayt-pencere{height:auto;aspect-ratio:var(--cerceve-orani)}
   .reklam.tam{height:120px}
 }
 @media(max-width:768px){
   .dortlu{grid-template-columns:repeat(2,minmax(0,1fr))}
   .bursaspor-haber{grid-template-columns:repeat(2,minmax(0,1fr))}
   .slayt h3{font-size:30px}
-  .slayt-pencere{height:300px}
   /* Sütun yönünde `align-items:flex-start` (1000 px kuralı) çapraz eksen
      GENİŞLİK demek: mini slayt içerik boyuna, 202 px'e düşüyordu
      (ölçüldü, 6 Eylül 2026). */
@@ -1816,9 +1842,17 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
   .kart h3{font-size:17px}
   .slayt p{display:none}
   .slayt .yazi{padding:12px 14px}
-  .slayt-pencere{height:250px}
   .mini-slayt .slayt-pencere{height:212px}
-  .slayt-noktalar{order:3;flex-basis:100%}
+  /* Sayfalayıcı TEK SATIR (20 Ekim 2026, R5): 15 numara iki satıra
+     kırılıyor, manşet bloğunun 96/348 px'ini yiyordu. Sayaç solda, numaralar
+     yanında yatay kayar; düğmeler 26x24 kalır (WCAG 2.5.8 alt sınırı 24).
+     Dolgu + eksi kenar boşluğu odak halkası (3 + 2 px) kaydırma kabında
+     kırpılmasın diye. */
+  .slayt-denetim{flex-wrap:nowrap}
+  .slayt-noktalar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+    padding:5px;margin:-5px}
+  .slayt-noktalar::-webkit-scrollbar{display:none}
+  .slayt-noktalar button{flex:none}
   /* Mobil tepe (Ö7b): 3 satırlık piyasa ızgarası 229 px alıyordu — tek
      satır yatay kaydırmaya döner; okur habere ~280 px erken ulaşır. */
   .doviz-ic{flex-wrap:nowrap;overflow-x:auto}
@@ -1869,11 +1903,10 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .govde{padding:16px 0 40px}
 .izgara{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start}
 .sutunlar{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:18px}
-.manset{position:relative;background:var(--kara)}
-.manset .foto{height:392px}
-.manset .yazi{position:absolute;left:0;right:0;bottom:0;padding:20px;z-index:2;color:var(--kagit)}
-.manset h1{font-family:var(--display);font-size:36px;line-height:1.06;font-weight:900;letter-spacing:-.4px}
-.manset p{font-size:14.5px;color:var(--ak-yazi);margin-top:8px;max-width:34.8em}
+/* `.manset`, `.yatay`, `.serit-oge` (demo dönemi) 20 Ekim 2026'da silindi:
+   hiçbir şablon, betik ya da Python çıktısı bu sınıfları basmıyordu ve
+   üçü de sabit px yükseklikli fotoğraf çerçevesi taşıyordu
+   (`tests_cerceve.OluSecici`). Dar ekran yatay kartı aşağıda, oranla. */
 .dar{display:flex;flex-direction:column;gap:12px}
 .dar .oge{background:var(--kagit);border:1px solid var(--cizgi);padding:11px}
 .dar .oge h3{font-family:var(--display);font-size:17px;line-height:1.18;font-weight:700}
@@ -1902,18 +1935,8 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .surmanset h2{font-family:var(--display);font-weight:700;font-size:17px;line-height:1.16}
 .surmanset .zaman{margin-left:auto;font-size:11.5px;color:var(--gri);flex:none}
 .alt-manset{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
-.yatay{display:grid;grid-template-columns:136px minmax(0,1fr);background:var(--kagit);border:1px solid var(--cizgi)}
-.yatay .foto{height:100%;min-height:106px}
-.yatay .ic{padding:9px 11px 11px}
-.yatay .ust{font-size:11px;font-weight:700;color:var(--kirmizi);letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px}
-.yatay h3{font-family:var(--display);font-size:17px;line-height:1.14;font-weight:700}
-.yatay p{font-size:12.5px;color:var(--gri);margin-top:5px}
 .kartlar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .serit{display:flex;gap:12px;overflow-x:auto;padding-bottom:5px}
-.serit-oge{flex:0 0 212px;background:var(--kagit);border:1px solid var(--cizgi)}
-.serit-oge .foto{height:120px}
-.serit-oge .rozet-o{position:absolute;left:7px;bottom:7px;z-index:2;background:var(--kirmizi);color:var(--kagit);font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.9px;padding:2px 7px}
-.serit-oge h3{font-family:var(--display);font-size:15px;line-height:1.18;font-weight:700;padding:8px 9px 11px}
 .doviz .kapsa{display:flex;align-items:center;overflow-x:auto;scrollbar-width:none}
 .doviz .kapsa::-webkit-scrollbar{display:none}
 .doviz .zaman{margin-left:auto;padding:8px 0 8px 10px;font-size:11.5px;color:var(--gri);white-space:nowrap}
@@ -1935,13 +1958,10 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .alt-menu{position:static;box-shadow:none;min-width:0}
 }
 @media(max-width:600px){
-.manset h1{font-size:26px}
-.manset .foto{height:250px}
 .bant .kapsa{flex-wrap:wrap}
 .kunye{display:none}
 .bant-sag{margin-left:0;flex:1 1 100%;flex-wrap:wrap}
 .kartlar{grid-template-columns:minmax(0,1fr)}
-.yatay{grid-template-columns:112px minmax(0,1fr)}
 .surmanset{flex-wrap:wrap;gap:6px}
 .surmanset .zaman{margin-left:0;flex-basis:100%}
 .yazarlar{grid-template-columns:minmax(0,1fr)}
@@ -1951,7 +1971,7 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 /* --- kart yatay düzeni (20 Ekim 2026, R1) --------------------------------
    Çerçeve 3:2 olunca tek sütundaki kart 245 px'lik fotoğrafla dikeyde
    büyürdü (dörtlü 4, ilgili 6, Bursaspor 9 kart). Dar ekranda bu üç ızgara
-   yukarıdaki `.yatay` ölçüsüne geçer: fotoğraf solda 112 px, oranı yine
+   demo dönemindeki `.yatay` kartın ölçüsüne geçer: fotoğraf solda 112 px, oranı yine
    3:2 (75 px), başlık sağda — kart ~90 px, fotoğraf KESİLMEZ.
    `align-items:start` ŞART: esneyen hücrede `aspect-ratio` yok sayılır ve
    fotoğraf metnin boyuna gerilip kırpılırdı (eski `.yatay .foto`nun
@@ -2366,7 +2386,6 @@ footer ul{line-height:1.45}
 footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 .kart h3 a{display:inline-block;padding:2px 0;margin:-2px 0}
 .sira h3 a{display:inline-block;padding:3px 0;margin:-3px 0}
-.ilan-bas .tumu{padding:4px 0;margin-top:-4px;margin-bottom:-4px}
 .ilan-turler button.tur{padding:5px 9px}
 .ilan-dizin .ilan-turler .tur{padding:5px 9px}
 .reklam-anahtar{padding:3px 8px}
@@ -2611,11 +2630,10 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 }
 
 /* --- GÜNÜN MANŞETLERİ listesi (manşet 15 -> 5 + 10) ----------------- */
-.manset-liste{background:var(--kagit);border:1px solid var(--cizgi);
-  border-top:3px solid var(--kirmizi);padding:8px 14px 6px;margin-bottom:16px}
-.manset-liste h2{font-family:var(--display);font-weight:900;font-size:11.5px;
-  letter-spacing:1.1px;color:var(--kirmizi-koyu);padding-bottom:4px}
-.manset-liste ul{list-style:none;columns:2;column-gap:32px}
+/* Başlık 20 Ekim 2026'dan beri `.kutu-bas.hafif` (K4): 11,5 px kırmızı
+   yazı + 3 px kırmızı üst çizgi, sayfadaki yedi başlık biçiminden biriydi. */
+.manset-liste{background:var(--kagit);border:1px solid var(--cizgi);margin-bottom:16px}
+.manset-liste ul{list-style:none;columns:2;column-gap:32px;padding:2px 14px 6px}
 .manset-liste li{display:flex;gap:12px;align-items:baseline;padding:8px 0;
   border-bottom:1px dotted var(--cizgi);break-inside:avoid}
 .manset-liste time{flex:none;width:64px;font-size:11.5px;color:var(--gri);
@@ -2636,12 +2654,18 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 .manset-liste.dikey time{width:62px;font-size:11px}
 .manset-liste.dikey a{font-size:13.5px;line-height:1.3}
 
-/* --- bölüm başlığı: ikinci ağırlık ---------------------------------
-   Editoryal bölümler beyaz zeminde lacivert başlık + kırmızı fitil;
-   servis ve yükümlülük bölümleri (piyasa, resmî ilan, şehir servisleri,
-   vizyon) dolu bantta kalır. BURSASPOR dokunulmaz — yeşil dolu bant
-   kulüp kimliğidir. Kırmızı `h2::before` fitili iki ağırlıkta da durur:
-   ortak görsel imza. */
+/* --- bölüm başlığı: İKİ KADEME (20 Ekim 2026, K4 — kullanıcı kararı) ---
+   Anasayfada aynı düzeydeki başlık yedi ayrı biçimdeydi ve renk bilgi
+   taşımıyordu ("En çok okunanlar" neden kırmızı, "Vizyonda" neden dolu).
+   1) DOLU ÇUBUK yalnız sayfa başlığı (`.kutu>.kutu-bas.vurgu h1`) ve
+      rengi kimlik olan bloklar: anasayfanın BURSASPOR kutusu (kulüp
+      yeşili) ve SON DAKİKA plakası (haber sinyali, başlık değil).
+   2) HAFİF: geri kalan her bölüm başlığı — beyaz kâğıtta koyu başlık,
+      2 px alt çizgi, kırmızı fitil. Kırmızı kaybolmuyor, seyreliyor:
+      fitilde, sıra numarasında, son dakikada.
+   Temalı sayfada üç rol değişir: `--tema-koyu` (yazı), `--tema-fitil-ak`
+   (fitil), `--tema-hafif-cizgi` (alt çizgi) — ekonomide fitil lacivert,
+   çünkü orada kırmızı "düşüş" demek. Sözleşme `tests_baslik_kademesi`. */
 .kutu-bas.hafif{background:var(--tema-kagit);color:var(--tema-koyu);
   border-bottom:2px solid var(--tema-hafif-cizgi);padding:9px 12px 7px}
 .kutu-bas.hafif h2{color:var(--tema-koyu);font-size:18px;font-weight:900;letter-spacing:.5px}
@@ -2720,6 +2744,23 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
   .ust-blok .manset-alani{order:1}
   .ust-blok .sondakika-satir{order:2}
   .ust-blok .dortlu{order:3}
+}
+/* TELEFONDA DÖRTLÜ MANŞETİN HEMEN ALTINDA (20 Ekim 2026, K2 — kullanıcı
+   kararı). 390'da sıra manşet → 300x250 → mini slayt → son dakika →
+   300x250 → dörtlü idi; dörtlünün ilk kartı 2.066 px'te, ilk ekranda tek
+   başlık vardı. Dörtlü artık "Manşet yanı" yuvasının ÖNÜNDE: manşet →
+   dörtlü → reklam → mini slayt → son dakika. Yuva `.manset-yan`ın içinde
+   olduğu için iki sarmalayıcı `display:contents` ile açılır ve çocuklar
+   `.ust-blok`un sütununa katılır — ikisi de rolsüz `div`, erişilebilirlik
+   ağacında kaybolan bir anlam yok. DOM sırası (dörtlü → manşet → yan)
+   ekran okuyucuda aynen; görsel sırayla farkı tek bir yer değiştirme. */
+@media(max-width:600px){
+  .ust-blok .manset-alani,.ust-blok .manset-yan{display:contents}
+  .ust-blok .manset-slayt{order:1;margin-bottom:16px}
+  .ust-blok .dortlu{order:2}
+  .ust-blok .manset-yan .reklam{order:3}
+  .ust-blok .mini-slayt{order:4;margin-bottom:16px}
+  .ust-blok .sondakika-satir{order:5}
 }
 @media(max-width:700px){
   .servis-uclu{grid-template-columns:minmax(0,1fr)}
@@ -2958,8 +2999,8 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
    Bölüme özel renk denendi ve 7 Eylül 2026'da kullanıcı kararıyla geri
    alındı — gerekçe URUN-PLANI.md §63'te. */
 .bolum-servis{margin-bottom:14px}
-/* Başlık çubuğu için AYRI KURAL YOK: varsayılan `.kutu-bas` (lacivert
-   zemin, beyaz yazı, kırmızı fitil) sitenin her yerindeki kutuyla aynı.
+/* Başlık çubuğu için AYRI KURAL YOK: sitenin hafif bölüm başlığı
+   (`.kutu-bas.hafif`, 20 Ekim 2026'dan beri; önce dolu lacivertti, K4).
    Bir süre bölüm rengini alıyordu; renk temaları 7 Eylül 2026'da kullanıcı
    kararıyla geri alındı ve çubuk da varsayılana döndü. */
 /* Künye satırı üç panelde de ortak: verinin ne olduğunu ve ne zamana ait
@@ -3051,6 +3092,17 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
   font-variant-numeric:tabular-nums}
 .eczane-izgara .harita{color:var(--lacivert);font-weight:700}
 .eczane-izgara a:hover{text-decoration:underline}
+/* DOKUNMA HEDEFİ (20 Ekim 2026, R12): `a.tel` 78x18, `a.harita` 87x18
+   ölçüldü — gece eczane arayan okurun dokunacağı iki bağlantı sitenin en
+   küçük hedefleriydi. Fare ile: eksi kenar boşluklu dolgu, 28 px, satır
+   boyu değişmez. Dokunmatikte ve ≤600'de 44x44 (WCAG 2.5.5); aynı kural
+   anasayfa panelinin ve nöbetçi eczane sayfasının düğmelerinde. */
+.eczane-izgara .baglar a{display:inline-block;padding:5px 0;margin:-5px 0}
+@media(max-width:600px),(pointer:coarse){
+  .eczane-izgara .baglar{gap:0 16px;margin-top:2px}
+  .eczane-izgara .baglar a,.eczane-liste .baglantilar a,.eczane-kartlar .baglantilar a{
+    display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;margin:0}
+}
 
 @media(max-width:1100px){
   .piyasa-izgara{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -3127,8 +3179,17 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 .akis-blok .kart:hover h3 a{color:var(--tema-vurgu-koyu)}
 /* Ağırlık farkı ritmin kendisi: ikili geniş ve spotlu, üçlü dar ve
    yalnız başlık. İkisi aynı görünseydi bölmenin anlamı kalmazdı. */
-.akis-blok.ikili h3{font-family:var(--display);font-size:20px;line-height:1.16;font-weight:900}
-.akis-blok.ikili p{font-size:13.5px;line-height:1.42;color:var(--gri);margin-top:5px}
+.akis-blok.ikili h3{font-family:var(--display);font-size:21px;line-height:1.2;font-weight:900}
+.akis-blok.ikili p{font-size:15px;line-height:1.4;color:var(--gri);margin-top:5px}
+/* İKİLİ SATIRDA BAŞLIK 21 (20 Ekim 2026, R8): 530 px'lik kartta 506x337
+   fotoğrafın altında 18 px başlık ve 14 px özet kalıyordu; görsel metni
+   eziyordu. Ölçek anasayfa dörtlüsüyle aynı (21), özet 15/21, satır
+   aralığı 1,2. Yalnız iki sütunlu genişlikte: telefonda tek sütunda
+   kartlar sitenin 17 px'ine döner. Üçlü blok 16'da kalır. */
+@media(min-width:601px){
+  .liste-izgara .kart:not(.genis) h3{font-size:21px;line-height:1.2}
+  .liste-izgara .kart:not(.genis) p{font-size:15px;line-height:1.4}
+}
 .akis-blok.uclu h3{font-family:var(--display);font-size:16px;line-height:1.2;font-weight:700}
 
 /* ÜÇLÜ BLOK 700 px'e KADAR ÜÇ SÜTUN KALIR — ölçülerek karar verildi.
