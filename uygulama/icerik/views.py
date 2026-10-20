@@ -1061,3 +1061,30 @@ def konu(request, slug):
         "haberler": haberler,
         "son": haberler[-1] if haberler else None,
     })
+
+
+# ---------------------------------------------------------------------------
+# Düzeltme ve cevap (20 Ekim 2026). Notları editör panelin haber düzenleme
+# ekranından yayımlar (`panel.haber_duzeltme`); haber detayında gövdenin
+# sonunda, burada da en yeniden eskiye görünürler.
+# ---------------------------------------------------------------------------
+
+from .models import Duzeltme  # noqa: E402
+
+DUZELTME_SAYFA_BOYU = 30
+
+
+@sayfa_onbellegi
+def duzeltmeler(request):
+    """`/duzeltmeler` — yayımlanmış düzeltme, cevap ve güncelleme notları.
+
+    Yalnız yayındaki notlar ve yalnız yayındaki haberlerinki (yayından
+    çekilmiş habere bağlantı 404 olurdu). Kayıt yoksa sayfa boş listeyi
+    söyler; uydurma örnek basılmaz. Sayfa önbelleğinde; not kaydedilince
+    yayın sürümü değişir (`icerik/sinyaller.py`).
+    """
+    sayfa = _sayfala(request, Duzeltme.dizin(), boy=DUZELTME_SAYFA_BOYU)
+    return render(request, "duzeltmeler.html", {
+        "baslik": "Düzeltme ve Cevap",
+        "sayfa": sayfa,
+    })

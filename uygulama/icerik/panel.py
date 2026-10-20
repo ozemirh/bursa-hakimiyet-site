@@ -19,20 +19,22 @@ from django.utils.functional import cached_property
 from django.db.models import Count, IntegerField, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
 from django.contrib import messages
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from medya.models import FotoGaleri, KoseYazisi, Video, Yazar
 from taksonomi.models import Etiket, Ilce, Kategori, KategoriTur, Kaynak, Yonlendirme
 
-from .formlar import (BildirimForm, FotoGaleriForm, GazeteForm, HaberForm,
+from .formlar import (BildirimForm, DuzeltmeForm, FotoGaleriForm, GazeteForm, HaberForm,
                       KategoriForm, KaynakForm, KoseYazisiForm, KullaniciForm,
                       ReklamKampanyasiForm, ReklamYuvasiForm, ResmiIlanForm,
                       SonDakikaForm, VideoForm, YazarForm, YorumForm)
 from . import denetim_kaydi, okunma, onbellek, yayin_kapisi, yz_koken, yz_kopru
 from .kimlik import yeni_kayit_kaydet
 from .arama_metni import slugla
-from .models import (YZ_BASLIK_ISARETI, Bildirim, Gazete, Haber, IkiAdimli,
+from .models import (YZ_BASLIK_ISARETI, Bildirim, Duzeltme, Gazete, Haber, IkiAdimli,
                      LogKaydi, ReklamKampanyasi, ReklamYuvasi, ResmiIlan,
                      SonDakika, Yorum)
 
@@ -597,7 +599,17 @@ def haber_duzenle(request, kimlik):
         _kaydet(form, request, onceki=onceki)
         return redirect("panel-haber-duzenle", kimlik=haber.pk)
 
-    return render(request, "panel/haber_form.html", {
+    return render(request, "panel/haber_form.html",
+                  _haber_duzenle_baglami(request, haber, form,
+                                         yayinlayabilir=yayinlayabilir,
+                                         kendisinin=kendisinin))
+
+
+def _haber_duzenle_baglami(request, haber, form, *, yayinlayabilir, kendisinin,
+                           duzeltme_formu=None) -> dict:
+    """Haber düzenleme ekranının bağlamı. Düzeltme ucu geçersiz formda aynı
+    ekranı hatalarıyla yeniden çizer; bağlam iki yerde ayrışmasın."""
+    return {
         "baslik": haber.baslik,
         "bolum": "haber",
         "ust_bolum": "icerik",
@@ -605,8 +617,98 @@ def haber_duzenle(request, kimlik):
         "haber": haber,
         "yayinlayabilir": yayinlayabilir,
         "kendisinin": kendisinin,
+        # Düzeltme ve cevap (20 Ekim 2026): kayıtların tamamı — yayından
+        # kaldırılanlar da (geçmiş korunur). Ekleme yayın yetkisine bağlı:
+        # not okura anında görünür, yani yayımlamaktır.
+        "duzeltmeler": list(haber.duzeltmeler.select_related("olusturan", "kaldiran")
+                            .order_by("-yayin_zamani", "-id")),
+        "duzeltme_formu": duzeltme_formu or DuzeltmeForm(),
+        "duzeltme_eklenebilir": haber.yayinda_mi(),
         **_yetkiler(request.user),
-    })
+    }
+
+
+def _duzeltme_bolumune(haber):
+    return redirect(reverse("panel-haber-duzenle", kwargs={"kimlik": haber.pk}) + "#duzeltme")
+
+
+@login_required
+@permission_required("icerik.kendi_haberini_yayinlama", raise_exception=True)
+def haber_duzeltme(request, kimlik):
+    """Habere düzeltme / cevap / güncelleme notu ekler ya da notu yayından
+    kaldırır, geri yayımlar — yalnız POST (20 Ekim 2026).
+
+    Ayrı bir yönetim yüzü yok: bölüm haber düzenleme ekranının altında,
+    bu uç yalnız oranın formlarını karşılar. Yetki haber yayınıyla aynı
+    kapı (`yayin_kapisi.yayin_yetkisi`): kendi haberi / başkasının haberi.
+
+    **Silme yok.** "Kaldır" kaydı yayından indirir; metin, yayımlayan ve
+    kaldıran kayıtta kalır. Her fiil denetim kaydı yazar.
+    """
+    from django.core.exceptions import PermissionDenied
+
+    if request.method != "POST":
+        return redirect(reverse("panel-haber-duzenle", kwargs={"kimlik": kimlik}) + "#duzeltme")
+    haber = get_object_or_404(Haber, pk=kimlik)
+    if not yayin_kapisi.yayin_yetkisi(request.user, haber):
+        raise PermissionDenied("Bu habere not yayımlama yetkiniz yok.")
+
+    islem = request.POST.get("islem", "ekle")
+    if islem in ("kaldir", "geri_al"):
+        try:
+            not_kimligi = int(request.POST.get("duzeltme", ""))
+        except ValueError:
+            raise Http404("Geçersiz not kimliği") from None
+        kayit = get_object_or_404(Duzeltme, pk=not_kimligi, haber=haber)
+        if islem == "kaldir" and kayit.yayinda:
+            kayit.yayinda = False
+            kayit.kaldirma_zamani = timezone.now()
+            kayit.kaldiran = request.user
+            kayit.kaldirma_gerekcesi = " ".join(
+                request.POST.get("gerekce", "").split())[:200]
+            kayit.save()
+            denetim_kaydi.yaz(request, "duzeltme_kaldirma", hedef_tur="haber",
+                              hedef_id=haber.pk, oncesi={"duzeltme_id": kayit.pk, "yayinda": True},
+                              sonrasi={"duzeltme_id": kayit.pk, "yayinda": False},
+                              gerekce=kayit.kaldirma_gerekcesi)
+            messages.success(request, f"{kayit.get_tur_display()} notu yayından kaldırıldı; "
+                                      "kayıt ve metni panelde duruyor.")
+        elif islem == "geri_al" and not kayit.yayinda:
+            kayit.yayinda = True
+            kayit.save()
+            denetim_kaydi.yaz(request, "duzeltme_yayimlama", hedef_tur="haber",
+                              hedef_id=haber.pk, oncesi={"duzeltme_id": kayit.pk, "yayinda": False},
+                              sonrasi={"duzeltme_id": kayit.pk, "yayinda": True})
+            messages.success(request, f"{kayit.get_tur_display()} notu yeniden yayımlandı.")
+        return _duzeltme_bolumune(haber)
+
+    if not haber.yayinda_mi():
+        messages.error(request, "Not yalnız yayındaki habere eklenir: okur haberi "
+                                "göremiyorsa notu da göremez.")
+        return _duzeltme_bolumune(haber)
+
+    duzeltme_formu = DuzeltmeForm(request.POST)
+    if duzeltme_formu.is_valid():
+        kayit = duzeltme_formu.save(commit=False)
+        kayit.haber = haber
+        kayit.olusturan = request.user
+        kayit.yayin_zamani = timezone.now()
+        kayit.yayinda = True
+        kayit.save()
+        denetim_kaydi.yaz(request, "duzeltme_yayimlama", hedef_tur="haber",
+                          hedef_id=haber.pk,
+                          sonrasi={"duzeltme_id": kayit.pk, "tur": kayit.tur, "yayinda": True})
+        messages.success(request, f"{kayit.get_tur_display()} notu yayımlandı; haberin "
+                                  "sonunda ve Düzeltme ve Cevap sayfasında görünüyor.")
+        return _duzeltme_bolumune(haber)
+
+    form = HaberForm(instance=haber, kullanici=request.user)
+    return render(request, "panel/haber_form.html",
+                  _haber_duzenle_baglami(
+                      request, haber, form,
+                      yayinlayabilir=True,
+                      kendisinin=haber.olusturan_id == request.user.pk,
+                      duzeltme_formu=duzeltme_formu))
 
 
 def _kaydet(form, request, onceki=None):
