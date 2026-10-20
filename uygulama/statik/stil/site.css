@@ -1940,8 +1940,26 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
    büyümesin diye negatif kenar boşluğuyla. */
 .detay-kunye .yazan a{display:inline-block;padding:4px 0;margin:-4px 0}
 .arac{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
-.arac button,.arac a{border:1px solid var(--cizgi);background:var(--yumusak);font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.5px;padding:5px 9px;cursor:pointer;color:var(--lacivert)}
-.arac button:hover,.arac a:hover{background:var(--lacivert);color:var(--kagit);border-color:var(--lacivert)}
+.arac button,.arac a{border:1px solid var(--cizgi);background:var(--yumusak);font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.5px;padding:5px 9px;cursor:pointer;color:var(--tema-koyu)}
+.arac button:hover,.arac a:hover{background:var(--tema-dolgu);color:var(--kagit);border-color:var(--tema-dolgu)}
+/* Paylaşım grubu (20 Ekim 2026, `parca/paylas.html`): WhatsApp · X ·
+   Facebook · bağlantıyı kopyala. Betiksiz düz bağlantı; marka rengi YOK,
+   araç çubuğunun kendi dili (yazı/simge --tema-koyu, üstüne gelince
+   --tema-dolgu) — varsayılanda lacivert, temalı sayfada temanın koyusu.
+   Hesaplanan kontrast (WCAG): yazı/simge --yumusak üstünde lacivert 12,41 ·
+   yeşil-koyu 9,66 · grafit 12,50; üstüne gelince beyaz, dolgu üstünde
+   lacivert 13,21 · yeşil 6,80 · grafit 13,31 — hepsi metin eşiği 4,5 üstü.
+   Grup kendi içinde KIRILMAZ (`nowrap`). Dar ekranda (≤600) grup satırın
+   tamamını alır: paylaşım bir satır, punto/yazdır ikinci satır. Kendiliğinden
+   kırılmaya bırakınca 390–430 px'te A− üst satırda, A+ altta kalıyordu
+   (ölçüldü, 20 Ekim 2026). */
+.arac .paylas{display:flex;gap:6px;flex-wrap:nowrap}
+.arac a.paylas-bag{display:inline-flex;align-items:center;justify-content:center;min-width:32px;padding:5px 7px}
+.paylas-bag .sosyal-simge{width:16px;height:16px}
+/* Dokunma hedefi 44×44 (WCAG 2.5.5): dar ekranda ve dokunmatik tablette
+   düğmeler başparmakla basılıyor; masaüstünün 28 px'i orada küçük kalır. */
+@media(max-width:600px),(pointer:coarse){.arac button,.arac a,.arac a.paylas-bag{min-height:44px;min-width:44px}}
+@media(max-width:600px){.arac .paylas{flex-basis:100%}}
 .ana-gorsel{height:420px}
 .foto-alt{font-size:12.5px;color:var(--gri);border-bottom:1px solid var(--cizgi);padding:8px 0 10px;margin-bottom:16px}
 /* ---- haber seslendirme ---- */
@@ -2009,7 +2027,7 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .ses-sag{margin-left:0}
 }
 @media print{
-.servis,.menu,.ilce,.sondakika,.reklam,.arac,.seslendirme,.yukari,aside,.kirinti,.kunye-ilce,.sosyal{display:none!important}
+.servis,.menu,.ilce,.sondakika,.reklam,.arac,.paylas,.seslendirme,.yukari,aside,.kirinti,.kunye-ilce,.sosyal{display:none!important}
 .izgara{grid-template-columns:minmax(0,1fr)}
 .detay{border:0;padding:0}
 }

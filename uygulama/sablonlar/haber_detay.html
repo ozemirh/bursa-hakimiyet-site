@@ -48,7 +48,10 @@ JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
               kayıtta dolu; boşsa hiç basılmaz — uydurma süre yazılmaz.{% endcomment %}
               {% if haber.kelime_sayisi %}<span>{{ haber.kelime_sayisi|okuma_dakikasi }} dk okuma</span>{% endif %}
               <div class="arac">
-                <button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button>
+                <div class="paylas" role="group" aria-label="Haberi paylaş">
+                  {% include "parca/paylas.html" with adres=site_koku|add:haber.get_absolute_url metin=haber.baslik %}
+                  <button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button>
+                </div>
                 <button type="button" class="yazi-kucult" aria-label="Yazı boyutunu küçült">A&minus;</button>
                 <button type="button" class="yazi-buyut" aria-label="Yazı boyutunu büyüt">A+</button>
                 <button type="button" class="yazdir">YAZDIR</button>

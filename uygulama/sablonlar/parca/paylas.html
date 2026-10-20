@@ -1,0 +1,14 @@
+{% comment %}Paylaşım bağlantıları (20 Ekim 2026). Referans kütüphanesi
+(`desenler/haber-detay.md` §2): incelenen yerel ve ulusal sitelerin hepsinde
+WhatsApp dahil paylaşım var; bizde yalnız "bağlantıyı kopyala" vardı.
+
+BETİKSİZ düz bağlantı: SDK, iframe, dış betik YOK — CSP değişmez, okura
+izleyici yüklenmez, tıklanana kadar dışarıya tek istek gitmez.
+
+Girdi: `adres` (mutlak kanonik adres) · `metin` (haber başlığı). İkisi de
+`urlencode:""` ile TAMAMEN kodlanır: Türkçe harf, boşluk, `&`, `?`, `/`, `:`.
+`&amp;` HTML'in kendi kaçışıdır; tarayıcı adrese `&` olarak koyar.
+Simgeler `parca/simgeler.html`; yazdırmada `.arac`/`.paylas` gizli.{% endcomment %}
+{% with a=adres|urlencode:"" m=metin|urlencode:"" %}<a class="paylas-bag" href="https://wa.me/?text={{ m }}%20{{ a }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp'ta paylaş" title="WhatsApp'ta paylaş"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-whatsapp"/></svg></a>
+<a class="paylas-bag" href="https://x.com/intent/post?url={{ a }}&amp;text={{ m }}" target="_blank" rel="noopener noreferrer" aria-label="X'te paylaş" title="X'te paylaş"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-x"/></svg></a>
+<a class="paylas-bag" href="https://www.facebook.com/sharer/sharer.php?u={{ a }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook'ta paylaş" title="Facebook'ta paylaş"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-facebook"/></svg></a>{% endwith %}
