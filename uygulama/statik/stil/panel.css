@@ -311,7 +311,7 @@ legend{font-weight:600;font-size:14px;margin-bottom:6px}
   box-shadow:var(--golge);margin-bottom:18px;overflow:hidden}
 .kutu-kart>h2{font-family:var(--serif);font-size:16px;font-weight:700;padding:15px 18px 12px;
   display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--cizgi)}
-.kutu-kart>h2 .sag-not{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--gri-acik);font-weight:400}
+.kutu-kart>h2 .sag-not{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--gri);font-weight:400}
 .kutu-govde{padding:6px 18px 15px}
 
 .sira-liste{list-style:none}
@@ -411,7 +411,12 @@ legend{font-weight:600;font-size:14px;margin-bottom:6px}
    kullanılıyordu ama karşılıkları yoktu; not metinleri gövde yazısıyla aynı
    boyda çiziliyordu. */
 .alt-not{font-size:12.5px;color:var(--gri);line-height:1.5;margin:10px 0}
-.sag-not{font-size:12.5px;color:var(--gri-acik);line-height:1.45;margin-top:4px}
+/* İpucu rengi --gri (20 Ekim 2026, panel geneli): --gri-acik beyazda
+   2,98:1, --zemin'de 2,75:1 idi (AA altı). --gri: --yuzey 5,85 · --zemin
+   5,40 · --girdi-zemin 4,86 · --uyari-zemin 5,52 · --bilgi-zemin 5,22.
+   İpucu artık etiketten rengiyle değil boyuyla (12,5 px) ayrışıyor.
+   `tests_kontrast_degiskenleri` kilitler. */
+.sag-not{font-size:12.5px;color:var(--gri);line-height:1.45;margin-top:4px}
 /* Django parola politikasini <ul> olarak veriyor; ipucu kutusu artik <div>
    oldugu icin liste burada bicimleniyor. */
 .sag-not ul{margin:2px 0 0;padding-left:18px}
@@ -601,9 +606,6 @@ legend{font-weight:600;font-size:14px;margin-bottom:6px}
    etiketi `.gorsel-gizli` ile mutlak konumlu; konumlu ata yoksa kayan kabın
    kırpmasından kaçıyor ve 360 px'te sayfayı 309 px taşırıyordu. */
 .duzeltme-bolumu .tablo-kaydir{position:relative;margin:12px 0 22px}
-/* `.sag-not` panel genelinde --gri-acik: beyaz üstünde 2,75:1 (ölçüldü, AA
-   altı). Bu bölümde --gri; panelin genel ipucu rengi ayrı iş. */
-.duzeltme-bolumu .sag-not{color:var(--gri)}
 .duzeltme-tablo td{vertical-align:top}
 .duzeltme-tablo .duzeltme-metin-hucre{min-width:240px;max-width:420px;overflow-wrap:anywhere;line-height:1.5}
 .duzeltme-tablo td.islem form{display:flex;flex-wrap:wrap;gap:6px;align-items:center}

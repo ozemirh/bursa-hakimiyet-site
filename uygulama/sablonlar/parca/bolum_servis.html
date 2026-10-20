@@ -28,7 +28,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
     <div class="kutu-bas">
       <h2 id="servis-bas">PİYASA</h2>
       <span class="tumu">
-        {% if servis.doviz.bulten.tarih %}TCMB bülteni {{ servis.doviz.bulten.tarih }}{% if servis.doviz.bulten.no %} &middot; {{ servis.doviz.bulten.no }}{% endif %} &middot; {% endif %}<a href="/veri-kaynaklari">Veri kaynakları &rarr;</a>
+        {% if servis.kaynaklar.adlar %}{{ servis.kaynaklar.adlar|join:" · " }} &middot; {% endif %}<a href="/veri-kaynaklari">Veri kaynakları &rarr;</a>
       </span>
     </div>
     <div class="kutu-ic">
@@ -52,7 +52,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
         {% endfor %}
       </div>
       <p class="servis-kunye">
-        {% if servis.doviz.kaynak.kunye %}{{ servis.doviz.kaynak.kunye }}{% endif %}
+        {% include "parca/piyasa_kaynaklari.html" with ks=servis.kaynaklar %}
         {% with t=servis.doviz.tazelik %}{% if t.guncelleme %}Son güncelleme {% if not t.bugun %}{{ t.guncelleme|date:"j F Y" }} {% endif %}{{ t.guncelleme|date:"H:i" }}{% if t.durum != "taze" %} &middot; <b>güncel değil</b>{% endif %}.{% elif t.durum != "taze" %}<b>Güncel değil.</b>{% endif %}{% endwith %}
       </p>
     </div>

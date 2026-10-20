@@ -476,7 +476,11 @@ def _bolum_servisi(slug=""):
     """
     if slug in SERVIS_DOVIZ:
         doviz = oku("doviz")
-        return {"tur": "doviz", "doviz": doviz} if doviz else None
+        if not doviz:
+            return None
+        # Künye: "Son" canlı kaynaktan, alış/satış TCMB'den — sütun sütun.
+        return {"tur": "doviz", "doviz": doviz,
+                "kaynaklar": piyasa_sayfa.cetvel_kaynaklari(doviz, oku("piyasa"))}
     if slug in SERVIS_PUAN:
         puan = oku("puan-durumu")
         takip = puan_takibi(puan)

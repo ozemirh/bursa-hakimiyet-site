@@ -352,6 +352,81 @@ class Baglantilar(PiyasaTesti):
         self.assertNotIn('href="#"', self.icerik(self.sayfa()))
 
 
+class CetvelKunyesi(PiyasaTesti):
+    """Ekonomi cetvelinin künyesi sütun sütun kaynağı adlandırır (20 Ekim 2026).
+
+    Kusur: künye yalnız "TCMB bülteni … Kaynak: TCMB döviz kurları"
+    diyordu; "Son" sütunu ise canlı kaynak tazeyken doviz.com değeriydi
+    (`canli-veri/doviz.py`: canlı değer `deger`i ezer, alış/satış TCMB'de
+    kalır). Fixture karışık: dolar/euro/altın/BIST doviz.com, sterlin TCMB.
+    """
+
+    def kunye(self, yol="/ekonomi"):
+        self.yaz("doviz", _doviz())
+        self.yaz("piyasa", PIYASA)
+        metin = self.sayfa(yol)
+        bolum = metin.split("piyasa-cetveli", 1)[1].split("</section>", 1)[0]
+        return bolum, bolum.split('class="servis-kunye"', 1)[1].split("</p>", 1)[0]
+
+    def test_iki_kaynak_da_adlandirilir(self):
+        bolum, kunye = self.kunye()
+        # Son değer: canlı kaynak, adı ve zamanıyla.
+        self.assertIn("Son ve değişim: doviz.com, "
+                      '<time datetime="2026-09-12T21:57:05+03:00">12 Eylül 2026 21:57</time>'
+                      " (Dolar, Euro, Gram altın)", kunye)
+        # BIST 100'ün damgası yok: kaynak yine adlandırılır, zaman uydurulmaz.
+        self.assertIn("Son ve değişim: doviz.com (BIST 100)", kunye)
+        # TCMB'den gelen son değer de kendi adıyla ve bülten günüyle.
+        self.assertIn('Son ve değişim: TCMB, <time datetime="2026-09-11">11 Eylül 2026</time>'
+                      ", döviz satış kuru, gösterge niteliğinde (Sterlin)", kunye)
+        # Alış/satış her zaman TCMB bülteni: gün ve numarasıyla.
+        self.assertIn('Alış ve satış: TCMB bülteni <time datetime="2026-09-11">11 Eylül 2026'
+                      "</time> &middot; 2026/171", kunye)
+        # Değişimin neye göre olduğu kaynağa göre söylenir.
+        self.assertIn("değişim doviz.com kaynağının bildirdiği günlük değişim", kunye)
+        self.assertIn("değişim bir önceki TCMB bültenine göre", kunye)
+        # Bütün tabloyu TCMB'ye atfeden eski cümleler yok.
+        self.assertNotIn("Kaynak: TCMB döviz kurları", bolum)
+        self.assertNotIn("Değişim bir önceki bültene göre", bolum)
+        # Başlık çubuğu iki kaynağı da sayar.
+        self.assertIn("doviz.com · TCMB &middot; <a href=\"/veri-kaynaklari\">", bolum)
+
+    def test_canli_kaynak_yokken_hepsi_tcmb(self):
+        tcmb = {"kaynak": "TCMB", "piyasa_damgasi": None}
+        self.yaz("doviz", _doviz(dolar=tcmb, euro=tcmb, gram_altin=None, bist100=None))
+        metin = self.sayfa("/ekonomi")
+        kunye = metin.split("piyasa-cetveli", 1)[1].split('class="servis-kunye"', 1)[1]
+        kunye = kunye.split("</p>", 1)[0]
+        self.assertIn("Son ve değişim: TCMB, ", kunye)
+        self.assertIn("(Dolar, Euro, Sterlin)", kunye)
+        self.assertNotIn("doviz.com", kunye)
+
+    def test_veri_tek_yerden(self):
+        """Cetvel ile enstrüman sayfası aynı rakamı farklı kaynağa atfedemez."""
+        doviz = _doviz()
+        k = piyasa.cetvel_kaynaklari(doviz, PIYASA)
+        self.assertEqual(k["adlar"], ["doviz.com", "TCMB"])
+        dolar = next(g for g in k["son"] if "Dolar" in g["kalemler"])
+        self.assertEqual(dolar["kaynak"], piyasa.sayfa_verisi(
+            piyasa.ENSTRUMANLAR["dolar"], doviz, PIYASA)["son"]["kaynak"])
+        self.assertEqual(piyasa.cetvel_kaynaklari(None, None),
+                         {"son": [], "tcmb": None, "adlar": []})
+
+    def test_varsayilan_servis_paneli_de_dogru_atfeder(self):
+        """Tema kalkarsa dönülen panel (`parca/bolum_servis.html`) aynı künyeyi taşır."""
+        from django.template.loader import render_to_string
+        self.yaz("doviz", _doviz())
+        canli._bellek.clear()
+        with override_settings(CANLI_VERI_KOK=self.kok):
+            doviz = canli.oku("doviz")
+            metin = render_to_string("parca/bolum_servis.html", {"servis": {
+                "tur": "doviz", "doviz": doviz,
+                "kaynaklar": piyasa.cetvel_kaynaklari(doviz, PIYASA)}})
+        self.assertIn("Son ve değişim: doviz.com", metin)
+        self.assertIn("Alış ve satış: TCMB bülteni", metin)
+        self.assertNotIn("Kaynak: TCMB döviz kurları", metin)
+
+
 class Sorgu(PiyasaTesti):
 
     def _say(self, yol):

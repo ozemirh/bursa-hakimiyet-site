@@ -332,6 +332,50 @@ def sayfa_verisi(enstruman: Enstruman, doviz: dict | None, piyasa: dict | None) 
     return paket
 
 
+def cetvel_kaynaklari(doviz: dict | None, piyasa: dict | None) -> dict:
+    """Ekonomi cetvelinin künyesi: hangi sütun hangi kaynaktan, ne zaman.
+
+    20 Ekim 2026 (P1 düzeltmesi). Cetvelin künyesi yalnız "TCMB bülteni …
+    Kaynak: TCMB döviz kurları" diyordu; oysa "Son" ve "Değişim" sütunları
+    canlı kaynak tazeyken o kaynağın (doviz.com vb.) kotasyonudur,
+    `alis`/`satis` ise HER ZAMAN TCMB bülteni (`canli-veri/doviz.py`,
+    `piyasadan_yerlestir`). Kaynak adı, zamanı ve değişimin neye göre
+    olduğu enstrüman sayfasıyla aynı yoldan gelir (`_son_deger`) — iki
+    sayfa aynı rakamı farklı kaynağa atfedemez.
+
+    `son`: aynı kaynak + zaman + değişim tanımını paylaşan kalemlerin
+    grupları, cetveldeki sırayla. `tcmb`: alış/satış basılan bir kalem
+    varsa bülten günü ve numarası, yoksa None. `adlar`: başlık çubuğu
+    için geçen kaynak adları, tekrarsız.
+    """
+    sonuc = {"son": [], "tcmb": None, "adlar": []}
+    if not doviz:
+        return sonuc
+    gruplar: dict[tuple, dict] = {}
+    alis_satis_var = False
+    for kalem in doviz.get("kalemler") or []:
+        if not isinstance(kalem, dict):
+            continue
+        if _sayi(kalem.get("alis")) is not None and _sayi(kalem.get("satis")) is not None:
+            alis_satis_var = True
+        # Şablonun "–" bastığı (değersiz) kalemin kaynağı yok.
+        if not _sayi(kalem.get("deger")):
+            continue
+        son = _son_deger(kalem, doviz, piyasa)
+        anahtar = (son["kaynak"], son["zaman"], son["gun"], son["zaman_metni"],
+                   son.get("degisim_neye", ""))
+        grup = gruplar.setdefault(anahtar, {**son, "kalemler": []})
+        grup["kalemler"].append(kalem.get("ad") or kalem.get("anahtar") or "")
+    sonuc["son"] = list(gruplar.values())
+    if alis_satis_var:
+        bulten = doviz.get("bulten") or {}
+        sonuc["tcmb"] = {"gun": _tarih(bulten.get("tarih_iso") or bulten.get("tarih")),
+                         "no": bulten.get("no") or ""}
+    adlar = [g["kaynak"] for g in sonuc["son"]] + (["TCMB"] if sonuc["tcmb"] else [])
+    sonuc["adlar"] = list(dict.fromkeys(adlar))
+    return sonuc
+
+
 # -- çevirici (betiksiz form, GET) ---------------------------------------------
 
 AZAMI_MIKTAR = 1e12
