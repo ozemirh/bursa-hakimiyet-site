@@ -47,14 +47,32 @@ Karşılaştırma yaparken bizim tarafı `URUN-PLANI.md`den (`grep -n '^## '`) v
 ## Sınırlar
 
 - **Kopyalama yok.** Başlık, metin, fotoğraf, logo kütüphaneye girmez. Alıntı
-  en fazla 25 kelime ve yalnız bir çözümü tarif etmek için. Ekran görüntüsü ve
+  en fazla 25 kelime, tırnak içinde ve URL'li, site dosyası başına en çok 3;
+  yalnız bir çözümü tarif etmek için. CSS/JS/SVG/ikon kodu ve lisanslı yazı
+  tipi alınmaz; desen tarif edilir, ayırt edici görsel kimlik alınmaz. Ekran görüntüsü ve
   ham HTML yalnız `referans-kutuphanesi/ham/` altına (depoya girmez; depo
   herkese açık).
-- **Nazik tarama.** `robots.txt`'e uy; alan adı başına en fazla bir istek / 3 sn,
-  site başına en fazla ~15 sayfa. Ödeme duvarı, giriş, CAPTCHA aşılmaz;
-  görünmüyorsa "ödeme duvarı arkasında" yazılır.
-- **WebFetch engellenirse** (Cloudflare 403), tarayıcı User-Agent'lı doğrudan
-  istek (`curl -A` / Python `urllib`) dene; o da olmazsa siteyi atla ve yaz.
+- **Önce izin.** Bir siteye ilk istekten önce `robots.txt` hem `*` hem
+  `Claude-User`/`ClaudeBot`/`anthropic-ai` bölümleriyle okunur; en kısıtlayıcısı
+  geçerlidir, başlık yorumundaki koşullar da bağlayıcıdır. Otomatik erişimi,
+  yapay zekâ kullanımını ya da ticari kullanımı yasaklayan siteye WebFetch,
+  `curl` ya da Chrome ile **hiç istek atılmaz**; `SITELER.md`de "otomatik
+  erişim yok" yazar (20 Ekim 2026: NYT, Reuters, FT, BBC/BBC Türkçe, Le Monde,
+  Guardian; Spiegel yalnız `Claude-User`'a açık yollar). Bu sitelerin dosyaları
+  yalnız ikincil kaynakla yazılır — yöntem `SITELER.md` "Erişim durumu".
+- **Kimlik gizleme yok.** User-Agent, Referer, IP değiştirilmez. 403, CAPTCHA,
+  Cloudflare engeli aşılmaya çalışılmaz; site "erişim engelli" diye atlanır.
+- **Nazik tarama.** Alan adı başına en fazla bir istek / 3 sn, site başına en
+  fazla ~15 sayfa.
+- **Ödeme duvarı.** Duvar ya da kayıt isteyen sayfanın gövdesi hiçbir yoldan
+  okunmaz (ham HTML, JS kapatma, AMP, arşiv/önbellek, çerez silme); hesap ve
+  deneme aboneliği açılmaz. Yalnız duvarın tipi ve tetik noktası tarif edilir;
+  ham HTML'de gövde gelmişse okunmadan atılır.
+- **Rakipler ve kişiler.** Yerel rakipler için sıralama, puan, "en iyi/en kötü"
+  yok; her ölçünün yanında "tek ölçüm, tarih, ülke/koşul" yazar. Trafik/gelir
+  tahmini, hukuki nitelendirme ve güvenlik açığı yazılmaz (açık görülürse yalnız
+  kullanıcıya iletilir). Adresinde kişi adı geçen haber kanıt URL'si olmaz;
+  çocuk/şüpheli/mağdur haberi örnek seçilmez.
 - **Yalnız `referans-kutuphanesi/` altına yazarsın.** Ürün kodu, şablon, CSS,
   `URUN-PLANI.md`, `EKIP.md` değiştirmezsin; ihtiyacı "→ `<ajan-adı>`" diye
   devredersin.

@@ -44,18 +44,34 @@ Dosya adları Türkçe, küçük harf, tireli, ASCII (`son-dakika.md`,
 
 ## Sınırlar
 
+Hukuk incelemesiyle sıkılaştırıldı (20 Ekim 2026, `hukuk-guvenlik-uyum-uzmani`).
+
 - **Kopyalama yok:** başlık, metin, fotoğraf, logo kütüphaneye girmez. Alıntı
-  ≤ 25 kelime, yalnız bir çözümü tarif etmek için.
+  ≤ 25 kelime, tırnak içinde ve URL'li, site dosyası başına en çok 3. CSS/JS/
+  SVG/ikon kodu ve lisanslı yazı tipi girmez; desen tarif edilir, kod ve
+  ayırt edici görsel kimlik alınmaz.
 - **Depo herkese açık:** ekran görüntüsü ve ham HTML yalnız `ham/` altına
-  (`.gitignore`'da).
-- **Nazik tarama:** `robots.txt`'e uy · alan adı başına ≤ 1 istek / 3 sn ·
-  site başına ≤ ~15 sayfa · ödeme duvarı, giriş, CAPTCHA aşılmaz.
-- **Kullanım koşulları:** otomatik erişimi açıkça yasaklayan sitede `curl`
-  yerine yalnız WebFetch/WebSearch ile birkaç sayfaya bakılır; bu SITELER.md'de
-  not edilir.
-- **Rakipler hakkında dil:** yerel rakipler (Olay, Bursada Bugün…) için
-  yalnız gözlenen çözüm ve ölçü yazılır; nitelendirme, küçümseme, tahmin yok.
-- **Kişisel veri yok:** muhabir adı, yorum, okur bilgisi kütüphaneye girmez.
+  (`.gitignore`'da); `ham/` buluttan dışarı taşınmaz, iş bitince silinir.
+- **Kullanım koşulları:** `robots.txt` hem `*` hem `Claude-User`/`ClaudeBot`/
+  `anthropic-ai` bölümüyle okunur, en kısıtlayıcısı geçerlidir; başlık
+  yorumundaki koşullar da bağlayıcıdır. Otomatik erişimi, yapay zekâ
+  kullanımını ya da ticari kullanımı yasaklayan siteye WebFetch, `curl` ya da
+  Chrome ile **istek atılmaz**; başarım için CrUX/PageSpeed kullanılabilir,
+  `SITELER.md`de "otomatik erişim yok" yazar.
+- **Kimlik gizleme yok:** User-Agent, Referer ya da IP değiştirilmez;
+  403/CAPTCHA/Cloudflare engeli aşılmaya çalışılmaz, site "erişim engelli"
+  diye atlanır.
+- **Nazik tarama:** alan adı başına ≤ 1 istek / 3 sn · site başına ≤ ~15 sayfa.
+- **Ödeme duvarı:** duvar ya da kayıt isteyen sayfanın gövdesi hiçbir yoldan
+  okunmaz (ham HTML, JS kapatma, AMP, arşiv/önbellek, çerez silme); hesap ve
+  deneme aboneliği açılmaz; yalnız duvarın tipi ve tetik noktası tarif edilir.
+- **Rakipler hakkında dil:** yerel rakipler için sıralama, puan, "en iyi/en
+  kötü" yok; her ölçünün yanında "tek ölçüm, tarih, ülke/koşul" yazar.
+  Trafik/gelir/kadro tahmini, hukuki nitelendirme ve güvenlik açığı yazılmaz
+  (açık görülürse yalnız kullanıcıya iletilir).
+- **Kişisel veri yok:** muhabir adı, yorum, okur bilgisi girmez. Adresinde kişi
+  adı geçen haber kanıt URL'si olmaz ("kişi adı içeriyor, URL gizlendi");
+  çocuk/şüpheli/mağdur haberi örnek seçilmez.
 - **Önerilerde** EKIP.md'deki değişmez kararlar ve reddedilenler süzgeçtir;
   desen yaygın olsa bile "BH için: reddedildi" diye işaretlenir.
 

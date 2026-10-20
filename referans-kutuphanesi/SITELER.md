@@ -4,6 +4,36 @@ Kapsam: dengeli ~20 site (kullanıcı kararı, 19 Ekim 2026). İlk taramada
 araştırmacı listeyi doğrular; "aday" satırlarını gerekçesiyle kesinleştirir
 ya da değiştirir. Son inceleme sütunu her taramada güncellenir.
 
+## Erişim durumu (robots.txt, 20 Ekim 2026)
+
+**Otomatik erişim yok — yalnız ikincil kaynak** (kullanıcı kararı, 20 Ekim
+2026): NYT · Reuters · FT · BBC News · **BBC Türkçe** · Le Monde · Guardian.
+Bu sitelerin robots.txt / kullanım koşulları otomatik, yapay zekâ ve ticari
+erişimi yazılı izinsiz yasaklıyor. Siteye WebFetch, `curl`, Chrome ile **hiç
+istek atılmaz** (robots.txt'in yeniden okunması hariç). Dosyaları yalnız şu
+kaynaklarla yazılır; her birinde "ikincil kaynak" diye işaretlenir:
+
+- **CrUX / PageSpeed Insights** (Google'ın verisi ve sunucusu) — başarım.
+- **Üçüncü taraf yayınlar**: HTTP Archive Web Almanac, tasarım/vaka
+  incelemeleri, basın haberleri (WebSearch ile bulunur, kendi alan adında
+  değilse açılabilir).
+- **Sitenin kendi mühendislik/tasarım blogu** — yalnız o alt alan adının
+  robots.txt'i izin veriyorsa.
+- **Elle gözlem**: kullanıcının ya da ekipten birinin tarayıcıda kendisi
+  bakıp yazdığı notlar (kim, ne zaman, hangi koşulda — yazılır).
+
+Rubrikte bu kaynaklarla doldurulamayan başlık "ölçülmedi (otomatik erişim
+yok)" kalır.
+
+**Kısmi:** Spiegel — yalnız robots.txt'in `Claude-User`'a açtığı yollar
+(`/ausland/`, `/gesundheit/` …); anasayfa dahil diğer yollar ikincil kaynakla.
+
+**Açık (yapay zekâ okumasına kural yok ya da yalnız model eğitimi kapalı):**
+Hürriyet, NTV, Milliyet, Manchester Evening News, Olay, Bursada Bugün,
+Habertürk, Texas Tribune, Axios. Her taramada yeniden kontrol edilir.
+**Ölçülmedi:** T24 (robots.txt çekilemedi), Sözcü (incelenmedi) — ilk
+istekten önce kontrol.
+
 ## Yerel
 
 | Site | Adres | Neden | Dosya | Son inceleme |

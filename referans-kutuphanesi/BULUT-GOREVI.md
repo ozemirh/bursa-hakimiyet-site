@@ -37,8 +37,11 @@ ajan türünü kullan (kayıtlı değilse `general-purpose` + "önce
 - Alt ajan **ulusal**: Ulusal tablosu.
 - Alt ajan **global**: Global tablosu.
 
-Her alt ajan: README'deki rubrik ve şablon, kanıt kuralı, nazik tarama
-sınırları. Ekran görüntüsü/ham HTML yalnız `referans-kutuphanesi/ham/`.
+Her alt ajan: README'deki rubrik ve şablon, kanıt kuralı, Sınırlar bölümü.
+**İlk istekten önce** `SITELER.md` "Erişim durumu"na bak: "otomatik erişim
+yok" sitelerine istek atılmaz, dosyaları ikincil kaynakla yazılır; listede
+olmayan ya da "ölçülmedi" sitede önce robots.txt okunur. User-Agent asla
+değiştirilmez. Ekran görüntüsü/ham HTML yalnız `referans-kutuphanesi/ham/`.
 `SITELER.md`de kendi satırlarının "Son inceleme" sütununu doldurur.
 `KİP: tazele` ise: site dosyasını baştan yazma; değişeni bul, ilgili başlığı
 güncelle, başlığa "(güncellendi 2026-MM-GG)" ekle, değişmeyeni dokunma.
@@ -63,6 +66,9 @@ güncelle, başlığa "(güncellendi 2026-MM-GG)" ekle, değişmeyeni dokunma.
 - Uzun alıntı taraması: kaynak sayfadan 25 kelimeden uzun ardışık metin yok.
 - `git status`: `ham/` altından hiçbir dosya izlenmiyor; `referans-kutuphanesi/`
   dışında değişiklik yok.
+- "Otomatik erişim yok" işaretli sitelerin dosyalarında WebFetch/curl/Chrome
+  kanıtı yok; hiçbir istekte User-Agent değiştirilmedi.
+- Kanıt URL'lerinde kişi adı yok.
 
 **5. Teslim.** Tek commit ("Referans kütüphanesi: <kip>, <tarih>"), dalı it,
 PR aç. PR açıklamasında: taranan/atlanan siteler (atlananın nedeni), bulutta
