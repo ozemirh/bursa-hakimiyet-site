@@ -3043,8 +3043,10 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
   border-left:3px solid var(--lacivert)}
 .eczane-izgara b{font-family:var(--display);font-size:15.5px;font-weight:900;line-height:1.18;
   color:var(--murekkep)}
+/* İlçe adı 11 px: --kirmizi --yumusak üstünde 4,32:1 (AA altı, ölçüldü
+   20 Ekim 2026) → --kirmizi-koyu 6,22:1. */
 .eczane-izgara .yer{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:1px;
-  text-transform:uppercase;color:var(--kirmizi)}
+  text-transform:uppercase;color:var(--kirmizi-koyu)}
 .eczane-izgara .adres{font-size:12.5px;line-height:1.4;color:var(--gri)}
 .eczane-izgara .baglar{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:5px;font-size:12.5px}
 .eczane-izgara .tel{font-family:var(--display);font-weight:700;color:var(--murekkep);

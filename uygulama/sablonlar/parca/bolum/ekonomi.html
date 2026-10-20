@@ -8,6 +8,9 @@ beş gözlü piyasa ızgarası) YERİNE iki cetvel.
    düzeninde: kalem · son · değişim · alış · satış. Renk yalnız değişim
    sütununda ve bilgi taşıyor (yeşil ▲ / kırmızı ▼ / gri); kural tablonun
    altında tek cümle. Veri bayatsa tablonun ÜSTÜNDE tarihle söylenir.
+   Künye sütun sütun kaynağı adlandırır (20 Ekim 2026): "Son" ve
+   "Değişim" canlı kaynaktan (doviz.com vb.) ya da TCMB'den, alış/satış
+   her zaman TCMB bülteninden (`parca/piyasa_kaynaklari.html`).
    Kaynağı bulunamayan kalem çizgiyle gösterilir (uydurma değer yok);
    alış/satış yalnız TCMB'nin verdiği kalemlerde dolu, diğerlerinde hücre
    BOŞ kalır — tabloda boş hücre "uygulanmaz" demektir. Sayfası olan
@@ -24,13 +27,13 @@ bilerek silinmedi.{% endcomment %}
   <section class="kutu bolum-servis s-doviz piyasa-cetveli" aria-labelledby="servis-bas">
     <div class="kutu-bas">
       <h2 id="servis-bas">PİYASA</h2>
-      <span class="tumu">{% if d.bulten.tarih %}TCMB bülteni {{ d.bulten.tarih }}{% if d.bulten.no %} &middot; {{ d.bulten.no }}{% endif %} &middot; {% endif %}<a href="/veri-kaynaklari">Veri kaynakları &rarr;</a></span>
+      <span class="tumu">{% if servis.kaynaklar.adlar %}{{ servis.kaynaklar.adlar|join:" · " }} &middot; {% endif %}<a href="/veri-kaynaklari">Veri kaynakları &rarr;</a></span>
     </div>
     <div class="kutu-ic">
       {% if d.bayat %}<p class="piyasa-bayat"><b>GÜNCEL DEĞİL.</b> Bu tablo {% if d.guncelleme %}{{ d.guncelleme|iso_tarih|date:"j F Y" }}, {{ d.guncelleme|slice:"11:16" }} tarihli; veri o günden beri tazelenmedi.{% else %}son güncelleme zamanını taşımıyor.{% endif %}</p>{% endif %}
       <div class="cetvel-sar" role="region" tabindex="0" aria-label="Piyasa cetveli">
       <table class="cetvel">
-        <caption class="gorsel-gizli">Piyasa: son değer, bir önceki bültene göre değişim, alış ve satış</caption>
+        <caption class="gorsel-gizli">Piyasa: son değer, değişim, alış ve satış; her sütunun kaynağı tablonun altında</caption>
         <thead><tr><th scope="col">Kalem</th><th scope="col">Son</th><th scope="col">Değişim</th><th scope="col" class="alis">Alış</th><th scope="col" class="satis">Satış</th></tr></thead>
         <tbody>
           {% for k in d.kalemler %}
@@ -45,8 +48,8 @@ bilerek silinmedi.{% endcomment %}
         </tbody>
       </table>
       </div>
-      <p class="servis-kunye">Değişim bir önceki bültene göre: yeşil &#9650; yükseliş, kırmızı &#9660; düşüş, gri değişmedi.
-        {% if d.kaynak.kunye %}{{ d.kaynak.kunye }}{% endif %}
+      <p class="servis-kunye">{% include "parca/piyasa_kaynaklari.html" with ks=servis.kaynaklar %}
+        Yeşil &#9650; yükseliş, kırmızı &#9660; düşüş, gri değişmedi.
         {% if d.guncelleme %}Son güncelleme {{ d.guncelleme|iso_tarih|date:"j F Y" }} {{ d.guncelleme|slice:"11:16" }}.{% endif %}</p>
     </div>
   </section>

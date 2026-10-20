@@ -85,7 +85,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import unittest
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -811,15 +810,16 @@ if os.environ.get("BH_SAYFA_BUTCESI") == "1":
                     if o["sayfa"] == "detay":
                         self.assertLessEqual(o["konum"]["h1"]["alt"], o["vh"], o["konum"])
 
-        @unittest.expectedFailure
         def test_5_sembol_fontlari_inmiyor(self):
-            """BİLİNEN KUSUR (20 Ekim 2026) → `frontend-gelistirici`.
+            """20 Ekim 2026'da DÜZELDİ (`fontlar.css`, `tests_fontlar`).
 
             Her sayfa `roboto-math.woff2` (41 KB) ve `roboto-symbols.woff2`
-            (21 KB) indiriyor; tetikleyen yalnız iki-üç glif: menü simgesi
-            ☰ (U+2630), "Tümü →" (U+2192, iki dosyanın aralığında birden) ve
-            döviz bandındaki ▲▼ (U+25B2/25BC). Okur başına 62 KB + 2 istek.
-            Düzelince bu test "beklenmeyen başarı" verir: dekoratörü kaldır."""
+            (21 KB) indiriyordu; tetikleyen yalnız arayüz işaretleriydi: menü
+            simgesi ☰ (U+2630), "Tümü →" (U+2192, iki dosyanın aralığında
+            birden), döviz bandındaki ▲▼ (U+25B2/25BC), seslendirme ▶ ◀ ■.
+            Okur başına 62 KB + 2 istek. Oklar, Geometrik Şekiller ve Çeşitli
+            Semboller blokları iki dilimin aralığından çıkarıldı; glifler zaten
+            sistem yazı tipinden çiziliyordu, görünüm değişmedi."""
             sonuc = getattr(type(self), "_sonuc", None)
             if not sonuc:
                 self.skipTest("test_2 ölçümü yok")
