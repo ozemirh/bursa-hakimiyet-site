@@ -177,7 +177,9 @@ class AkisRitmi(TestCase):
                 "site.css").read_text(encoding="utf-8")
         import re
         kural = re.sub(r"/\*.*?\*/", "", stil, flags=re.S)
-        # Kart/akış çerçevelerinin oranı: hepsi 3/2.
+        # Kart/akış çerçevelerinin oranı: hepsi 3/2. 20 Ekim 2026 (R1):
+        # oran tek kaynaktan, `:root`taki `--cerceve-orani` değişkeninden.
+        self.assertIn("--cerceve-orani:3/2;", kural)
         for secici in (".liste-izgara .kart:not(.genis) .foto",
                        ".liste-izgara .kart.genis .foto",
                        ".akis-blok .foto",
@@ -185,7 +187,7 @@ class AkisRitmi(TestCase):
             yer = kural.find(secici)
             self.assertNotEqual(yer, -1, secici)
             blok = kural[yer:kural.index("}", yer)]
-            self.assertIn("aspect-ratio:3/2", blok, secici)
+            self.assertIn("aspect-ratio:var(--cerceve-orani)", blok, secici)
         # Arşivle uyuşmayan iki oran hiçbir kart çerçevesinde kalmadı.
         for oran in ("aspect-ratio:4/3", "aspect-ratio:16/9"):
             self.assertNotIn(oran, kural, oran)

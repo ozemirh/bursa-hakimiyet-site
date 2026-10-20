@@ -53,6 +53,15 @@
      Slayt penceresi --gece kalır: üstündeki beyaz yazı karartma
      gradyanıyla birlikte çalışıyor. */
   --foto-bekleme:#DDE3EA;
+  /* FOTOĞRAF ÇERÇEVE ORANLARI (20 Ekim 2026, R1 — kullanıcı kararı
+     "görsel kırpılmasın"). Renk değil oran; tek kaynak burası. Haber
+     görseli arşivde 3:2 (§64: 1.498/1.498 dosya). Galeri ve video kapağı
+     1200x630 = 40:21 (20 Ekim örneklemi: galeri 600/600, video 600/600);
+     16:9 DEĞİL. Kart çerçevesi sabit px yükseklik ALMAZ: `object-fit:
+     cover` aradaki farkı kırparak kapatıyordu — anasayfa dörtlüsü 390'da
+     %44, detayın ilgili haberleri %37, Bursaspor şeridi %39 (ölçüldü). */
+  --cerceve-orani:3/2;
+  --kapak-orani:40/21;
   /* Gövde serifi (§35). Yalnız `.metin` ve `.detay .spot` kullanır;
      listeler ve başlıklar sans kalır. İnternetsizde Georgia'ya düşer. */
   --serif:"Roboto Serif","Roboto Serif yedek",Georgia,"Times New Roman",serif;
@@ -545,6 +554,16 @@ main{display:block;padding-top:14px}
 .kutu-bas .tumu a:hover{color:var(--tema-bant-yazi);text-decoration:underline}
 .kutu-bas.vurgu{background:var(--tema-bant-vurgu)}
 .kutu-bas.vurgu .tumu{color:var(--tema-bant-vurgu-ikincil)}
+/* BÖLÜM VE İLÇE SAYFASI H1 (20 Ekim 2026, R2). `kategori.html`in sayfa
+   başlığı için kural yoktu; tarayıcı varsayılanına düşüyordu: 30/700
+   ARAYÜZ ailesinde (Roboto), sayfanın en önemli başlığı sitenin başlık
+   dilinin dışında. Ölçek köşe yazıları sayfa başıyla (`.kose-sayfa-bas
+   h1`) aynı: 32/900, ≤600'de 26. Aile temanın başlık ailesi — varsayılan
+   ve Bursaspor/ekonomide Roboto Condensed, teknolojide Roboto. Renk
+   çubuğun yazı rengi (`--tema-bant-yazi`), 32 px/900 büyük metin. */
+.bolum>.kutu-bas h1{font-family:var(--tema-baslik-aile);font-weight:900;font-size:32px;
+  letter-spacing:.3px;line-height:1.1}
+@media(max-width:600px){.bolum>.kutu-bas h1{font-size:26px}}
 .kutu-ic{padding:12px}
 /* Kart ızgarası zemine oturur (29 Ağustos 2026 denetimi): beyaz kart beyaz
    kutuda yalnız 1,29:1'lik çizgiyle ayrışıyordu — 20 kart tek duvar gibi
@@ -556,7 +575,12 @@ main{display:block;padding-top:14px}
 
 /* --- haber kartı --- */
 .kart{background:var(--tema-kagit);border:1px solid var(--tema-yuzey-cizgi);display:flex;flex-direction:column}
-.kart .foto{height:150px}
+/* Çerçeve ORANLA çizilir, sabit px ile değil (20 Ekim 2026, R1): 150 px
+   şerit her ızgarada başka bir oran veriyordu (detayın ilgili haberleri
+   357x150 = 2,38 → fotoğrafın %37'si kesik). Oran kartın genişliği ne
+   olursa olsun arşivin 3:2'sini tutar; dörtlü, son haberler ve Bursaspor
+   şeridi kendi px yüksekliklerini bu kurala bıraktı. */
+.kart .foto{height:auto;aspect-ratio:var(--cerceve-orani)}
 .kart .ic{padding:10px 11px 13px}
 .kart .ust{display:flex;align-items:baseline;gap:6px;font-size:11px;font-weight:700;color:var(--tema-vurgu);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px}
 /* Kartta yayın zamanı (29 Ağustos 2026): "bu yeni mi?" sorusu tıklamadan
@@ -569,7 +593,9 @@ main{display:block;padding-top:14px}
 
 /* --- 6 · dört haber kutucuğu --- */
 .dortlu{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
-.dortlu .kart .foto{height:132px}
+/* Fotoğraf `.kart .foto`nun 3:2 oranında; 132 px şerit 263 px kartta
+   %24, 390'da %44 kırpıyordu (yüzler alından ve çeneden kesik). ≤600'de
+   kart yatay düzene geçer (aşağıda, "kart yatay düzeni"). */
 .dortlu .kart h3{font-size:21px}
 
 /* --- 7/8 · manşet alanı --- */
@@ -721,9 +747,10 @@ main{display:block;padding-top:14px}
    ve ekranla değişiyor, sabit yükseklik dar ekranda oranı yeniden bozardı
    (768 px altında tek sütuna inip 360 px'e düşüyor).
 
-   Yalnız `liste-izgara` içinde: anasayfanın kutuları 150 px'te kalıyor,
-   orada kartlar rayın yanında ve daha dar. */
-.liste-izgara .kart:not(.genis) .foto{height:auto;aspect-ratio:3/2}
+   20 Ekim 2026 (R1): oran artık `.kart .foto`nun kendisinde, her ızgarada
+   (anasayfa, detay, Bursaspor şeridi); bu satır §45 sözleşmesinin
+   çapası olarak duruyor (`tests_akis_ritmi`). Oran `--cerceve-orani`. */
+.liste-izgara .kart:not(.genis) .foto{height:auto;aspect-ratio:var(--cerceve-orani)}
 /* İLK KART DA 3:2 — 7 Eylül 2026, kullanıcı bildirimi: "en üstteki 3
    büyük haberin görselleri tam sığmamış gibi görünüyor çerçevelerine".
 
@@ -753,7 +780,7 @@ main{display:block;padding-top:14px}
    768 px altında kart sütuna döndüğü için bu kural geri alınıyor —
    orada çapraz eksen YATAY, `start` fotoğrafı içeriği kadar daraltırdı. */
 .liste-izgara .kart.genis .foto{align-self:start;height:auto;min-height:0;
-  aspect-ratio:3/2}
+  aspect-ratio:var(--cerceve-orani)}
 /* ARAMA SONUÇLARI: fotoğraf TAM görünür (19 Ekim 2026, kullanıcı: "arama
    sonuçlarında resimler tam değil, kötü kırpılmış; tam çıkmalı, ona göre
    ölçekle"). Kart iki sütunda 150 px'lik şeritteydi, `cover` 3:2 kareyi
@@ -839,7 +866,7 @@ main{display:block;padding-top:14px}
 /* İki sütunun İLK satırında üst çizgi yok: tarih ayracı zaten oradan
    geçiyor ve iki çizgi üst üste biniyordu. */
 .akis li:nth-child(-n+2){border-top:0}
-.akis .foto{aspect-ratio:3/2}
+.akis .foto{aspect-ratio:var(--cerceve-orani)}
 .akis .ust{display:flex;align-items:baseline;gap:6px;font-size:10.5px;font-weight:700;
   color:var(--kirmizi);letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px}
 .akis .ust time{font-family:var(--govde);font-weight:400;font-size:11.5px;
@@ -1559,7 +1586,8 @@ main{display:block;padding-top:14px}
 .skor .konum{display:block;margin-top:3px;font-size:11px;color:var(--gri);line-height:1.4}
 
 .bursaspor-haber{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.bursaspor-haber .kart .foto{height:140px}
+/* Fotoğraf `.kart .foto`nun 3:2 oranında (R1): 140 px şerit tek sütunda
+   (390) %39 kırpıyordu. ≤600'de kart yatay düzene geçer. */
 
 /* Kartların altındaki başlık listesi — 29 Ağustos 2026.
    Tablo tam kadro olunca sol sütun 958 px'e çıktı, altı kart 546 px'te
@@ -1570,7 +1598,15 @@ main{display:block;padding-top:14px}
 /* --- 16 · galeriler --- */
 .galeri-izgara{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .galeri-kart{position:relative;background:var(--kagit);border:1px solid var(--cizgi)}
-.galeri-kart .foto{height:150px}
+/* Kapak 1200x630: çerçeve `--kapak-orani` (R1). 150 px şerit 256 px'te
+   %10, bölüm sayfasının iki sütunlu 390 düzeninde (156 px) %46 kırpıyordu.
+   Galeri sayfasının KARELERİ (`figure.galeri-kart`) kapak değil; oranları
+   bilinmiyor (göç kayıtlarında kare yok), o yüzden 3:2 çerçevede `contain`
+   — hiçbir oranda kesilmez, kalan pay düz zemin (arama sonuçlarıyla aynı
+   çözüm, 19 Ekim 2026 kullanıcı kararı). */
+.galeri-kart .foto{height:auto;aspect-ratio:var(--kapak-orani)}
+figure.galeri-kart .foto{aspect-ratio:var(--cerceve-orani);background:var(--zemin)}
+figure.galeri-kart .foto img{object-fit:contain}
 /* `pointer-events:none` 31 Ağustos 2026'da eklendi: rozet artık tıklanabilir
    kapağın ÜSTÜNDE duruyor ve onsuz sol alt köşede tıklamayı yutan ölü bir
    kutucuk kalıyordu. Rozet zaten hiçbir zaman tıklanacak bir şey değildi. */
@@ -1581,7 +1617,7 @@ main{display:block;padding-top:14px}
 /* --- 17 · videolar --- */
 .video-izgara{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .video-kart{position:relative;background:var(--kagit);border:1px solid var(--cizgi)}
-.video-kart .foto{height:150px}
+.video-kart .foto{height:auto;aspect-ratio:var(--kapak-orani)}
 .oynat{position:absolute;inset:0;z-index:3;display:grid;place-items:center;pointer-events:none}
 .oynat span{width:46px;height:46px;border-radius:50%;background:var(--kirmizi);color:var(--kagit);display:grid;place-items:center;font-size:16px;padding-left:3px;box-shadow:var(--golge)}
 .video-kart h3{font-family:var(--display);font-size:16px;line-height:1.18;font-weight:700;padding:9px 10px 4px}
@@ -1912,6 +1948,20 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .yazar{border-right:0;border-bottom:1px solid var(--cizgi)}
 .reklam.tepe{height:100px}
 }
+/* --- kart yatay düzeni (20 Ekim 2026, R1) --------------------------------
+   Çerçeve 3:2 olunca tek sütundaki kart 245 px'lik fotoğrafla dikeyde
+   büyürdü (dörtlü 4, ilgili 6, Bursaspor 9 kart). Dar ekranda bu üç ızgara
+   yukarıdaki `.yatay` ölçüsüne geçer: fotoğraf solda 112 px, oranı yine
+   3:2 (75 px), başlık sağda — kart ~90 px, fotoğraf KESİLMEZ.
+   `align-items:start` ŞART: esneyen hücrede `aspect-ratio` yok sayılır ve
+   fotoğraf metnin boyuna gerilip kırpılırdı (eski `.yatay .foto`nun
+   `height:100%` kusuru). Son haberler tam genişlikte kalır: rozet
+   fotoğrafın üstüne biniyor ve 112 px'te sığmaz. */
+@media(max-width:600px){
+  .dortlu .kart,.ilgili-izgara .kart,.bursaspor-haber .kart{display:grid;
+    grid-template-columns:112px minmax(0,1fr);align-items:start}
+  .dortlu .kart h3{font-size:17px}
+}
 /* --- haber detay --- */
 .kirinti{font-size:12.5px;color:var(--gri);background:var(--tema-kagit);border:1px solid var(--tema-yuzey-cizgi);padding:8px 12px;margin-bottom:14px}
 .kirinti ol{list-style:none;display:flex;flex-wrap:wrap;gap:6px}
@@ -1961,7 +2011,12 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
    düğmeler başparmakla basılıyor; masaüstünün 28 px'i orada küçük kalır. */
 @media(max-width:600px),(pointer:coarse){.arac button,.arac a,.arac a.paylas-bag{min-height:44px;min-width:44px}}
 @media(max-width:600px){.arac .paylas{flex-basis:100%}}
-.ana-gorsel{height:420px}
+/* Ana görsel ORANLA (20 Ekim 2026, R1): 420/300/210 px'lik üç sabit boy
+   her genişlikte başka oran veriyordu — 768'de 687x300, fotoğrafın %34'ü
+   kesik. Haberde arşivin 3:2'si; galeri ve video detayında kapak
+   (`.kapak`, 1200x630). */
+.ana-gorsel{height:auto;aspect-ratio:var(--cerceve-orani)}
+.ana-gorsel.kapak{aspect-ratio:var(--kapak-orani)}
 .foto-alt{font-size:12.5px;color:var(--gri);border-bottom:1px solid var(--cizgi);padding:8px 0 10px;margin-bottom:16px}
 /* ---- haber seslendirme ---- */
 .seslendirme{border:1px solid var(--cizgi);border-left:4px solid var(--kirmizi);background:var(--yumusak);padding:10px 12px;margin-bottom:16px}
@@ -2017,13 +2072,9 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .etiketler b{font-family:var(--display);font-size:12.5px;letter-spacing:.8px;color:var(--gri)}
 .etiketler a{border:1px solid var(--cizgi);background:var(--yumusak);font-size:12.5px;padding:4px 9px}
 .etiketler a:hover{background:var(--kirmizi);color:var(--kagit);border-color:var(--kirmizi)}
-@media(max-width:1000px){
-.ana-gorsel{height:300px}
-}
 @media(max-width:600px){
 .detay{padding:14px 14px 18px}
 .detay h1{font-size:25px}
-.ana-gorsel{height:210px}
 .arac{margin-left:0;flex-basis:100%}
 .ses-sag{margin-left:0}
 }
@@ -2260,7 +2311,10 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
    `min(420px,46%)` 1600 px'te 338 px veriyordu; sütun fotoğrafı 359 px'te
    bitiyordu, 21 px'lik basamak görünüyordu. Formül ızgaranın kendisinden
    türetildi: sütun dışı = (içerik+2−14)/2, eksi 2 kenarlık = %50 − 8px. */
-.kart.genis .foto{flex:0 0 calc(50% - 8px);height:auto;min-height:236px}
+/* 20 Ekim 2026 (R1): `min-height:236px` + esneme fotoğrafı metnin boyuna
+   çekip kırpıyordu; oran `.kart .foto`dan (3:2) gelir. `align-self:start`
+   ŞART — esneyen hücrede `aspect-ratio` yok sayılır (§45). */
+.kart.genis .foto{flex:0 0 calc(50% - 8px);align-self:start;height:auto;min-height:0}
 .kart.genis .ic{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:16px 18px 18px}
 .kart.genis h3{font-size:26px;line-height:1.12}
 .kart.genis p{font-size:14px;margin-top:8px}
@@ -2269,12 +2323,12 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
      (0,2,0) yazılınca 360 px'te kart sütuna dönmüyor, başlık kartın
      dışına 126 px taşıyordu (doğrulama K1, dogrulama-kare-gundem360). */
   .kutu-izgara .kart.genis{flex-direction:column}
-  .kart.genis .foto{flex:none;height:200px;min-height:0}
+  .kart.genis .foto{flex:none;align-self:stretch;height:auto;min-height:0}
   /* Sütuna dönen kartta çapraz eksen yatay: `start` fotoğrafı içeriği
      kadar daraltırdı. Özgüllük taban kuralla EŞİT (0,4,0), dosyada sonra
      geldiği için kazanıyor. */
   .liste-izgara .kart.genis .foto{align-self:stretch;height:auto;
-    aspect-ratio:3/2}
+    aspect-ratio:var(--cerceve-orani)}
   .kart.genis h3{font-size:21px}
 }
 
@@ -2737,8 +2791,9 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
    anasayfa.html'de kaldırıldı). Metin çıkınca boşalan yer fotoğrafa
    verildi: çerçeve 150 → 185 px. Sınıf yalnız anasayfadaki ızgaraya
    konuluyor; kategori, arama ve haber detay ızgaraları 150 px'te kalır.
+   20 Ekim 2026 (R1): 185 px de kırpıyordu (359x185, %23); çerçeve artık
+   `.kart .foto`nun 3:2'si — fotoğraf yine büyüdü (359x239), kesilmiyor.
    ================================================================= */
-.son-haberler .kart .foto{height:185px}
 
 /* Kategori/ilçe işareti fotoğrafın SOL ÜSTÜNE rozet olarak biner
    (31 Ağustos 2026, kullanıcı isteği; tarih aynı istekle kalktı —
@@ -2768,12 +2823,8 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
   letter-spacing:.9px;padding:4px 10px}
 .son-haberler .kart .ust .etiket-bursa{background:var(--isaret-bursa);color:var(--kagit)}
 .son-haberler .kart .ust .etiket-ekonomi{background:var(--isaret-ekonomi);color:var(--kagit)}
-/* Dar ekranda geniş kart sütuna dönüyor (768 px kuralı) ve fotoğrafı
-   yukarıdaki satırdan 185 px alıyor; manşet kartı olduğu için 35 px
-   önde tutuluyor — kategori ızgarasındaki 200 px'lik değer yerinde. */
-@media(max-width:768px){
-  .son-haberler .kart.genis .foto{height:220px}
-}
+/* Dar ekranda geniş kart sütuna dönüyor (768 px kuralı); 220 px'lik sabit
+   boy 20 Ekim 2026'da (R1) kalktı — fotoğraf tam genişlikte 3:2. */
 
 /* ---- KONU DOSYALARI (5 Eylül 2026) ------------------------------------
    Haber sayfasındaki "KONUNUN AKIŞI" bloğu, /konu/<slug> künyesi ve
@@ -3064,7 +3115,7 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
    ölçülen kayıp %16 (512x288 çerçevede 53 px). Dikey kırpma haber
    fotoğrafında yatay kırpmadan daha zararlı — kadrajın kestiği şey baş ve
    ayak oluyor. Sitenin öbür ızgaraları da 3:2; oran artık istisnasız. */
-.akis-blok .foto{aspect-ratio:3/2;height:auto}
+.akis-blok .foto{aspect-ratio:var(--cerceve-orani);height:auto}
 .akis-blok .ic{padding:10px 0 0}
 .akis-blok .ust{display:flex;align-items:baseline;gap:6px;font-size:10.5px;font-weight:700;
   color:var(--tema-vurgu);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px}

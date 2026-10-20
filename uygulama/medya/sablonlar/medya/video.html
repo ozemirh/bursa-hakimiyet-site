@@ -41,7 +41,7 @@ iştir (oynatıcı seçimi, çerez/izleme, yaş sınırı).
           {% if video.sure_yazi %}<span>Süre: {{ video.sure_yazi }}</span>{% endif %}
         </div>
 
-        <div class="foto ana-gorsel {{ video|kart_rengi }}">
+        <div class="foto ana-gorsel kapak {{ video|kart_rengi }}">
           {% if video.gorsel_yolu %}
             {% gorsel video "detay" oncelikli=True %}
           {% else %}

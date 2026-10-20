@@ -29,12 +29,17 @@ register = template.Library()
 #: anahtar → (sizes, src için varsayılan genişlik). Yorumdaki sayılar
 #: 1200 px ve üstünde ölçülen çizim genişliği.
 YUVALAR = {
-    # anasayfa dörtlüsü: 263 px; 640–799 iki sütun, 800–1199 dört sütun
-    "dortlu": ("(max-width: 639px) 100vw, (max-width: 799px) 50vw, "
+    # anasayfa dörtlüsü: 263 px; ≤600 yatay kart (fotoğraf 112 px, 20 Ekim
+    # 2026 R1), 601–799 iki sütun, 800–1199 dört sütun
+    "dortlu": ("(max-width: 600px) 112px, (max-width: 799px) 50vw, "
                "(max-width: 1199px) 25vw, 270px", 320),
-    # kutu ızgarası (son haberler, ilgili, arama, Bursaspor kutusu): 359 px
+    # kutu ızgarası (son haberler, arama): 359 px
     "kart": ("(max-width: 639px) 100vw, (max-width: 1023px) 50vw, "
              "(max-width: 1199px) 33vw, 360px", 480),
+    # detayın ilgili haberleri ve anasayfa Bursaspor şeridi: ≤600 yatay kart
+    # (fotoğraf 112 px, R1), üstünde kutu ızgarasıyla aynı
+    "kart-yatay": ("(max-width: 600px) 112px, (max-width: 1023px) 50vw, "
+                   "(max-width: 1199px) 33vw, 360px", 480),
     "kart-genis": ("(max-width: 767px) 100vw, (max-width: 1023px) 50vw, "
                    "(max-width: 1199px) 33vw, 360px", 480),
     # bölüm sayfasının üst kademesi (liste-izgara): 528 px

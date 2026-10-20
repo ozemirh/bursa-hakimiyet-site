@@ -635,7 +635,7 @@ yaşanmıştı.{% endcomment %}
             ızgaranın sağ gözünde tek çocuk kaldı, `.bursaspor-haber` doğrudan
             ızgara öğesi.{% endcomment %}
             <div class="bursaspor-haber">
-{% for h in bursaspor_haberleri %}              {% include "parca/kart.html" with h=h goster_foto=1 %}
+{% for h in bursaspor_haberleri %}              {% include "parca/kart.html" with h=h goster_foto=1 gorsel_yuva="kart-yatay" %}
 {% empty %}              <p class="bos">Bu kategoride henüz haber yok.</p>
 {% endfor %}            </div>
 

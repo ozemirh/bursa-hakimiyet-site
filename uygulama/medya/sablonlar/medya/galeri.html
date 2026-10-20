@@ -41,12 +41,12 @@ görünmüyor; eksik olanın ne olduğunu gizlemek yerine yazıyoruz.
         </div>
 
         {% if galeri.gorsel_yolu %}
-          <div class="foto ana-gorsel">
+          <div class="foto ana-gorsel kapak">
             {% gorsel galeri "detay" oncelikli=True %}
           </div>
           {% with fa=galeri|foto_alti %}{% if fa %}<p class="foto-alt">{{ fa }}</p>{% endif %}{% endwith %}
         {% else %}
-          <div class="foto ana-gorsel {{ galeri|kart_rengi }}">
+          <div class="foto ana-gorsel kapak {{ galeri|kart_rengi }}">
             <svg role="img" aria-label="{{ galeri.baslik }} galerisini temsil eden çizim"><use href="#{{ galeri.kategori|simge_adi }}"/></svg>
           </div>
           <p class="foto-alt">Görsel temsilîdir: bu galerinin kapağı kaynaktan alınamadı.</p>

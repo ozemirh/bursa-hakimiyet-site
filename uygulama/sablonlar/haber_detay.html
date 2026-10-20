@@ -124,8 +124,8 @@ JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
           <div class="kutu">
             <div class="kutu-bas"><h2>İLGİLİ HABERLER</h2><span class="tumu"><a href="/{{ haber.kategori.slug_al }}">Tümü &rarr;</a></span></div>
             <div class="kutu-ic">
-              <div class="kutu-izgara">
-                {% for h in ilgili %}{% include "parca/kart.html" with h=h goster_foto=1 %}
+              <div class="kutu-izgara ilgili-izgara">
+                {% for h in ilgili %}{% include "parca/kart.html" with h=h goster_foto=1 gorsel_yuva="kart-yatay" %}
                 {% empty %}<p class="bos">Bu kategoride başka haber yok.</p>
                 {% endfor %}
               </div>
