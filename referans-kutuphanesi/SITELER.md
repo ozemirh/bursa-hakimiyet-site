@@ -42,9 +42,15 @@ kapatılmadı). İkisi de ikincil kaynakla.
 `Claude-Web` için `Disallow: /`; robots.txt dışında istek atılmadı, ikincil
 kaynakla yazıldı.
 
+**Global taramada (20 Ekim 2026):** Manchester Evening News kapalı
+(`ClaudeBot`/`anthropic-ai`/`Claude-Web` için `Disallow: /`) · Texas Tribune
+robots.txt açık ama kullanım koşulları ticari girişimle bağlantılı kullanımı
+onaysız yasaklıyor → istek kesildi, hukuk teyidi bekliyor · Axios Local
+Cloudflare sınaması (403) → erişim engelli. Üçü de ikincil kaynakla.
+
 **Açık:** Habertürk, Bursada Bugün, Bursa Saati, Özgür Kocaeli, Ege'de Son
-Söz, Manchester Evening News, Texas Tribune, Axios. Her taramada ilk istekten
-önce yeniden kontrol edilir.
+Söz. Her taramada ilk istekten önce robots.txt **ve kullanım koşulları**
+yeniden kontrol edilir.
 
 ## Yerel
 
@@ -75,16 +81,16 @@ Adaylar 20 Ekim 2026'da araştırmacı tarafından seçildi (havuz: üçüncü t
 
 | Site | Adres | Neden | Dosya | Son inceleme |
 |---|---|---|---|---|
-| The New York Times | nytimes.com | Haber detay tipografisi, canlı blog | `siteler/nyt.md` | — |
-| The Guardian | theguardian.com | Açık erişim + okur desteği, bölüm sayfası (§46) | `siteler/guardian.md` | — |
-| BBC News | bbc.com/news | Kademeli bölüm sayfası, göreli zaman (§44, §46) | `siteler/bbc-news.md` | — |
-| Reuters | reuters.com | Ajans dili, kaynak/düzeltme gösterimi | `siteler/reuters.md` | — |
-| Financial Times | ft.com | Veri gösterimi, ekonomi sayfası (özel tasarım adayı: ekonomi) | `siteler/ft.md` | — |
-| Le Monde | lemonde.fr | Klasik gazete kimliğinin dijitale taşınması | `siteler/le-monde.md` | — |
-| Der Spiegel | spiegel.de | Son başlık rayı, "Vor 6 Min" (§44) | `siteler/spiegel.md` | — |
-| Manchester Evening News | manchestereveningnews.co.uk | Global ölçekte **yerel** gazete; ilçe/semt ve reklam yoğunluğu | `siteler/manchester-evening-news.md` | — |
-| Texas Tribune | texastribune.org | Kâr amacı gütmeyen bölgesel haber; açıklayıcı/veri haberi | `siteler/texas-tribune.md` | — |
-| Axios Local | axios.com/local | Şehir bülteni öncelikli yerel model | `siteler/axios-local.md` | — |
+| The New York Times | nytimes.com | Haber detay tipografisi, canlı blog | `siteler/nyt.md` | 2026-10-20 · ikincil kaynak |
+| The Guardian | theguardian.com | Açık erişim + okur desteği, bölüm sayfası (§46) | `siteler/guardian.md` | 2026-10-20 · ikincil kaynak |
+| BBC News | bbc.com/news | Kademeli bölüm sayfası, göreli zaman (§44, §46) | `siteler/bbc-news.md` | 2026-10-20 · ikincil kaynak |
+| Reuters | reuters.com | Ajans dili, kaynak/düzeltme gösterimi | `siteler/reuters.md` | 2026-10-20 · ikincil kaynak |
+| Financial Times | ft.com | Veri gösterimi, ekonomi sayfası (özel tasarım adayı: ekonomi) | `siteler/ft.md` | 2026-10-20 · ikincil kaynak |
+| Le Monde | lemonde.fr | Klasik gazete kimliğinin dijitale taşınması | `siteler/le-monde.md` | 2026-10-20 · ikincil kaynak |
+| Der Spiegel | spiegel.de | Son başlık rayı, "Vor 6 Min" (§44) | `siteler/spiegel.md` | 2026-10-20 · kısmi (izinli yollar) |
+| Manchester Evening News | manchestereveningnews.co.uk | Global ölçekte **yerel** gazete; ilçe/semt ve reklam yoğunluğu | `siteler/manchester-evening-news.md` | 2026-10-20 · ikincil kaynak |
+| Texas Tribune | texastribune.org | Kâr amacı gütmeyen bölgesel haber; açıklayıcı/veri haberi | `siteler/texas-tribune.md` | 2026-10-20 · ikincil kaynak |
+| Axios Local | axios.com/local | Şehir bülteni öncelikli yerel model | `siteler/axios-local.md` | 2026-10-20 · ikincil kaynak |
 
 ## Odak konuları (ilk taramada öncelikli)
 
