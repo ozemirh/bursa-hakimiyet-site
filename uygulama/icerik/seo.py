@@ -368,6 +368,25 @@ def video_sayfasi(video) -> dict:
     return veri
 
 
+def veri_sayfasi(ad: str, yol: str, aciklama: str = "", degisti=None) -> dict:
+    """Kalıcı veri sayfası (enstrüman, 20 Ekim 2026): `WebPage`.
+
+    Finansal şema (`ExchangeRateSpecification`) BİLEREK yok: Google onu bir
+    zengin sonuç türü olarak okumuyor ve alanlarının yarısını (geçerlilik
+    aralığı, kur türü) kaynaklarımız vermiyor — uydurma alan yazılmaz.
+    `dateModified` verinin zamanıdır, sayfanın çizildiği an değil.
+    """
+    veri = {"@context": "https://schema.org", "@type": "WebPage",
+            "name": _metin(ad, BASLIK_SINIRI), "url": mutlak(yol),
+            "inLanguage": DIL, "publisher": yayinci()}
+    metin = _metin(aciklama, ACIKLAMA_SINIRI)
+    if metin:
+        veri["description"] = metin
+    if degisti:
+        veri["dateModified"] = _zaman(degisti)
+    return veri
+
+
 def medya_kirintisi(kayit, bolum_ad: str, bolum_yol: str) -> dict:
     return kirinti([("Anasayfa", "/"), (bolum_ad, bolum_yol),
                     (kayit.baslik, kayit.get_absolute_url())])

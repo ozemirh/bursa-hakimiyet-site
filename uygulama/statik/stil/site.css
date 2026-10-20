@@ -260,8 +260,9 @@ summary:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--tema-odak
    Kabuk ham marka renginde (`--kagit`): temadan etkilenmez. İçerik
    sütunundaki çubuklar `--tema-odak-koyu` alır. Bandın içindeki beyaz
    öğeler (arama kutusu, mega levha) bu listede DEĞİL — orada kırmızı
-   halka beyaz zeminde 4,6:1. */
-.servis,footer,.kategori-liste,.menu-dugme,.ara-ac,.bant-logo,.slayt-pencere{--tema-odak:var(--kagit)}
+   halka beyaz zeminde 4,6:1. `.doviz` (anasayfanın lacivert piyasa
+   bandı) 20 Ekim 2026'da kalemleri enstrüman sayfasına bağlanınca girdi. */
+.servis,footer,.kategori-liste,.menu-dugme,.ara-ac,.bant-logo,.slayt-pencere,.doviz{--tema-odak:var(--kagit)}
 .kutu-bas:not(.hafif){--tema-odak:var(--tema-odak-koyu)}
 /* Arama düğmesi beyaz kutunun içinde kırmızı bir dolgu: dışa çizilen halka
    bir yanda beyaz kutuya, bir yanda laciverde düşüyordu. İçe alındı;
@@ -2082,6 +2083,14 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .doviz .veri-yok{color:var(--bant-bos);font-size:19px}
 .doviz .tarih{color:var(--bant-saat);font-size:11px;padding:12px 0 12px 14px;
   border-left:1px solid var(--bant-ayrac);margin-left:auto}
+/* Sayfası olan kalem (dolar, euro, gram altın; 20 Ekim 2026) enstrüman
+   sayfasına bağlı. Bağ adın üstünde ama tıklama alanı gözün TAMAMI
+   (`::after` gözü kaplıyor): bantta küçük bir ad metnini hedeflemek
+   parmakla zordu. Odak halkası adın çevresinde, beyaz (yukarıdaki liste). */
+.doviz dl>div{position:relative}
+.doviz dt a{color:inherit}
+.doviz dt a::after{content:"";position:absolute;inset:0}
+.doviz dl>div:hover dt a{color:var(--kagit);text-decoration:underline}
 
 /* --- resmî ilan: sayfanın ortasında, iki sütun, sakin -------------
    BİK yükümlülüğü olan editoryal bölüm; haber akışının önüne
@@ -3377,6 +3386,86 @@ body[data-bolum="kose"] main{
      cümlesi "en yeni haberler" dediği için kesim onu yalanlamıyor. */
   .bursa-cetvel li:nth-child(n+4){display:none}
   .bursa-cetvel li:nth-child(3){border-bottom:0}
+}
+
+/* --- kalıcı enstrüman sayfası (/piyasa/<enstrüman>, 20 Ekim 2026) -----
+   Rakam arayan okurun iniş adresi: önce büyük rakam, hemen altında
+   değişim ve KİM-NE ZAMAN satırı; sonra döküm (TCMB alış/satış, resmî
+   kapanış), sağda çevirici. Tablo dili piyasa cetvelinin aynısı: çizgi
+   ayırır, rakam tabular, renk yalnız değişimde. Cetvel ve servis
+   panelindeki kalem adları buraya bağlanır; bağ altı çizili (tablo içinde
+   rengi tek başına bağ olduğunu söylemesin). */
+.cetvel tbody th a,.piyasa-kalem .ad a{text-decoration:underline;text-decoration-thickness:1px;
+  text-underline-offset:3px}
+.cetvel tbody th a:hover,.piyasa-kalem .ad a:hover{color:var(--tema-vurgu-koyu)}
+.piyasa-bas{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.piyasa-bas>.piyasa-yan{display:flex;flex-direction:column;gap:14px}
+.piyasa-bas>.piyasa-yan>.kutu{margin-bottom:0}
+.piyasa-son{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:2px 0 4px}
+.piyasa-son .rakam{font-family:var(--display);font-size:46px;font-weight:900;line-height:1;
+  letter-spacing:-.5px;color:var(--murekkep);font-variant-numeric:tabular-nums}
+.piyasa-son .birim{font-family:var(--display);font-size:22px;font-weight:700;color:var(--gri)}
+.piyasa-fark{font-family:var(--display);font-size:16px;font-weight:700;color:var(--gri);
+  font-variant-numeric:tabular-nums;margin-bottom:4px}
+.piyasa-fark.artiyor{color:var(--artis)}
+.piyasa-fark.azaliyor{color:var(--kirmizi-koyu)}
+.piyasa-fark .neye{font-family:var(--govde);font-size:13px;font-weight:400;color:var(--gri)}
+.piyasa-damga{font-size:13px;line-height:1.45;color:var(--gri);margin-bottom:12px}
+.piyasa-damga b{color:var(--murekkep)}
+.piyasa-dokum{margin:0 0 4px;border-top:2px solid var(--tema-cizgi)}
+.piyasa-dokum>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 14px;
+  align-items:baseline;padding:8px 0;border-bottom:1px solid var(--tema-cizgi)}
+.piyasa-dokum dt{font-family:var(--display);font-size:14.5px;font-weight:700;color:var(--tema-murekkep)}
+.piyasa-dokum dd{margin:0;text-align:right}
+.piyasa-dokum .rakam{font-family:var(--display);font-size:17px;font-weight:900;color:var(--murekkep);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.piyasa-dokum .kaynak{display:block;font-size:12px;color:var(--gri)}
+/* Çevirici: betiksiz GET formu; sonuç sunucuda hesaplanır. */
+.cevirici-alanlar{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 10px;align-items:center}
+.cevirici label{font-family:var(--display);font-size:13px;font-weight:700;color:var(--tema-murekkep)}
+.cevirici input,.cevirici select{min-height:40px;padding:6px 10px;font:inherit;font-size:16px;
+  color:var(--murekkep);background:var(--kagit);border:1px solid var(--gri);border-radius:2px;min-width:0}
+.cevirici button{margin-top:10px;min-height:40px;padding:8px 18px;font-family:var(--display);
+  font-size:14px;font-weight:700;letter-spacing:.5px;color:var(--kagit);background:var(--tema-dolgu);
+  border:0;border-radius:2px;cursor:pointer}
+.cevirici button:hover{background:var(--tema-vurgu-koyu)}
+.cevirici-sonuc{margin-top:10px;font-size:15px;color:var(--murekkep);font-variant-numeric:tabular-nums}
+.cevirici-sonuc:empty{display:none}
+.cevirici-sonuc.hata{color:var(--kirmizi-koyu)}
+.piyasa-diger ul{list-style:none;margin:0}
+.piyasa-diger li{border-bottom:1px solid var(--tema-cizgi)}
+.piyasa-diger li:last-child{border-bottom:0}
+.piyasa-diger a{display:block;padding:9px 0;font-family:var(--display);font-size:15px;font-weight:700;color:var(--murekkep)}
+.piyasa-diger a:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
+/* Grafik: eksen yazıları SVG'nin DIŞINDA (HTML) — viewBox ölçeklenince
+   SVG içi yazı 360 px'te 6 px'e iniyordu. Çizim alanı verinin aralığı;
+   y yazıları alanın üst, orta ve alt çizgisine oturur. */
+.piyasa-grafik{margin:0 0 14px}
+.grafik-cerceve{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto 180px auto;
+  column-gap:8px;padding:6px 0}
+.grafik-birim{grid-column:1;grid-row:1;font-size:12px;font-weight:700;color:var(--gri);padding-bottom:8px}
+.grafik-y{grid-column:1;grid-row:2;display:flex;flex-direction:column;justify-content:space-between;
+  margin:-.65em 0;font-size:12px;line-height:1.3;color:var(--gri);text-align:right;
+  font-variant-numeric:tabular-nums}
+.grafik-y span:only-child{margin:auto 0}
+.piyasa-grafik svg{grid-column:2;grid-row:2;display:block;width:100%;height:100%;overflow:visible}
+.piyasa-grafik .izgara{stroke:var(--cizgi);stroke-width:1;vector-effect:non-scaling-stroke}
+.piyasa-grafik .cizgi{fill:none;stroke:var(--tema-koyu);stroke-width:2.5;stroke-linejoin:round;
+  stroke-linecap:round;vector-effect:non-scaling-stroke}
+.grafik-x{grid-column:2;grid-row:3;display:flex;justify-content:space-between;padding-top:6px;
+  font-size:12px;color:var(--gri)}
+.piyasa-grafik figcaption{margin-top:6px;font-size:12.5px;line-height:1.45;color:var(--gri)}
+@media(max-width:1000px){
+  .piyasa-bas{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:560px){
+  /* 360 px'te alt başlık h1'i iki satıra bölüyordu (ölçüldü); alta iner. */
+  .piyasa-sayfa>.kutu-bas{flex-wrap:wrap;row-gap:2px}
+  .piyasa-sayfa>.kutu-bas .tumu{margin-left:0;flex-basis:100%}
+  .piyasa-son .rakam{font-size:38px}
+  .piyasa-dokum>div{grid-template-columns:minmax(0,1fr)}
+  .piyasa-dokum dd{text-align:left}
+  .grafik-cerceve{grid-template-rows:auto 150px auto}
 }
 
 /* --- köşe yazısı: sütun başı -----------------------------------------

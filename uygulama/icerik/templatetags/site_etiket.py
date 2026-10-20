@@ -298,3 +298,12 @@ def mutlak(sayi):
         return abs(float(sayi))
     except (TypeError, ValueError):
         return sayi
+
+
+@register.filter
+def piyasa_adresi(anahtar) -> str:
+    """Döviz kalemi anahtarının kalıcı enstrüman sayfası (`/piyasa/dolar`);
+    sayfası olmayan kalemde (sterlin, BIST 100) boş — şablon bağ kurmaz.
+    Eşleme tek yerde: `icerik/piyasa.ENSTRUMANLAR` (20 Ekim 2026)."""
+    from ..piyasa import adres
+    return adres(str(anahtar or ""))

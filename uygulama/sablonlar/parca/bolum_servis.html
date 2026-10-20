@@ -40,7 +40,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
       <div class="piyasa-izgara">
         {% for k in servis.doviz.kalemler %}
         <div class="piyasa-kalem{% if k.yon == 'yukari' %} artiyor{% elif k.yon == 'asagi' %} azaliyor{% endif %}">
-          <span class="ad">{{ k.ad }}</span>
+          <span class="ad">{% with a=k.anahtar|piyasa_adresi %}{% if a %}<a href="{{ a }}">{{ k.ad }}</a>{% else %}{{ k.ad }}{% endif %}{% endwith %}</span>
           <b class="deger">{% if k.deger %}{{ k.deger|floatformat:2 }}{% if k.birim == "TL" %} <span class="birim">&#8378;</span>{% else %} <span class="birim">{{ k.birim }}</span>{% endif %}{% else %}<span class="veri-yok" title="Kaynak bulunamadı, panelden elle girilir">&ndash;</span>{% endif %}</b>
           {% if k.degisim_yuzde %}
           <span class="fark" aria-label="yüzde {{ k.degisim_yuzde|mutlak|floatformat:2 }} {% if k.yon == 'yukari' %}yükseldi{% else %}geriledi{% endif %}">
