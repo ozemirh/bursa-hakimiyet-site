@@ -534,10 +534,10 @@ class LogKaydi(models.Model):
         # 19 Ekim 2026 (Paket M): K2 bulgusu tek tek kapatılır, kimin
         # kapattığı burada da durur (bulgunun kendi kaydına ek olarak).
         ("yz_bulgu_kapatma", "Yapay zekâ olgu bulgusunu kapatma"),
-        # 20 Ekim 2026: düzeltme / cevap notu. Kayıt silinmez; yayından
-        # kaldırma ve yeniden yayımlama da ayrı satır yazar.
-        ("duzeltme_yayimlama", "Düzeltme/cevap yayımlama"),
-        ("duzeltme_kaldirma", "Düzeltme/cevap yayından kaldırma"),
+        # 20 Ekim 2026: düzeltme notu. Kayıt silinmez; yayından kaldırma ve
+        # yeniden yayımlama da ayrı satır yazar.
+        ("duzeltme_yayimlama", "Düzeltme notu yayımlama"),
+        ("duzeltme_kaldirma", "Düzeltme notu yayından kaldırma"),
     ]
 
     # PROTECT: kullanıcı silinirse log okunamaz hâle gelir. Kimliği ada değil
@@ -1296,7 +1296,7 @@ class DuzeltmeSorgusu(models.QuerySet):
 
 
 class Duzeltme(models.Model):
-    """Habere bağlı düzeltme, cevap/tekzip ya da güncelleme notu — 20 Ekim 2026.
+    """Habere bağlı düzeltme ya da güncelleme notu — 20 Ekim 2026.
 
     DEGERLENDIRME-2026-10 Aşama 4 ("kesim öncesi şart") ve referans
     kütüphanesi karşılaştırması 2. satır: haber detayında yalnız güncelleme
@@ -1318,17 +1318,14 @@ class Duzeltme(models.Model):
     """
 
     TUR_DUZELTME = "duzeltme"
-    TUR_CEVAP = "cevap"
     TUR_GUNCELLEME = "guncelleme"
     TURLER = [
         (TUR_DUZELTME, "Düzeltme"),
-        (TUR_CEVAP, "Cevap / tekzip"),
         (TUR_GUNCELLEME, "Güncelleme notu"),
     ]
     #: Başlık altındaki işaretin metni; birden çok tür varsa öncelik sırası.
     ISARETLER = [
         (TUR_DUZELTME, "Bu haberde düzeltme var"),
-        (TUR_CEVAP, "Bu habere cevap yayımlandı"),
         (TUR_GUNCELLEME, "Bu haberde güncelleme notu var"),
     ]
     METIN_EN_AZ = 10
@@ -1338,9 +1335,6 @@ class Duzeltme(models.Model):
                               db_index=False)
     tur = models.CharField(max_length=12, choices=TURLER, default=TUR_DUZELTME)
     metin = models.TextField(help_text="Editörün yazdığı düz metin. Okura olduğu gibi basılır.")
-    cevap_veren = models.CharField(
-        max_length=200, blank=True,
-        help_text="Yalnız cevap/tekzipte: cevabı gönderen kişi ya da kurum ve sıfatı.")
     yayin_zamani = models.DateTimeField(default=timezone.now)
     yayinda = models.BooleanField(default=True)
     olusturan = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
@@ -1355,8 +1349,8 @@ class Duzeltme(models.Model):
 
     class Meta:
         ordering = ["-yayin_zamani", "-id"]
-        verbose_name = "düzeltme / cevap kaydı"
-        verbose_name_plural = "düzeltme / cevap kayıtları"
+        verbose_name = "düzeltme notu"
+        verbose_name_plural = "düzeltme notları"
         indexes = [
             # Haber detayı: "bu haberin yayındaki notları" (tek sorgu, var mı
             # yoklaması da buradan).

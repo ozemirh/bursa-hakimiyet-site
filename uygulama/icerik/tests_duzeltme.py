@@ -1,4 +1,4 @@
-"""Düzeltme / cevap notu — model, panel girişi, haber bloğu, sayfa (20 Ekim 2026).
+"""Düzeltme notu — model, panel girişi, haber bloğu, sayfa (20 Ekim 2026).
 
 İş: DEGERLENDIRME-2026-10 Aşama 4 ("kesim öncesi şart") + referans
 kütüphanesi karşılaştırması 2. satır. Korunanlar:
@@ -6,8 +6,9 @@ kütüphanesi karşılaştırması 2. satır. Korunanlar:
 1. **Model.** Kayıt silinmez (tekil, toplu, haberle birlikte); yalnız
    yayından kaldırılır, kimin kaldırdığı kalır.
 2. **Panel girişi.** Not haberi giren ekrandan girilir (`/panel/haber/<id>`
-   altındaki bölüm), uç yalnız POST, kapı yayın yetkisi; cevapta cevap
-   veren zorunlu; yayın zamanı elle verilemez; her fiil denetim kaydı yazar.
+   altındaki bölüm), uç yalnız POST, kapı yayın yetkisi; yalnız iki tür
+   (düzeltme · güncelleme notu, kullanıcı kararı 20 Ekim 2026); yayın
+   zamanı elle verilemez; her fiil denetim kaydı yazar.
 3. **Haber detayı.** Not varsa gövdenin SONUNDA blok + başlık altında
    bloğa bağlı işaret; yoksa ikisi de HİÇ basılmaz. Metin kaçışlı.
 4. **`/duzeltmeler`.** Kategori sanılmaz; en yeniden eskiye; kaldırılan not
@@ -82,9 +83,9 @@ class Temel(TestCase):
             cls.kullanicilar[rol] = u
 
     def _not(self, haber=None, tur=Duzeltme.TUR_DUZELTME, metin="Haberde köprünün açılış "
-             "saati 10.00 yazılmıştı; doğrusu 11.00'dir.", veren="", once=0, **ek):
+             "saati 10.00 yazılmıştı; doğrusu 11.00'dir.", once=0, **ek):
         return Duzeltme.objects.create(
-            haber=haber or self.haber, tur=tur, metin=metin, cevap_veren=veren,
+            haber=haber or self.haber, tur=tur, metin=metin,
             yayin_zamani=timezone.now() - timedelta(minutes=once), **ek)
 
     def _sayfa(self, yol):
@@ -107,14 +108,21 @@ class Model(Temel):
             Haber.objects.get(pk=self.haber.pk).delete()
         self.assertTrue(Duzeltme.objects.filter(pk=kayit.pk).exists())
 
+    def test_yalniz_iki_tur(self):
+        """Kullanıcı kararı (20 Ekim 2026): düzeltme ve güncelleme notu."""
+        self.assertEqual([k for k, _ in Duzeltme.TURLER], ["duzeltme", "guncelleme"])
+        self.assertEqual([k for k, _ in Duzeltme.ISARETLER], ["duzeltme", "guncelleme"])
+        alanlar = {f.name for f in Duzeltme._meta.get_fields()}
+        self.assertEqual(alanlar - {"id", "haber"}, {
+            "tur", "metin", "yayin_zamani", "yayinda", "olusturan", "kaldirma_zamani",
+            "kaldiran", "kaldirma_gerekcesi"})
+
     def test_isaret_metni_turden_ve_oncelikli(self):
-        cevap = self._not(tur=Duzeltme.TUR_CEVAP, veren="Kurum")
         guncel = self._not(tur=Duzeltme.TUR_GUNCELLEME)
         duz = self._not()
         self.assertEqual(Duzeltme.isaret_metni([]), "")
         self.assertEqual(Duzeltme.isaret_metni([guncel]), "Bu haberde güncelleme notu var")
-        self.assertEqual(Duzeltme.isaret_metni([guncel, cevap]), "Bu habere cevap yayımlandı")
-        self.assertEqual(Duzeltme.isaret_metni([guncel, cevap, duz]), "Bu haberde düzeltme var")
+        self.assertEqual(Duzeltme.isaret_metni([guncel, duz]), "Bu haberde düzeltme var")
 
     def test_haber_icin_yalniz_yayindakiler_eskiden_yeniye(self):
         yeni = self._not(once=1)
@@ -146,14 +154,17 @@ class PanelGirisi(Temel):
         self.client.force_login(self.kullanicilar[rol])
 
     def test_duzenleme_ekraninda_bolum_ve_form(self):
-        self._not(tur=Duzeltme.TUR_CEVAP, veren="Bursa Büyükşehir Belediyesi Basın Müdürü")
+        self._not(tur=Duzeltme.TUR_GUNCELLEME, metin="Köprünün yaya yolu da açıldı.")
         self._gir("Editör")
         html = self._sayfa(f"/panel/haber/{self.haber.pk}")
         self.assertIn('id="duzeltme"', html)
         self.assertIn(f'action="/panel/haber/{self.haber.pk}/duzeltme"', html)
         self.assertIn('name="metin"', html)
         self.assertIn('id="duzeltme_metin"', html)       # ana formun id_… alanlarıyla çakışmaz
-        self.assertIn("Bursa Büyükşehir Belediyesi Basın Müdürü", html)
+        self.assertIn("Köprünün yaya yolu da açıldı.", html)
+        secenekler = re.findall(r'<option value="([^"]*)"',
+                                html[html.index('id="duzeltme_tur"'):].split("</select>")[0])
+        self.assertEqual(secenekler, ["duzeltme", "guncelleme"])
         self.assertIn("Yayından kaldır", html)
         # Ayrı bir yönetim yüzü yok: tek panel kalıbı, o da yalnız POST ucu.
         self.assertEqual(self.client.get(self._uc()).status_code, 302)
@@ -178,27 +189,21 @@ class PanelGirisi(Temel):
         self.assertEqual(log.sonrasi["duzeltme_id"], kayit.pk)
         self.assertEqual(log.kullanici, self.kullanicilar["Editör"])
 
-    def test_cevapta_cevap_veren_zorunlu_digerinde_yasak(self):
+    def test_tanimsiz_tur_ve_kisa_metin_reddedilir(self):
         self._gir("Editör")
-        yanit = self.client.post(self._uc(), {"islem": "ekle", "tur": "cevap",
-                                              "metin": "Kurumun gönderdiği cevap metni."})
+        yanit = self.client.post(self._uc(), {"islem": "ekle", "tur": "baska",
+                                              "metin": "Tanımsız türde bir not metni."})
         self.assertEqual(yanit.status_code, 200)
-        self.assertIn("cevabı gönderenin", yanit.content.decode())
-        yanit = self.client.post(self._uc(), {"islem": "ekle", "tur": "duzeltme",
-                                              "cevap_veren": "Biri",
-                                              "metin": "Düzeltme metni burada."})
-        self.assertEqual(yanit.status_code, 200)
-        self.assertIn("yalnız cevap/tekzip", yanit.content.decode())
+        self.assertIn("baska mevcut seçeneklerden biri değil", yanit.content.decode())
         yanit = self.client.post(self._uc(), {"islem": "ekle", "tur": "duzeltme",
                                               "metin": "kısa"})
         self.assertEqual(yanit.status_code, 200)
         self.assertIn("en az", yanit.content.decode())
         self.assertFalse(Duzeltme.objects.exists())
-        yanit = self.client.post(self._uc(), {
-            "islem": "ekle", "tur": "cevap", "cevap_veren": "  Osmangazi   Belediyesi ",
-            "metin": "Kurumun gönderdiği cevap metni."})
+        yanit = self.client.post(self._uc(), {"islem": "ekle", "tur": "guncelleme",
+                                              "metin": "Köprünün yaya yolu da açıldı."})
         self.assertEqual(yanit.status_code, 302)
-        self.assertEqual(Duzeltme.objects.get().cevap_veren, "Osmangazi Belediyesi")
+        self.assertEqual(Duzeltme.objects.get().tur, Duzeltme.TUR_GUNCELLEME)
 
     def test_muhabir_yayimlayamaz_listeyi_gorur(self):
         self._not()
@@ -301,16 +306,14 @@ class HaberDetayi(Temel):
         self.assertRegex(bolme, r'<b class="duzeltme-tur">Düzeltme</b> <time datetime="[^"]+">')
         self.assertIn('<a href="/duzeltmeler">', bolme)
 
-    def test_cevap_veren_ve_sira(self):
+    def test_guncelleme_notu_ve_sira(self):
         self._not(tur=Duzeltme.TUR_GUNCELLEME, metin="Köprüye yaya yolu da eklendi.", once=60)
-        self._not(tur=Duzeltme.TUR_CEVAP, veren="Nilüfer Belediyesi Basın Birimi",
-                  metin="Belediyenin gönderdiği cevap metni.", once=5)
+        self._not(tur=Duzeltme.TUR_GUNCELLEME, metin="Açılışa vali de katıldı.", once=5)
         html = self._sayfa(self.haber.get_absolute_url())
-        self.assertIn("Bu habere cevap yayımlandı", html)
-        self.assertIn('<p class="duzeltme-veren">Cevap veren: Nilüfer Belediyesi Basın Birimi</p>',
-                      html)
-        self.assertLess(html.index("yaya yolu"), html.index("Belediyenin gönderdiği"))
-        # Cevap ve güncelleme notu `correction` değildir.
+        self.assertIn("Bu haberde güncelleme notu var", html)
+        self.assertIn('<b class="duzeltme-tur">Güncelleme notu</b>', html)
+        self.assertLess(html.index("yaya yolu"), html.index("vali de katıldı"))
+        # Güncelleme notu `correction` değildir.
         self.assertNotIn("correction", _makale(html))
 
 
@@ -318,7 +321,7 @@ class JsonLd(Temel):
 
     def test_duzeltme_correction_comment(self):
         kayit = self._not()
-        self._not(tur=Duzeltme.TUR_CEVAP, veren="Kurum", metin="Kurumun cevap metni.")
+        self._not(tur=Duzeltme.TUR_GUNCELLEME, metin="Habere sonradan eklenen bilgi.")
         makale = _makale(self._sayfa(self.haber.get_absolute_url()))
         self.assertEqual(len(makale["correction"]), 1)
         yorum = makale["correction"][0]
@@ -340,33 +343,32 @@ class DuzeltmelerSayfasi(Temel):
 
     def test_bos_sayfa_uydurma_icerik_yok(self):
         html = self._sayfa("/duzeltmeler")
-        self.assertIn("Yayımlanmış düzeltme ya da cevap notu yok.", html)
+        self.assertIn("Yayımlanmış düzeltme notu yok.", html)
         self.assertNotIn('class="duzeltme"', html)
         self.assertEqual(html.count("<h1"), 1)
 
     def test_en_yeniden_eskiye_haberine_bagli(self):
         self._not(metin="Eski düzeltmenin metni burada.", once=120)
-        self._not(tur=Duzeltme.TUR_CEVAP, veren="Kurum Sözcüsü",
-                  metin="Yeni cevabın metni burada.", once=1)
+        self._not(tur=Duzeltme.TUR_GUNCELLEME, metin="Yeni güncellemenin metni burada.", once=1)
         self._not(metin="Kaldırılan notun metni.", yayinda=False)
         self._not(haber=self.pasif, metin="Pasif haberin notu metni.")
         html = self._sayfa("/duzeltmeler")
-        self.assertLess(html.index("Yeni cevabın"), html.index("Eski düzeltmenin"))
+        self.assertLess(html.index("Yeni güncellemenin"), html.index("Eski düzeltmenin"))
         self.assertNotIn("Kaldırılan notun", html)
         self.assertNotIn("Pasif haberin", html)
         self.assertEqual(html.count('<li class="duzeltme"'), 2)
         self.assertIn(f'href="{self.haber.get_absolute_url()}#duzeltmeler"', html)
-        self.assertIn("Cevap veren: Kurum Sözcüsü", html)
         self.assertIn(">2 not<", html)
 
     def test_seo_ve_sayfalama(self):
         self._not()
         html = self._sayfa("/duzeltmeler")
-        self.assertIn("<title>Düzeltme ve Cevap — Bursa Hakimiyet</title>", html)
+        self.assertIn("<title>Düzeltmeler — Bursa Hakimiyet</title>", html)
+        self.assertIn("<h1>DÜZELTMELER</h1>", html)
         self.assertRegex(html, r'<link rel="canonical" href="https?://[^"]+/duzeltmeler">')
         kirinti = next(b for b in _ld(html) if b.get("@type") == "BreadcrumbList")
         self.assertEqual([o["name"] for o in kirinti["itemListElement"]],
-                         ["Anasayfa", "Düzeltme ve Cevap"])
+                         ["Anasayfa", "Düzeltmeler"])
         for deger in ("2", "0", "abc"):
             with self.subTest(deger):
                 self.assertEqual(self.client.get(f"/duzeltmeler?sayfa={deger}").status_code, 404)
@@ -437,7 +439,7 @@ class Basarim(Temel):
             govde="<p>a</p><p>b</p>", kategori=self.gundem, durum=Haber.DURUM_AKTIF,
             yayin_zamani=timezone.now() - timedelta(hours=n + 1)) for n in range(12)]
         for h in haberler:
-            self._not(haber=h, tur=Duzeltme.TUR_CEVAP, veren="Kurum")
+            self._not(haber=h, tur=Duzeltme.TUR_GUNCELLEME)
         cok = self._isinmis("/duzeltmeler")
         self.assertEqual(az, cok)
         self.assertLessEqual(cok, 3)     # sayım + dilim (+ oturumsuz kabuk ısınmış)

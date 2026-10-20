@@ -1,4 +1,4 @@
-"""Düzeltme / cevap notu — başsız Chrome ölçümü (20 Ekim 2026).
+"""Düzeltme notu — başsız Chrome ölçümü (20 Ekim 2026).
 
 Varsayılan test turunda **hiç yüklenmez** (Chrome gerektirir):
 
@@ -7,7 +7,7 @@ Varsayılan test turunda **hiç yüklenmez** (Chrome gerektirir):
 
 Kendi test veritabanını ve canlı sunucusunu test çatısından alır
 (`StaticLiveServerTestCase`); paylaşılan veritabanına yazmaz. Uzun metin,
-uzun cevap veren adı ve uzun başlık bilerek: taşmayı en çok onlar zorlar.
+kesintisiz uzun kelime ve uzun başlık bilerek: taşmayı en çok onlar zorlar.
 
 Ölçülenler — haber detayı (notlu), `/duzeltmeler` ve panelin haber düzenleme
 ekranı × 360 · 390 · 768 · 1440:
@@ -149,10 +149,8 @@ if os.environ.get("BH_DUZELTME_OLCUM") == "1":
                     "olarak yazılmıştı; doğrusu 102 bin metreküptür. ") * 3
             Duzeltme.objects.create(haber=self.haber, metin=uzun)
             Duzeltme.objects.create(
-                haber=self.haber, tur=Duzeltme.TUR_CEVAP,
-                cevap_veren=("Bursa Büyükşehir Belediyesi Kent Estetiği ve Çevre Koruma Dairesi "
-                             "Başkanlığı Basın ve Halkla İlişkiler Şube Müdürü"),
-                metin="Kurumun gönderdiği cevap metni.\n\nİkinci paragraf "
+                haber=self.haber, tur=Duzeltme.TUR_GUNCELLEME,
+                metin="Habere sonradan eklenen bilgi.\n\nİkinci paragraf "
                       "BirleşikUzunKelimeKesintisizTaşmaDenemesiİçinYazıldıBurada.")
             Duzeltme.objects.create(haber=self.haber, tur=Duzeltme.TUR_GUNCELLEME,
                                     metin="Tesisin açılış tarihi habere eklendi.")

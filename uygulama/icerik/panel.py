@@ -617,7 +617,7 @@ def _haber_duzenle_baglami(request, haber, form, *, yayinlayabilir, kendisinin,
         "haber": haber,
         "yayinlayabilir": yayinlayabilir,
         "kendisinin": kendisinin,
-        # Düzeltme ve cevap (20 Ekim 2026): kayıtların tamamı — yayından
+        # Düzeltmeler (20 Ekim 2026): kayıtların tamamı — yayından
         # kaldırılanlar da (geçmiş korunur). Ekleme yayın yetkisine bağlı:
         # not okura anında görünür, yani yayımlamaktır.
         "duzeltmeler": list(haber.duzeltmeler.select_related("olusturan", "kaldiran")
@@ -635,7 +635,7 @@ def _duzeltme_bolumune(haber):
 @login_required
 @permission_required("icerik.kendi_haberini_yayinlama", raise_exception=True)
 def haber_duzeltme(request, kimlik):
-    """Habere düzeltme / cevap / güncelleme notu ekler ya da notu yayından
+    """Habere düzeltme ya da güncelleme notu ekler ya da notu yayından
     kaldırır, geri yayımlar — yalnız POST (20 Ekim 2026).
 
     Ayrı bir yönetim yüzü yok: bölüm haber düzenleme ekranının altında,
@@ -671,7 +671,7 @@ def haber_duzeltme(request, kimlik):
                               hedef_id=haber.pk, oncesi={"duzeltme_id": kayit.pk, "yayinda": True},
                               sonrasi={"duzeltme_id": kayit.pk, "yayinda": False},
                               gerekce=kayit.kaldirma_gerekcesi)
-            messages.success(request, f"{kayit.get_tur_display()} notu yayından kaldırıldı; "
+            messages.success(request, f"{kayit.get_tur_display()} yayından kaldırıldı; "
                                       "kayıt ve metni panelde duruyor.")
         elif islem == "geri_al" and not kayit.yayinda:
             kayit.yayinda = True
@@ -679,7 +679,7 @@ def haber_duzeltme(request, kimlik):
             denetim_kaydi.yaz(request, "duzeltme_yayimlama", hedef_tur="haber",
                               hedef_id=haber.pk, oncesi={"duzeltme_id": kayit.pk, "yayinda": False},
                               sonrasi={"duzeltme_id": kayit.pk, "yayinda": True})
-            messages.success(request, f"{kayit.get_tur_display()} notu yeniden yayımlandı.")
+            messages.success(request, f"{kayit.get_tur_display()} yeniden yayımlandı.")
         return _duzeltme_bolumune(haber)
 
     if not haber.yayinda_mi():
@@ -698,8 +698,8 @@ def haber_duzeltme(request, kimlik):
         denetim_kaydi.yaz(request, "duzeltme_yayimlama", hedef_tur="haber",
                           hedef_id=haber.pk,
                           sonrasi={"duzeltme_id": kayit.pk, "tur": kayit.tur, "yayinda": True})
-        messages.success(request, f"{kayit.get_tur_display()} notu yayımlandı; haberin "
-                                  "sonunda ve Düzeltme ve Cevap sayfasında görünüyor.")
+        messages.success(request, f"{kayit.get_tur_display()} yayımlandı; haberin "
+                                  "sonunda ve Düzeltmeler sayfasında görünüyor.")
         return _duzeltme_bolumune(haber)
 
     form = HaberForm(instance=haber, kullanici=request.user)

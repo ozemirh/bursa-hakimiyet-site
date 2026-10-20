@@ -84,7 +84,7 @@ def bagla() -> None:
     # yayımlanan yazı 30 sn beklemeden görünsün.
     from medya.models import KoseYazisi, Yazar
 
-    # Düzeltme / cevap notu (20 Ekim 2026): haber detayı ve `/duzeltmeler`
+    # Düzeltme notu (20 Ekim 2026): haber detayı ve `/duzeltmeler`
     # sayfa önbelleğinde; yayımlanan ya da kaldırılan not anında görünsün.
     for model in (Haber, Konu, KonuHaber, ResmiIlan, SonDakika, KoseYazisi, Yazar,
                   Duzeltme):
