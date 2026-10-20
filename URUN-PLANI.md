@@ -71,7 +71,7 @@ Kullanıcının tarif ettiği sıra. **Yukarıdan aşağıya bağlayıcı.**
 |---|---|---|
 | 1 | **Yan bannerlar** | Sayfanın üst kısmında iki yanda. Mevcut yuva envanterinde `-Sol pageskin1..4-` ve `-Sağ pageskin1..4-` (160×600) karşılığı var. |
 | 2 | **Logo** | Sol üstte. **29 Ağustos 2026'da kendi şeridinden kategori bandının içine alındı** — şerit 93 px idi ve %82'si boştu (ölçüm: bant 1100 px, logo 196 px). Yanında hâlâ arama/abone kutusu yok; arama bandın sağ ucunda. Kazanç: içeriğin başlangıcı 379 → 284 px. Logo artık **yapışkan bantta**, yani sayfa kaydırılırken de görünür. |
-| 3 | **Kategori bandı** | **Tam 10 kalem:** Yazarlar · Bursa · Bursaspor · Gündem · Ekonomi · Dünya · Spor · Magazin · İlçeler · Resmî İlan. Kalabalıklaştırma. **Arama ve menü düğmesi bandın içinde**, sağ uçta: önce arama, onun sağında menü düğmesi (26 Ağustos kararı). **Dar ekranda (≤1000 px) dördü kalır:** Bursa · Bursaspor · Gündem · Spor; kalan altısı gizlenir ama **DOM'dan düşmez** (29 Ağustos 2026). Öncesinde liste bütünüyle `display:none` idi ve 360 px'te görünen kategori sayısı **sıfırdı**. |
+| 3 | **Kategori bandı** | **Tam 10 kalem:** Yazarlar · Bursa · Bursaspor · Gündem · Ekonomi · Dünya · Spor · Magazin · İlçeler · Resmî İlan. *(→ §71 ile değişti: İlçeler yerine Sağlık, 20 Ekim 2026.)* Kalabalıklaştırma. **Arama ve menü düğmesi bandın içinde**, sağ uçta: önce arama, onun sağında menü düğmesi (26 Ağustos kararı). **Dar ekranda (≤1000 px) dördü kalır:** Bursa · Bursaspor · Gündem · Spor; kalan altısı gizlenir ama **DOM'dan düşmez** (29 Ağustos 2026). Öncesinde liste bütünüyle `display:none` idi ve 360 px'te görünen kategori sayısı **sıfırdı**. |
 | 4 | **Son dakika bandı** | Kategori bandının hemen altında. |
 | 5 | **Reklam** | **1100×150**, tam genişlik. |
 | 6 | **Dört haber kutucuğu** | Yan yana, eşit. |
@@ -803,7 +803,7 @@ tablosundaki 9 ve 10 numaralı satırlar güncellendi.
 
 | İstenen | Yapılan | Ölçüm |
 |---|---|---|
-| İlçeleri menüye koy | Tam menüye ayrı **İLÇELER** sütunu; 17 ilçe + başlık | menüde 18 bağlantı |
+| İlçeleri menüye koy | Tam menüye ayrı **İLÇELER** sütunu; 17 ilçe + başlık | menüde 18 bağlantı · *→ §71 ile değişti: İLÇELER bölümü menüden kalktı* |
 | Piyasa bandını taşı ve çarpıcı yap | Sayfanın **en üstüne** alındı; koyu lacivert gradyan, 19 px tabular rakam, yeşil/kırmızı değişim rozetleri | 5 kalem tam |
 | Resmî ilanın yerini değiştir, güzelleştir | Haber kutularının **altına**; üç sütun → **iki sütun**, satır vurgusu | 820 px altında tek sütun |
 | Otomatik geçiş seçim olmasın, varsayılan olsun | `OTOMATİK GEÇİŞ` düğmesi **kaldırıldı**, sayaç açılışta başlıyor | 11 sn'de slayt 0 → 1 |
@@ -1751,6 +1751,8 @@ katlanır bölümlerle doğal uyuşuyor ve ekranı kaplamıyor.
 
 Kazancın kaynağı iki şey: dört bölümün katlanması **ve** uzun listelerin
 (13 kategori, 18 ilçe) iki sütuna inmesi. Yalnız katlamayla 717 px'de kalıyordu.
+
+> → §71 ile değişti: menüde ilçe bölümü yok; KATEGORİLER izin listesinden (12 kategori + Resmî ilan).
 
 **Yapı:** 5 `<details>`/`<summary>`, yalnız **KATEGORİLER `open`**. Başlıklar
 `<summary><h2>` içinde — belge başlık düzeni bozulmadı (atlama 0). Perde ayrı
@@ -3296,21 +3298,26 @@ indirilebilirliğini ve arşiv medya altyapısını önce ölçtü.
 - **Sağ ray yeni dizilim:** EN ÇOK OKUNANLAR → **İLÇE İLÇE BURSA** (yeni
   çip ızgarası; ilçeler menüde katlanmış duruyordu) → `-Haber arası1-`
   300×250. Reklam yuvalarının adı ve ölçüsü değişmedi.
+  *(→ §71 ile değişti: anasayfadaki ilçe kutusu kalktı, ilçe sayfaları 301 /bursa.)*
 - **Bölüm başlığı iki ağırlıkta.** Editoryal bölümler (SON HABERLER ·
   YAZARLAR · GALERİLER · VİDEOLAR · İLÇE İLÇE BURSA) `.kutu-bas.hafif`:
   beyaz zemin, lacivert başlık, lacivert alt çizgi. Servis ve yükümlülük
   bölümleri (ŞEHİR SERVİSLERİ · RESMÎ İLANLAR · VİZYON · PİYASA) dolu
   bantta kaldı; EN ÇOK OKUNANLAR dolu kırmızı; **BURSASPOR dokunulmaz**.
   Kırmızı fitil (`h2::before`) iki ağırlıkta da duruyor — ortak imza.
+  *(→ §71 ile değişti (K4): dolu çubuk yalnız sayfa H1'i, BURSASPOR ve SON DAKİKA plakası;
+  şehir servisleri, resmî ilanlar, vizyon, en çok okunanlar `.kutu-bas.hafif`.)*
 - **Dar ekranda (≤768 px) sıra: manşet → manşet listesi → dörtlü.**
   `.ust-blok` sarmalayıcısı ve `order`; DOM ve odak sırası değişmiyor.
   360'ta okur ana manşete 1550 px aşağıda varıyordu.
+  *(→ §71 ile değişti (K2): ≤600 px'te dörtlü manşetin altında, "Manşet yanı" 300×250'nin önünde.)*
 
 ### Menü — sidebar kalktı, banda asılı beyaz mega levha geldi
 
 Kullanıcı 28 Ağustos'ta gelen koyu sidebar'ı beğenmedi. Yeni menü bandın
 altına asılan beyaz levhadır; masaüstünde **beş sütunlu** açılır
 (İLÇELER en geniş sütun), dar ekranda akordeon kalır.
+*(→ §71 ile değişti: İLÇELER sütunu kalktı, levha dört sütun.)*
 
 Kritik karar: **şablona `open` yazılmadı.** Bölümleri geniş ekranda
 `site.js` `menuAc()` açıyor (3 satır). Böylece sunucu HTML'i bayt bayt
@@ -3692,6 +3699,7 @@ bloğun (haber ızgarası ↔ resmî ilanlar) arasında ayraç işi de görüyor
   ≤768 px'te liste de tek sütuna iner.
 - `.ust-blok` dar ekran sırası güncellendi: manşet 1 · **son dakika 2** ·
   dörtlü 3 (eskiden 2. sıra GÜNÜN MANŞETLERİ idi).
+  *(→ §71 ile değişti (K2): ≤600 px'te dörtlü manşetin altında, "Manşet yanı" 300×250'nin önünde.)*
 
 ### Doğrulama
 
@@ -4341,6 +4349,10 @@ Görünüm haritası **dört kademe** oldu; her eşik ölçülmüş bir kısıt:
 - **1001-1139** kutu 250 px ama içerik sütunu ~981-1119 px — 970 sığar,
   1100 sığmaz.
 
+> → §71 ile değişti (K1, yalnız haber detayı): detayda şerit başlık + ana görselin
+> altında, yalnız 728×90 (`601>728x90; 0>`), kutu ≥601'de 110 px, ≤600'de 44 px.
+> Anasayfa ve bölüm şeridi bu haritada kaldı.
+
 **Doğrulama (1600 · 1280 · 1100 · 800 · 360 px):** yatay taşma **0**. Kutu
 1100×250 / 1065×250 / 765×120 / 325×44; demo ağı üçünden yalnız 728×90'ı
 doldurduğu için görünen yaratıcı her genişlikte o. 646 test geçiyor —
@@ -4603,6 +4615,8 @@ bağlantısı var ve dizine gidiyor — komşu ilçeye geçmek bantla iki tıkla
 şeritle bir. Liste veriden geliyor (`ilceler`); dar ekranda yatay kayıyor,
 sarılınca dört satır oluyordu.
 
+> → §71 ile değişti: ilçe sayfaları kaldırıldı (301 /bursa), şerit de onlarla gitti.
+
 **Ray EKLENMEDİ.** Guardian/Milliyet bölüm sayfasında sağ ray taşıyor ama
 320 px'lik ray içerik sütununu 1080'den 740'a indirirdi ve §45'te kullanıcının
 ölçüp onayladığı fotoğraf boyları küçülürdü. Kademeleme aynı işi genişlikten
@@ -4619,6 +4633,10 @@ akış), /ilce/osmangazi (İLÇELER şeridi), 430 ve 390 px (tek sütun akış,
 ---
 
 ## §47 — İLÇELER bandı Osmangazi'ye, bölüme özel EN ÇOK OKUNANLAR (2 Eylül 2026)
+
+> → §71 ile değişti: 1. madde geçersiz — bantta İLÇELER yerine SAĞLIK; `/ilce/*` ve
+> `/ilceler` 301 ile `/bursa`ya gidiyor. 2. madde (bölüme özel en çok okunanlar) sürüyor,
+> başlığı K4'ten beri `.kutu-bas.hafif`.
 
 Kullanıcı isteği: "ilçelere tıklanınca default olarak osmangaziye yolla, bir
 de kategori sayfalarına en çok okunanlar paneli ekle o kategoriye özel".
@@ -5774,6 +5792,9 @@ arşivden bugün ve arşiv dizini bu turda kurulmadı.
 
 ### Servis şeridi — sayfanın başında
 
+> → §71 ile değişti (K3): bölüm adı (H1) kırıntının altında, servis şeridinin üstünde.
+> Tablodaki "İlçe sayfaları" satırı geçersiz (ilçe sayfaları kalktı).
+
 | Bölüm | Şerit |
 |---|---|
 | EKONOMİ | döviz bandı (anasayfadakiyle **aynı parça**) |
@@ -6097,6 +6118,7 @@ Panelin içindeki `var(--bolum-…, <yedek>)` kalıpları da açıldı: değişk
 artık hiçbir yerde tanımlı olmadığı için bırakılsaydı ölü bir düzenek
 olurdu. Servis panelinin başlık çubuğu da kendi kuralını bıraktı ve
 varsayılan `.kutu-bas`a döndü — sitenin her yerindeki kutuyla aynı.
+*(→ §71 ile değişti (K4): bölümün servis panelleri `.kutu-bas.hafif`.)*
 
 §35'in *"site lacivert-kırmızı kalır"* kuralı böylece **istisnasız**
 sürüyor; tek istisna anasayfadaki `#bursaspor` kutusudur ve o 29 Ağustos
@@ -6479,7 +6501,9 @@ basıyor (`taban.html`e `govde_nitelik` bloğu açıldı), kurallar `site.css`
 sonunda `body[data-bolum="bursaspor"]` altında. Üst kabuk (servis şeridi,
 kategori bandı, menü) değişmedi; değişen içerik sütunu: kutu başlıkları
 yeşil, h1 kutusu koyu yeşil, fitil beyaz, maç kartı açık yeşil, sıradaki
-maç ve galibiyet kutusu yeşil, mağlubiyet kırmızı kaldı. Anasayfa
+maç ve galibiyet kutusu yeşil, mağlubiyet kırmızı kaldı. *(→ §71 ile değişti (K4):
+fikstür ve bölümün en çok okunanları `.kutu-bas.hafif`, tema rolüyle yeşil; dolu çubuk
+yalnız H1.)* Anasayfa
 `#bursaspor` kutusuyla aynı dört değişken. Fikstür yoksa `bursaspor`
 bağlamı None gelir ve kabuk da yeşile dönmez — yarım yeşil sayfa yok.
 `tests_bolum_bloklari.test_bolume_ozel_renk_yok` bu istisnayı tanıyacak
@@ -6518,6 +6542,8 @@ Kesimi (F8) engelleyen ana kalemler:
 - manşet ve son dakika bayrakları siteye bağlı değil;
 - ayarlar fail-open, SSRF açığı var, denetim günlüğü yazılmıyor;
 - 5187/7418 künye, sürüm ve cevap hakkı altyapısı eksik;
+  *(→ §71 ile değişti: sitede cevap/tekzip türü kurulmayacak, kullanıcı kararı;
+  düzeltme + güncelleme notu kuruldu, kanuni tekzip yükümlülüğü siteden bağımsız.)*
 - SEO meta ve JSON-LD eksik, `/amp/*` 404 dönüyor;
 - PostgreSQL göçü başlamadı.
 
@@ -6620,3 +6646,137 @@ düzeltildi (tablolar aynı).
 - §35 işaret renkleri (turkuaz/amber).
 - Köşe adları ve özgeçmişler: 37 yazarın hiçbirinde yok, yeni içerik ister.
 - Üretim sunucusu ve bütçesi; kesim tarihi.
+
+---
+
+## §71 — 20 Ekim 2026: referans kütüphanesi, tasarım turu ve gezinme kararları
+
+Kaynak: `git log 11b46ef..547757a` (dal `arsiv-taramasi-tasinabilir`, HEAD
+547757a) ve `referans-kutuphanesi` dalının commit'leri. Ölçüler commit
+mesajlarından alındı; bu bölümü yazarken yeniden ölçülenler ayrıca belirtildi.
+
+### 1. Referans kütüphanesi (PR #1 — açık, birleşmedi)
+
+`referans-kutuphanesi/`, dal `referans-kutuphanesi`, PR #1 (taban
+`arsiv-taramasi-tasinabilir`). Sahibi `haber-siteleri-arastirmacisi` ajanı.
+
+- **22 site dosyası** (`siteler/`), **14 desen** (`desenler/`), **BH fark
+  matrisi** (`karsilastirma.md`, 24 satır; her satır kaynak dosyaya ve
+  URL/tarihe bağlı, doğrudan · ikincil · eski kayıt diye işaretli).
+- **Ekran görüntüsüyle tasarım çözümlemesi, 6 site** (`tasarim/`):
+  Habertürk, Bursada Bugün, Bursa Saati, Özgür Kocaeli, Ege'de Son Söz,
+  Spiegel (yalnız izinli yollar). Ölçüm computed style'dan, tek ölçüm,
+  başsız Chrome, çerez kabul edilmedi. Görüntüler `ham/` altında, depoya
+  girmez.
+- **BH tasarım önerisi** (`tasarim/bursa-hakimiyet-oneri.md`): korunacaklar,
+  12 rafineleştirme maddesi (R1–R12), kullanıcı kararı gereken K1–K4. Bu
+  turdaki R ve K kodları bu belgeden gelir.
+
+**Hukuki sınırlar** (commit 6afa381, kullanıcı kararı 20 Ekim 2026):
+
+- robots.txt hem `*` hem Claude ajanları (`Claude-User`, `ClaudeBot`,
+  `anthropic-ai`) bölümüyle okunur.
+- **User-Agent değiştirip engel aşmak yasak.**
+- Ödeme duvarı aşılmaz; alıntı, rakip dili ve kişisel veri kuralları genişletildi.
+- Otomatik/yapay zekâ/ticari erişimi yasaklayan yedi siteye istek atılmaz,
+  dosyaları yalnız ikincil kaynakla yazılır: NYT, Reuters, FT, BBC News,
+  BBC Türkçe, Le Monde, Guardian.
+- Ayrıca ikincil kaynakla yazılanlar: Hürriyet, NTV, Milliyet, Olay
+  (robots.txt Claude ajanlarını kapatıyor), Manchester Evening News, Sözcü ve
+  T24 (erişim engelli), Texas Tribune (kullanım koşulları), Axios (Cloudflare
+  engeli). Spiegel kısmi: yalnız robots.txt'in Claude-User'a açtığı yollar.
+
+**Birleştirme öncesi açık:** 5 iddianın doğrulanması ve Texas Tribune için
+hukuk teyidi (bkz. madde 5).
+
+### 2. Kullanıcı kararları (20 Ekim 2026)
+
+**(a) Düzeltme özelliğinde cevap/tekzip türü yok.** Yalnız iki tür: düzeltme
+ve güncelleme notu (856613e). Kanuni tekzip yükümlülüğü (5187) siteden
+bağımsız olarak sürer; sitede ayrı bir cevap/tekzip türü, alanı ya da sayfası
+kurulmaz.
+
+**(b) İlçe sayfaları kaldırıldı** (8112cc6). `/ilce/<slug>` ve `/ilceler`
+→ **301 `/bursa`** (ara katman `cekirdek/adres_duzeni.py`; sorgu dizesi
+korunur, eğik çizgili biçim tek halkada). `/daha-fazla?kaynak=ilce` 404.
+Menüdeki 18 bağlantılık İLÇELER bölümü, künyedeki ilçe sütunu, anasayfa
+"BURSA İLÇELERİ" kutusu, haber kırıntısındaki ilçe basamağı kalktı.
+**Korunanlar:** `Haber.ilce` alanı ve verisi, paneldeki ilçe seçimi ve toplu
+ilçe atama, `Ilce` modeli, `goc_ilce`, `ilce_doldur`, nöbetçi eczanenin ilçe
+kırılımı (`/nobetci-eczane/<ilçe>`), haber detayındaki aynı ilçeden haberler
+kutusu. Migration yok.
+
+**(c) Menü kategorileri izin listesi** (`baglam.MENU_KATEGORILERI`):
+Magazin, Dünya, Ekonomi, Spor, Bursa, Bursaspor, Sağlık, Gündem, Teknoloji,
+Yaşam, Bursa'da Spor, Savunma Sanayi — 12 kategori — artı Resmî ilan.
+**Aktüalite menüde yok**, sayfası ve haberleri yerinde (`/aktualite` 200).
+Listede olup veritabanında olmayan slug sessizce atlanır. Sıra eskisi gibi
+haber sayısına göre. Menü levhası ve künye ızgarası beş sütundan dörde indi.
+**Bantta İLÇELER yerine SAĞLIK** (10 kalem korunur, `MOBIL_BANT` aynı).
+
+**(d) Boş `href="#"` bağlantıları** kullanıcı sonra dolduracak. Bu tur
+dokunulmadı.
+
+**(e) Tasarım ayrıntı kararları koordinatöre bırakıldı.** Koordinatörün
+verdiği kararlar:
+
+| Kod | Karar | Commit |
+|---|---|---|
+| K1 | Haber detayında üst reklam şeridi başlık + ana görselin **altına**; orada yalnız **728×90**, kutu **110 px** (≥601), ≤600'de 44 px ve ölçüsüz. Anasayfa/bölüm şeridi değişmedi. | 3fb368c, 165d115 |
+| K2 | Mobil anasayfada (≤600) dörtlü manşetin altında, "Manşet yanı" 300×250 yuvasının **önünde** | b8e4432 |
+| K3 | Bölüm adı (H1) kırıntının hemen altında, **servis şeridinin üstünde**; servissiz bölümde iki kutu birleşir | b8e4432 |
+| K4 | İki kademe başlık: **dolu çubuk** yalnız sayfa H1'i ve kimlik blokları (anasayfa BURSASPOR, SON DAKİKA plakası); en çok okunanlar, günün manşetleri, resmî ilanlar, şehir servisleri, vizyon, bölüm servis panelleri, "önce Bursa" listeleri, fikstür ve bölümün en çok okunanları `.kutu-bas.hafif` (tema rolleriyle) | b8e4432 |
+
+### 3. Yapılanlar
+
+| Commit | İş |
+|---|---|
+| 11b46ef | Köşe yazıları sayfası `/kose-yazilari` (son yazılar + akış, `daha-fazla?kaynak=kose`) |
+| d02cfed | Sayfa bütçesi testleri: istek, aktarım, LCP, HTML ve yapışkan tavanları (başsız Chrome kısmı `BH_SAYFA_BUTCESI=1` ile) |
+| 40fbb46 (birleşim) | Paylaşım bağlantıları WhatsApp/X/Facebook, betiksiz (1fa4bd1); düzeltme notu + `/duzeltmeler` (3b85fb8, 856613e); `/piyasa/dolar`, `/piyasa/euro`, `/piyasa/gram-altin` (ee45526). Migration `0020_duzeltme` geliştirme PG'sine uygulandı. |
+| a2eb0e3 | R1: kart görseli 3:2, kırpmasız (`--cerceve-orani`, `--kapak-orani`); R2: bölüm H1 biçimi |
+| 547757a (birleşim, tur A/B/C) | 3fb368c: araç çubuğu betikleri (bağlantı kopyala, A-/A+, yazdır), başa dön düğmesi, spot 20 px (R3). 8112cc6: ilçe kaldırma, menü izin listesi, bantta SAĞLIK. f71be75: sembol fontları kesildi (sayfa başına −62 KB ve 2 istek), ekonomi cetveli sütun sütun kaynak atfı, panel `.sag-not` ipucu kontrastı 2,75 → 5,40:1, eczane `.yer` 4,32 → 6,22:1. 165d115: K1. b8e4432: K2/K3/K4, bölüm ilk kademesi ve Bursaspor şeridinde `contain` (16:9 kırpması %15,6 → 0), manşet penceresi ray alta inince 3:2 (768'de kırpma %39,7 → 0), eczane bağlantıları 44×44 (≤600), ölü CSS (`.manset`, `.yatay`, `.serit-oge`) |
+
+### 4. Ölçümler
+
+| Ölçüm | Önce → sonra | Kaynak |
+|---|---|---|
+| Haber detay H1 konumu, 1440×900 (sunum hâli) | 478 → 214 px | 3fb368c |
+| Haber detay gövde (commit'teki adıyla), 1440×900 | 1394 → 1320 px (K1 ara hâli 1460) | 165d115 |
+| Mobil anasayfa, 390×844 ilk ekranda tam başlık | 1 → 3 | b8e4432 |
+| Ekonomi H1 konumu, 390 | 1109 → 247 px | b8e4432 |
+| Dörtlü blok yüksekliği, 390 | 2066 → 597 px | b8e4432 |
+| Test paketi | **1621 test, OK (2 atlandı)** — bu bölüm yazılırken 547757a'da yeniden koşuldu (`gelistir.ps1 -Komut "test --parallel 4"`, 45,8 sn) | yeniden ölçüldü |
+| Sayfa bütçesi testi (başsız Chrome) | 5/5 | koordinatör ölçümü; bu bölüm yazılırken yeniden koşulmadı |
+| `0020_duzeltme` geliştirme PG'sinde | uygulandı | `showmigrations icerik` ile doğrulandı |
+
+### 5. Açık kalanlar ve devredilenler
+
+| Konu | Sahip / durum |
+|---|---|
+| Piyasa sayfalarının geçmiş serisi: gram altın EVDS (~0,5 gün iş), dolar/euro veri yolu | veri-entegrasyon |
+| Seslendirme kutusunda okura dönük kırmızı teknik not | yapay-zeka-uzmani |
+| Anasayfa ilk ekranının tamamı ulusal haber ("önce Bursa" ilk ekranda görünmüyor) | haber-muduru |
+| Anasayfa HTML'i gerçek veride 229 KB > 200 KB bütçe (gzip 35 KB) — bütçe ham mı aktarım mı, tanım kararı | karar bekliyor (koordinatör ölçümü, bu bölümde yeniden ölçülmedi) |
+| Panelde kalan `--gri-acik` metinler AA altı | açık |
+| Mini slayt kırpması | açık |
+| Köşe sayfalarının dolu h2'leri (K4'e uymuyor) | açık |
+| Ölü CSS: `.ilce`, `.alt-menu`, `.dar`, `.surmanset` | açık |
+| Menü sırası haber sayısına göre; kullanıcının yazdığı sıra istenirse ~15 dk | kullanıcı isterse |
+| İletişim sayfası (5187 m.4/3) | gazeteden bilgi bekliyor |
+| PR #1: birleştirme öncesi 5 iddianın doğrulanması, Texas Tribune hukuk teyidi | açık |
+| Boş `href="#"` bağlantıları | kullanıcı dolduracak (2d) |
+
+### Plana etkisi
+
+Aşağıdaki eski yerlere "→ §71 ile değişti" notu düşüldü; eski metin
+silinmedi: §1 bileşen 3 (kategori bandı), §14 (menüde ilçe sütunu), menü
+ölçümündeki "18 ilçe", anasayfa sağ ray İLÇE İLÇE BURSA ve iki ağırlıklı
+başlık, dar ekran sırası, mega levhanın beş sütunu, §37 dar ekran sırası,
+§42 eki 2 (üst şerit haritası), §46 (ilçe hızlı geçiş şeridi), §47 (İLÇELER
+bandı), §59 (servis şeridi sayfanın başında, ilçe satırı), §63 (servis
+paneli başlığı), §68 (Bursaspor kutu başlıkları), §69 (cevap hakkı
+altyapısı).
+
+**Not:** §5 süreç tablosu Ağustos'tan beri güncellenmedi; faz durumu için
+bu tablo değil, §69–§71 ve `EKIP.md` okunmalı.
