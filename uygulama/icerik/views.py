@@ -1,4 +1,4 @@
-"""İçerik görünümleri — anasayfa, kategori, ilçe, arama, haber detay.
+"""İçerik görünümleri — anasayfa, kategori, arama, haber detay.
 
 Hepsi veritabanından render eder; şablonlarda gömülü haber başlığı ya da
 gövdesi yoktur (F4 bitti ölçütü, madde a).
@@ -408,26 +408,28 @@ def _bolum_gorselleri(kategori):
     }
 
 
-def _nobet_ozeti(slug="", ad=""):
-    """Nöbetçi eczane panelinin içeriği. Kayıt yoksa None — sahte satır yok.
+def _nobet_ozeti():
+    """Nöbetçi eczane panelinin içeriği (Bursa geneli). Kayıt yoksa None —
+    sahte satır yok.
+
+    İlçe süzgeci 20 Ekim 2026'da kalktı: onu yalnız ilçe sayfası
+    kullanıyordu. İlçe ilçe liste `/nobetci-eczane/<ilçe>` sayfasında.
 
     Liste dünden eskiyse (`canli.GECERLIK_GUN`, 19 Ekim 2026) eczane
     basılmaz; panel "liste güncel değil" der ve kaynağa yönlendirir.
     """
     panel = eczane_sayfa.gunun_paketi(gecersizi_de=True)
     if panel and panel.get("gecersiz"):
-        return {"tur": "nobet", "gecersiz": True, "panel": panel, "yer": ad,
-                "yol": eczane_sayfa.ilce_yolu(slug), "eczaneler": [], "adet": 0}
-    tumu = panel["eczaneler"] if panel else []
-    kayitlar = [e for e in tumu if e["ilce_anahtar"] == slug] if slug else tumu
+        return {"tur": "nobet", "gecersiz": True, "panel": panel,
+                "yol": eczane_sayfa.KOK_YOL, "eczaneler": [], "adet": 0}
+    kayitlar = panel["eczaneler"] if panel else []
     if not kayitlar:
         return None
     return {
         "tur": "nobet",
         "eczaneler": kayitlar[:SERVIS_ECZANE],
         "adet": len(kayitlar),
-        "yer": ad,
-        "yol": eczane_sayfa.ilce_yolu(slug),
+        "yol": eczane_sayfa.KOK_YOL,
         "gun": panel["gun"] if panel else None,
         # Nöbet aralığı ("08:30 – 08:30 ertesi gün") ve şu an nöbette olan
         # sayısı panelin künyesinde duruyor: okur "bu liste ne zamana ait"
@@ -464,7 +466,7 @@ def _puan_penceresi(puan, takip):
     return []
 
 
-def _bolum_servisi(slug="", ilce=None):
+def _bolum_servisi(slug=""):
     """Bölüme özel canlı veri şeridi — yoksa None, şablon hiç çizmez.
 
     Veri ZATEN toplanıyor (`canli.py`, `icerik/eczane.py`) ve anasayfada
@@ -472,11 +474,6 @@ def _bolum_servisi(slug="", ilce=None):
     kopyası DEĞİL, özeti: ekonomi bandı aynı bant, spor şeridi tablonun
     tamamı değil Bursaspor'un satırı, eczane şeridi listenin ilk üçü.
     """
-    if ilce is not None:
-        # İlçe sayfası: o ilçenin bugünkü nöbetçileri. Hava durumu BURSA
-        # merkezi için tek pakettir (`hava_paneli`), ilçeye inmiyor — ilçe
-        # sayfasında merkezin havasını basmak yanlış bilgi olurdu.
-        return _nobet_ozeti(ilce.slug, ilce.ad)
     if slug in SERVIS_DOVIZ:
         doviz = oku("doviz")
         return {"tur": "doviz", "doviz": doviz} if doviz else None
@@ -522,25 +519,6 @@ def kategori(request, slug):
     return render(request, "kategori.html", baglam)
 
 
-@sayfa_onbellegi
-def ilce(request, slug):
-    ilce = get_object_or_404(Ilce, slug=slug)
-    sorgu = _liste().filter(ilce=ilce)
-    sayfa = _sayfala(request, sorgu, sinirli=True)
-    return render(request, "kategori.html", {
-        "baslik": f"{ilce.ad} haberleri",
-        "ilce": ilce,
-        "sayfa": sayfa,
-        "en_cok": _bolum_en_cok(sorgu, sayfa),
-        "daha_uc": f"/daha-fazla?kaynak=ilce&slug={slug}",
-        # İlçenin görüntü kuşağı YOK: galeri ve videonun kategorisi var,
-        # ilçesi yok (`medya.models.KategoriliIcerik`). Uydurma bir eşleme
-        # yapmaktansa blok hiç çizilmiyor.
-        "servis": _bolum_servisi(ilce=ilce),
-        "akis": _bolum_akisi(sayfa),
-    })
-
-
 # ---------------------------------------------------------------------------
 # "DAHA FAZLA GÖSTER" (6 Eylül 2026, kullanıcı isteği: "hem anasayfada hem de
 # kategori sayfalarında daha fazla göster seçeneği ekle haberler için,
@@ -578,9 +556,6 @@ def _akis_sorgusu(kaynak, slug):
         kategori = get_object_or_404(Kategori, turler__tur=Kategori.TUR_HABER,
                                      turler__slug=slug, aktif=True)
         return _liste().filter(kategori=kategori), kategori
-    if kaynak == "ilce":
-        get_object_or_404(Ilce, slug=slug)
-        return _liste().filter(ilce__slug=slug), None
     return _liste(), None
 
 
@@ -612,10 +587,11 @@ def daha_fazla(request):
     sessizce ayrışması demekti.
     """
     kaynak = request.GET.get("kaynak") or "anasayfa"
-    if kaynak not in {"anasayfa", "son", "kategori", "ilce", "kose"}:
+    # `ilce` kaynağı 20 Ekim 2026'da kalktı (ilçe sayfası yok): 404.
+    if kaynak not in {"anasayfa", "son", "kategori", "kose"}:
         raise Http404("Bilinmeyen akış")
     slug = request.GET.get("slug") or ""
-    if kaynak in {"kategori", "ilce"} and not slug:
+    if kaynak == "kategori" and not slug:
         raise Http404("Bölüm belirtilmedi")
     try:
         numara = max(int(request.GET.get("sayfa") or 1), 1)
@@ -742,10 +718,6 @@ def piyasa_enstrumani(request, slug):
             enstruman.soru, yol, aciklama, tazelik.get("guncelleme"))),
         "tema": temalar.piyasa_temasi(),
     })
-
-
-def ilceler(request):
-    return render(request, "ilceler.html", {"baslik": "İlçeler"})
 
 
 # Anasayfa panellerinin altındaki dokuz "Veri kaynağı ve kapsam" notu

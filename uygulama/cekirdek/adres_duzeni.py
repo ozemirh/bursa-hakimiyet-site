@@ -7,8 +7,9 @@ biçimleri tek katmanda kanonik biçime **301** ile bağlanır. Sorgu dizesi
 | Gelen | Giden | Neden |
 |---|---|---|
 | `/amp/<yol>` | `/<yol>` | Canlıda her haberin AMP ikizi var (`<link rel="amphtml">`); bizde AMP yok |
-| `/spor/`, `/ilce/osmangazi/`, haber adresi `/` ile | eğik çizgisiz | Adres sözleşmesi eğik çizgisiz (`APPEND_SLASH = False`); iki biçim iki kopya demekti |
+| `/spor/`, haber adresi `/` ile | eğik çizgisiz | Adres sözleşmesi eğik çizgisiz (`APPEND_SLASH = False`); iki biçim iki kopya demekti |
 | `/arama?ara=x` | `/ara?q=x` | Eski sitenin arama adresi |
+| `/ilce/<slug>`, `/ilceler` (eğik çizgili de) | `/bursa` | İlçe sayfaları kaldırıldı (20 Ekim 2026, kullanıcı kararı); yerel haberin bölümü Bursa. Tek halka: eğik çizgili biçim önce `/ilce/x`'e, sonra `/bursa`'ya gitmez |
 
 Hedef bir haber adresiyse ve slug yanlışsa görünüm ikinci bir 301 verir
 (kimlikle çözüm, `taksonomi/views.py`). Zincir en çok iki halkadır.
@@ -19,6 +20,7 @@ yönetim adresleri eğik çizgiyle biter (`/panel/`, `/yonetim/`).
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -29,6 +31,14 @@ from django.utils.encoding import iri_to_uri
 #: Bu öneklerle başlayan adresler olduğu gibi geçer.
 DOKUNULMAZ = ("/panel/", "/yonetim/", "/statik/", "/static/", "/gorsel/",
               "/arsiv-gorsel/", "/arsiv-medya/", "/reklam/", "/_")
+
+#: Kaldırılan ilçe sayfaları (20 Ekim 2026): dizin ve 17 ilçe. Kalıp eski
+#: `ilce` adres kalıbıyla aynı slug kümesini kabul eder; bilinmeyen slug da
+#: yönlenir — sayfa artık yok, "hangi ilçe vardı" sorusunu sormanın anlamı
+#: kalmadı. Haberin `ilce` alanı ve nöbetçi eczanenin ilçe kırılımı
+#: (`/nobetci-eczane/<ilçe>`) bu kararın DIŞINDA.
+ILCE_KALIBI = re.compile(r"^/(?:ilceler|ilce/[-\w]+)/?$")
+ILCE_HEDEFI = "/bursa"
 
 
 def _sorgu(request) -> str:
@@ -58,6 +68,9 @@ def hedef_bul(request) -> HttpResponsePermanentRedirect | None:
             parametreler.insert(0, ("q", aranan))
         sorgu = urlencode(parametreler)
         return _yonlendir("/ara", f"?{sorgu}" if sorgu else "")
+
+    if ILCE_KALIBI.match(yol):
+        return _yonlendir(ILCE_HEDEFI, _sorgu(request))
 
     if (len(yol) > 1 and yol.endswith("/")
             and not yol.startswith(DOKUNULMAZ)):

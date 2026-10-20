@@ -15,8 +15,7 @@
 
         {% comment %}`mobil` sınıfı taşıyan dört kalem dar ekranda da
         duruyor; kalan altısını CSS gizler. Hepsi DOM'da — arama motoru ve
-        ekran okuyucu bağlantıları görmeli (menüdeki 17 ilçeyle aynı
-        gerekçe).{% endcomment %}
+        ekran okuyucu bağlantıları görmeli.{% endcomment %}
         <div class="kategori-liste" id="kategori-liste">
           {% for b in band_kategorileri %}<a{% if b.mobil %} class="mobil{% if b.mobil_son %} mobil-son{% endif %}"{% endif %} href="{{ b.yol }}"{% if b.etkin %} aria-current="page"{% endif %}>{{ b.ad }}</a>
           {% endfor %}</div>
@@ -46,10 +45,14 @@
       klavye ve ekran okuyucu desteği tarayıcıdan HAZIR gelir ve JavaScript
       kapalıyken de çalışır. KATEGORİLER `open` durur — en çok kullanılan o.
 
-      **17 ilçenin tamamı DOM'da.** Katlanmış olmak gizlenmiş olmak değildir;
+      **Bütün bağlantılar DOM'da.** Katlanmış olmak gizlenmiş olmak değildir;
       `hidden` ya da sonradan yükleme YOK, çünkü hem arama motoru hem ekran
-      okuyucu bağlantıları sayfada görmeli (URUN-PLANI.md §14: menüde 18
-      bağlantı — 17 ilçe + "Tüm ilçeler").
+      okuyucu bağlantıları sayfada görmeli.
+
+      KATEGORİLER bir İZİN LİSTESİNDEN gelir (`baglam.MENU_KATEGORILERI`,
+      20 Ekim 2026): veritabanındaki her etkin kategori değil. Aynı gün
+      İLÇELER bölümü kalktı — ilçe sayfaları yok, adresleri `/bursa`ya
+      301'leniyor.
 
       Başlıklar `<summary>` içinde `<h2>` olarak duruyor: HTML `summary`nin
       içeriğinde başlık öğesine izin verir ve böylece belge başlık düzeni
@@ -72,17 +75,6 @@
               <li><a href="/#son-dakika">Son dakika</a></li>
               <li><a href="/resmi-ilan">Resmî ilanlar</a></li>
               <li><a href="#vizyon">Vizyonda neler var</a></li>
-            </ul>
-          </details>
-
-          {% comment %}İlçeler ayrı bölüm: yerel gazetenin okuru önce kendi
-          ilçesine bakıyor. Banda sığmıyor (10 kalem sözleşmesi), bu yüzden
-          menüde ve katlanmış duruyor — 17 kalem tek satıra iniyor.{% endcomment %}
-          <details class="menu-bolum menu-ilce menu-iki-sutun">
-            <summary><h2>İLÇELER</h2></summary>
-            <ul>
-              <li><a href="/ilceler">Tüm ilçeler</a></li>
-              {% for i in ilceler %}<li><a href="/ilce/{{ i.slug }}">{{ i.ad }}</a></li>{% endfor %}
             </ul>
           </details>
 

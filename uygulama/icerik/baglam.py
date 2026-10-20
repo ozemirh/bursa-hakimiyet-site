@@ -1,13 +1,13 @@
-"""Her sayfada duran ortak bağlam: kategori bandı, son dakika, ilçeler.
+"""Her sayfada duran ortak bağlam: kategori bandı, tam menü, son dakika.
 
 Bunlar `taban.html` içindeki parçalarda kullanıldığı için her görünümde
 tek tek verilmez; bağlam işlemcisiyle bir kez hazırlanır.
 
 **Kategori bandı 10 kalemdir ve sırası bağlayıcıdır** (URUN-PLANI.md §1,
 bileşen 3). Liste veritabanındaki 13 kategoriden türetilmez — banda girmeyen
-kategoriler (Sağlık, Teknoloji, Yaşam…) tam menüde durur. Bandın iki kalemi
-kategori değildir: "Yazarlar" ve "İlçeler" kendi bölümlerine, "Resmî İlan"
-ise BİK yükümlülüğü olan editoryal bölüme gider.
+kategoriler (Teknoloji, Yaşam…) tam menüde durur. Bandın iki kalemi
+kategori değildir: "Yazarlar" kendi bölümüne, "Resmî İlan" BİK
+yükümlülüğü olan editoryal bölüme gider.
 """
 
 from django.conf import settings
@@ -19,18 +19,11 @@ from taksonomi.models import Ilce, Kategori
 from . import onbellek
 from .models import Haber
 
-# "İLÇELER" bandı DİZİNE değil doğrudan bir ilçeye gider (2 Eylül 2026,
-# kullanıcı isteği: "ilçelere tıklanınca default olarak osmangaziye yolla").
-# Gerekçe: dizin sayfası okuru bir tıklama daha uzağa koyuyordu; ilçe sayfası
-# §46'dan beri 17 ilçenin hepsini taşıyan hızlı geçiş şeridini çiziyor, yani
-# dizinin işini de görüyor. Osmangazi Bursa'nın merkez ilçesi.
-#
-# Dizin sayfası KALDIRILMADI: tam menüdeki "Tüm ilçeler" ve anasayfadaki
-# "BURSA İLÇELERİ" kutusu oraya gitmeye devam ediyor, adres arama motorunda
-# kayıtlı.
-VARSAYILAN_ILCE = "osmangazi"
-
 # (görünen ad, kategori adı ya da None, sabit yol) — sıra plandaki sıradır.
+#
+# 20 Ekim 2026 (kullanıcı kararı): "İLÇELER" kalemi çıktı, yerine SAĞLIK
+# girdi. İlçe sayfaları kalktı; `/ilce/*` ve `/ilceler` 301 ile `/bursa`ya
+# gider (`cekirdek/adres_duzeni.py`). Bant 10 kalem sözleşmesi sürüyor.
 BANT = [
     ("YAZARLAR", None, "/yazarlar"),
     ("BURSA", "BURSA", None),
@@ -40,7 +33,7 @@ BANT = [
     ("DÜNYA", "DÜNYA", None),
     ("SPOR", "SPOR", None),
     ("MAGAZİN", "MAGAZİN", None),
-    ("İLÇELER", None, f"/ilce/{VARSAYILAN_ILCE}"),
+    ("SAĞLIK", "SAĞLIK", None),
     ("RESMÎ İLAN", None, "/resmi-ilan"),
 ]
 
@@ -53,6 +46,23 @@ BANT = [
 # dışındakileri CSS gizliyor ve hepsi tam menüde zaten var. Seçim DOM
 # sırasının ilk dördü değil, okurun ilk aradığı dört bölüm.
 MOBIL_BANT = {"BURSA", "BURSASPOR", "GÜNDEM", "SPOR"}
+
+# Tam menüdeki KATEGORİLER bölümünün İZİN LİSTESİ (20 Ekim 2026, kullanıcı
+# kararı). Haber tür satırının slug'ı (`KategoriTur.slug`, `slug_al()`).
+# Menü artık "veritabanındaki her etkin kategori" değil: yeni açılan bir
+# kategori kendiliğinden menüye girmez, buraya yazılır. Listede olup
+# veritabanında olmayan (ya da etkin olmayan) slug sessizce atlanır.
+#
+# Aktüalite BİLEREK yok: sayfası (`/aktualite`) ve haberleri yerinde,
+# adres açık; yalnız gezinmeden çıktı. Resmî ilan kategori değil, menüde
+# BÖLÜMLER altında ayrı bağlantı.
+#
+# Küme SIRAYI belirlemez: menü eskisi gibi çok haberliden aza dizilir
+# (künye bu listenin ilk altısını basıyor; o sözleşme değişmedi).
+MENU_KATEGORILERI = frozenset({
+    "magazin", "dunya", "ekonomi", "spor", "bursa", "bursaspor", "saglik",
+    "gundem", "teknoloji", "yasam", "bursa-da-spor", "savunma-sanayi",
+})
 
 # 4 -> 6 (30 Ağustos 2026, §36): kayan şerit dört başlığı sırayla
 # gösteriyordu, rayda sabit liste altısını da AYNI ANDA gösteriyor —
@@ -214,11 +224,7 @@ def site(request):
             if kategori_adi not in kategoriler:
                 continue  # taksonomi kurulmadıysa bandı kırma
             hedef = "/" + kategoriler[kategori_adi]
-        # Bandın "İLÇELER" kalemi Osmangazi'ye gidiyor ama HER ilçe
-        # sayfasında etkin görünmeli — okur Nilüfer'deyken bandın hangi
-        # kalemi altında olduğunu göremezdi.
-        etkin = yol == hedef or (hedef.startswith("/ilce/")
-                                 and yol.startswith("/ilce/"))
+        etkin = yol == hedef
         bant.append({"ad": ad, "yol": hedef, "etkin": etkin,
                      "mobil": ad in MOBIL_BANT, "mobil_son": False})
 
@@ -238,7 +244,6 @@ def site(request):
         # haberler. Tembel: yalnız bandı çizen sayfa sorgu açar. Masanın
         # kayıtları 30 sn önbellekte, kayıt değişince anında düşer (§21).
         "son_dakika": son_dakika_bandi(),
-        "ilceler": _ilceler(),
         "reklam_dugmesi": sunum_araci_mi(request),
         # Reklam demo agi. Bayrak kapaliyken taban.html hicbir dis betik
         # basmaz; yuvalar gri yer tutucu olarak kalir.
@@ -344,22 +349,25 @@ def _kategori_ozeti() -> list[dict]:
 
 
 def _tum_kategoriler():
-    """Tam menüdeki liste: haber taşıyan kategoriler, çok haberliden aza.
+    """Tam menüdeki liste: izin listesindeki (`MENU_KATEGORILERI`) etkin
+    kategoriler, çok haberliden aza.
 
     Sayım kilide takılırsa son bilinen liste döner, o da yoksa
     **sayımsız** sıralamaya düşülür — menü her hâlükârda çizilmeli, sayfa
     bir sıralama yüzünden düşmemeli.
     """
     return [{"ad": o["ad"], "slug": o["slug"], "adet": o["adet"]}
-            for o in _kategori_ozeti() if o["slug"]]
+            for o in _kategori_ozeti() if o["slug"] in MENU_KATEGORILERI]
 
 
 ILCE_ANAHTARI = "bh:ilceler:v1"
 
 
 def _ilceler() -> list:
-    """17 ilçe; her sayfanın menüsünde ve künyesinde. Kayıt değişince
-    `icerik/sinyaller.py` anahtarı siler."""
+    """17 ilçe — anasayfa dizilimi Bursa haberini tanırken başlıkta ilçe
+    adı arıyor (`anasayfa_dizilimi._yer_adlari`). Menü ve künye 20 Ekim
+    2026'dan beri ilçe basmıyor. Kayıt değişince `icerik/sinyaller.py`
+    anahtarı siler."""
     return onbellek.hesapla(ILCE_ANAHTARI, lambda: list(Ilce.objects.all()),
                             taze=3600, hata=20, yedek=list)
 

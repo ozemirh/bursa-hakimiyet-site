@@ -196,11 +196,12 @@ class SayfalarVeritabanindanRender(TestCase):
                          Haber.yayindakiler().filter(
                              kategori__turler__slug="gundem").distinct().count())
 
-    def test_ilce_sayfasi(self):
+    def test_ilce_adresi_bursaya_yonleniyor(self):
+        """İlçe sayfası 20 Ekim 2026'da kalktı; adres 301 ile `/bursa`.
+        Ayrıntılı yönlendirme sözleşmesi: `tests_ilce_kaldirma`."""
         yanit = self.client.get(f"/ilce/{self.ilce.slug}")
-        self.assertEqual(yanit.status_code, 200)
-        self.assertEqual(yanit.context["sayfa"].paginator.count,
-                         Haber.yayindakiler().filter(ilce=self.ilce).count())
+        self.assertEqual(yanit.status_code, 301)
+        self.assertEqual(yanit["Location"], "/bursa")
 
     def test_arama_bulur(self):
         yanit = self.client.get("/ara", {"q": "Deneme başlığı 3"})
@@ -563,25 +564,17 @@ class BolumDurustlugu(TestCase):
         self.assertNotIn(en_yeni.baslik, liste)
         self.assertEqual(liste.count("<li>"), SON_DAKIKA_ADET - 1)
 
-    def test_ilceler_bandi_dizine_degil_osmangaziye_gidiyor(self):
-        """2 Eylül 2026, §47 — kullanıcı isteği.
-
-        Bant kalemi dizine gidince okur ilçe haberine iki tıklamada
-        ulaşıyordu; ilçe sayfası artık 17 ilçelik hızlı geçiş şeridini
-        taşıyor (§46), yani dizinin işini de görüyor. Dizin KALDIRILMADI:
-        tam menüdeki "Tüm ilçeler" oraya gitmeye devam ediyor.
-        """
-        from .baglam import VARSAYILAN_ILCE
+    def test_bantta_ilceler_yerine_saglik(self):
+        """20 Ekim 2026, kullanıcı kararı: §47'deki "İLÇELER → Osmangazi"
+        kalemi ilçe sayfalarıyla birlikte kalktı, yerine SAĞLIK geldi."""
         govde = self.client.get("/").content.decode()
         bant = govde[govde.index('class="kategori-liste"'):]
         # Bant listesinin kendisi: ilk `</div>`e kadar. `</nav>` çok
         # sonra kapanıyor ve tam menüyü de içine alıyordu.
         bant = bant[:bant.index("</div>")]
-        self.assertIn(f'href="/ilce/{VARSAYILAN_ILCE}"', bant)
-        self.assertNotIn('href="/ilceler"', bant)
-        # Dizin adresi menüde duruyor; sayfa da ayakta.
-        self.assertIn('href="/ilceler"', govde)
-        self.assertEqual(self.client.get("/ilceler").status_code, 200)
+        self.assertIn('href="/saglik">SAĞLIK</a>', bant)
+        self.assertNotIn("İLÇELER", bant)
+        self.assertNotIn("/ilce", bant)
 
     def test_bolum_en_cok_seridi_sayfadaki_haberleri_tekrarlamiyor(self):
         """Bölüme özel "EN ÇOK OKUNANLAR" (2 Eylül 2026, §47).

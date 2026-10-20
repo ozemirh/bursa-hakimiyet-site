@@ -3,12 +3,12 @@
 
 {% comment %}SEO (Paket G): ?sayfa=N sayfalarının başlığı ve açıklaması "Sayfa N"
 taşır (yinelenen başlık olmasın); kanonik taban.html'den, kendi sayfasına.
-BreadcrumbList: kategori → Anasayfa › Bölüm; ilçe → Anasayfa › İlçeler › İlçe.{% endcomment %}
+BreadcrumbList: kategori → Anasayfa › Bölüm.{% endcomment %}
 {% block baslik %}{{ baslik }}{% if sayfa.number > 1 %} — Sayfa {{ sayfa.number }}{% endif %} — Bursa Hakimiyet{% endblock %}
-{% block aciklama %}{% if ilce %}Bursa {{ ilce.ad }} ilçesinden son haberler{% else %}{{ baslik }} başlığındaki son haberler{% endif %}{% if sayfa.number > 1 %}, sayfa {{ sayfa.number }}{% endif %} — Bursa Hakimiyet.{% endblock %}
+{% block aciklama %}{{ baslik }} başlığındaki son haberler{% if sayfa.number > 1 %}, sayfa {{ sayfa.number }}{% endif %} — Bursa Hakimiyet.{% endblock %}
 {% block og_baslik %}{{ baslik }}{% if sayfa.number > 1 %} — Sayfa {{ sayfa.number }}{% endif %}{% endblock %}
 {% block rss_bolum %}{% if kategori %}<link rel="alternate" type="application/rss+xml" title="Bursa Hakimiyet — {{ baslik }}" href="{{ site_koku }}/rss/{{ kategori.slug_al }}">{% endif %}{% endblock %}
-{% block yapisal %}{% if kategori %}<script type="application/ld+json">{% jsonld_kirinti baslik request.path %}</script>{% elif ilce %}<script type="application/ld+json">{% jsonld_kirinti "İlçeler" "/ilceler" ilce.ad request.path %}</script>{% endif %}{% endblock %}
+{% block yapisal %}{% if kategori %}<script type="application/ld+json">{% jsonld_kirinti baslik request.path %}</script>{% endif %}{% endblock %}
 {% comment %}SAYFAYA ÖZEL TASARIM (19 Ekim 2026). Gövde niteliği `taban.html`
 yazar; bu şablon yalnız temanın DÜZEN parçasını yuvalarına koyar:
 `parca/bolum/<anahtar>.html`, `yer="bas"` (kırıntının altı, varsayılan
@@ -42,10 +42,8 @@ duruyordu. Yeni kademeler:
      kaybolmadı — kartın kendi damgası aynı günde saat, eskisinde tarih
      basıyor (`kisa_zaman`).
 
-Hızlı geçiş şeridi yalnız İLÇE sayfasında: kategori sayfasında yapışkan
-kategori bandının kopyasıydı, kaldırıldı. İlçe listesi bantta yok — orada
-şerit gerçek bir kısayol. Veriden geliyor (`ilceler`), elle yazılmış liste
-yok.{% endcomment %}
+Hızlı geçiş şeridi YOK: kategori sayfasında yapışkan kategori bandının
+kopyasıydı, kaldırıldı; ilçe sayfası da 20 Ekim 2026'da kalktı.{% endcomment %}
 
 {% block icerik %}
       <nav class="kirinti" aria-label="Neredesiniz">
@@ -68,23 +66,6 @@ yok.{% endcomment %}
           tam tarama. Kesin sayı okurun kararını değiştirmiyor.{% endcomment %}
           <span class="tumu">{% if sayfa.paginator.kesildi_mi %}1.000+{% else %}{{ sayfa.paginator.count }}{% endif %} haber</span>
         </div>
-
-        {% comment %}Hızlı geçiş şeridi YALNIZ İLÇE SAYFASINDA (2 Eylül 2026,
-        kullanıcı: "niye hızlı geçiş şeridi ekledin, zaten ekranın üst kısmında
-        kategoriler bandı var"). Doğru: kategori sayfasında şerit yapışkan
-        kategori bandının kopyasıydı, okur zaten o bandı sayfanın her yerinde
-        görüyor — kaldırıldı.
-
-        İlçede durum başka: bantta 17 ilçe YOK, tek bir "İLÇELER" bağlantısı
-        var ve o da dizin sayfasına gidiyor. Komşu ilçeye geçmek bantla iki
-        tıklama; şeritle bir. Kategori bandı bu listeyi taşımadığı sürece
-        şerit kopya değil.{% endcomment %}
-        {% if ilce %}
-        <nav class="bolum-gecis" aria-label="Öbür ilçeler">
-          <b>İLÇELER</b>
-          {% for i in ilceler %}{% if i.slug != ilce.slug %}<a href="/ilce/{{ i.slug }}">{{ i.ad|baslikla }}</a>{% endif %}{% endfor %}
-        </nav>
-        {% endif %}
 
         <div class="kutu-ic">
           <h2 class="gorsel-gizli">Haberler</h2>

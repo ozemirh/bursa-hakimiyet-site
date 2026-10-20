@@ -211,12 +211,13 @@ class MenuSayimi(Temel):
         self.assertEqual(len(ikinci.captured_queries), 0)
 
     def test_bant_da_ozetten_geliyor(self):
-        self.client.get("/ilceler")
+        # Ölçüm sayfası eskiden `/ilceler`di (20 Ekim 2026'da kalktı).
+        self.client.get("/konular")
         with CaptureQueriesContext(connection) as y:
-            self.client.get("/ilceler")
+            self.client.get("/konular")
         kategori = [q["sql"] for q in y.captured_queries
                     if "taksonomi_kategori" in q["sql"] or "taksonomi_ilce" in q["sql"]]
-        self.assertEqual(kategori, [], "bant/ilçe her istekte sorgu açıyor")
+        self.assertEqual(kategori, [], "bant/menü her istekte sorgu açıyor")
 
 
 # --------------------------------------------------------------------------

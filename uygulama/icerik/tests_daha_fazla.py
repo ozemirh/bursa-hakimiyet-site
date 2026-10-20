@@ -54,11 +54,6 @@ class DahaFazlaGoster(TestCase):
         self.assertNotIn('class="sayfalama"', metin)
         self.assertIn('class="daha-fazla"', metin)
 
-    def test_ilce_sayfasinda_numarali_sayfalama_yok(self):
-        metin = self.client.get(f"/ilce/{self.ilce.slug}").content.decode()
-        self.assertNotIn('class="sayfalama"', metin)
-        self.assertIn('class="daha-fazla"', metin)
-
     def test_numarali_sayfalama_kume_sayfalarinda_duruyor(self):
         """Karar YALNIZ haber listeleri içindi. Arama sonucu, konu dizini ve
         resmî ilan dizini birer KÜMEDİR; okur orada "kaçıncı sayfadayım"
@@ -119,7 +114,9 @@ class DahaFazlaGoster(TestCase):
         for adres in ("/daha-fazla?kaynak=uydurma",
                       "/daha-fazla?kaynak=kategori",
                       "/daha-fazla?kaynak=kategori&slug=olmayan-bolum",
-                      "/daha-fazla?kaynak=ilce&slug=olmayan-ilce"):
+                      "/daha-fazla?kaynak=ilce&slug=olmayan-ilce",
+                      # İlçe kaynağı 20 Ekim 2026'da kalktı: var olan ilçe de 404.
+                      f"/daha-fazla?kaynak=ilce&slug={self.ilce.slug}"):
             self.assertEqual(self.client.get(adres).status_code, 404, adres)
 
     def test_bozuk_sayfa_numarasi_ilk_dilime_dusuyor(self):

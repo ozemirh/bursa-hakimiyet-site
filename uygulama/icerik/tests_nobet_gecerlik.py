@@ -151,9 +151,11 @@ class EskiListeSayfalarda(_Klasorlu):
         self.assertIn("Deneme Eczanesi", metin)
         self.assertIn("elimizdeki son liste", metin.lower())
 
-    def test_ilce_sayfasi_servis_paneli(self):
+    def test_bolum_servis_paneli(self):
+        # Eskiden ilçe sayfasının servis paneli (20 Ekim 2026'da kalktı);
+        # aynı panel Sağlık bölümünde Bursa geneliyle çiziliyor.
         self.yaz("nobetci-eczane", _eczane(ESKI))
-        self._son_liste_mi(self.sayfa("/ilce/nilufer"))
+        self._son_liste_mi(self.sayfa("/saglik"))
 
     def test_taze_liste_uyarisiz(self):
         self.yaz("nobetci-eczane", _eczane(_yerel(0, 0)))

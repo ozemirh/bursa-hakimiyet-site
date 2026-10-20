@@ -26,7 +26,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from medya.models import KoseYazisi, Yazar
-from taksonomi.models import Ilce, Kategori, KategoriTur
+from taksonomi.models import Kategori, KategoriTur
 
 from . import temalar, views
 from .models import Haber
@@ -185,7 +185,6 @@ class TemaSayfalari(TestCase):
     def setUpTestData(cls):
         from django.core.management import call_command
         call_command("taksonomi_kur", verbosity=0)
-        cls.ilce = Ilce.objects.first()
         tur = lambda s: KategoriTur.objects.filter(tur=Kategori.TUR_HABER, slug=s).first().kategori
         cls.ekonomi, cls.teknoloji, cls.bursa = tur("ekonomi"), tur("teknoloji"), tur("bursa")
         cls.gundem = tur("gundem")
@@ -231,7 +230,7 @@ class TemaSayfalari(TestCase):
                               (self.yazar.get_absolute_url(), "kose"),
                               (self.yazi.get_absolute_url(), "kose")):
             self.assertIn(f'<body data-bolum="{beklenen}">', self._govde(yol), yol)
-        for yol in ("/gundem", "/bursa", f"/ilce/{self.ilce.slug}", "/"):
+        for yol in ("/gundem", "/bursa", "/saglik", "/"):
             metin = self._govde(yol)
             self.assertNotIn("data-bolum", metin, yol)
             self.assertIn("<body>", metin, yol)

@@ -54,7 +54,8 @@ import urllib.request
 from pathlib import Path
 
 #: 1024 (19 Ekim 2026, L1): 1001-1190 bandında künyenin ilçe sütunu 7 px
-#: taşıyordu ve 1000 ile 1200 arasında ölçüm noktası yoktu.
+#: taşıyordu ve 1000 ile 1200 arasında ölçüm noktası yoktu. Sütun 20 Ekim
+#: 2026'da kalktı; ara genişlik ölçüm noktası olarak duruyor.
 GENISLIKLER = [390, 430, 600, 820, 1000, 1024, 1200, 1440]
 ODAK_GENISLIKLERI = (390, 1440)
 TAB_SAYISI = 40
@@ -253,7 +254,7 @@ if os.environ.get("BH_SITE_OLCUM") == "1":
             hrefler = re.findall(r'href="(/[^"#?]+)"', ana)
             haber = next((h for h in hrefler if re.fullmatch(r"/[a-z0-9-]+/[^/]+-\d+", h)
                           and not h.startswith(("/yazarlar/", "/galeriler/", "/videolar/",
-                                                "/konu/", "/ilce/"))), None)
+                                                "/konu/"))), None)
             kose = next((h for h in hrefler
                          if re.fullmatch(r"/yazarlar/[^/]+-\d+/[^/]+-\d+", h)), None)
             if kose is None:
@@ -267,7 +268,7 @@ if os.environ.get("BH_SITE_OLCUM") == "1":
                         ("bursaspor", "/bursaspor"), ("ekonomi", "/ekonomi"),
                         ("teknoloji", "/teknoloji"), ("köşe yazısı", kose),
                         ("köşe yazıları", "/kose-yazilari"),
-                        ("ilçe", "/ilce/osmangazi"), ("konular", "/konular"),
+                        ("konular", "/konular"),
                         ("nöbetçi eczane", "/nobetci-eczane"), ("arama", "/ara?q=bursa")]
             eksik = [ad for ad, yol in sayfalar if not yol]
             if eksik:

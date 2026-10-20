@@ -133,8 +133,6 @@ ISTEK_TAVAN = {
     ("ekonomi", 390, "okur"): 18, ("ekonomi", 390, "acik"): 20,       # 14 / 16
     ("detay", 1440, "okur"): 19, ("detay", 1440, "acik"): 23,         # 15 / 19
     ("detay", 390, "okur"): 19, ("detay", 390, "acik"): 22,           # 15 / 18
-    ("ilce", 1440, "okur"): 20, ("ilce", 1440, "acik"): 23,           # 16 / 19
-    ("ilce", 390, "okur"): 18, ("ilce", 390, "acik"): 20,             # 14 / 16
 }
 
 #: Aktarım (KB = 1024 B; başlıklar dahil; statik SIKIŞTIRILMADAN — modül
@@ -149,8 +147,6 @@ AKTARIM_TAVAN_KB = {
     ("ekonomi", 390, "okur"): 730, ("ekonomi", 390, "acik"): 740,        # 577 / 588 · 395
     ("detay", 1440, "okur"): 870, ("detay", 1440, "acik"): 880,          # 689 / 704 · 498
     ("detay", 390, "okur"): 830, ("detay", 390, "acik"): 850,            # 663 / 675 · 472
-    ("ilce", 1440, "okur"): 940, ("ilce", 1440, "acik"): 960,            # 748 / 761 · 566
-    ("ilce", 390, "okur"): 750, ("ilce", 390, "acik"): 770,              # 599 / 610 · 417
 }
 
 #: LCP (ms, 3 turun ortancası). Ölçülen ortancalar 128–676 ms (tek turda en
@@ -170,7 +166,6 @@ HTML_TAVAN_KB = {
     "anasayfa": (280, 43),   # 230,4 / 35,7
     "ekonomi": (101, 22),    #  83,9 / 17,6
     "detay": (71, 17),       #  59,0 / 14,2
-    "ilce": (88, 19),        #  72,8 / 15,5
 }
 
 #: 390 px'te kaydırırken ekranda kalan yapışık şeritlerin toplamı (px).
@@ -236,7 +231,7 @@ OLCUM = r"""
   // harflik metni olan, görüntü alanıyla kesişen VE o noktada gerçekten
   // görünen (elementFromPoint; kaydırıcıda kırpılan slayt sayılmaz) bağlantı.
   // Aynı adres bir kez sayılır. `tam`: alt kenarı da ekranda.
-  const desen = /^\/(?:yazarlar\/[^/]+-\d+\/[^/]+-\d+|(?!yazarlar\/|ilce\/|konu\/|static\/)[a-z0-9-]+\/[^/]+-\d+)$/;
+  const desen = /^\/(?:yazarlar\/[^/]+-\d+\/[^/]+-\d+|(?!yazarlar\/|konu\/|static\/)[a-z0-9-]+\/[^/]+-\d+)$/;
   const tam = new Set(), kismi = new Set(), yerler = {};
   for (const a of document.querySelectorAll('a[href]')) {
     let yol;
@@ -656,13 +651,13 @@ def sayfalari_bul(kok):
         ana = ana.decode("utf-8", "replace")
         parca = ana.split('class="slayt-kap manset-slayt"', 1)[-1]
         detay = next((h for h in re.findall(r'href="(/[a-z0-9-]+/[^"#?/]+-\d+)"', parca)
-                      if not h.startswith(("/yazarlar/", "/ilce/", "/konu/"))), None)
+                      if not h.startswith(("/yazarlar/", "/konu/"))), None)
         if not detay:
             raise RuntimeError("detay adresi bulunamadı")
         print(f"UYARI: {DETAY_VARSAYILAN} yok; detay {detay} — HTML/aktarım tavanı "
               "başka makale için konmuştu.")
-    return [("anasayfa", "/"), ("ekonomi", "/ekonomi"), ("detay", detay),
-            ("ilce", "/ilce/osmangazi")]
+    # İlçe sayfası 20 Ekim 2026'da kalktı; ölçümü de (tavanlarıyla birlikte).
+    return [("anasayfa", "/"), ("ekonomi", "/ekonomi"), ("detay", detay)]
 
 
 def tablo(sonuc):

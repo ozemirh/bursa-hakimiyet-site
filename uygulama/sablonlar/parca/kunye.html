@@ -70,16 +70,6 @@ sayfalarında hiçbir yere gitmezler.{% endcomment %}
           <li><a href="/static/sitemap/sitemap.xml">Site haritası</a></li>
         </ul>
       </nav>
-
-      {% comment %}İlçeler ARTIK SÜTUN. Eskiden sütunların altında enine
-      akan bir şeritti; hücre içinde iki alt sütuna bölünüyor, 17 kalem
-      diğer sütunlarla aynı yükseklikte kalıyor.{% endcomment %}
-      <nav class="kunye-ilce" aria-label="İlçe sayfaları">
-        <h2>İLÇELER</h2>
-        <ul>
-          {% for i in ilceler %}<li><a href="/ilce/{{ i.slug }}">{{ i.ad }}</a></li>{% endfor %}
-        </ul>
-      </nav>
     </div>
 
     {% comment %}Alt satırda YALNIZ telif kalıyor (kullanıcı isteği,

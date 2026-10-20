@@ -237,7 +237,7 @@
     /* MEGA LEVHA (30 Agustos 2026, §35): genis ekranda bes bolumun hepsi
        acik gelir - levha bes sutunlu bir tablodur, akordeon degil. Sablona
        `open` YAZILMAZ: sunucu HTML'i bayt bayt ayni kalsin ki menunun DOM
-       sozlesmeleri (18 ilce, 50 baglanti, tek acik bolum) oynamasin.
+       sozlesmeleri (dort bolum, tek acik bolum) oynamasin.
        Dar ekranda akordeon KATEGORILER-acik haliyle gelir; hepsini acmak
        100+ satirlik bir kaydirma duvari kurardi. */
     if(window.matchMedia('(min-width:1001px)').matches){

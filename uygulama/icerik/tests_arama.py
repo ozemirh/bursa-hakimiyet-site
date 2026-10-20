@@ -413,9 +413,10 @@ class MenuSiralamasiOnbellekli(TestCase):
     def test_sayfa_her_istekte_toplama_yapmiyor(self):
         from django.db import connection
         from django.test.utils import CaptureQueriesContext
-        self.client.get("/ilceler")
+        # Eskiden `/ilceler` (en yalın sayfa); 20 Ekim 2026'da kalktı.
+        self.client.get("/konular")
         with CaptureQueriesContext(connection) as yakala:
-            self.client.get("/ilceler")
+            self.client.get("/konular")
         toplama = [s["sql"] for s in yakala.captured_queries
                    if "COUNT" in s["sql"].upper() and "icerik_haber" in s["sql"]]
         self.assertEqual(toplama, [], f"her istekte toplama sorgusu açılıyor: {toplama[:1]}")
@@ -453,7 +454,7 @@ class SayfaSorguProfili(TestCase):
     def setUp(self):
         from icerik import baglam
         baglam.onbellek.sil(baglam.MENU_ANAHTARI)
-        self.client.get("/ilceler")      # menü önbelleğini ısıt
+        self.client.get("/konular")      # menü önbelleğini ısıt
 
     def _sorgu_sayisi(self, yol):
         from django.db import connection
@@ -501,11 +502,5 @@ class SayfaSorguProfili(TestCase):
     def test_kategori_sayimi_sinirli(self):
         from icerik.views import SinirliSayfalayici
         yanit = self.client.get("/gundem")
-        self.assertEqual(yanit.status_code, 200)
-        self.assertIsInstance(yanit.context["sayfa"].paginator, SinirliSayfalayici)
-
-    def test_ilce_sayimi_sinirli(self):
-        from icerik.views import SinirliSayfalayici
-        yanit = self.client.get("/ilce/osmangazi")
         self.assertEqual(yanit.status_code, 200)
         self.assertIsInstance(yanit.context["sayfa"].paginator, SinirliSayfalayici)

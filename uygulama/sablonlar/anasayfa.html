@@ -181,20 +181,6 @@ yaşanmıştı.{% endcomment %}
             </div>
           </div>
 
-          {% comment %}BURSA İLÇELERİ (§35): yerel gazetenin okuru önce
-          kendi ilçesine bakıyor; ilçeler menüde katlanmış duruyordu.
-          Bağlam `ilceler`i zaten taşıyor. Bu kutu anasayfa gövdesinde,
-          `#tam-menu` içinde DEĞİL — menü bağlantı sayısı sözleşmesi
-          (50) etkilenmez.{% endcomment %}
-          <div class="kutu">
-            <div class="kutu-bas hafif"><h2>BURSA İLÇELERİ</h2><span class="tumu"><a href="/ilceler">Tümü &rarr;</a></span></div>
-            <div class="kutu-ic">
-              <nav class="ilce-agi" aria-label="İlçe sayfaları">
-                {% for i in ilceler %}<a href="/ilce/{{ i.slug }}">{{ i.ad }}</a>{% endfor %}
-              </nav>
-            </div>
-          </div>
-
           <div class="reklam kare-300" data-gpt="300x250"><span><b>REKLAM ALANI</b><span class="olcu">-Haber arası1- 300x250</span></span></div>
 
           {% comment %}GÜNÜN MANŞETLERİ — slayta girmeyen 10 kayıt (§35).

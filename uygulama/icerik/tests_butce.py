@@ -47,7 +47,6 @@ TAVAN = {
     "kategori_bursa": 12,       #  7 / 7
     "kategori_ekonomi": 12,     #  9 / 7
     "kategori_bursaspor": 12,   #  7 / 7
-    "ilce": 10,                 #  5 / 5
     # 11 / 14 idi — BÜYÜYORDU: "yazarın diğer yazıları" her kalem için
     # yazarı ayrıca çekiyordu. Paket L2: `select_related("yazar")` +
     # raydaki yazarların son yazısı tek sorguda (`Yazar.son_yazisiyla`).
@@ -88,7 +87,6 @@ ANASAYFA_HTML_TAVAN = 200 * 1024
 HTML_TAVAN = {              # KB   ölçülen az kayıt / 4 kat kayıt (B)
     "haber_detay": 58,      #      45.940 / 45.961  (gerçek veri: 58 KB)
     "kategori_ekonomi": 65,  #     46.973 / 51.940  (gerçek veri: 83 KB)
-    "ilce": 64,             #      50.490 / 50.467  (gerçek veri: 72 KB)
 }
 
 #: Okurun sayfası kaç ayrı betik/stil DOSYASI istiyor (sunum araçları hariç:
@@ -164,7 +162,6 @@ class Temel(TestCase):
             "kategori_bursa": "/bursa",
             "kategori_ekonomi": "/ekonomi",
             "kategori_bursaspor": "/bursaspor",
-            "ilce": "/ilce/osmangazi",
             "kose_yazisi": self.yazi.get_absolute_url(),
             "yazarlar": "/yazarlar",
             "kose_yazilari": "/kose-yazilari",
@@ -195,7 +192,7 @@ class SorguTavani(Temel):
         self.assertLessEqual(len(yanit.content), ANASAYFA_HTML_TAVAN,
                              f"anasayfa {len(yanit.content)} bayt")
 
-    def test_detay_kategori_ilce_html_boyutu(self):
+    def test_detay_ve_kategori_html_boyutu(self):
         yollar = self.yollar()
         olcum = {}
         for ad, tavan_kb in HTML_TAVAN.items():
@@ -234,7 +231,7 @@ class SorguTavaniCokKayit(SorguTavani):
 class SayfaOnbellegiButcesi(Temel):
     """Anonim okur: ikinci istek önbellekten, veritabanına HİÇ inmeden."""
 
-    ONBELLEKLI = ("anasayfa", "haber_detay", "kategori_bursa", "ilce", "konular",
+    ONBELLEKLI = ("anasayfa", "haber_detay", "kategori_bursa", "konular",
                   "kose_yazilari")
 
     def test_ikinci_istekte_sorgu_sifir(self):

@@ -62,7 +62,7 @@ class AdresSozlesmesi(SimpleTestCase):
         haber kalıbını GÖLGELEMEMELERİ gerekiyor."""
         for yol, ad in (("/", "anasayfa"), ("/spor", "kategori"),
                         ("/spor/", "kategori"), ("/ara", "arama"),
-                        ("/ilceler", "ilceler"), ("/yazarlar", "yazarlar")):
+                        ("/son-haberler", "son-haberler"), ("/yazarlar", "yazarlar")):
             with self.subTest(yol=yol):
                 self.assertEqual(resolve(yol).url_name, ad)
 

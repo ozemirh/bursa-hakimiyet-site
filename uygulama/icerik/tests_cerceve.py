@@ -172,7 +172,8 @@ class BolumBasligiSablonda(TestCase):
                              spot="Spot", govde="<p>Gövde</p>", kategori=kategori,
                              ilce=cls.ilce, yayin_zamani=timezone.now())
 
-    def test_bolum_ve_ilce_h1_kancasi(self):
+    def test_bolum_h1_kancasi(self):
+        # İlçe sayfası 20 Ekim 2026'da kalktı; kanca bölüm sayfalarında.
         desen = r'<section class="kutu bolum">\s*<div class="kutu-bas vurgu">\s*<h1>'
-        for yol in ("/gundem", f"/ilce/{self.ilce.slug}"):
+        for yol in ("/gundem", "/bursa"):
             self.assertRegex(self.client.get(yol).content.decode(), desen, yol)

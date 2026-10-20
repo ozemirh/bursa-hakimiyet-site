@@ -38,36 +38,39 @@ class MenuYapisi(TestCase):
         baglam.onbellek.sil(baglam.MENU_ANAHTARI)
 
     def test_bolumler_details_ile_katlaniyor(self):
-        self.assertEqual(len(re.findall(r"<details", self.menu)), 5)
-        self.assertEqual(len(re.findall(r"<summary", self.menu)), 5)
+        # 20 Ekim 2026: İLÇELER bölümü kalktı, beşten dörde.
+        self.assertEqual(len(re.findall(r"<details", self.menu)), 4)
+        self.assertEqual(len(re.findall(r"<summary", self.menu)), 4)
 
     def test_yalniz_kategoriler_acik(self):
-        """En çok kullanılan bölüm açık, kalan dördü katlı."""
+        """En çok kullanılan bölüm açık, kalan üçü katlı."""
         acik = re.findall(r"<details[^>]*\sopen[^>]*>\s*<summary><h2>([^<]+)", self.menu)
         self.assertEqual(acik, ["KATEGORİLER"])
 
     def test_basliklar_summary_icinde_h2(self):
         """Belge başlık düzeni bozulmasın: `summary` başlık öğesi taşıyabilir."""
-        self.assertEqual(len(re.findall(r"<summary><h2>", self.menu)), 5)
+        self.assertEqual(len(re.findall(r"<summary><h2>", self.menu)), 4)
 
-    def test_17_ilce_DOM_da_katlanmis_olsa_bile(self):
-        """URUN-PLANI.md §14: menüde 18 bağlantı (17 ilçe + tüm ilçeler).
+    def test_ilce_bolumu_kalkti(self):
+        """20 Ekim 2026, kullanıcı kararı: ilçe sayfaları kalktı, menüdeki
+        17 ilçe + "Tüm ilçeler" bölümü de (§14'teki 18 bağlantı)."""
+        self.assertNotIn("/ilce", self.menu)
+        self.assertNotIn("menu-ilce", self.menu)
+        self.assertNotIn("İLÇELER", self.menu)
 
-        Katlanmış olmak gizlenmiş olmak değildir; `hidden` ya da sonradan
+    def test_kategori_bolumu_hidden_kullanmiyor(self):
+        """Katlanmış olmak gizlenmiş olmak değildir; `hidden` ya da sonradan
         yükleme yok — arama motoru ve ekran okuyucu bağlantıları görmeli.
-        """
-        self.assertEqual(len(re.findall(r'href="/ilce/', self.menu)), 17)
-        self.assertEqual(len(re.findall(r'href="/ilceler"', self.menu)), 1)
+        (Eskiden İLÇELER bölümünde ölçülüyordu.)"""
+        bolum = self.menu[self.menu.index("<summary><h2>KATEGORİLER"):]
+        bolum = bolum[:bolum.index("</details>")]
+        self.assertNotIn("hidden", bolum)
+        self.assertNotIn("display:none", bolum)
 
-    def test_ilce_bolumu_hidden_kullanmiyor(self):
-        ilce = self.menu[self.menu.index("menu-ilce"):]
-        ilce = ilce[:ilce.index("</details>")]
-        self.assertNotIn("hidden", ilce)
-        self.assertNotIn("display:none", ilce)
-
-    def test_menudeki_baglanti_sayisi_korundu(self):
-        """Sidebar'a geçerken hiçbir bağlantı düşmedi (ölçüm: 50)."""
-        self.assertEqual(len(re.findall(r"<a href=", self.menu)), 50)
+    def test_menudeki_baglanti_sayisi(self):
+        """50 → 31 (20 Ekim 2026): 17 ilçe + "Tüm ilçeler" ve Aktüalite
+        çıktı. 12 kategori + 6 bölüm + 6 servis + 7 kurumsal."""
+        self.assertEqual(len(re.findall(r"<a href=", self.menu)), 31)
 
     def bant_blogu(self):
         return re.search(r'<div class="kategori-liste"[^>]*>(.*?)</div>',
@@ -150,15 +153,16 @@ class MenuStiliVeBetigi(TestCase):
         self.assertIn("top:100%", kural)
         self.assertIn("var(--perde)", kural)
 
-    def test_masaustunde_bes_sutunlu_levha(self):
-        """Levha ≥1001 px'te beş sütuna açılır; bölümleri JS açar, şablonda
-        `open` YAZILMAZ (DOM sözleşmeleri oynamasın)."""
+    def test_masaustunde_dort_sutunlu_levha(self):
+        """Levha ≥1001 px'te dört sütuna açılır (20 Ekim 2026'ya dek beşti;
+        İLÇELER sütunu kalktı); bölümleri JS açar, şablonda `open`
+        YAZILMAZ (DOM sözleşmeleri oynamasın)."""
         blok = re.search(r"@media\(min-width:1001px\)\{\s*\.tam-menu-ic\{([^}]*)\}",
                          self.CSS)
         self.assertIsNotNone(blok, "masaüstü levha kuralı yok")
         self.assertIn("display:grid", blok.group(1))
         self.assertEqual(len(blok.group(1).split("grid-template-columns:")[1]
-                             .split("}")[0].split()), 5)
+                             .split("}")[0].split()), 4)
         betik = (KOK / "statik" / "betik" / "site.js").read_text(encoding="utf-8")
         self.assertIn("min-width:1001px", betik)
         self.assertIn("b.open = true", betik)

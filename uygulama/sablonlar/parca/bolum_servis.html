@@ -117,7 +117,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
 
   {% elif servis.tur == "nobet" %}
     <div class="kutu-bas">
-      <h2 id="servis-bas">{% if servis.yer %}{{ servis.yer|buyult }} NÖBETÇİ ECZANELERİ{% else %}NÖBETÇİ ECZANELER{% endif %}</h2>
+      <h2 id="servis-bas">NÖBETÇİ ECZANELER</h2>
       {% comment %}Adet PANELİN GÖSTERDİĞİ değil, bugünkü TOPLAMDIR:
       "düğmedeki sayı, basınca geleni sayar" (URUN-PLANI.md §32.2).{% endcomment %}
       {% if servis.gecersiz %}<span class="tumu"><a href="{{ servis.yol }}">Nöbetçi eczane sayfası &rarr;</a></span>
@@ -130,7 +130,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
         {% for e in servis.eczaneler %}
         <li>
           <b>{{ e.ad|baslikla }}</b>
-          {% if e.ilce and not servis.yer %}<span class="yer">{{ e.ilce|baslikla }}</span>{% endif %}
+          {% if e.ilce %}<span class="yer">{{ e.ilce|baslikla }}</span>{% endif %}
           {% if e.adres %}<span class="adres">{{ e.adres|baslikla }}</span>{% endif %}
           <span class="baglar">
             {% if e.telefon_baglanti %}<a class="tel" href="tel:{{ e.telefon_baglanti }}">{{ e.telefon }}</a>{% endif %}

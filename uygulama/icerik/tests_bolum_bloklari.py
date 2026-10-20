@@ -76,12 +76,6 @@ class BolumBloklari(TestCase):
         self.assertNotIn("bolum-goruntu", metin)
         self.assertNotIn("GÖRÜNTÜLER", metin)
 
-    def test_kusak_ilce_sayfasinda_yok(self):
-        """Galeri ve videonun kategorisi var, ilçesi yok; uydurma eşleme
-        yapmaktansa blok hiç çizilmiyor."""
-        metin = self.client.get(f"/ilce/{self.ilce.slug}").content.decode()
-        self.assertNotIn("bolum-goruntu", metin)
-
     def test_kusak_adedi_sabitlerden_geliyor(self):
         self.assertEqual(views.BOLUM_GALERI, 4)
         self.assertEqual(views.BOLUM_VIDEO, 4)
@@ -149,12 +143,14 @@ class BolumBloklari(TestCase):
         with mock.patch.object(views.eczane_sayfa, "gunun_paketi",
                                lambda *a, **k: None):
             self.assertIsNone(views._bolum_servisi(slug="saglik"))
-            self.assertIsNone(views._bolum_servisi(ilce=self.ilce))
 
-    def test_nobet_seridi_ilceye_suzuluyor(self):
-        """İlçe sayfasında yalnız O İLÇENİN nöbetçisi görünür; sayı ise
-        şeritte görünenin değil, ilçenin bugünkü TOPLAMININ sayısıdır
-        (URUN-PLANI.md §32.2: düğmedeki sayı basınca geleni sayar)."""
+    def test_nobet_seridi_toplami_sayiyor(self):
+        """Şeritteki sayı şeritte görünenin değil, bugünkü TOPLAMIN sayısıdır
+        (URUN-PLANI.md §32.2: düğmedeki sayı basınca geleni sayar).
+
+        20 Ekim 2026'ya dek bu test ilçe sayfasının ilçeye süzülmüş şeridini
+        ölçüyordu; ilçe sayfası kalktı, süzgeç de. Sayım kuralı Sağlık
+        bölümündeki Bursa geneli şeritte aynen geçerli."""
         oteki = Ilce.objects.exclude(pk=self.ilce.pk).first()
         paket = {"gun": None, "eczaneler": [
             {"ad": f"Eczane {n}", "ilce": self.ilce.ad,
@@ -164,12 +160,11 @@ class BolumBloklari(TestCase):
              "telefon": "", "telefon_baglanti": ""}]}
         with mock.patch.object(views.eczane_sayfa, "gunun_paketi",
                                lambda *a, **k: paket):
-            servis = views._bolum_servisi(ilce=self.ilce)
+            servis = views._bolum_servisi(slug="saglik")
         self.assertEqual(servis["tur"], "nobet")
-        self.assertEqual(servis["adet"], 5)
+        self.assertEqual(servis["adet"], 6)
         self.assertEqual(len(servis["eczaneler"]), views.SERVIS_ECZANE)
-        for e in servis["eczaneler"]:
-            self.assertEqual(e["ilce_anahtar"], self.ilce.slug)
+        self.assertEqual(servis["yol"], "/nobetci-eczane")
 
     def test_hangi_bolum_hangi_servis_gorunumde(self):
         """Kural şablonda değil görünümde; şablon yalnız çiziyor."""
@@ -348,7 +343,7 @@ class BolumBloklari(TestCase):
         `icerik/temalar.py`de kayıtlı bölümde ve kaydın değeriyle basılır.
         Ayrıntılı sözleşme (takım, kontrast, kabuk) `tests_temalar.py`de."""
         from . import temalar
-        for yol in ("/bursa", "/saglik", "/gundem", f"/ilce/{self.ilce.slug}"):
+        for yol in ("/bursa", "/saglik", "/gundem"):
             self.assertNotIn("data-bolum", self.client.get(yol).content.decode(), yol)
         self.assertIn('<body data-bolum="ekonomi">', self.client.get("/ekonomi").content.decode())
         self.assertEqual(temalar.KATEGORI_TEMALARI["ekonomi"], "ekonomi")

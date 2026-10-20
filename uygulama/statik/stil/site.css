@@ -476,7 +476,7 @@ a.foto,.foto-bag{display:block}
 
    Bölümlerin masaüstünde açılmasını JS yapar (site.js `menuAc`), şablona
    `open` yazılmaz: sunucu HTML'i değişmeyince menünün DOM sözleşmeleri
-   (17 ilçe + tüm ilçeler, 50 bağlantı, tek açık bölüm) olduğu gibi kalır. */
+   (dört bölüm, tek açık bölüm) olduğu gibi kalır. */
 .tam-menu{position:absolute;top:100%;left:0;right:0;z-index:60;
   background:var(--kagit);color:var(--murekkep);
   border-top:3px solid var(--kirmizi);border-bottom:1px solid var(--cizgi);
@@ -503,7 +503,7 @@ a.foto,.foto-bag{display:block}
 .menu-bolum ul{list-style:none;padding:0 0 8px}
 .menu-bolum a{display:block;color:var(--murekkep);font-size:13.5px;padding:8px 14px 8px 24px}
 .menu-bolum a:hover{background:var(--yumusak);color:var(--kirmizi-koyu)}
-/* Uzun listeler (13 kategori, 18 ilçe) iki sütuna iniyor. Çok sütunda
+/* Uzun liste (12 kategori) iki sütuna iniyor. Çok sütunda
    görsel sıra DOM sırasıyla aynıdır, o yüzden odak sırası görsel sırayı
    izler. */
 .menu-iki-sutun ul{columns:2;column-gap:2px}
@@ -512,17 +512,17 @@ a.foto,.foto-bag{display:block}
   padding:10px 14px;font-size:11.5px;line-height:1.45;color:var(--gri)}
 @media(max-width:1000px){.tam-menu{max-height:calc(100dvh - 96px)}}
 
-/* Masaüstü: beş sütunlu levha. İLÇELER en geniş sütun — yerel gazetenin
-   omurgası; vurgu sıra değiştirerek değil yer vererek kuruluyor. */
+/* Masaüstü: dört sütunlu levha (20 Ekim 2026'ya dek beşti; İLÇELER
+   sütunu ilçe sayfalarıyla birlikte kalktı, kalan izlerin oranı aynı). */
 /* Levha da bant gibi kenardan kenara (30 Ağustos, §36): genişlik kapağı
    konsaydı tam ekran bandın altında dar bir ada gibi durur, sütunlar bandın
-   kalemleriyle hizasını kaybederdi. Yorum `@media`nin DIŞINDA: beş sütun
+   kalemleriyle hizasını kaybederdi. Yorum `@media`nin DIŞINDA: sütun
    sözleşmesini sınayan test (tests_menu) `@media(min-width:1001px){` ile
    `.tam-menu-ic{` arasında yalnız boşluk bekliyor. */
 @media(min-width:1001px){
   .tam-menu-ic{display:grid;padding:18px 20px 8px;gap:0 24px;
     max-width:1480px;margin:0 auto;
-    grid-template-columns:1.3fr .9fr 1.5fr .9fr .9fr}
+    grid-template-columns:1.3fr .9fr .9fr .9fr}
   .menu-bolum{border-bottom:0;border-left:1px solid var(--cizgi);padding-left:16px}
   .menu-bolum:first-child{border-left:0;padding-left:0}
   /* Başlıklar masaüstünde sütun başlığıdır, düğme değil: fare tıklaması
@@ -790,26 +790,6 @@ main{display:block;padding-top:14px}
    fotoğraf çerçeveye sığacak kadar ölçeklenir, kalan pay düz zemin. */
 .arama-izgara .kart .foto:has(img){background:var(--zemin)}
 .arama-izgara .kart .foto img{object-fit:contain}
-
-/* --- İLÇE SAYFASI: hızlı geçiş şeridi (2 Eylül 2026, §46) -----------
-   YALNIZ ilçe sayfasında çizilir. Kategori sayfasında da denendi ve
-   kullanıcı haklı olarak kaldırttı: yapışkan kategori bandı zaten
-   ekranın üstünde duruyor, şerit onun kopyasıydı. İlçede bantta 17 ilçe
-   YOK — tek bir "İLÇELER" bağlantısı var ve dizine gidiyor; komşu ilçeye
-   geçmek bantla iki tıklama, şeritle bir.
-
-   Şerit kutunun İÇİNDE, kırmızı başlık bandının hemen altında: kutunun
-   dışına konsaydı sayfada üçüncü bir yatay bant daha olurdu. Dar ekranda
-   yatay kayar — sarmak 17 ilçede dört satır yapıyordu. */
-.bolum-gecis{display:flex;align-items:center;gap:8px;overflow-x:auto;
-  background:var(--yumusak);border-bottom:1px solid var(--cizgi);
-  padding:8px 12px;scrollbar-width:thin}
-.bolum-gecis b{flex:none;font-family:var(--display);font-weight:900;font-size:11px;
-  letter-spacing:1.2px;color:var(--gri)}
-.bolum-gecis a{flex:none;font-size:12.5px;font-weight:500;color:var(--lacivert);
-  background:var(--kagit);border:1px solid var(--cizgi);border-radius:2px;
-  padding:5px 10px;white-space:nowrap}
-.bolum-gecis a:hover{border-color:var(--kirmizi);color:var(--kirmizi-koyu)}
 
 /* --- BÖLÜM SAYFASI: EN ÇOK OKUNANLAR şeridi (2 Eylül 2026, §47) -----
    Anasayfada bu kutu sağ RAYDA duruyor; bölüm sayfasında ray yok (§46:
@@ -1639,7 +1619,9 @@ figure.galeri-kart .foto img{object-fit:contain}
    margin degerlerini eziyordu) -- tek tanima indi. */
 footer{background:var(--lacivert-koyu);color:var(--kunye-yazi);border-top:3px solid var(--kirmizi);padding:30px 0 24px;font-size:13px;margin-top:18px}
 .kunye-ic{max-width:1480px;margin:0 auto;padding:0 12px}
-.kunye-ust{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.5fr);gap:26px}
+/* 20 Ekim 2026: İLÇELER sütunu kalktı (ilçe sayfaları yok), beşinci iz
+   de kalktı — boş iz bırakılsaydı dört sütun sola yığılırdı. */
+.kunye-ust{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr);gap:26px}
 footer a:hover{color:var(--kagit);text-decoration:underline}
 /* Baslik altindaki cizgi bes sutunun da AYNI satirdan basladigini gosterir;
    kisa kirmizi parca sutun basini isaretler. */
@@ -1661,15 +1643,6 @@ footer strong{color:var(--kagit)}
    ustunde; yazili etiket kaldirildi (kunye.html'deki olcum notu). */
 .sosyal a{border:1px solid var(--kunye-cizgi);width:34px;height:34px;display:grid;place-items:center}
 .sosyal a:hover{background:var(--kirmizi);color:var(--kagit);border-color:var(--kirmizi);text-decoration:none}
-/* 17 ilce hucrenin ICINDE iki alt sutuna boluniyor: sutun komsulariyla ayni
-   yukseklikte kaliyor ve enine serit gerekmiyor.
-   19 Ekim 2026 (L1): `columns:2 8.5em` — EN FAZLA iki sutun, her biri en az
-   8.5em (110 px). En uzun ilce adi "Mustafakemalpasa" 13 px'te 112 px;
-   1001-1190 px arasinda hucre ~203-240 px kaliyor, iki alt sutun 92 px'e
-   dusuyor ve ad hucreden 7 px tasiyordu (1024'te sayfa yatay kaydi,
-   olculdu). Dar hucrede tarayici tek sutuna iner, genis hucrede iki. */
-.kunye-ilce ul{columns:2 8.5em;column-gap:18px}
-.kunye-ilce li{break-inside:avoid}
 /* Alt satirda yalniz telif var (kullanici istegi, 3 Eylul 2026): kunye
    bilgileri ve uzun veri kaynagi beyani kunyeden kaldirildi. Iki sutunlu
    izgaraya gerek kalmadi. */
@@ -2079,7 +2052,7 @@ html[data-reklam="kapali"] .sayfa{grid-template-columns:minmax(0,1100px)}
 .ses-sag{margin-left:0}
 }
 @media print{
-.servis,.menu,.ilce,.sondakika,.reklam,.arac,.paylas,.seslendirme,.yukari,aside,.kirinti,.kunye-ilce,.sosyal{display:none!important}
+.servis,.menu,.ilce,.sondakika,.reklam,.arac,.paylas,.seslendirme,.yukari,aside,.kirinti,.sosyal{display:none!important}
 .izgara{grid-template-columns:minmax(0,1fr)}
 .detay{border:0;padding:0}
 }
@@ -2673,13 +2646,6 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 .servis-dilim h3{font-family:var(--display);font-size:12px;letter-spacing:1.1px;
   color:var(--lacivert);border-bottom:2px solid var(--kirmizi);
   padding-bottom:6px;margin-bottom:10px}
-
-/* --- ray: ilçe ağı -------------------------------------------------- */
-.ilce-agi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-.ilce-agi a{display:block;font-family:var(--display);font-weight:700;font-size:12.5px;
-  letter-spacing:.3px;color:var(--lacivert);background:var(--yumusak);
-  border:1px solid var(--cizgi);padding:7px 9px;text-align:center}
-.ilce-agi a:hover{background:var(--lacivert);color:var(--kagit);border-color:var(--lacivert)}
 
 /* --- dörtlü: dört EŞİT kutucuk --------------------------------------
    30 Ağustos 2026, kullanıcı kararı: ilk kutucuk 1,5fr genişlikte ve

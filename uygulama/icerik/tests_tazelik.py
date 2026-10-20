@@ -417,9 +417,10 @@ class HavaVeEczane(KlasorluTest):
         self.assertIn("Deneme Eczanesi", metin)
         self.assertNotIn("elimizdeki son liste", metin)
 
-    def test_ilce_servis_panelinde_de_uyari(self):
+    def test_bolum_servis_panelinde_de_uyari(self):
+        # Eskiden ilçe sayfasında ölçülüyordu (20 Ekim 2026'da kalktı).
         self.yaz("nobetci-eczane", self._eczane(self._dun_sabah()))
-        self.assertIn("Elimizdeki son liste", self.sayfa("/ilce/nilufer"))
+        self.assertIn("Elimizdeki son liste", self.sayfa("/saglik"))
 
 
 # -- 6. betikler: asgari eşik ve kaynak sağlığı -----------------------------------------

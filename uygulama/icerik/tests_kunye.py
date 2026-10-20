@@ -22,7 +22,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
-from taksonomi.models import Ilce, Kategori, KategoriTur
+from taksonomi.models import Kategori, KategoriTur
 
 from . import baglam
 from .models import Haber
@@ -56,15 +56,15 @@ class KunyeYapisi(TestCase):
 
     # --- 1. tek ritim ----------------------------------------------------
 
-    def test_ilceler_serit_degil_sutun(self):
-        """17 ilçe artık sütun ızgarasının İÇİNDE, altından akan şerit değil."""
+    def test_ilce_sutunu_kalkti_serit_de_donmedi(self):
+        """20 Ekim 2026: ilçe sayfaları kalktı, künyenin İLÇELER sütunu da.
+        Eski enine şerit (`<b>İLÇELER</b>`) de geri gelmedi; ızgara dört
+        hücre (marka + üç bağlantı sütunu)."""
         kunye = self._kunye()
         izgara = kunye[kunye.index('class="kunye-ust"'):kunye.index('class="kunye-alt"')]
-        for ilce in Ilce.objects.all():
-            self.assertIn(f'href="/ilce/{ilce.slug}"', izgara)
-        # Eski şeridin işareti: `<b>İLÇELER</b>` etiketi ve sütun dışı yer.
-        self.assertNotIn("<b>İLÇELER</b>", kunye)
-        self.assertIn("<h2>İLÇELER</h2>", kunye)
+        self.assertNotIn("/ilce", izgara)
+        self.assertNotIn("İLÇELER", kunye)
+        self.assertEqual(izgara.count("<nav "), 3)
 
     def test_kunye_bilgileri_tamamen_kalkti(self):
         """İmtiyaz sahibi · sorumlu müdür · yayın türü künyeden kaldırıldı.
@@ -167,7 +167,7 @@ class KunyeYapisi(TestCase):
         kunye = self._kunye()
         self.assertNotIn("haber arşivde", kunye)
         # Sayfanın geri kalanı ayakta: künye kusuru sayfayı düşürmez.
-        self.assertIn("<h2>İLÇELER</h2>", kunye)
+        self.assertIn("<h2>SERVİSLER</h2>", kunye)
 
     def test_hata_onbellege_yaziliyor(self):
         """Hata önbelleklenmezse göç sürerken her istek kilide yeniden girer.

@@ -47,8 +47,9 @@ class AkisRitmi(TestCase):
 
     # -- ayraç gitti -------------------------------------------------------
 
-    def test_kategori_ve_ilce_sayfasinda_tarih_ayraci_yok(self):
-        for yol in ("/gundem", f"/ilce/{self.ilce.slug}", "/son-haberler"):
+    def test_kategori_sayfasinda_tarih_ayraci_yok(self):
+        # İlçe sayfası 20 Ekim 2026'da kalktı (301 → /bursa).
+        for yol in ("/gundem", "/son-haberler"):
             metin = self.client.get(yol).content.decode()
             self.assertNotIn('class="gun"', metin, yol)
             self.assertIn("akis-ritim", metin, yol)

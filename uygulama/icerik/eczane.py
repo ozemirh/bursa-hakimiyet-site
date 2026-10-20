@@ -80,7 +80,7 @@ def ilce_adlari() -> dict[str, str]:
 
     Kaynak ilçeyi büyük harfle ve nöbet bölgesi olarak veriyor
     ("OSMANGAZİ - DEMİRTAŞ"); sayfada gazetenin kendi ilçe adı yazmalı ki
-    ilçe sayfasıyla (`/ilce/osmangazi`) aynı sözcük görünsün.
+    haberin ilçe alanıyla (`Ilce.ad`) aynı sözcük görünsün.
     `canli._ilce_anahtar()` ile `Ilce.slug` birebir aynı 17 değeri
     üretiyor (ölçüldü, 31 Ağustos 2026).
     """

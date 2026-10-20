@@ -1,6 +1,6 @@
 """Kök adres tablosu.
 
-**Sıra bağlayıcıdır.** Sabit yollar (`/ara`, `/ilceler`) kategori kalıbından
+**Sıra bağlayıcıdır.** Sabit yollar (`/ara`, `/son-haberler`) kategori kalıbından
 önce gelmek zorunda; kategori kalıbı `^(?P<slug>[^/]+)$` her tek dilimli yolu
 yakalar ve sonra gelen hiçbir şey eşleşmez.
 
@@ -201,19 +201,20 @@ urlpatterns = [
 
     path("", icerik_gorunum.anasayfa, name="anasayfa"),
     path("ara", icerik_gorunum.arama, name="arama"),
-    path("ilceler", icerik_gorunum.ilceler, name="ilceler"),
+    # `/ilceler` ve `/ilce/<slug>` 20 Ekim 2026'da kalktı: 301 ile `/bursa`
+    # (`cekirdek/adres_duzeni.py`, ara katman — burada kalıp yok).
 
     # "Daha fazla göster" (6 Eylul 2026). `/daha-fazla` sayfa degil PARCA
     # dondurur; `/son-haberler` o dugmenin JavaScript'siz karsiligidir.
     # Ikisi de tek dilimli, kategori kalibindan ONCE gelmek zorunda.
     path("daha-fazla", icerik_gorunum.daha_fazla, name="daha-fazla"),
     path("son-haberler", icerik_gorunum.son_haberler, name="son-haberler"),
-    re_path(r"^ilce/(?P<slug>[-\w]+)/?$", icerik_gorunum.ilce, name="ilce"),
     path("resmi-ilan", icerik_gorunum.resmi_ilan, name="resmi-ilan"),
 
     # Nobetci eczane: kalici servis sayfalari (31 Agustos 2026).
     # "nobetci-eczane" tek dilimli, kategori kalibindan ONCE gelmeli.
-    # Ilce kalibi `/ilce/<slug>` ile ayni slug kumesini kullanir.
+    # Ilce kalibi `Ilce.slug` kumesini kullanir (ilce SAYFASI kalkti,
+    # eczanenin ilce kirilimi duruyor).
     path("nobetci-eczane", icerik_gorunum.nobetci_eczane,
          name="nobetci-eczane"),
     re_path(r"^nobetci-eczane/(?P<slug>[-\w]+)/?$",

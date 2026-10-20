@@ -20,7 +20,6 @@ JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
         <ol>
           <li><a href="/">Anasayfa</a></li>
           <li><a href="/{{ haber.kategori.slug_al }}">{{ haber.kategori.ad|baslikla }}</a></li>
-          {% if haber.ilce %}<li><a href="/ilce/{{ haber.ilce.slug }}">{{ haber.ilce.ad }}</a></li>{% endif %}
           <li><span aria-current="page">{{ haber.baslik|truncatechars:60 }}</span></li>
         </ol>
       </nav>
@@ -155,7 +154,7 @@ JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
 
           {% if ilcedekiler %}
           <div class="kutu">
-            <div class="kutu-bas"><h2>{{ haber.ilce.ad|buyult }} HABERLERİ</h2><span class="tumu"><a href="/ilce/{{ haber.ilce.slug }}">Tümü &rarr;</a></span></div>
+            <div class="kutu-bas"><h2>{{ haber.ilce.ad|buyult }} HABERLERİ</h2></div>
             <div class="kutu-ic">
               <ul class="liste">
 {% for h in ilcedekiler %}                <li><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>{% if h.yayin_zamani %}<span class="zaman">{{ h.yayin_zamani|kisa_zaman }}</span>{% endif %}</li>

@@ -93,8 +93,7 @@ class MetaBlogu(SeoTabani):
 
     def _yollar(self):
         return [
-            "/", self.haber.get_absolute_url(), "/gundem", f"/ilce/{self.ilce.slug}",
-            "/ilceler", "/konular", "/konu/ince", "/konu/kalin", "/son-haberler",
+            "/", self.haber.get_absolute_url(), "/gundem", "/bursa", "/konular", "/konu/ince", "/konu/kalin", "/son-haberler",
             "/bursaspor", "/yazarlar", self.yazar.get_absolute_url(),
             self.yazi.get_absolute_url(), "/galeriler", self.galeri.get_absolute_url(),
             "/videolar", self.video.get_absolute_url(), "/resmi-ilan",
@@ -165,7 +164,6 @@ class Kanonik(SeoTabani):
                               (self.haber.get_absolute_url() + "?utm_source=x",
                                KOK + self.haber.get_absolute_url()),
                               ("/gundem?fbclid=1", f"{KOK}/gundem"),
-                              (f"/ilce/{self.ilce.slug}", f"{KOK}/ilce/{self.ilce.slug}"),
                               ("/konular", f"{KOK}/konular"),
                               ("/yazarlar", f"{KOK}/yazarlar"),
                               ("/resmi-ilan?tur=ihale", f"{KOK}/resmi-ilan")):
@@ -188,7 +186,7 @@ class SayfaNumarasi(SeoTabani):
     def test_gecersiz_ve_aralik_disi_sayfa_404(self):
         for yol in ("/gundem?sayfa=abc", "/gundem?sayfa=0", "/gundem?sayfa=-2",
                     "/gundem?sayfa=999", "/son-haberler?sayfa=50", "/konular?sayfa=9",
-                    "/galeriler?sayfa=5", f"/ilce/{self.ilce.slug}?sayfa=x"):
+                    "/galeriler?sayfa=5", "/bursa?sayfa=x"):
             with self.subTest(yol=yol):
                 self.assertEqual(self.client.get(yol).status_code, 404)
 
@@ -220,8 +218,7 @@ class AdresDuzeni(SeoTabani):
 
     def test_sondaki_egik_cizgi(self):
         self._301("/gundem/", "/gundem")
-        self._301(f"/ilce/{self.ilce.slug}/?utm_source=facebook",
-                  f"/ilce/{self.ilce.slug}?utm_source=facebook")
+        self._301("/bursaspor/?utm_source=facebook", "/bursaspor?utm_source=facebook")
         self._301(self.haber.get_absolute_url() + "/", self.haber.get_absolute_url())
 
     def test_panel_ve_yonetim_egik_cizgisi_korunur(self):
@@ -292,12 +289,10 @@ class YapilandirilmisVeri(SeoTabani):
         self.assertIn("https://x.com/b_hakimiyet", kurulus["sameAs"])
         self.assertEqual(len(kurulus["sameAs"]), 4)
 
-    def test_kategori_ve_ilce_kirintisi(self):
+    def test_kategori_kirintisi(self):
+        # İlçe kırıntısı (Anasayfa › İlçeler › İlçe) sayfayla birlikte kalktı.
         k = _tur(_ld(self._al("/gundem")), "BreadcrumbList")
         self.assertEqual([o["name"] for o in k["itemListElement"]], ["Anasayfa", "Gündem"])
-        k = _tur(_ld(self._al(f"/ilce/{self.ilce.slug}")), "BreadcrumbList")
-        self.assertEqual([o["name"] for o in k["itemListElement"]],
-                         ["Anasayfa", "İlçeler", self.ilce.ad])
 
     def test_kose_galeri_video_yazar(self):
         m = _tur(_ld(self._al(self.yazi.get_absolute_url())), "OpinionNewsArticle")
