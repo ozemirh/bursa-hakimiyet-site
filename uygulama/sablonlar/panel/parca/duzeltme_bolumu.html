@@ -1,0 +1,73 @@
+{% comment %}
+DÜZELTME VE CEVAP — haber düzenleme ekranının bölümü (20 Ekim 2026).
+
+Ayrı bir yönetim ekranı yok: notlar haberi giren ekrandan girilir. Bölüm
+ana formun DIŞINDA (iç içe form olmaz); formlar `panel-haber-duzeltme`
+ucuna gider. Ekleme ve kaldırma yayın yetkisine bağlı — not okura anında
+görünür. Yetkisi olmayan kullanıcı listeyi görür, düğmeleri görmez
+(görünmemesi yetki denetimi değildir; denetim uçta).
+
+Kayıt SİLİNMEZ: "Yayından kaldır" notu okurdan indirir, metin ve kimin
+kaldırdığı burada kalır. Metni editör yazar; yapay zekâ üretmez.
+{% endcomment %}
+<section class="haber-form duzeltme-bolumu" id="duzeltme" aria-labelledby="duzeltme-bolumu-baslik">
+  <h2 id="duzeltme-bolumu-baslik">Düzeltme ve cevap</h2>
+  <p class="alt-not">Yayımlanan not haberin sonunda ve <a href="/duzeltmeler">Düzeltme ve Cevap</a>
+    sayfasında görünür; başlığın altına “Bu haberde düzeltme var” işareti düşer.
+    Kayıt silinmez, yalnız yayından kaldırılır.</p>
+
+  {% if duzeltmeler %}
+  <div class="tablo-kaydir">
+  <table class="liste duzeltme-tablo">
+    <caption class="gorsel-gizli">Bu haberin notları ({{ duzeltmeler|length }})</caption>
+    <thead><tr><th scope="col">Yayın</th><th scope="col">Tür</th><th scope="col">Metin</th><th scope="col">Durum</th>{% if yayinlayabilir %}<th scope="col">İşlem</th>{% endif %}</tr></thead>
+    <tbody>
+{% for n in duzeltmeler %}      <tr>
+        <td class="mono">{{ n.yayin_zamani|date:"d.m.Y H:i" }}<br><span class="alt-not">{{ n.olusturan.get_username|default:"—" }}</span></td>
+        <td>{{ n.get_tur_display }}{% if n.cevap_veren %}<br><span class="alt-not">{{ n.cevap_veren }}</span>{% endif %}</td>
+        <td class="duzeltme-metin-hucre">{{ n.metin|linebreaksbr }}</td>
+        <td>{% if n.yayinda %}<span class="durum-etiket">Yayında</span>{% else %}<span class="durum-etiket silinmis">Kaldırıldı</span><br><span class="alt-not">{{ n.kaldirma_zamani|date:"d.m.Y H:i" }} · {{ n.kaldiran.get_username|default:"—" }}{% if n.kaldirma_gerekcesi %} · {{ n.kaldirma_gerekcesi }}{% endif %}</span>{% endif %}</td>
+        {% if yayinlayabilir %}<td class="islem">
+          <form method="post" action="{% url 'panel-haber-duzeltme' haber.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="duzeltme" value="{{ n.pk }}">
+            {% if n.yayinda %}
+              <input type="hidden" name="islem" value="kaldir">
+              <label class="gorsel-gizli" for="gerekce-{{ n.pk }}">Kaldırma gerekçesi</label>
+              <input type="text" id="gerekce-{{ n.pk }}" name="gerekce" maxlength="200" placeholder="Gerekçe (isteğe bağlı)">
+              <button type="submit" class="dugme ufak">Yayından kaldır</button>
+            {% else %}
+              <input type="hidden" name="islem" value="geri_al">
+              <button type="submit" class="dugme ufak">Yeniden yayımla</button>
+            {% endif %}
+          </form>
+        </td>{% endif %}
+      </tr>
+{% endfor %}    </tbody>
+  </table>
+  </div>
+  {% endif %}
+
+  {% if yayinlayabilir %}
+    {% if duzeltme_eklenebilir %}
+    <form method="post" action="{% url 'panel-haber-duzeltme' haber.pk %}" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="islem" value="ekle">
+      <fieldset>
+        <legend>Yeni not</legend>
+        {% if duzeltme_formu.non_field_errors %}<div class="uyari" role="alert">{{ duzeltme_formu.non_field_errors }}</div>{% endif %}
+        {% include "panel/parca/alan.html" with alan=duzeltme_formu.tur ipucu="Düzeltme: haberdeki hatanın düzeltilmesi. Cevap / tekzip: haberle ilgili kişi ya da kurumun gönderdiği cevap. Güncelleme notu: habere sonradan eklenen bilgi." %}
+        {% include "panel/parca/alan.html" with alan=duzeltme_formu.cevap_veren ipucu="Yalnız cevap/tekzipte; ör. kurumun adı ve gönderenin sıfatı." %}
+        {% include "panel/parca/alan.html" with alan=duzeltme_formu.metin ipucu="Okura olduğu gibi basılır. Boş satır paragraf ayırır. Yayın zamanı kaydettiğiniz an olur." %}
+      </fieldset>
+      <div class="eylem">
+        <button type="submit" class="dugme dolu">Notu yayımla</button>
+      </div>
+    </form>
+    {% else %}
+    <p class="alt-not">Haber yayında değil: not yalnız yayındaki habere eklenir.</p>
+    {% endif %}
+  {% else %}
+    <p class="alt-not">Not yayımlamak yayın yetkisi ister; notu masaya iletin.</p>
+  {% endif %}
+</section>

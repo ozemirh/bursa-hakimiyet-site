@@ -98,7 +98,7 @@ class MetaBlogu(SeoTabani):
             "/bursaspor", "/yazarlar", self.yazar.get_absolute_url(),
             self.yazi.get_absolute_url(), "/galeriler", self.galeri.get_absolute_url(),
             "/videolar", self.video.get_absolute_url(), "/resmi-ilan",
-            "/nobetci-eczane", "/veri-kaynaklari", "/ara?q=köprü",
+            "/nobetci-eczane", "/veri-kaynaklari", "/duzeltmeler", "/ara?q=köprü",
         ]
 
     def test_her_sayfa_turunde_meta_var_ve_json_ayristirilir(self):

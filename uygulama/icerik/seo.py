@@ -257,7 +257,35 @@ def haber_makalesi(haber) -> dict:
                            "url": kok() + "/"}]
     if haber.kategori_id:
         veri["articleSection"] = _baslikla(haber.kategori.ad)
+    duzeltmeler = duzeltme_yorumlari(haber)
+    if duzeltmeler:
+        veri["correction"] = duzeltmeler
     return veri
+
+
+def duzeltme_yorumlari(haber) -> list[dict]:
+    """schema.org `correction` → `CorrectionComment` (20 Ekim 2026).
+
+    YALNIZ "düzeltme" türü işaretlenir. Cevap/tekzip gazetenin kendi
+    düzeltmesi değil, karşı tarafın beyanıdır; güncelleme notu da hata
+    düzeltmesi değildir — ikisini `correction` diye işaretlemek sayfada
+    görünenden farklı bir şey söylemek olurdu. Kayıt yoksa alan hiç
+    yazılmaz. Liste görünümün haber detayında kurduğu listeden okunur
+    (`yayindaki_duzeltmeler`); yoksa modelden.
+    """
+    from .models import Duzeltme
+    notlar = getattr(haber, "yayindaki_duzeltmeler", None)
+    if notlar is None:
+        notlar = Duzeltme.haber_icin(haber)
+    sonuc = []
+    for n in notlar:
+        if n.tur != Duzeltme.TUR_DUZELTME:
+            continue
+        oge = {"@type": "CorrectionComment", "text": _metin(n.metin, 2000)}
+        if n.yayin_zamani:
+            oge["datePublished"] = _zaman(n.yayin_zamani)
+        sonuc.append(oge)
+    return sonuc
 
 
 def haber_kirintisi(haber) -> dict:

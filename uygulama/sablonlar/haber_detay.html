@@ -34,6 +34,9 @@ JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
                spot arasında. Boşsa hiç basılmaz.{% endcomment %}
             {% if haber.ikinci_baslik %}<p class="ikinci-baslik">{{ haber.ikinci_baslik }}</p>{% endif %}
             {% if haber.spot %}<p class="spot">{{ haber.spot }}</p>{% endif %}
+            {% comment %}Düzeltme işareti (20 Ekim 2026): yalnız yayındaki not varsa;
+               gövde sonundaki bloğa bağlanır. Metni notun türünden.{% endcomment %}
+            {% if duzeltme_isareti %}<p class="duzeltme-isaret"><a href="#duzeltmeler">{{ duzeltme_isareti }}</a></p>{% endif %}
 
             <div class="detay-kunye">
               {% comment %}İmza (Paket H): muhabir · ajans · "Kaynak: X" · Haber
@@ -80,6 +83,8 @@ JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
             {% include "parca/seslendirme.html" %}
 
             <div class="metin">{{ haber.govde_guvenli }}</div>
+
+            {% if duzeltmeler %}{% include "parca/duzeltme_bolmesi.html" with notlar=duzeltmeler %}{% endif %}
 
             {% comment %}Gömülü kod (Paket H): ham kod ASLA basılmaz. Tanınan
                YouTube / X / Instagram bağlantısı kimliğinden yeniden kurulur
