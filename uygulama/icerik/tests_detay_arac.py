@@ -30,7 +30,7 @@ from .models import Haber
 KOK = Path(__file__).resolve().parent.parent
 CSS = (KOK / "statik" / "stil" / "site.css").read_text(encoding="utf-8")
 JS = (KOK / "statik" / "betik" / "site.js").read_text(encoding="utf-8")
-SERIT = 'class="reklam tam"'
+SERIT = 'class="reklam tam'   # detay kopyası: "reklam tam gorsel-alti"
 
 
 YORUMSUZ = re.sub(r"/\*.*?\*/", "", CSS, flags=re.S)
@@ -86,28 +86,41 @@ class DetayUstSerit(TestCase):
         self.assertLess(serit, makale.index('id="seslendirme"'))
         self.assertLess(serit, makale.index('class="metin"'))
 
-    def test_yuva_tanimi_tabandakiyle_ayni(self):
-        """Ad, ölçüler, harita, demo işareti: anasayfadaki şeritle birebir."""
+    def test_detay_kopyasi_yalniz_728x90(self):
+        """Koordinatör kararı (20 Ekim 2026): makale sütununda 970/1100
+        sığmıyor; detay kopyası yalnız 728x90 taşır, ≤600'de ölçüsüz.
+        Yuva adı (yer tutucu yazısından ölçü atılınca kalan) ve demo
+        işareti tabandakiyle aynı; anasayfa şeridi üç ölçüyü korur."""
         def yuva(metin):
             bas = metin.index(SERIT)
             return metin[bas:metin.index("</span></span>", bas)]
-        ana = self.client.get("/").content.decode()
-        self.assertEqual(yuva(self.metin), yuva(ana))
-        self.assertIn('data-gpt="1100x150,970x250,728x90"', yuva(self.metin))
-        self.assertIn('data-gpt-demo="kapali"', yuva(self.metin))
+
+        def ad(parca):
+            olcu = re.search(r'class="olcu">([^<]*)', parca).group(1)
+            olcu = re.sub(r"\d{2,4}\s*[x×]\s*\d{2,4}", "", olcu.replace("&middot;", "·"))
+            return re.sub(r"[·–—,\-\s]+", " ", olcu).strip()
+
+        detay, ana = yuva(self.metin), yuva(self.client.get("/").content.decode())
+        self.assertIn('data-gpt="728x90"', detay)
+        self.assertNotIn("970", detay)
+        self.assertNotIn("1100", detay)
+        self.assertIn('data-gpt-harita="601>728x90; 0>"', detay)
+        self.assertIn('data-gpt-demo="kapali"', detay)
+        self.assertNotIn("ornek-yaratici", self.metin)
+        self.assertEqual(ad(detay), ad(ana))
+        self.assertIn('data-gpt="1100x150,970x250,728x90"', ana)
 
     def test_anasayfada_serit_yerinde(self):
         ana = self.client.get("/").content.decode()
         self.assertEqual(ana.count(SERIT), 1)
         self.assertLess(ana.index(SERIT), ana.index("<main"))
 
-    def test_kutu_boyu_ve_tasma_kurali(self):
-        """Kutu boyu `.reklam.tam` sınıfından (250 · 120 · 44); detay kopyası
-        yalnız kenar boşluğunu değiştirir, boyu değil."""
+    def test_kutu_boyu(self):
+        """Taban şeridi 250 px; detay kopyası 110 px (728x90 + nefes),
+        ≤600'de tabandaki gibi 44 px."""
         self.assertIn("height:250px", _kural(".reklam.tam"))
-        detay = _kural(".detay>.reklam.tam")
-        self.assertIsNotNone(detay)
-        self.assertNotIn("height", detay)
+        self.assertIn("height:110px", _kural(".detay>.reklam.tam"))
+        self.assertIn("@media(max-width:600px){.detay>.reklam.tam{height:44px;", CSS)
 
 
 class SpotOlcusu(TestCase):

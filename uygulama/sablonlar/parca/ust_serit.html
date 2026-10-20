@@ -1,9 +1,9 @@
 {% comment %}IKI YERDE BASILIR (20 Ekim 2026, K1 (b)): `taban.html` (anasayfa,
 bolum, ilce ve obur sayfalar, icerik sutununun tepesinde) ve
-`haber_detay.html` (ana gorselin ALTINDA; taban blogu orada bos). Isaret,
-yuva adi ve kutu boylari iki yerde de bu dosyadan — tek tanim. Detayda kutu
-makale sutunundadir (1440'ta 756 px): 1100 ve 970 SIGMAZ, sigma hesabi
-(`reklam-olcu.js`) yaraticiyi 728x90'a indirir.{% endcomment %}
+`haber_detay.html` (ana gorselin ALTINDA, `gorsel_alti=1`; taban blogu
+orada bos). Iki hal de bu dosyada — tek yer. Detay kopyasi makale
+sutunundadir (1440'ta 756 px): 1100 ve 970 sigmadigi icin yalniz 728x90
+tasir, kutusu 110 px (asagida).{% endcomment %}
 {% comment %}UST SERIT — 1100x150 + 970x250 (31 Agustos 2026).
 
 Serit gun icinde uc kez donduruldu; son hali IKISINI BIRDEN tasiyor
@@ -42,7 +42,15 @@ yazilmasi gerekmesin; kalkan tek sey demo dolgusu. Isaret yalnizca
   - 601-1000: kutu 120 px, yalniz 728x90 sigar.
   - 1001-1139: kutu 250 px ve sutun ~981-1119 px — 970 sigar, 1100
     sigmaz. Esik 1140, mevcut kirilma noktasi.{% endcomment %}
-<div class="reklam tam" data-gpt="1100x150,970x250,728x90"
+{% if gorsel_alti %}{% comment %}DETAY KOPYASI (20 Ekim 2026, koordinator karari): yalniz
+728x90. Makale sutununda 970/1100 hicbir genislikte sigmiyordu ve 728x90
+250 px'lik kutuda 80'er px bosluklu kaliyordu (31 Agustos'ta reddedilen
+gorunum). Kutu 110 px (>=601), <=600'de 44 px ve olcusuz — tabanla ayni.
+Yuva adi (yer tutucudaki ad, olcu atilinca) ve demo isareti ayni.{% endcomment %}
+<div class="reklam tam gorsel-alti" data-gpt="728x90"
+     data-gpt-harita="601>728x90; 0>"
+     data-gpt-demo="kapali"><span><b>REKLAM ALANI</b><span class="olcu">728x90</span></span></div>
+{% else %}<div class="reklam tam" data-gpt="1100x150,970x250,728x90"
      data-gpt-harita="1140>1100x150,970x250,728x90; 1001>970x250,728x90; 601>728x90; 0>"
      data-gpt-demo="kapali"><span><b>REKLAM ALANI</b><span class="olcu">1100x150 &middot; 970x250</span></span>{% if reklam_demo %}{% comment %}ORNEK YARATICI — reklam DEGIL, olcu maketi.
 
@@ -54,4 +62,4 @@ yazilmasi gerekmesin; kalkan tek sey demo dolgusu. Isaret yalnizca
   Sahte reklam DEGIL: reklamveren adi, marka, gorsel yok — yalniz
   formatin ayak izi. Yalniz demo bayragi acikken basilir; yayinda bu
   blok HIC uretilmez.{% endcomment %}
-  <span class="ornek-yaratici"><b>ÖRNEK YARATICI</b><span class="olcu">970 &times; 250 &mdash; billboard ayak izi</span></span>{% endif %}</div>
+  <span class="ornek-yaratici"><b>ÖRNEK YARATICI</b><span class="olcu">970 &times; 250 &mdash; billboard ayak izi</span></span>{% endif %}</div>{% endif %}

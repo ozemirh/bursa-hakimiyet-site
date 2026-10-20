@@ -87,7 +87,7 @@ parça aşağıda, `ust_serit.html` tek tanım.{% endcomment %}
               {% else %}<p class="foto-alt">Görsel temsilîdir.</p>{% endif %}
             {% endif %}
 
-            {% include "parca/ust_serit.html" %}
+            {% include "parca/ust_serit.html" with gorsel_alti=1 %}
 
             {% include "parca/seslendirme.html" %}
 

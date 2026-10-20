@@ -2034,12 +2034,14 @@ html:not(.js-var) .arac button{display:none}
 .ana-gorsel.kapak{aspect-ratio:var(--kapak-orani)}
 .foto-alt{font-size:12.5px;color:var(--gri);border-bottom:1px solid var(--cizgi);padding:8px 0 10px;margin-bottom:16px}
 /* Üst şerit detayda ana görselin altında (20 Ekim 2026, K1 (b);
-   `parca/ust_serit.html`). Kutu boyu tabandakiyle aynı sınıftan
-   (`.reklam.tam` 250 · 120 · 44 px). Makalenin iç dolgusunu yanlardan
-   aşar: 1440'ta 712 yerine 756 px, 728x90 sığsın; yan çizgisi makalenin
-   kendi kenarına dayandığı için yalnız alt-üst kesik çizgi kalır. */
-.detay>.reklam.tam{margin:16px -22px;border-left:0;border-right:0}
-@media(max-width:600px){.detay>.reklam.tam{margin:14px -14px}}
+   `parca/ust_serit.html` `gorsel_alti`). Yalnız 728x90 taşır: kutu 110 px
+   (yaratıcı 90 + 10'ar px nefes; dolu kutuda kenarlık kalkar, yükseklik
+   sabit — kayma yok). ≤600'de tabandaki gibi 44 px ve ölçüsüz.
+   Makalenin iç dolgusunu yanlardan aşar: 1440'ta 712 yerine 756 px,
+   728 sığsın; yan çizgisi makalenin kenarına dayandığı için yalnız
+   alt-üst kesik çizgi kalır. */
+.detay>.reklam.tam{height:110px;margin:16px -22px;border-left:0;border-right:0}
+@media(max-width:600px){.detay>.reklam.tam{height:44px;margin:14px -14px}}
 /* ---- haber seslendirme ---- */
 .seslendirme{border:1px solid var(--cizgi);border-left:4px solid var(--kirmizi);background:var(--yumusak);padding:10px 12px;margin-bottom:16px}
 .seslendirme.ses-acik{border-left-color:var(--lacivert)}
