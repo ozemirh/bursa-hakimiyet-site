@@ -148,5 +148,7 @@
       <a class="dugme ufak" href="{% url 'panel-akis' %}">Vazgeç</a>
     </div>
   </form>
+
+  {% if haber %}{% include "panel/parca/duzeltme_bolumu.html" %}{% endif %}
   <script src="{% static 'betik/panel.js' %}" defer></script>
 {% endblock %}

@@ -534,6 +534,10 @@ class LogKaydi(models.Model):
         # 19 Ekim 2026 (Paket M): K2 bulgusu tek tek kapatılır, kimin
         # kapattığı burada da durur (bulgunun kendi kaydına ek olarak).
         ("yz_bulgu_kapatma", "Yapay zekâ olgu bulgusunu kapatma"),
+        # 20 Ekim 2026: düzeltme notu. Kayıt silinmez; yayından kaldırma ve
+        # yeniden yayımlama da ayrı satır yazar.
+        ("duzeltme_yayimlama", "Düzeltme notu yayımlama"),
+        ("duzeltme_kaldirma", "Düzeltme notu yayından kaldırma"),
     ]
 
     # PROTECT: kullanıcı silinirse log okunamaz hâle gelir. Kimliği ada değil
@@ -1278,3 +1282,129 @@ class YzBulgu(models.Model):
 
     def __str__(self) -> str:
         return f"{self.kural} {self.tur}: {self.deger}"
+
+
+class DuzeltmeSilinmez(models.ProtectedError):
+    """Düzeltme kaydı silinmeye çalışıldı (bkz. `Duzeltme`)."""
+
+
+class DuzeltmeSorgusu(models.QuerySet):
+    def delete(self):
+        # Silme işleminin atomik bloğuna GİRMEDEN durur: `pre_delete`
+        # içinden yükseltilen hata açık işlemi bozuyordu (ölçüldü).
+        raise DuzeltmeSilinmez("Düzeltme kaydı silinmez; yayından kaldırın.", set(self))
+
+
+class Duzeltme(models.Model):
+    """Habere bağlı düzeltme ya da güncelleme notu — 20 Ekim 2026.
+
+    DEGERLENDIRME-2026-10 Aşama 4 ("kesim öncesi şart") ve referans
+    kütüphanesi karşılaştırması 2. satır: haber detayında yalnız güncelleme
+    damgası vardı; okura görünen düzeltme notu yoktu.
+
+    **Silinmez.** Kayıt yalnız yayından kaldırılır (`yayinda=False`); kimin
+    ne zaman kaldırdığı kayıtta durur ve geçmiş korunur. `delete()` ve
+    toplu silme `DuzeltmeSilinmez` yükseltir; habere `PROTECT` ile bağlı
+    olduğu için haber de düzeltmesiyle birlikte silinemez.
+
+    **Metni editör yazar.** Yapay zekâ üretmez; düz metindir (HTML değil),
+    şablonda kaçışlı basılır — `temizle.py`'ye ihtiyaç yok, `|safe` yok.
+
+    **Yayın zamanı kayıtta konur**, panelde elle değiştirilmez: okura
+    görünen tarih notun gerçekten yayımlandığı andır.
+
+    Neden `Haber`e sütun değil: arşiv tablosu 1 milyon satır; not yalnız
+    birkaç haberde olacak (bkz. `YzKoken`).
+    """
+
+    TUR_DUZELTME = "duzeltme"
+    TUR_GUNCELLEME = "guncelleme"
+    TURLER = [
+        (TUR_DUZELTME, "Düzeltme"),
+        (TUR_GUNCELLEME, "Güncelleme notu"),
+    ]
+    #: Başlık altındaki işaretin metni; birden çok tür varsa öncelik sırası.
+    ISARETLER = [
+        (TUR_DUZELTME, "Bu haberde düzeltme var"),
+        (TUR_GUNCELLEME, "Bu haberde güncelleme notu var"),
+    ]
+    METIN_EN_AZ = 10
+    METIN_EN_COK = 4000
+
+    haber = models.ForeignKey(Haber, on_delete=models.PROTECT, related_name="duzeltmeler",
+                              db_index=False)
+    tur = models.CharField(max_length=12, choices=TURLER, default=TUR_DUZELTME)
+    metin = models.TextField(help_text="Editörün yazdığı düz metin. Okura olduğu gibi basılır.")
+    yayin_zamani = models.DateTimeField(default=timezone.now)
+    yayinda = models.BooleanField(default=True)
+    olusturan = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                  on_delete=models.SET_NULL, related_name="+")
+    kaldirma_zamani = models.DateTimeField(null=True, blank=True)
+    kaldiran = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                 on_delete=models.SET_NULL, related_name="+")
+    kaldirma_gerekcesi = models.CharField(max_length=200, blank=True,
+                                          help_text="Panelde kalır, okura basılmaz.")
+
+    objects = DuzeltmeSorgusu.as_manager()
+
+    class Meta:
+        ordering = ["-yayin_zamani", "-id"]
+        verbose_name = "düzeltme notu"
+        verbose_name_plural = "düzeltme notları"
+        indexes = [
+            # Haber detayı: "bu haberin yayındaki notları" (tek sorgu, var mı
+            # yoklaması da buradan).
+            models.Index(fields=["haber", "yayinda", "yayin_zamani"], name="duzeltme_haber"),
+            # `/duzeltmeler` dizini: yayındakiler, en yeni önde.
+            models.Index(fields=["yayinda", "-yayin_zamani", "-id"], name="duzeltme_dizin"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.haber_id} · {self.get_tur_display()}"
+
+    def delete(self, *args, **kwargs):
+        raise DuzeltmeSilinmez("Düzeltme kaydı silinmez; yayından kaldırın.", {self})
+
+    @classmethod
+    def yayindakiler(cls):
+        return cls.objects.filter(yayinda=True)
+
+    @classmethod
+    def dizin(cls):
+        """`/duzeltmeler`: yayındaki notlar, YALNIZ yayındaki haberlerin —
+        yayından çekilmiş habere bağlantı 404'e giderdi."""
+        simdi = timezone.now()
+        return (cls.yayindakiler()
+                .filter(haber__durum=Haber.DURUM_AKTIF, haber__yayin_zamani__isnull=False,
+                        haber__yayin_zamani__lte=simdi)
+                .select_related("haber")
+                .order_by("-yayin_zamani", "-id"))
+
+    @classmethod
+    def haber_icin(cls, haber) -> list:
+        """Haber detayındaki notlar, eskiden yeniye.
+
+        Görünüm haber sorgusuna `duzeltme_var` (EXISTS) açıklaması ekler;
+        not yoksa — arşivin hemen tamamı — burada sorgu açılmaz.
+        """
+        if not getattr(haber, "duzeltme_var", True):
+            return []
+        return list(cls.yayindakiler().filter(haber_id=haber.pk)
+                    .order_by("yayin_zamani", "id"))
+
+    @classmethod
+    def isaret_metni(cls, notlar) -> str:
+        turler = {n.tur for n in notlar}
+        for tur, metin in cls.ISARETLER:
+            if tur in turler:
+                return metin
+        return ""
+
+
+def _duzeltme_silinmez(sender, instance, **kwargs):
+    """Toplu silme (`QuerySet.delete`) `delete()`i çağırmaz; sinyal çağırır."""
+    raise DuzeltmeSilinmez("Düzeltme kaydı silinmez; yayından kaldırın.", {instance})
+
+
+models.signals.pre_delete.connect(_duzeltme_silinmez, sender=Duzeltme,
+                                  dispatch_uid="bh-duzeltme-silinmez")

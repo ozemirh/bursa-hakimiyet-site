@@ -591,3 +591,20 @@ legend{font-weight:600;font-size:14px;margin-bottom:6px}
 .yz-damgalar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px}
 .yz-gorsel{display:block;width:100%;max-height:165px;object-fit:cover;
   border:1px solid var(--cizgi);border-radius:9px;margin-bottom:8px}
+
+/* ===== Düzeltmeler — haber düzenleme ekranının bölümü (20 Ekim 2026) =====
+   Ana formun dışında, altında. Tablo kendi kabında yatay kayar; dar
+   ekranda sayfa taşmaz (.tablo-kaydir). */
+.duzeltme-bolumu{border-top:1px solid var(--cizgi);padding-top:22px}
+.duzeltme-bolumu h2{font-size:16px;font-weight:600;margin-bottom:2px}
+/* `position:relative` ZORUNLU (ölçüldü): satırdaki gizli "Kaldırma gerekçesi"
+   etiketi `.gorsel-gizli` ile mutlak konumlu; konumlu ata yoksa kayan kabın
+   kırpmasından kaçıyor ve 360 px'te sayfayı 309 px taşırıyordu. */
+.duzeltme-bolumu .tablo-kaydir{position:relative;margin:12px 0 22px}
+/* `.sag-not` panel genelinde --gri-acik: beyaz üstünde 2,75:1 (ölçüldü, AA
+   altı). Bu bölümde --gri; panelin genel ipucu rengi ayrı iş. */
+.duzeltme-bolumu .sag-not{color:var(--gri)}
+.duzeltme-tablo td{vertical-align:top}
+.duzeltme-tablo .duzeltme-metin-hucre{min-width:240px;max-width:420px;overflow-wrap:anywhere;line-height:1.5}
+.duzeltme-tablo td.islem form{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.duzeltme-tablo td.islem input[type=text]{width:170px}

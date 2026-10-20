@@ -257,7 +257,34 @@ def haber_makalesi(haber) -> dict:
                            "url": kok() + "/"}]
     if haber.kategori_id:
         veri["articleSection"] = _baslikla(haber.kategori.ad)
+    duzeltmeler = duzeltme_yorumlari(haber)
+    if duzeltmeler:
+        veri["correction"] = duzeltmeler
     return veri
+
+
+def duzeltme_yorumlari(haber) -> list[dict]:
+    """schema.org `correction` → `CorrectionComment` (20 Ekim 2026).
+
+    YALNIZ "düzeltme" türü işaretlenir. Güncelleme notu hata düzeltmesi
+    değildir — onu `correction` diye işaretlemek sayfada görünenden farklı
+    bir şey söylemek olurdu. Kayıt yoksa alan hiç
+    yazılmaz. Liste görünümün haber detayında kurduğu listeden okunur
+    (`yayindaki_duzeltmeler`); yoksa modelden.
+    """
+    from .models import Duzeltme
+    notlar = getattr(haber, "yayindaki_duzeltmeler", None)
+    if notlar is None:
+        notlar = Duzeltme.haber_icin(haber)
+    sonuc = []
+    for n in notlar:
+        if n.tur != Duzeltme.TUR_DUZELTME:
+            continue
+        oge = {"@type": "CorrectionComment", "text": _metin(n.metin, 2000)}
+        if n.yayin_zamani:
+            oge["datePublished"] = _zaman(n.yayin_zamani)
+        sonuc.append(oge)
+    return sonuc
 
 
 def haber_kirintisi(haber) -> dict:
@@ -337,6 +364,25 @@ def video_sayfasi(video) -> dict:
     gorseller = gorsel_dizisi(video)
     if gorseller:
         veri["primaryImageOfPage"] = gorseller[0]
+    return veri
+
+
+def veri_sayfasi(ad: str, yol: str, aciklama: str = "", degisti=None) -> dict:
+    """Kalıcı veri sayfası (enstrüman, 20 Ekim 2026): `WebPage`.
+
+    Finansal şema (`ExchangeRateSpecification`) BİLEREK yok: Google onu bir
+    zengin sonuç türü olarak okumuyor ve alanlarının yarısını (geçerlilik
+    aralığı, kur türü) kaynaklarımız vermiyor — uydurma alan yazılmaz.
+    `dateModified` verinin zamanıdır, sayfanın çizildiği an değil.
+    """
+    veri = {"@context": "https://schema.org", "@type": "WebPage",
+            "name": _metin(ad, BASLIK_SINIRI), "url": mutlak(yol),
+            "inLanguage": DIL, "publisher": yayinci()}
+    metin = _metin(aciklama, ACIKLAMA_SINIRI)
+    if metin:
+        veri["description"] = metin
+    if degisti:
+        veri["dateModified"] = _zaman(degisti)
     return veri
 
 

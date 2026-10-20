@@ -46,7 +46,7 @@ from taksonomi.models import Etiket, Ilce, Kategori, Kaynak, Yonlendirme
 
 from . import yayin_kapisi
 from .arama_metni import anahtar, slugla
-from .models import (YZ_BASLIK_ISARETI, Bildirim, Gazete, Haber,
+from .models import (YZ_BASLIK_ISARETI, Bildirim, Duzeltme, Gazete, Haber,
                      ReklamKampanyasi, ReklamYuvasi, ResmiIlan, SonDakika,
                      Yorum)
 from .yetkiler import ROLLER
@@ -1110,6 +1110,42 @@ class SonDakikaForm(forms.ModelForm):
                 "Ya serbest adres ya da bağlı haber verilmeli; bantta "
                 "tıklanamayan kayıt olmamalı.")
         return veri
+
+
+class DuzeltmeForm(forms.ModelForm):
+    """Haber düzenleme ekranındaki "Düzeltmeler" bölümü (20 Ekim 2026).
+
+    Yalnız iki alan: tür ve metin. Yayın zamanı, yayımlayan ve haber
+    görünümde konur; editör elle tarih yazamaz. Metin düz metindir; boş
+    satır paragraf ayırır.
+    """
+
+    class Meta:
+        model = Duzeltme
+        fields = ["tur", "metin"]
+        labels = {"tur": "Tür", "metin": "Not metni"}
+        widgets = {"metin": forms.Textarea(attrs={"rows": 5})}
+
+    def __init__(self, *args, **kwargs):
+        # Kimlikler ana formdaki alanlarla çakışmasın: aynı sayfada haber
+        # formunun kendi `id_…` alanları da var.
+        kwargs.setdefault("auto_id", "duzeltme_%s")
+        super().__init__(*args, **kwargs)
+        self.fields["metin"].max_length = Duzeltme.METIN_EN_COK
+        self.fields["metin"].widget.attrs["maxlength"] = Duzeltme.METIN_EN_COK
+
+    def clean_metin(self):
+        metin = (self.cleaned_data.get("metin") or "").strip()
+        # Satır sonları korunur (paragraf), satır içi boşluk sadeleşir.
+        metin = "\n".join(" ".join(s.split()) for s in metin.splitlines()).strip()
+        metin = re.sub(r"\n{3,}", "\n\n", metin)
+        if len(metin) < Duzeltme.METIN_EN_AZ:
+            raise forms.ValidationError(
+                f"Not metni en az {Duzeltme.METIN_EN_AZ} karakter olmalı.")
+        if len(metin) > Duzeltme.METIN_EN_COK:
+            raise forms.ValidationError(
+                f"Not metni en çok {Duzeltme.METIN_EN_COK} karakter olabilir.")
+        return metin
 
 
 class KonuForm(forms.ModelForm):

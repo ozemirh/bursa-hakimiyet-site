@@ -1,0 +1,50 @@
+{% extends "taban.html" %}
+{% load seo_etiket %}
+{% comment %}
+DÜZELTMELER dizini (20 Ekim 2026). Yayımlanmış düzeltme ve güncelleme
+notları, en yeniden eskiye; her biri haberine bağlı (haberin `#duzeltmeler`
+bölmesine). Notları editör panelden yayımlar.
+
+Giriş cümlesi bilerek yalnız OLGUSAL: sayfada ne olduğunu söyler. Hukuki
+iddia burada yazılmaz; o metin `hukuk-guvenlik-uyum-uzmani`ndan gelirse
+eklenir.
+
+SEO (Paket G deseni): `?sayfa=N` başlığı "Sayfa N" taşır; kanonik
+taban.html'den (yol + geçerli sayfa); JSON-LD BreadcrumbList.
+{% endcomment %}
+
+{% block baslik %}Düzeltmeler{% if sayfa.number > 1 %} — Sayfa {{ sayfa.number }}{% endif %} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}Bursa Hakimiyet haberlerine eklenen düzeltme ve güncelleme notları, en yeniden eskiye{% if sayfa.number > 1 %}, sayfa {{ sayfa.number }}{% endif %}.{% endblock %}
+{% block og_baslik %}Düzeltmeler{% if sayfa.number > 1 %} — Sayfa {{ sayfa.number }}{% endif %}{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld_kirinti "Düzeltmeler" "/duzeltmeler" %}</script>{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <ol>
+          <li><a href="/">Anasayfa</a></li>
+          <li><span aria-current="page">Düzeltmeler</span></li>
+        </ol>
+      </nav>
+
+      <section class="kutu bolum duzeltme-sayfa">
+        <div class="kutu-bas vurgu">
+          <h1>DÜZELTMELER</h1>
+          <span class="tumu">{{ sayfa.paginator.count }} not</span>
+        </div>
+        <div class="kutu-ic">
+          <p class="duzeltme-giris">Haberlerimize sonradan eklenen düzeltme ve güncelleme notları, en yeniden eskiye. Her not ilgili haberin sonunda da yer alır.</p>
+          {% if sayfa.object_list %}
+          <ol class="duzeltme-dizin">
+{% for n in sayfa %}            <li class="duzeltme" data-tur="{{ n.tur }}">
+              <p class="duzeltme-ust"><b class="duzeltme-tur">{{ n.get_tur_display }}</b> <time datetime="{{ n.yayin_zamani|date:'c' }}">{{ n.yayin_zamani|date:'j F Y, H:i' }}</time></p>
+              <h2><a href="{{ n.haber.get_absolute_url }}#duzeltmeler">{{ n.haber.baslik }}</a></h2>
+              <div class="duzeltme-metin">{{ n.metin|linebreaks }}</div>
+            </li>
+{% endfor %}          </ol>
+          {% else %}<p class="bos">Yayımlanmış düzeltme notu yok.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      {% include "parca/sayfalama.html" %}
+{% endblock %}

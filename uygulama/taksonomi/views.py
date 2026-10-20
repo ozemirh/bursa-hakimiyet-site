@@ -14,6 +14,7 @@ F2'de içerik modelleri henüz yok, o yüzden:
   F3'te kapanır.
 """
 
+from django.db.models import Exists, OuterRef
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 
@@ -22,7 +23,7 @@ from cekirdek.adres_duzeni import kalici
 from icerik import ilgili as ilgili_yardimci
 from icerik import konu as konu_yardimci
 from icerik import okunma
-from icerik.models import Haber
+from icerik.models import Duzeltme, Haber
 from icerik.sayfa_onbellegi import sayfa_onbellegi
 
 from . import slug_eslemesi
@@ -72,9 +73,14 @@ def haber(request, kategori, slug, kimlik):
 
     # `kategori__turler` ön çekimi kalktı: slug süreç içi eşlemeden geliyor
     # (taksonomi/slug_eslemesi.py), sayfa başına bir sorgu daha az.
+    # `duzeltme_var` (20 Ekim 2026): düzeltme notu var mı — aynı
+    # sorguda EXISTS. Arşivin hemen tamamında not yok; o haberlerde sayfa
+    # tek sorgu bile fazla açmaz (`Duzeltme.haber_icin`).
     kayit = (Haber.yayindakiler()
              .select_related("kategori", "ilce")
              .prefetch_related("kaynaklar", "etiketler")
+             .annotate(duzeltme_var=Exists(
+                 Duzeltme.yayindakiler().filter(haber_id=OuterRef("pk"))))
              .filter(pk=kimlik).first())
     if kayit is None:
         raise Http404("Haber yok")
@@ -87,7 +93,12 @@ def haber(request, kategori, slug, kimlik):
     # Konu akışı önce: ilgili haberler kutusu akışta zaten görünenleri
     # atlar, aynı başlık sayfada iki kez basılmaz (5 Eylül 2026).
     akis = konu_yardimci.akis(kayit)
+    # Düzeltme notları: gövdenin sonundaki blok, başlık altındaki
+    # işaret ve JSON-LD `correction` aynı listeden okur (`seo.haber_makalesi`).
+    kayit.yayindaki_duzeltmeler = Duzeltme.haber_icin(kayit)
     yanit = render(request, "haber_detay.html", {
+        "duzeltmeler": kayit.yayindaki_duzeltmeler,
+        "duzeltme_isareti": Duzeltme.isaret_metni(kayit.yayindaki_duzeltmeler),
         "haber": kayit,
         "baslik": kayit.baslik,
         "ilgili": _ilgili(kayit, akis),

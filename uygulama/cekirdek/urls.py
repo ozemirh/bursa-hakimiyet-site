@@ -21,6 +21,7 @@ from cekirdek import durum as durum_gorunum
 
 from icerik import gorsel_turev
 from icerik import panel as panel_gorunum
+from icerik import piyasa as piyasa_sayfa
 from icerik import panel_yz
 from icerik.giris_guvenligi import GirisGorunumu
 from icerik import reklam as reklam_gorunum
@@ -76,6 +77,10 @@ urlpatterns = [
     # tek yayin kapisindan gecer.
     path("panel/haber/<int:kimlik>/yayinla", panel_gorunum.haber_yayinla,
          name="panel-haber-yayinla"),
+    # Düzeltme notu (20 Ekim 2026). Yalnız POST; formu haber düzenleme
+    # ekranının "Düzeltmeler" bölümünde. Kapı yayın yetkisi.
+    path("panel/haber/<int:kimlik>/duzeltme", panel_gorunum.haber_duzeltme,
+         name="panel-haber-duzeltme"),
 
     # Icerik bolumunun kalan aileleri. Adres kaliplari liste/duzenle
     # ciftidir; duzenle yolu tekil, liste yolu cogul adla duruyor ki
@@ -213,9 +218,22 @@ urlpatterns = [
          name="nobetci-eczane"),
     re_path(r"^nobetci-eczane/(?P<slug>[-\w]+)/?$",
             icerik_gorunum.nobetci_eczane, name="nobetci-eczane-ilce"),
+    # Kalici enstruman sayfalari (20 Ekim 2026): /piyasa/dolar, /piyasa/euro,
+    # /piyasa/gram-altin. Iki dilimli; haber kalibi `/{kategori}/{slug}-{id}`
+    # sondaki SAYIYI ister, bu adlarin hicbiri sayiyla bitmez — yine de
+    # medya/taksonomi kaliplarindan ONCE (onekli kaliplar once kurali).
+    # Secenekler acik liste (`icerik/piyasa.ENSTRUMANLAR`): `/piyasa/<x>`
+    # bicimindeki baska adres bu gorunume dusmez. Sondaki egik cizgiyi
+    # Paket G'nin ara katmani 301'ler; kalip egik cizgisiz.
+    re_path(rf"^piyasa/(?P<slug>{piyasa_sayfa.ADRES_KALIBI})$",
+            icerik_gorunum.piyasa_enstrumani, name="piyasa"),
     # Kunyedeki beyan sayfasi. Tek dilimli; kategori kalibindan ONCE.
     path("veri-kaynaklari", icerik_gorunum.veri_kaynaklari,
          name="veri-kaynaklari"),
+    # Düzeltmeler dizini (20 Ekim 2026). Tek dilimli: kategori
+    # kalıbından ÖNCE gelmeli, yoksa "duzeltmeler adlı kategori" sanılıp
+    # 404 verirdi (`/kose-yazilari` ile aynı tuzak).
+    path("duzeltmeler", icerik_gorunum.duzeltmeler, name="duzeltmeler"),
     # Konu dosyalari (5 Eylul 2026). "konular" tek dilimli, kategori
     # kalibindan ONCE; "konu/<slug>" iki dilimli, haber kalibindan ONCE
     # (haber kalibi sondaki sayiyi kimlik sanir).

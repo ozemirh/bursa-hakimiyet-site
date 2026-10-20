@@ -10,7 +10,9 @@ beş gözlü piyasa ızgarası) YERİNE iki cetvel.
    altında tek cümle. Veri bayatsa tablonun ÜSTÜNDE tarihle söylenir.
    Kaynağı bulunamayan kalem çizgiyle gösterilir (uydurma değer yok);
    alış/satış yalnız TCMB'nin verdiği kalemlerde dolu, diğerlerinde hücre
-   BOŞ kalır — tabloda boş hücre "uygulanmaz" demektir.
+   BOŞ kalır — tabloda boş hücre "uygulanmaz" demektir. Sayfası olan
+   kalemin adı kalıcı enstrüman sayfasına bağlanır (20 Ekim 2026,
+   `/piyasa/dolar` · `/piyasa/euro` · `/piyasa/gram-altin`).
 2) BURSA EKONOMİSİ. "Önce Bursa": bölümün Bursa'yı anan son haberleri
    (`temalar.bursa_listesi`). Seçim kuralı listenin altında yazılı.
 
@@ -33,7 +35,7 @@ bilerek silinmedi.{% endcomment %}
         <tbody>
           {% for k in d.kalemler %}
           <tr class="cetvel-kalem{% if k.yon == 'yukari' %} artiyor{% elif k.yon == 'asagi' %} azaliyor{% endif %}">
-            <th scope="row">{{ k.ad }}{% if k.alis and k.satis %}<span class="dar-as">Alış {{ k.alis|floatformat:2 }} &middot; Satış {{ k.satis|floatformat:2 }}</span>{% endif %}</th>
+            <th scope="row">{% with a=k.anahtar|piyasa_adresi %}{% if a %}<a href="{{ a }}">{{ k.ad }}</a>{% else %}{{ k.ad }}{% endif %}{% endwith %}{% if k.alis and k.satis %}<span class="dar-as">Alış {{ k.alis|floatformat:2 }} &middot; Satış {{ k.satis|floatformat:2 }}</span>{% endif %}</th>
             <td class="deger">{% if k.deger %}{{ k.deger|floatformat:2 }} <span class="birim">{% if k.birim == "TL" %}&#8378;{% else %}{{ k.birim }}{% endif %}</span>{% else %}<span class="veri-yok" title="Kaynak bulunamadı, panelden elle girilir">&ndash;</span>{% endif %}</td>
             <td class="fark">{% if k.degisim_yuzde is not None and k.deger %}<span aria-hidden="true">{% if k.yon == 'yukari' %}&#9650;{% elif k.yon == 'asagi' %}&#9660;{% else %}&ndash;{% endif %}</span> %{{ k.degisim_yuzde|mutlak|floatformat:2 }}<span class="gorsel-gizli">{% if k.yon == 'yukari' %} yükseldi{% elif k.yon == 'asagi' %} geriledi{% else %} değişmedi{% endif %}</span>{% endif %}</td>
             <td class="alis">{% if k.alis and k.satis %}{{ k.alis|floatformat:2 }}{% endif %}</td>
