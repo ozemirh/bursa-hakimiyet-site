@@ -173,7 +173,7 @@ yaşanmıştı.{% endcomment %}
 
         <aside class="ray" aria-label="Öne çıkan listeler">
           <div class="kutu" id="en-cok-okunan">
-            <div class="kutu-bas vurgu"><h2>EN ÇOK OKUNANLAR</h2></div>
+            <div class="kutu-bas hafif"><h2>EN ÇOK OKUNANLAR</h2></div>
             <div class="kutu-ic">
               <ol class="sira">
 {% for h in en_cok %}                <li><span class="no">{{ forloop.counter }}</span><h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3></li>
@@ -192,7 +192,7 @@ yaşanmıştı.{% endcomment %}
           rayda iki sütun sığmıyor, satırlar tek sütunda alt alta dizilir.
           Ray sırası: en çok okunanlar → ilçeler → reklam → manşetler.{% endcomment %}
           <section class="manset-liste dikey" aria-labelledby="manset-liste-bas">
-            <h2 id="manset-liste-bas">GÜNÜN MANŞETLERİ</h2>
+            <div class="kutu-bas hafif"><h2 id="manset-liste-bas">GÜNÜN MANŞETLERİ</h2></div>
             <ul>
 {% for h in manset_liste %}              <li><time datetime="{{ h.yayin_zamani|date:'c' }}" title="{{ h.yayin_zamani|date:'j F Y, H:i' }}">{{ h.yayin_zamani|kisa_zaman }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
 {% endfor %}            </ul>
@@ -201,7 +201,7 @@ yaşanmıştı.{% endcomment %}
       </div>
 
       <section class="ilan" id="resmi-ilan" aria-labelledby="resmi-ilan-bas">
-        <div class="ilan-bas">
+        <div class="kutu-bas hafif ilan-bas">
           <h2 id="resmi-ilan-bas">RESMÎ İLANLAR</h2>
           <span class="dayanak">Basın İlan Kurumu aracılığıyla yayımlanır</span>
           {% comment %}Dönem etiketi: kayıtların tamamı arşiv durumunda ve
@@ -209,7 +209,7 @@ yaşanmıştı.{% endcomment %}
           sorusunu ancak satır satır tarihlere bakarak yanıtlıyordu; aralık
           bunu başlıkta söylüyor.{% endcomment %}
           {% if ilan_son %}<span class="donem">{% if ilan_ilk %}{{ ilan_ilk|date:"j F" }} &ndash; {% endif %}{{ ilan_son|date:"j F Y" }}</span>{% endif %}
-          <a class="tumu" href="{% url 'resmi-ilan' %}">TÜM İLANLAR &rarr;</a>
+          <span class="tumu"><a href="{% url 'resmi-ilan' %}">TÜM İLANLAR &rarr;</a></span>
         </div>
 
         {% comment %}Eskiden burası bir LEJANTTI: dört tür rengini tanıtan,
@@ -257,7 +257,7 @@ yaşanmıştı.{% endcomment %}
       `role="tablist"` DOM'u buradan kalktı; `site.js` `.sek` bulamayınca
       dokunmadan geçer (Bursaspor'un lig sekmeleri sürüyor).{% endcomment %}
       <section class="kutu" id="sehir-servisleri" aria-labelledby="sehir-servis-bas">
-        <div class="kutu-bas"><h2 id="sehir-servis-bas">ŞEHİR SERVİSLERİ</h2></div>
+        <div class="kutu-bas hafif"><h2 id="sehir-servis-bas">ŞEHİR SERVİSLERİ</h2></div>
         <div class="kutu-ic">
           <div class="servis-uclu">
 
@@ -652,7 +652,7 @@ yaşanmıştı.{% endcomment %}
       </section>
 
       <section class="kutu" id="vizyon">
-        <div class="kutu-bas"><h2>VİZYONDA NELER VAR</h2><span class="tumu">Haftanın vizyonu &rarr;</span></div>
+        <div class="kutu-bas hafif"><h2>VİZYONDA NELER VAR</h2><span class="tumu">Haftanın vizyonu &rarr;</span></div>
         {% comment %}Bölüm canlı veriden çizilir (`icerik/canli.py`,
            `vizyon_filmleri`). Afiş **basılmaz**: dosyanın kendi notu afişlerin
            telifli olduğunu ve dosyanın afiş taşımadığını söylüyor, ayrıca dış

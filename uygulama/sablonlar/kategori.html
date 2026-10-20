@@ -50,15 +50,14 @@ kopyasıydı, kaldırıldı; ilçe sayfası da 20 Ekim 2026'da kalktı.{% endcom
         <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">{{ baslik }}</span>
       </nav>
 
-      {% comment %}SERVİS ŞERİDİ (6 Eylül 2026, §59, kullanıcı kararı).
-      Kırıntının hemen altında, bölüm kutusunun ÜSTÜNDE: haber akışını
-      bölmüyor, sayfayı açan okur bölümün kimliğini ilk ekranda görüyor.
-      Hangi bölümün ne göreceği görünümde (`_bolum_servisi`); veri yoksa
-      şerit hiç çizilmez ve sayfa aynen eski hâlinde durur.{% endcomment %}
-      {% if tema and "bas" in tema.yuvalar %}{% include tema.duzen with yer="bas" %}
-      {% else %}{% include "parca/bolum_servis.html" %}{% endif %}
-
-      <section class="kutu bolum">
+      {% comment %}SAYFA BAŞI ÖNCE (20 Ekim 2026, K3 — kullanıcı kararı):
+      bölüm adı kırıntının hemen altında, servis şeridinin ÜSTÜNDE. 390 px'te
+      ekonomi H1'i 1.109 px'te, ilk ekranın altındaydı; okur "neredeyim"
+      sorusunun yanıtını piyasa cetvelini geçince alıyordu. Başlık bu yüzden
+      haber kutusundan çıktı, kendi kutusunda duruyor; arkasından servis
+      gelmiyorsa (gündem gibi) iki kutu CSS'te birleşir ve görünüm eskisi
+      gibi tek kutudur (`.bolum-bas`, site.css).{% endcomment %}
+      <header class="kutu bolum-bas">
         <div class="kutu-bas vurgu">
           <h1>{{ baslik|buyult }}</h1>
           {% comment %}Sayım üst sınırla kesiliyor (SinirliSayfalayici).
@@ -66,9 +65,21 @@ kopyasıydı, kaldırıldı; ilçe sayfası da 20 Ekim 2026'da kalktı.{% endcom
           tam tarama. Kesin sayı okurun kararını değiştirmiyor.{% endcomment %}
           <span class="tumu">{% if sayfa.paginator.kesildi_mi %}1.000+{% else %}{{ sayfa.paginator.count }}{% endif %} haber</span>
         </div>
+      </header>
+
+      {% comment %}SERVİS ŞERİDİ (6 Eylül 2026, §59, kullanıcı kararı).
+      Bölüm adının hemen altında (20 Ekim 2026'ya kadar kırıntının altında
+      ve adın üstündeydi, K3), haber kutusunun ÜSTÜNDE: haber akışını
+      bölmüyor, sayfayı açan okur bölümün kimliğini ilk ekranda görüyor.
+      Hangi bölümün ne göreceği görünümde (`_bolum_servisi`); veri yoksa
+      şerit hiç çizilmez.{% endcomment %}
+      {% if tema and "bas" in tema.yuvalar %}{% include tema.duzen with yer="bas" %}
+      {% else %}{% include "parca/bolum_servis.html" %}{% endif %}
+
+      <section class="kutu bolum" aria-labelledby="bolum-haber-bas">
 
         <div class="kutu-ic">
-          <h2 class="gorsel-gizli">Haberler</h2>
+          <h2 class="gorsel-gizli" id="bolum-haber-bas">Haberler</h2>
           {% if sayfa.number == 1 %}
           <div class="kutu-izgara liste-izgara">
             {% for h in sayfa|slice:":3" %}{% if forloop.first %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 genis=1 kategori_gizle=kategori gorsel_yuva="liste" gorsel_oncelikli=1 %}
@@ -89,7 +100,7 @@ kopyasıydı, kaldırıldı; ilçe sayfası da 20 Ekim 2026'da kalktı.{% endcom
           beslenir. Şablon iki durumda da aynıdır.{% endcomment %}
           {% if en_cok %}
           <section class="en-cok" aria-labelledby="en-cok-bas">
-            <h2 id="en-cok-bas">BU BÖLÜMDE EN ÇOK OKUNANLAR</h2>
+            <div class="kutu-bas hafif"><h2 id="en-cok-bas">BU BÖLÜMDE EN ÇOK OKUNANLAR</h2></div>
             <ol>
               {% for h in en_cok %}<li><span class="no" aria-hidden="true">{{ forloop.counter }}</span><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
               {% endfor %}

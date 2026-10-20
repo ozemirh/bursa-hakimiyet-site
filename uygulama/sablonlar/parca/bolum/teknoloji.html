@@ -12,13 +12,13 @@ söyler. Kural listenin altında tek cümle.
 Liste boşsa yuva hiç çizilmez; sayfa kademeyle başlar.{% endcomment %}
 {% if yer == "bas" and bursa_listesi %}
 <section class="kutu bursa-listesi bolum-tek" aria-labelledby="bursa-tek-bas">
-  <div class="kutu-bas"><h2 id="bursa-tek-bas">BURSA'DA TEKNOLOJİ</h2></div>
+  <div class="kutu-bas hafif"><h2 id="bursa-tek-bas">BURSA'DA TEKNOLOJİ</h2></div>
   <div class="kutu-ic">
     <ol class="bursa-cetvel">
       {% for h in bursa_listesi %}<li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|date:"j M Y" }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a><span class="bolum-ad">{% if h.ilce %}{{ h.ilce.ad|baslikla }}{% else %}{{ h.kategori.ad|baslikla }}{% endif %}</span></li>
       {% endfor %}
     </ol>
-    <p class="servis-kunye">Bütün bölümlerden, Bursa'yı anan (başlıkta Bursa ya da BTSO geçen veya bir ilçeye bağlı) ve başlığında bir teknoloji konusu geçen en yeni haberler — teknoloji, yapay zekâ, yazılım, robot, bilişim, dijital dönüşüm, siber, uzay, TEKNOFEST. Sağda haberin ilçesi ya da bölümü.</p>
+    <details class="yer-not secim-kurali"><summary>Bu liste nasıl seçildi?</summary><p>Bütün bölümlerden, Bursa'yı anan (başlıkta Bursa ya da BTSO geçen veya bir ilçeye bağlı) ve başlığında bir teknoloji konusu geçen en yeni haberler — teknoloji, yapay zekâ, yazılım, robot, bilişim, dijital dönüşüm, siber, uzay, TEKNOFEST. Sağda haberin ilçesi ya da bölümü.</p></details>
   </div>
 </section>
 {% endif %}

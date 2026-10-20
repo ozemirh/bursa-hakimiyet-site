@@ -25,7 +25,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
 <section class="kutu bolum-servis s-{{ servis.tur }}" aria-labelledby="servis-bas">
 
   {% if servis.tur == "doviz" %}
-    <div class="kutu-bas">
+    <div class="kutu-bas hafif">
       <h2 id="servis-bas">PİYASA</h2>
       <span class="tumu">
         {% if servis.kaynaklar.adlar %}{{ servis.kaynaklar.adlar|join:" · " }} &middot; {% endif %}<a href="/veri-kaynaklari">Veri kaynakları &rarr;</a>
@@ -58,7 +58,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
     </div>
 
   {% elif servis.tur == "puan" %}
-    <div class="kutu-bas">
+    <div class="kutu-bas hafif">
       <h2 id="servis-bas">{{ servis.takip.lig_adi|default:"PUAN DURUMU" }}{% if servis.takip.grup_adi %} &middot; {{ servis.takip.grup_adi }}{% endif %}</h2>
       {% comment %}Hafta numarası tablonun haftasıdır, BUGÜNÜN değil (19 Ekim
       2026, L1): veri bayatken "7. hafta" yalnız başlıkta duruyor ve lig
@@ -116,7 +116,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
     </div>
 
   {% elif servis.tur == "nobet" %}
-    <div class="kutu-bas">
+    <div class="kutu-bas hafif">
       <h2 id="servis-bas">NÖBETÇİ ECZANELER</h2>
       {% comment %}Adet PANELİN GÖSTERDİĞİ değil, bugünkü TOPLAMDIR:
       "düğmedeki sayı, basınca geleni sayar" (URUN-PLANI.md §32.2).{% endcomment %}
