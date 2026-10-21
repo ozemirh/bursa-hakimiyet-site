@@ -1,8 +1,13 @@
 {% load site_etiket %}{% comment %}
 Köşe yazıları akışının satırı (19 Ekim 2026, `/kose-yazilari`). Yazarın
-kendi arşiv satırının (`yazi_satiri.html`) kardeşi; tek farkı satırın
-YAZARI da söylemesi — bu akışta yazılar birçok yazardan geliyor. Sütunlar
-aynı: tarih · (yazar + başlık) · okuma süresi. Spot yalnız başlıktan
-FARKLIYSA basılır (arşivin %99'unda ikisi aynı cümle).
+kendi arşiv satırının (`yazi_satiri.html`) kardeşi; farkı satırın YAZARI
+da söylemesi — bu akışta yazılar birçok yazardan geliyor. Spot yalnız
+başlıktan FARKLIYSA basılır (arşivin %99'unda ikisi aynı cümle).
+
+21 Ekim 2026 (tasarım önerisi): tarih sütunu KALKTI, tarihi gün başlığı
+söylüyor (`kose_gunleri.html`). Yazar adı bağlantı DEĞİL, `<span>`:
+yazara geçiş sayfanın yazar dizininden yapılıyor ve satırda tek bağlantı
+kalınca o bağlantı bütün satıra yayılabiliyor (dokunma hedefi, site.css
+`.kose-gun-liste a::after`). Sütunlar: (yazar + başlık) · okuma süresi.
 `y.yazar` sorgu açmaz: akış `select_related("yazar")` ile gelir.
-{% endcomment %}<li>{% if y.yayin_zamani %}<time datetime="{{ y.yayin_zamani|date:'c' }}">{{ y.yayin_zamani|date:'j M Y' }}</time>{% else %}<span></span>{% endif %}<span class="kose-satir"><a class="kose-satir-yazar" href="{{ y.yazar.get_absolute_url }}">{{ y.yazar.ad }}</a><a href="{{ y.get_absolute_url }}">{{ y.baslik }}</a></span><span class="sure">{% if y.kelime_sayisi %}{{ y.kelime_sayisi|okuma_dakikasi }} dk{% endif %}</span>{% if y.spot and y.spot != y.baslik %}<p>{{ y.spot|truncatechars:160 }}</p>{% endif %}</li>
+{% endcomment %}<li><span class="kose-satir"><span class="kose-satir-yazar">{{ y.yazar.ad }}</span><a href="{{ y.get_absolute_url }}">{{ y.baslik }}</a></span><span class="sure">{% if y.kelime_sayisi %}{{ y.kelime_sayisi|okuma_dakikasi }} dk{% endif %}</span>{% if y.spot and y.spot != y.baslik %}<p>{{ y.spot|truncatechars:160 }}</p>{% endif %}</li>

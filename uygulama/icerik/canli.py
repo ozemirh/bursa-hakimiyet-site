@@ -860,16 +860,14 @@ ECZANE_KAYNAK_ADRESI = "https://www.beo.org.tr/nobetci-eczaneler"
 
 # Türkçe sıralama: `sorted` varsayılanı "İ"yi "Z"den sonraya atıyor,
 # İnegöl ilçe listesinin en altında kalıyordu. Küçük bir alfabe yeter;
-# `locale` kurmak sunucunun diline bağımlılık olurdu.
-_TR_ALFABE = "aâbcçdefgğhıiîjklmnoöprsştuüvyz"
-_TR_KUCULT = str.maketrans("IİÎÂ", "ıiîâ")
+# `locale` kurmak sunucunun diline bağımlılık olurdu. 21 Ekim 2026: anahtar
+# `cekirdek/tr_siralama.py`ye taşındı (köşe yazıları yazar dizini de
+# kullanıyor); eski adlar burada aynen duruyor, `eczane.py` onları alıyor.
+from cekirdek.tr_siralama import TR_ALFABE as _TR_ALFABE  # noqa: E402,F401
+from cekirdek.tr_siralama import TR_KUCULT as _TR_KUCULT  # noqa: E402
+from cekirdek.tr_siralama import tr_sirala as _tr_sirala  # noqa: E402,F401
+
 _ASCIYE = str.maketrans("çğıöşüâî", "cgiosuai")
-
-
-def _tr_sirala(metin: str) -> tuple:
-    kucuk = (metin or "").translate(_TR_KUCULT).lower()
-    return tuple(_TR_ALFABE.find(h) if h in _TR_ALFABE else len(_TR_ALFABE)
-                 for h in kucuk)
 
 
 def _ilce_anahtar(ilce: str) -> str:

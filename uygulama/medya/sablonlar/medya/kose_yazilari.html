@@ -4,17 +4,31 @@
 KÖŞE YAZILARI (19 Ekim 2026, kullanıcı isteği: "köşe yazıları diye bir
 sayfamız da olsun"). `/yazarlar` yazarları listeler; bu sayfa yazıları.
 
-Ulusal gazetelerin "Köşe Yazıları" sayfasının klasik düzeni, iki blok:
+21 Ekim 2026'da tasarım direktörünün önerisiyle yeniden kuruldu. Sıra:
 
-1. YAZARLARIN SON YAZILARI — her yazarın en son yazısı, en yeniden eskiye.
-   Kart başı köşe yazısı sayfasının sütun başıyla aynı dil (`.gorus-bas`:
-   portre, ad, tarih); altında başlık ve gövdenin başından kırpılmış düz
-   metin (yeni cümle yazılmaz). Yalnız 1. sayfada. Blok "güncel" demiyor:
-   arşivde son yazısı 2021'de kalmış yazarlar da var ve her kartın tarihi
-   görünür (bayat veri gizlenmez, tarihiyle gösterilir).
-2. TÜM KÖŞE YAZILARI — akış, tarih sütunlu cetvel (`.gorus-liste`), "daha
-   fazla göster" deseniyle (§58/§61). Düğme `?sayfa=N` bağlantısıdır;
-   betik `/daha-fazla?kaynak=kose` ucundan aynı satır şablonunu çeker.
+0. SAYFA BAŞI — sayfanın TEK dolu çubuğu (`.kutu-bas.vurgu > h1`, bölüm
+   sayfasının H1'iyle aynı biçim, K3/K4). Sağda sayfa içi "Yazar dizini ↓"
+   bağlantısı; `?sayfa=N`'de dizin yok, bağlantı 1. sayfanın dizinine gider.
+1. SON YAZILAR (hafif) — yalnız "yazıyor" kademesindeki yazarların son
+   yazısı (`KoseYazisi.kademele`: arşivdeki en yeni yazıya 45 günden yakın),
+   en yeniden eskiye. Yatay kart: portre solda; ad, tarih, (doluysa) unvan,
+   başlık ve gövdenin başından kırpılmış düz metin (yeni cümle yazılmaz).
+   Spot basılmaz: 6.713 yazının 6.623'ünde başlıkla aynı cümle. En yeni yazı
+   7 günden eskiyse başlığın sayacı tarihini söyler (bayat veri gizlenmez).
+2. YAZARLAR A–Z (hafif, `nav`) — bütün listedeki yazarlar iki kademede:
+   "Yazıyor" yalnız adlar, "Arşivde" ad + son yazının ay-yılı. Türkçe
+   alfabe; "Av.", "Doç. Dr." gibi önekler sıralamada atlanır
+   (`Yazar.dizin_anahtari`). Arşivde kalan yazar gizlenmiyor, portresiz
+   alt kademede duruyor.
+3. TÜM KÖŞE YAZILARI (hafif) — gün başlıklı akış (`kose_gunleri.html`),
+   "daha fazla göster" deseniyle (§58/§61). Düğme `?sayfa=N` bağlantısıdır;
+   betik `/daha-fazla?kaynak=kose` ucundan aynı grupları çeker ve hedef kaba
+   (`.kose-akis`) ekler. Dilim sınırı bir günün ortasına düşerse parça o
+   günün başlığını ikinci kez basmaz (`icerik.views.daha_fazla`).
+
+1 ve 2 yalnız 1. sayfada. Sorgu sayısı 21 Ekim'den önceki gibi üç (sayım,
+akış dilimi, yazar başına son yazı); kademeler, dizin ve gün grupları
+Python'da ayrıştırılıyor.
 
 SEO (Paket G deseni, kategori sayfasıyla aynı): `?sayfa=N` başlığı ve
 açıklaması "Sayfa N" taşır; kanonik taban.html'den (yol + geçerli sayfa);
@@ -34,26 +48,33 @@ JSON-LD BreadcrumbList. Tema: köşe yazıları teması (`icerik/temalar.py`).
         </ol>
       </nav>
 
-      <header class="kutu kose-sayfa-bas">
-        <h1>Köşe Yazıları</h1>
-        <p>Bursa Hakimiyet yazarlarının görüş ve yorumları{% if sayfa.number > 1 %} &middot; {{ sayfa.number }}. sayfa{% endif %} &middot; <a href="/yazarlar">Yazarlar &rarr;</a></p>
+      <header class="kutu bolum-bas kose-bas">
+        <div class="kutu-bas vurgu">
+          <h1>KÖŞE YAZILARI</h1>
+          {% if sayfa.number > 1 %}<span class="tumu">{{ sayfa.number }}. sayfa &middot; <a href="/kose-yazilari#kose-dizin">Yazar dizini &rarr;</a></span>
+          {% elif vitrin %}<span class="tumu"><a href="#kose-dizin">Yazar dizini &darr;</a></span>{% endif %}
+        </div>
       </header>
 
-      {% if guncel %}
+      {% if vitrin %}
       <section class="kutu kose-vitrin-kutu" aria-labelledby="kose-son-bas">
-        <div class="kutu-bas"><h2 id="kose-son-bas">YAZARLARIN SON YAZILARI</h2><span class="tumu">{{ guncel|length }} yazar</span></div>
+        <div class="kutu-bas hafif"><h2 id="kose-son-bas">SON YAZILAR</h2><span class="tumu">{{ vitrin|length }} yazar{% if tazelik %}<span class="kose-tazelik"> &middot; en yeni yazı <time datetime="{{ tazelik|date:'c' }}">{{ tazelik|date:'j F Y' }}</time></span>{% endif %}</span></div>
         <div class="kutu-ic">
           <ul class="kose-vitrin">
-{% for y in guncel %}            <li class="kose-kart">
+{% for y in vitrin %}            <li class="kose-kart">
               {% comment %}Portre bezemedir (`alt=""`): yazarın adı hemen yanında
               bağlantı olarak duruyor — anasayfa kuşağıyla aynı karar. Kırpım
-              `.gorus-bas .portre img[src*="-afis"]` kurallarından.{% endcomment %}
+              `.gorus-bas .portre img[src*="-afis"]` kurallarından; kartta
+              `.gorus-bas` kutusuz (`display:contents`), çocukları kartın
+              ızgarasına oturuyor. Başlık bağlantısı bütün karta yayılır
+              (`::after`), yazar adı onun üstünde ayrı hedef.{% endcomment %}
               <div class="gorus-bas">
                 {% if y.yazar.gorsel_yolu %}<span class="portre">{% gorsel y.yazar "portre" alt="" %}</span>
                 {% else %}<span class="portre vesika" aria-hidden="true">{{ y.yazar.basharfler }}</span>{% endif %}
                 <div class="gorus-kimlik">
                   <a class="gorus-ad" href="{{ y.yazar.get_absolute_url }}">{{ y.yazar.ad }}</a>
                   {% if y.yayin_zamani %}<time class="gorus-sayi" datetime="{{ y.yayin_zamani|date:'c' }}">{{ y.yayin_zamani|date:'j F Y' }}</time>{% endif %}
+                  {% if y.yazar.unvan %}<span class="gorus-kose">{{ y.yazar.unvan }}</span>{% endif %}
                 </div>
               </div>
               <h3><a href="{{ y.get_absolute_url }}">{{ y.baslik }}</a></h3>
@@ -62,16 +83,32 @@ JSON-LD BreadcrumbList. Tema: köşe yazıları teması (`icerik/temalar.py`).
 {% endfor %}          </ul>
         </div>
       </section>
+
+      <nav class="kutu kose-dizin-kutu" id="kose-dizin" aria-labelledby="kose-dizin-bas">
+        <div class="kutu-bas hafif"><h2 id="kose-dizin-bas">YAZARLAR A–Z</h2><span class="tumu"><a href="/yazarlar">Yazarlar sayfası &rarr;</a></span></div>
+        <div class="kutu-ic kose-dizin">
+          <div class="kose-dizin-yaziyor">
+            <h3>Yazıyor &middot; {{ dizin_yaziyor|length }}</h3>
+            <ul>
+{% for y in dizin_yaziyor %}              <li><a href="{{ y.yazar.get_absolute_url }}">{{ y.yazar.ad }}</a></li>
+{% endfor %}            </ul>
+          </div>
+          {% if dizin_arsivde %}<div class="kose-dizin-arsivde">
+            <h3>Arşivde &middot; {{ dizin_arsivde|length }} &middot; son yazı tarihiyle</h3>
+            <ul>
+{% for y in dizin_arsivde %}              <li><a href="{{ y.yazar.get_absolute_url }}">{{ y.yazar.ad }}</a><time datetime="{{ y.yayin_zamani|date:'Y-m' }}">{{ y.yayin_zamani|date:'F Y' }}</time></li>
+{% endfor %}            </ul>
+          </div>{% endif %}
+        </div>
+      </nav>
       {% endif %}
 
       <section class="kutu gorus-arsiv" aria-labelledby="kose-tum-bas">
-        <div class="kutu-bas"><h2 id="kose-tum-bas">TÜM KÖŞE YAZILARI</h2><span class="tumu">{{ sayfa.paginator.count }} yazı</span></div>
+        <div class="kutu-bas hafif"><h2 id="kose-tum-bas">TÜM KÖŞE YAZILARI</h2><span class="tumu">{{ sayfa.paginator.count }} yazı</span></div>
         <div class="kutu-ic">
-          {% if sayfa %}
-          <ol class="gorus-liste kose-akis">
-            {% for y in sayfa %}{% include "medya/parca/kose_satiri.html" with y=y %}
-            {% endfor %}
-          </ol>
+          {% if gunler %}
+          <div class="kose-akis">
+{% include "medya/parca/kose_gunleri.html" %}          </div>
           {% comment %}`if` ZORUNLU: `next_page_number` son sayfada EmptyPage
           fırlatır (kategori.html'deki notun aynısı).{% endcomment %}
           {% if sayfa.has_next %}{% include "parca/daha_fazla.html" with devam=1 sonraki=sayfa.next_page_number daha_uc=daha_uc daha_hedef=".kose-akis" daha_metin="Daha fazla köşe yazısı göster" daha_son="Tüm köşe yazıları yüklendi." %}{% endif %}

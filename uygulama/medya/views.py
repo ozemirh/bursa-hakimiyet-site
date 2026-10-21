@@ -16,6 +16,7 @@ gelen adreslerin kanonik biçime düşmesi bu sayede sürüyor.
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.utils import timezone
 
 from cekirdek.adres_duzeni import kalici
 from icerik import temalar
@@ -129,13 +130,23 @@ def kose_yazilari(request):
 
     `/yazarlar` YAZARLARI listeler; bu sayfa YAZILARI. Eski sitede adres
     tasarlanmış ama sayfası yoktu (`/kose-yazilari/` → 301 → 404, canlıda
-    ölçüldü). İki blok:
+    ölçüldü). Üç blok (21 Ekim 2026, tasarım önerisi):
 
-    1. **Yazarların son yazıları** — her yazarın en son yazısı, en yeniden
-       eskiye; yalnız 1. sayfada. Tek sorgu (`yazar_basina_son`).
-    2. **Tüm köşe yazıları** — akış, en yeniden eskiye, "daha fazla
-       göster" deseniyle (§58/§61): düğme `?sayfa=N` bağlantısıdır, betik
-       `/daha-fazla?kaynak=kose` ucundan aynı dilimi çeker.
+    1. **Son yazılar** — "yazıyor" kademesindeki yazarların son yazısı, en
+       yeniden eskiye (`KoseYazisi.kademele`, eşik `YAZIYOR_ESIGI`); yalnız
+       1. sayfada. En yeni yazı `TAZELIK_UYARISI`ndan eskiyse başlık
+       tarihini söyler.
+    2. **Yazarlar A–Z** — bütün listedeki yazarlar iki kademede, Türkçe
+       alfabeyle (`Yazar.dizin_anahtari`); yalnız 1. sayfada.
+    3. **Tüm köşe yazıları** — gün başlıklı akış (`KoseYazisi.gunlere_bol`),
+       "daha fazla göster" deseniyle (§58/§61): düğme `?sayfa=N`
+       bağlantısıdır, betik `/daha-fazla?kaynak=kose` ucundan aynı dilimi
+       çeker.
+
+    Sorgular 21 Ekim'den önceki gibi ÜÇ: sayım + akış dilimi +
+    `yazar_basina_son` (tek sorgu). Vitrin, dizin ve gün grupları aynı iki
+    listenin Python'da ayrıştırılmasıdır; `tests_kose_yazilari` sayıyı
+    `assertNumQueries` ile kilitler.
 
     Sayım yapılır (`Paginator`): 6.713 satırda ucuz ve `?sayfa=N`
     bağlantı zincirinin arşivin SONUNA kadar inmesini sağlıyor —
@@ -143,11 +154,20 @@ def kose_yazilari(request):
     """
     sayfa = sayfa_getir(Paginator(KoseYazisi.akis(), KoseYazisi.AKIS_BOYU),
                         request.GET.get("sayfa"))
+    son_yazilar = (list(KoseYazisi.yazar_basina_son())
+                   if sayfa.number == 1 else [])
+    yaziyor, arsivde = KoseYazisi.kademele(son_yazilar)
+    en_yeni = son_yazilar[0].yayin_zamani if son_yazilar else None
     return render(request, "medya/kose_yazilari.html", {
         "baslik": "Köşe yazıları",
         "sayfa": sayfa,
-        "guncel": (list(KoseYazisi.yazar_basina_son())
-                   if sayfa.number == 1 else []),
+        "gunler": KoseYazisi.gunlere_bol(sayfa.object_list),
+        "vitrin": yaziyor,
+        "dizin_yaziyor": sorted(yaziyor, key=lambda y: y.yazar.dizin_anahtari),
+        "dizin_arsivde": sorted(arsivde, key=lambda y: y.yazar.dizin_anahtari),
+        # Bayat veri gizlenmez, tarihiyle gösterilir (vitrin başlığı).
+        "tazelik": (en_yeni if en_yeni and timezone.now() - en_yeni
+                    > KoseYazisi.TAZELIK_UYARISI else None),
         "daha_uc": "/daha-fazla?kaynak=kose",
         "tema": temalar.kose_temasi(),
     })

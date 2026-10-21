@@ -23,11 +23,13 @@ tuttuğu hesap `icerik/views.py`de `AKIS_RITMI` başlığı altında.{% endcomme
 <div class="akis-parca" data-devam="{% if devam %}1{% else %}0{% endif %}">
 {% for h in kalemler %}{% include "parca/kart.html" with h=h goster_foto=1 zaman_gizle=1 %}
 {% endfor %}</div>
-{% elif kaynak == "kose" %}{% comment %}Köşe yazıları akışı (19 Ekim 2026): çocuklar
-`<li>`; sayfadaki hedef `<ol class="gorus-liste kose-akis">`.{% endcomment %}
+{% elif kaynak == "kose" %}{% comment %}Köşe yazıları akışı (19 Ekim 2026; 21 Ekim'den beri
+gün başlıklı): çocuklar `h3.kose-gun` + `ol.kose-gun-liste` çiftleri, sayfadaki
+hedef `<div class="kose-akis">`. Önceki dilimin son günüyle süren ilk grup
+başlıksız gelir (yalnız `ol`); betik onu sayfadaki son listenin hemen ardına
+ekler, CSS iki listenin birleşme yerini tek cetvel gibi çizer.{% endcomment %}
 <div class="akis-parca" data-devam="{% if devam %}1{% else %}0{% endif %}">
-{% for y in kalemler %}{% include "medya/parca/kose_satiri.html" with y=y %}
-{% endfor %}</div>
+{% include "medya/parca/kose_gunleri.html" %}</div>
 {% else %}
 <div class="akis-parca" data-devam="{% if devam %}1{% else %}0{% endif %}">
 {% include "parca/akis_bloklari.html" %}</div>

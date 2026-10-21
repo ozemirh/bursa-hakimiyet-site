@@ -557,8 +557,9 @@ main{display:block;padding-top:14px}
 /* BÖLÜM VE İLÇE SAYFASI H1 (20 Ekim 2026, R2). `kategori.html`in sayfa
    başlığı için kural yoktu; tarayıcı varsayılanına düşüyordu: 30/700
    ARAYÜZ ailesinde (Roboto), sayfanın en önemli başlığı sitenin başlık
-   dilinin dışında. Ölçek köşe yazıları sayfa başıyla (`.kose-sayfa-bas
-   h1`) aynı: 32/900, ≤600'de 26. Aile temanın başlık ailesi — varsayılan
+   dilinin dışında. Ölçek köşe yazıları sayfasının o günkü başıyla
+   (`.kose-sayfa-bas h1`; 21 Ekim 2026'da kalktı, sayfa bu kurala
+   katıldı) aynı: 32/900, ≤600'de 26. Aile temanın başlık ailesi — varsayılan
    ve Bursaspor/ekonomide Roboto Condensed, teknolojide Roboto. Renk
    çubuğun yazı rengi (`--tema-bant-yazi`), 32 px/900 büyük metin.
    20 Ekim 2026: seçici GENİŞLEDİ — sayfa başlığı taşıyan her vurgu
@@ -3223,15 +3224,15 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 
    ÖLÇÜLDÜ (başsız Chrome): bant 1440 px'te 50 px, 390 px'te 82 px.
    Üstüne birkaç piksel nefes payı bırakılıyor. */
-.akis-blok,.son-haberler .kart,.kose-akis>li{scroll-margin-top:58px}
+.akis-blok,.son-haberler .kart,.kose-akis>*{scroll-margin-top:58px}
 @media(max-width:900px){
-  .akis-blok,.son-haberler .kart,.kose-akis>li{scroll-margin-top:92px}
+  .akis-blok,.son-haberler .kart,.kose-akis>*{scroll-margin-top:92px}
 }
 /* Odak da yeni yığına taşınıyor (klavyeyle gezen okur listenin başına
    dönmesin). Blok bir KAP; fare/dokunmayla gelen odakta halka çizmek
    gereksiz gürültü olurdu, klavye okurunda ise şart. */
-.akis-blok:focus,.kose-akis>li:focus{outline:none}
-.akis-blok:focus-visible,.kose-akis>li:focus-visible{outline:3px solid var(--tema-koyu);outline-offset:4px}
+.akis-blok:focus,.kose-akis>*:focus{outline:none}
+.akis-blok:focus-visible,.kose-akis>*:focus-visible{outline:3px solid var(--tema-koyu);outline-offset:4px}
 
 /* =================================================================
    BÖLÜM RENK TEMALARI GERİ ALINDI — 7 Eylül 2026 (§63)
@@ -3642,50 +3643,113 @@ a.gorus-ad:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
 .yazar b a:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
 
 /* --- köşe yazıları sayfası (/kose-yazilari, 19 Ekim 2026) ---------------
-   Sayfa başı yazar sayfasının künyesiyle aynı dil: display h1, üstte koyu
-   fitil. Vitrin (her yazarın son yazısı) TABLO düzeni: hücreleri boşluk
-   değil çizgi ayırır. Kart başı köşe yazısının sütun başının (`.gorus-bas`)
-   küçük hâli; portre kırpımı yukarıdaki `.gorus-bas .portre` kurallarından
-   gelir, burada yeniden yazılmaz. Akış satırı yazarın arşiv cetvelinin
-   (`.gorus-liste`) kardeşi; tek ek, başlığın üstündeki yazar adı. */
-.kose-sayfa-bas{padding:16px 20px 14px;border-top:4px solid var(--tema-koyu)}
-.kose-sayfa-bas h1{font-family:var(--display);font-size:32px;font-weight:900;letter-spacing:.3px;
-  line-height:1.08;color:var(--tema-koyu)}
-.kose-sayfa-bas p{margin-top:6px;font-size:13.5px;line-height:1.45;color:var(--gri)}
-.kose-sayfa-bas a{display:inline-block;padding:2px 0;font-weight:700;color:var(--tema-vurgu-koyu)}
-.kose-sayfa-bas a:hover{text-decoration:underline}
+   21 Ekim 2026 (tasarım önerisi): sayfa başı bölüm sayfasının H1 çubuğu
+   (`.kose-bas` = `.bolum-bas` + sayfa içi "Yazar dizini" bağlantısı) ve
+   sayfanın TEK dolu çubuğu; son yazılar, yazar dizini ve akış hafif
+   kademede (K4). Eski `.kose-sayfa-bas` künyesi kalktı.
+
+   Vitrin TABLO düzeni: hücreleri boşluk değil çizgi ayırır. Kart YATAY:
+   portre solda, sağında kimlik, başlık, giriş. Kartta `.gorus-bas` kutusuz
+   (`display:contents`): çocukları kartın ızgarasına oturur, portre kırpımı
+   yukarıdaki `.gorus-bas .portre` kurallarından aynen gelir, markup
+   değişmez. Taban `.gorus-bas` / `.gorus-liste` kurallarına DOKUNULMAZ —
+   yazar sayfası ve köşe yazısı detayı onları kullanıyor; buradaki her
+   kural `.kose-*` kapsamında.
+
+   Dokunma hedefi (≤600'de 44x44): kartın ve akış satırının başlık
+   bağlantısı `::after` ile bütün kutuya yayılır (uzatılmış bağlantı);
+   kartın yazar adı onun üstünde ayrı hedef (`z-index`). Ölçüldü
+   (prototip): 5 kart başlığı 21 px yüksekti. */
+.kose-bas .kutu-bas .tumu a{font-weight:700;color:var(--tema-bant-vurgu-ikincil)}
+/* ?sayfa=N'de sayaç ("2. sayfa · Yazar dizini →") 320–390'da h1'i
+   "KÖŞE / YAZILARI" diye bölüyordu (doğrulamada ölçüldü). Sığmazsa
+   bütün olarak alt satıra iner; h1 de sayaç da kendi içinde kırılmaz. */
+.kose-bas .kutu-bas{flex-wrap:wrap;row-gap:0}
+.kose-bas .kutu-bas .tumu{white-space:nowrap}
+/* Sayaçtaki tazelik notu ("en yeni yazı 27 Ağustos 2026") dar ekranda
+   satır kırar; kırılan başlık değil not olsun, tarih bölünmesin (360'ta
+   ölçüldü: "SON / YAZILAR" iki satıra düşüyordu). */
+.kose-vitrin-kutu .kutu-bas h2{white-space:nowrap}
+.kose-vitrin-kutu .kutu-bas .tumu{text-align:right}
+.kose-tazelik time{white-space:nowrap}
 .kose-vitrin{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-.kose-kart{min-width:0;padding:14px 16px;border-bottom:1px solid var(--tema-cizgi)}
+.kose-kart{position:relative;min-width:0;display:grid;grid-template-columns:56px minmax(0,1fr);
+  column-gap:12px;align-content:start;padding:14px 16px;border-bottom:1px solid var(--tema-cizgi)}
 .kose-kart:not(:nth-child(3n)){border-right:1px solid var(--tema-cizgi)}
 .kose-kart:last-child{border-right:0;border-bottom:0}
-.kose-kart .gorus-bas{gap:12px;padding-bottom:10px;margin-bottom:10px}
-.kose-kart .gorus-bas .portre{width:64px;height:64px}
-.kose-kart .gorus-bas .vesika{font-size:22px}
-.kose-kart .gorus-ad{font-size:17px}
-.kose-kart h3{font-family:var(--tema-baslik-aile);font-size:18px;font-weight:700;line-height:1.28}
+.kose-kart .gorus-bas{display:contents}
+.kose-kart .gorus-bas .portre{grid-row:1/span 3;width:56px;height:56px}
+.kose-kart .gorus-bas .vesika{font-size:20px}
+.kose-kart .gorus-kimlik{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px}
+.kose-kart .gorus-ad{font-size:16px}
+.kose-kart a.gorus-ad{position:relative;z-index:1}
+.kose-kart .gorus-kose{font-size:13px}
+.kose-kart h3,.kose-kart>p{grid-column:2}
+.kose-kart h3{margin-top:2px;font-family:var(--tema-baslik-aile);font-size:18px;font-weight:700;line-height:1.28}
 .kose-kart h3 a{color:var(--murekkep)}
+.kose-kart h3 a::after{content:"";position:absolute;inset:0}
 .kose-kart h3 a:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
 .kose-kart p{margin-top:6px;font-family:var(--serif);font-size:14px;line-height:1.5;color:var(--gri);
-  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* Yazar dizini: "Yazıyor" yalnız adlar (1/3), "Arşivde" ad + son yazının
+   ay-yılı, iki sütun (2/3). Çubuktaki "Yazar dizini ↓" buraya iner;
+   hedef yapışkan bandın altına otursun (akıştaki ölçülmüş 58/92 px). */
+.kose-dizin-kutu{scroll-margin-top:58px}
+.kose-dizin{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:0 24px}
+.kose-dizin>:only-child{grid-column:1/-1}
+.kose-dizin h3{font-family:var(--display);font-size:12.5px;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--gri);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--tema-cizgi)}
+.kose-dizin ul{list-style:none;margin:0;padding:0}
+.kose-dizin-arsivde ul{columns:2;column-gap:24px}
+.kose-dizin li{break-inside:avoid;display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  border-bottom:1px dotted var(--tema-cizgi)}
+.kose-dizin a{display:block;padding:6px 0;font-family:var(--display);font-size:15px;font-weight:700;color:var(--tema-koyu)}
+.kose-dizin a:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
+.kose-dizin time{font-size:12.5px;color:var(--gri);white-space:nowrap;font-variant-numeric:tabular-nums}
+/* Akış: gün başlığı + satırlar. Satırda tarih sütunu yok (tarihi başlık
+   söylüyor), iki sütun kalıyor: (yazar + başlık) · süre. */
 .kose-satir{min-width:0}
 .gorus-liste .kose-satir-yazar{display:block;width:max-content;max-width:100%;margin-bottom:2px;
   font-family:var(--display);font-size:12.5px;font-weight:700;letter-spacing:.4px;line-height:1.3;
   color:var(--tema-vurgu-koyu)}
+.kose-gun{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:.2px;line-height:1.3;
+  color:var(--tema-koyu);padding:16px 0 6px;margin-bottom:10px;border-bottom:2px solid var(--tema-cizgi)}
+.kose-gun:first-child{padding-top:0}
+.kose-gun-liste li{position:relative;grid-template-columns:minmax(0,1fr) auto}
+.kose-gun-liste p{grid-column:1/-1}
+.kose-gun-liste a::after{content:"";position:absolute;inset:0}
+/* "Daha fazla" dikişi: önceki dilimin son günü süren parça başlıksız,
+   yalnız listeyle gelir ve sayfadaki listenin hemen ardına oturur. Taban
+   kural ilk satırın üst boşluğunu, son satırın çizgisini siliyor; iki
+   liste birleşince arada çizgi ve boşluk kaybolurdu. */
+.kose-gun-liste+.kose-gun-liste>li:first-child{padding-top:10px;border-top:1px solid var(--tema-cizgi)}
 @media(max-width:1000px){
   .kose-vitrin{grid-template-columns:repeat(2,minmax(0,1fr))}
   .kose-kart:not(:nth-child(3n)){border-right:0}
   .kose-kart:nth-child(odd):not(:last-child){border-right:1px solid var(--tema-cizgi)}
 }
+@media(max-width:900px){
+  .kose-dizin-kutu{scroll-margin-top:92px}
+}
+@media(max-width:768px){
+  .kose-dizin{grid-template-columns:minmax(0,1fr)}
+  .kose-dizin-arsivde{margin-top:14px}
+}
 @media(max-width:600px){
-  .kose-sayfa-bas{padding:12px 14px 10px}
-  .kose-sayfa-bas h1{font-size:26px}
   .kose-vitrin{grid-template-columns:minmax(0,1fr)}
-  .kose-kart{padding:12px 0}
+  .kose-kart{grid-template-columns:48px minmax(0,1fr);padding:12px 0}
   .kose-kart:nth-child(odd):not(:last-child){border-right:0}
   .kose-kart:first-child{padding-top:0}
-}
-@media(max-width:560px){
-  .kose-akis .kose-satir{grid-column:1/-1}
+  .kose-kart .gorus-bas .portre{width:48px;height:48px}
+  .kose-kart a.gorus-ad{display:inline-flex;align-items:center;min-height:44px;padding:0}
+  /* Bant bağlantıları: taban `.kutu-bas .tumu a` 6 px dolguyla 29 px
+     kalıyordu ("Yazarlar sayfası →", doğrulamada ölçüldü). */
+  .kose-bas .kutu-bas .tumu a{display:inline-flex;align-items:center;min-height:44px;padding:0}
+  .kose-dizin-kutu .kutu-bas .tumu a{display:inline-flex;align-items:center;min-height:44px;padding:0}
+  .kose-kart p{-webkit-line-clamp:2}
+  .kose-dizin ul{columns:2;column-gap:16px}
+  .kose-dizin a{display:flex;align-items:center;min-height:44px;padding:0}
+  .kose-dizin-arsivde li{flex-direction:column;align-items:flex-start;gap:0}
 }
 
 @media(max-width:768px){

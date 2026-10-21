@@ -34,12 +34,15 @@ kayıtların bir bölümünü kaydırırdı.
 """
 
 import re
+from datetime import timedelta
 from html import unescape
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.html import strip_tags
 
+from cekirdek.tr_siralama import tr_sirala
 from taksonomi.models import Kategori, KategoriTur
 
 # Arşiv görsellerinin adres öneki.
@@ -241,6 +244,19 @@ class Yazar(models.Model):
     def __str__(self) -> str:
         return f"[{self.pk}] {self.ad}"
 
+    #: Dizin sıralamasında atlanan unvan önekleri (21 Ekim 2026): arşivde
+    #: "Av. Veysel TAYYAR" ve "Doç. Dr. Filiz ERYILMAZ" adın parçası olarak
+    #: kayıtlı; okur onları A'da ve D'de değil V'de ve F'de arar.
+    DIZIN_ONEKI = re.compile(r"^(?:(?:Av|Doç|Dr|Prof|Op|Uzm|Yrd|Öğr|Gör)\.\s*)+", re.I)
+
+    @property
+    def dizin_anahtari(self) -> tuple:
+        """Türkçe alfabeyle, unvan öneki atılmış, KELİME KELİME sıralama
+        anahtarı. Kelime kelime: boşluk alfabe dışı sayılıp harflerin
+        ardına düşerdi, "Ali GENÇ" "Alican"ın arkasında kalırdı."""
+        ad = self.DIZIN_ONEKI.sub("", self.ad or "")
+        return tuple(tr_sirala(kelime) for kelime in ad.split())
+
     @classmethod
     def listedekiler(cls):
         return cls.objects.filter(aktif=True)
@@ -332,6 +348,17 @@ class KoseYazisi(ArsivIcerigi):
     #: ortalama 4.259 karakter (PG, 19 Ekim 2026); 37 kart için hepsini
     #: çekmek gereksiz. Etiketler düştükten sonra 200 karakter kalsın diye pay.
     GIRIS_HAM = 1200
+    #: `/kose-yazilari` vitrininin "yazıyor" eşiği (21 Ekim 2026, tasarım
+    #: önerisi). Son yazısı REFERANSA bundan yakın yazar "yazıyor" kademesinde
+    #: kartla, öbürleri "arşivde" kademesinde yalnız dizinde durur. Ölçüldü
+    #: (PG): aylık yazanların son 12 aydaki en uzun aralığı 43 gün; en yeni
+    #: yazıya uzaklıklar 0…10, 35, ardından 98 — doğal kırılma 35 ile 98
+    #: arasında. 45 aylık yazarı karşılıyor, 98 günlük düzensiz yazarı almıyor.
+    YAZIYOR_ESIGI = timedelta(days=45)
+    #: En yeni köşe yazısı bugünden bu kadar eskiyse vitrin başlığı tarihini
+    #: söyler (bayat veri gizlenmez, tarihiyle gösterilir). 2025–26'da köşe
+    #: yazısı çıkmayan en uzun dönem 5 gün (bayram); 7 gün yanlış alarm vermez.
+    TAZELIK_UYARISI = timedelta(days=7)
 
     class Meta:
         ordering = ["-yayin_zamani"]
@@ -379,6 +406,54 @@ class KoseYazisi(ArsivIcerigi):
                 .select_related("yazar").defer("govde")
                 .annotate(giris_ham=Substr("govde", 1, cls.GIRIS_HAM))
                 .order_by("-yayin_zamani", "-pk"))
+
+    @classmethod
+    def kademele(cls, son_yazilar):
+        """`yazar_basina_son()` listesini `(yaziyor, arsivde)` diye böler —
+        SORGU AÇMAZ, liste zaten elde.
+
+        Referans BUGÜN değil, listenin başındaki (en yeni) yazı. Bugüne göre
+        ölçülseydi göç hattı durduğunda (arşiv 6 Eylül'de durdu) eşiği kimse
+        geçemez, vitrin boşalırdı — oysa duran yazarlar değil hat. Referans
+        en yeni yazı olunca o yazının yazarı eşiği her zaman geçer: liste
+        boş değilse vitrin YAPISI GEREĞİ boş kalamaz. Panelden yeni yazı
+        girdikçe referans kendiliğinden bugüne yaklaşır. Sıra korunur (en
+        yeniden eskiye).
+        """
+        son_yazilar = list(son_yazilar)
+        if not son_yazilar:
+            return [], []
+        referans = son_yazilar[0].yayin_zamani
+        yaziyor, arsivde = [], []
+        for yazi in son_yazilar:
+            hedef = yaziyor if referans - yazi.yayin_zamani <= cls.YAZIYOR_ESIGI else arsivde
+            hedef.append(yazi)
+        return yaziyor, arsivde
+
+    @staticmethod
+    def gunlere_bol(yazilar, onceki=None):
+        """Akış dilimini yayın gününe göre gruplar: `[{gun, yazilar, surer}]`.
+
+        Gün YEREL saatle hesaplanır (UTC'de 05:01 saklanan yazı TR'de
+        08:01; gece yarısına yakın yazı başka güne düşebilir) — şablonun
+        `|date` süzgeci de yerel saati basıyor, ikisi ayrışmasın.
+
+        `onceki`: "daha fazla" ucunun aynı sorguda okuduğu, ÖNCEKİ dilimin son
+        kaydı. İlk grup onun gününe denk geliyorsa `surer=True`: sayfada o
+        günün başlığı zaten duruyor, parça başlığı ikinci kez basmaz, yalnız
+        listeyi getirir. `?sayfa=N` kendi başına açılan bir sayfadır; ona
+        `onceki` verilmez, ilk grup hep başlıklıdır.
+        """
+        onceki_gun = (timezone.localtime(onceki.yayin_zamani).date()
+                      if onceki is not None else None)
+        gruplar = []
+        for yazi in yazilar:
+            gun = timezone.localtime(yazi.yayin_zamani).date()
+            if not gruplar or gruplar[-1]["gun"] != gun:
+                gruplar.append({"gun": gun, "yazilar": [],
+                                "surer": not gruplar and gun == onceki_gun})
+            gruplar[-1]["yazilar"].append(yazi)
+        return gruplar
 
     @property
     def giris(self) -> str:

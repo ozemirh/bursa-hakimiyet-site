@@ -605,9 +605,22 @@ def daha_fazla(request):
         # `/kose-yazilari` akışı (19 Ekim 2026). Kalem haber değil köşe
         # yazısı; satır şablonu ve dilim boyu sayfanınkiyle aynı
         # (`KoseYazisi.akis`, `AKIS_BOYU`).
-        kalemler, devam = _dilim(KoseYazisi.akis(), numara, KoseYazisi.AKIS_BOYU)
+        #
+        # 21 Ekim 2026: akış gün başlıklı. Dilim sınırı bir günün ortasına
+        # düşerse (ölçüldü: 1. dilim 22 Ağustos'ta bitiyor, 2. dilim 22
+        # Ağustos'la başlıyor) parça o günün başlığını İKİNCİ KEZ basmamalı.
+        # Bunun için sorgu BİR SATIR GERİDEN başlar: ilk kayıt önceki
+        # dilimin sonudur, yalnız günü okunur (`gunlere_bol(..., onceki)`).
+        # Hâlâ TEK sorgu — `_dilim`le tek fark OFFSET'in bir eksik olması;
+        # "devam var mı" yine bir fazla satırdan.
+        boy = KoseYazisi.AKIS_BOYU
+        bas = (numara - 1) * boy
+        ham = list(KoseYazisi.akis()[max(bas - 1, 0):bas + boy + 1])
+        onceki = ham.pop(0) if bas and ham else None
+        kalemler, devam = ham[:boy], len(ham) > boy
         return render(request, "parca/akis_parcasi.html", {
-            "kalemler": kalemler, "devam": devam, "kaynak": kaynak})
+            "gunler": KoseYazisi.gunlere_bol(kalemler, onceki),
+            "devam": devam, "kaynak": kaynak})
     sorgu, kategori = _akis_sorgusu(kaynak, slug)
     if kaynak == "anasayfa":
         kalemler, devam = _dilim(sorgu, numara, ANASAYFA_DAHA, atla=ANASAYFA_ATLA)

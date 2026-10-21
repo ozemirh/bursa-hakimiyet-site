@@ -6760,7 +6760,7 @@ verdiği kararlar:
 | Anasayfa HTML'i gerçek veride 229 KB > 200 KB bütçe (gzip 35 KB) — bütçe ham mı aktarım mı, tanım kararı | karar bekliyor (koordinatör ölçümü, bu bölümde yeniden ölçülmedi) |
 | Panelde kalan `--gri-acik` metinler AA altı | açık |
 | Mini slayt kırpması | açık |
-| Köşe sayfalarının dolu h2'leri (K4'e uymuyor) | açık |
+| Köşe sayfalarının dolu h2'leri (K4'e uymuyor) | açık → §72: `/kose-yazilari`'da kapandı; `yazar.html:55` ve `kose_yazisi.html:91/116/127`'de açık |
 | Ölü CSS: `.ilce`, `.alt-menu`, `.dar`, `.surmanset` | açık |
 | Menü sırası haber sayısına göre; kullanıcının yazdığı sıra istenirse ~15 dk | kullanıcı isterse |
 | İletişim sayfası (5187 m.4/3) | gazeteden bilgi bekliyor |
@@ -6780,3 +6780,61 @@ altyapısı).
 
 **Not:** §5 süreç tablosu Ağustos'tan beri güncellenmedi; faz durumu için
 bu tablo değil, §69–§71 ve `EKIP.md` okunmalı.
+
+---
+
+## §72 — 21 Ekim 2026: köşe yazıları sayfası "görüş" sayfası oldu
+
+Kullanıcı isteği: "köşe yazıları sayfasına ihtiyacımız var". Sayfa 11b46ef'ten
+beri vardı (§71/3); bu tur onu yeniden tasarladı. Akış: tasarım direktörü
+önerisi (gerçek PG dağılımı + başsız Chrome prototipi) → full-stack uygulama
+→ test-kalite bağımsız doğrulama → iki CSS bulgusu koordinatörce kapatıldı ve
+yeniden ölçüldü. Kapsam yalnız `/kose-yazilari`; `/yazarlar`, yazar sayfası
+ve köşe yazısı detayına dokunulmadı (yerleşim parmak izi HEAD ile aynı).
+
+### 1. Kararlar
+
+| Konu | Karar | Gerekçe (ölçüm) |
+|---|---|---|
+| Yazıyor / arşivde | `KoseYazisi.YAZIYOR_ESIGI` = **45 gün**, referans **arşivdeki en yeni yazı** (bugün değil) | Yazarların en yeni yazıya uzaklığı 0–10, 35, sonra 98 gün: doğal kırılma 35–98 arası; ayda bir yazanların en uzun aralığı 43 gün. Sonuç 13 yazıyor / 24 arşivde. Bugüne göre (55 gün) kimse geçemezdi; en yeni yazının yazarı her zaman geçtiği için vitrin yapı gereği boş kalmaz |
+| Bayatlık | `TAZELIK_UYARISI` = **7 gün**: en yeni yazı daha eskiyse vitrin sayacı tarihi yazar ("13 yazar · en yeni yazı 27 Ağustos 2026") | 2025–26'da köşe yazısız en uzun dönem 5 gün; arşivdeki yazarlar gizlenmez, tarihiyle alt kademede |
+| Blok sırası | Kırıntı → **dolu H1** (KÖŞE YAZILARI + "Yazar dizini ↓") → hafif SON YAZILAR → hafif YAZARLAR A–Z → hafif TÜM KÖŞE YAZILARI | K4: dolu çubuk yalnız H1 |
+| Vitrin kartı | Yatay: portre solda; ad, tarih, başlık, gövdeden kırpılmış giriş; spot yok; unvan doluysa `.gorus-kose` | 6.713 spotun 6.623'ü başlıkla aynı; 37 yazarın hiçbirinde unvan yok. Vitrindeki 13 yazarın hepsinde gerçek portre var |
+| Yazar dizini | İki liste: "Yazıyor" adlar; "Arşivde" ad + son yazının ay-yılı. Türkçe alfabe, kelime kelime; Av./Doç./Dr./Prof./Op./Uzm./Yrd./Öğr./Gör. önekleri anahtardan atılır | Yeni sorgu parametresi yok (kopya içerik); bağlantılar `/yazarlar/<slug>` |
+| Akış | **Gün** başlıkları (`parca/kose_gunleri.html`), satırdaki tarih sütunu kalktı | Günde ortalama 3,9 yazı; 20'lik dilim 5–6 güne yayılıyor, ay başlığı işe yaramazdı |
+| "Daha fazla" dikişi | `daha_fazla` köşe dalı OFFSET'i **bir satır geriden** başlatır; önceki dilimin son günüyle süren parça başlıksız `ol` olarak gelir, CSS dikişi çizer. `site.js` değişmedi | Hâlâ tek sorgu. Gün `timezone.localtime` ile (arşivde UTC/yerel günü farklı 169 yazı var) |
+| Türkçe sıralama | `cekirdek/tr_siralama.py` ortak modül; `icerik/canli` eski adlarla oradan alıyor | Eczane davranışı aynı (doğrulandı) |
+
+### 2. Ölçümler (önce → sonra)
+
+| Ölçüm | Önce → sonra |
+|---|---|
+| Sorgu: `/kose-yazilari` · `/daha-fazla?kaynak=kose&sayfa=2` · `?sayfa=2` (ısınmış PG) | 3 · 1 · 2 → **3 · 1 · 2** (`assertNumQueries` ile kilitli) |
+| HTML `/kose-yazilari` ham / gzip | 86.079 / 19.536 → **59.589 / ~14.130 bayt** |
+| İlk ekranda tam kart 390 · 768 · 1280 | 1 · 2 · 3 → **3 · 4 · 3** |
+| Akışın başladığı yer 390 · 1280 | 9.263 · 3.912 → **3.726 · 2.076 px** |
+| Yatay taşma, 8 genişlik (320–1440), 1. sayfa ve `?sayfa=2` | **0** |
+| h1 / dolu çubuk | **1 / 1** |
+| ≤600'de main içinde 44×44 altı hedef | **1** (kırıntı "Anasayfa", site geneli, eski) |
+| Kontrast (hesaplanmış renk) en düşük | **5,50:1** (tarih, giriş, arşiv ay-yılı) |
+| "Daha fazla" 3 tık: 80 satır `?sayfa=1..4` ve DB ile | birebir; tekrar 0, başlık tekrarı 0, 21 başlık = 21 yerel gün |
+| Bant yüksekliği ≥601 | 60 → **51 px** (bölüm sayfalarıyla eşit) |
+| Test paketi | **1649 test, OK (2 atlandı)**; sayfa bütçesi (`BH_SAYFA_BUTCESI=1`) 5/5 |
+
+Doğrulamada çıkan ve kapatılan iki bulgu: (1) ≤600'de "Yazarlar sayfası →"
+29 px idi → 44 px; (2) `?sayfa=N`'de 320–390'da H1 "KÖŞE / YAZILARI" diye
+kırılıyordu → bant `flex-wrap`, sayaç `nowrap` ve sığmazsa bütün olarak alta
+iner. 44 px kuralı yalnız ≤600'e alındı (geniş ekranda bant 60 px'ti).
+
+### 3. Açık kalanlar
+
+| Konu | Sahip / durum |
+|---|---|
+| Yazar unvanı, özgeçmişi, afişsiz portre (unvan/özgeçmiş 37 yazarın hiçbirinde yok; 18 yazarın portresi afişten kırpılıyor) | **kullanıcıdan içerik** (haber-muduru) |
+| `yazar.html:55`, `kose_yazisi.html:91/116/127` dolu h2'leri (K4) | frontend |
+| `yayindakiler()` ileri tarihli yazıyı süzmüyor; panel zamanlı yayın açarsa vitrin referansı kayar | backend |
+| Kütüphanede görüş/yazarlar sayfası deseni yok (`t24.md` erişim engeli) | haber-siteleri-arastirmacisi (yalnız ikincil kaynak) |
+| ≥1001'de 13 kart 3 sütunda: son satırda tek kart | not (veriyle değişir) |
+| `site.js` köşe akışında da "Başka haber yok." / "Haberler yüklenemedi." | frontend, küçük |
+| Sayaçta binlik ayırıcı yok ("6713 yazı"; kategori sayfasında da öyle) | frontend, küçük |
+| Sayfa bütçesi testi köşe sayfasını ölçmüyor; "daha fazla"nın tarayıcı tarafı otomatik testsiz | test-kalite |

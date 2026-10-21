@@ -34,17 +34,25 @@ from .tests_cerceve import KURAL, _blok, medya_blogu
 
 KOK = Path(__file__).resolve().parent.parent
 SABLON = KOK / "sablonlar"
+#: Medya uygulamasının şablon kökü ayrı (`medya/sablonlar/medya/...`); KAPSAM'daki
+#: `medya/...` adları oradan okunur — Django'nun şablon adıyla aynı biçim.
+MEDYA_SABLON = KOK / "medya" / "sablonlar"
 KUTU_BAS = re.compile(r'<div class="(kutu-bas[^"]*)">\s*<(h1|h2)[^>]*>([^<{]*)')
+
+
+def _sablon(ad: str) -> Path:
+    return (MEDYA_SABLON if ad.startswith("medya/") else SABLON) / ad
 
 #: Dolu çubukta kalmasına izin verilen h2'ler: (şablon, başlık) → gerekçe.
 DOLU_IZINLI = {
     ("anasayfa.html", "BURSASPOR"): "kulüp kimliği; yeşil `#bursaspor` kuralından",
 }
 
-#: Kademeye bağlanan şablonlar (anasayfa, bölüm ve bölümün parçaları).
+#: Kademeye bağlanan şablonlar (anasayfa, bölüm ve bölümün parçaları;
+#: 21 Ekim 2026'dan beri köşe yazıları sayfası — K4 orada kapandı).
 KAPSAM = ["anasayfa.html", "kategori.html", "parca/bolum_servis.html",
           "parca/bolum/ekonomi.html", "parca/bolum/teknoloji.html",
-          "parca/bolum/bursaspor.html"]
+          "parca/bolum/bursaspor.html", "medya/kose_yazilari.html"]
 
 
 class IkiKademe(SimpleTestCase):
@@ -52,13 +60,23 @@ class IkiKademe(SimpleTestCase):
     def test_kapsamdaki_her_baslik_hafif_ya_da_izinli(self):
         dolu = []
         for ad in KAPSAM:
-            for sinif, etiket, metin in KUTU_BAS.findall((SABLON / ad).read_text(encoding="utf-8")):
+            for sinif, etiket, metin in KUTU_BAS.findall(_sablon(ad).read_text(encoding="utf-8")):
                 if "hafif" in sinif.split() or etiket == "h1":
                     continue
                 if (Path(ad).name, metin.strip()) in DOLU_IZINLI:
                     continue
                 dolu.append(f"{ad}: {sinif} {metin.strip()}")
         self.assertEqual(dolu, [], "dolu çubuk yalnız sayfa başlığı ve kimlik bloğu")
+
+    def test_kose_yazilari_kapsamda_ve_okunuyor(self):
+        """Yol düzeltmesi boşa düşmesin: medya kökünden okunan şablonda
+        tek dolu çubuk h1, üç blok hafif (21 Ekim 2026)."""
+        bulunan = KUTU_BAS.findall(_sablon("medya/kose_yazilari.html").read_text(encoding="utf-8"))
+        self.assertEqual([(s, e, m.strip()) for s, e, m in bulunan], [
+            ("kutu-bas vurgu", "h1", "KÖŞE YAZILARI"),
+            ("kutu-bas hafif", "h2", "SON YAZILAR"),
+            ("kutu-bas hafif", "h2", "YAZARLAR A–Z"),
+            ("kutu-bas hafif", "h2", "TÜM KÖŞE YAZILARI")])
 
     def test_sayfa_basligi_dolu_cubukta(self):
         metin = (SABLON / "kategori.html").read_text(encoding="utf-8")
