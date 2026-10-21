@@ -9,18 +9,22 @@ yazarları listeler; bu sayfa yazıların kendisini. Korunanlar:
 2. **Son yazılar (21 Ekim 2026'dan beri kademeli).** Yazar başına TEK
    kart, en yeniden eskiye, yalnız "yazıyor" kademesi (arşivdeki en yeni
    yazıya `YAZIYOR_ESIGI`nden yakın); en yeninin yazarı eşiği hep geçer,
-   vitrin boş kalmaz. Pasif yazar ve yayında olmayan yazı girmez; giriş
-   gövdeden kırpılmış düz metin (yeni cümle yok). En yeni yazı
-   `TAZELIK_UYARISI`ndan eskiyse başlık tarihini söyler.
+   vitrin boş kalmaz. Pasif yazar ve yayında olmayan yazı girmez. En yeni
+   yazı `TAZELIK_UYARISI`ndan eskiyse başlık tarihini söyler. İkinci
+   turdan beri (onaylı iskelet): iki sütun SÜTUN SÜTUN (`--satir` =
+   ceil(n/2)), kartta giriş metni ve unvan YOK, tarih kısa.
 3. **Yazar dizini.** Bütün listedeki yazarlar iki kademede, Türkçe
-   alfabeyle, unvan öneki sıralamada atlanarak.
-4. **Akış.** Bütün yazılar en yeniden eskiye, GÜN BAŞLIKLI; "daha fazla
-   göster" düğmesi `?sayfa=N` bağlantısı + `/daha-fazla?kaynak=kose`
-   parçası, dilimler çakışmaz; dilim bir günün ortasında biterse parça o
-   günün başlığını ikinci kez basmaz (dikiş), `?sayfa=N` ise hep başlıkla
-   açılır; aralık dışı sayfa 404.
+   alfabeyle, unvan öneki sıralamada atlanarak; "Arşivde" kapalı
+   `<details>`.
+4. **Önceki yazılar (akış).** Vitrindeki yazılar HARİÇ bütün yazılar en
+   yeniden eskiye, GÜN BAŞLIKLI — sayfa, `?sayfa=N` ve "daha fazla"
+   parçası AYNI kümeden (`KoseYazisi.onceki_akis`; SQL dışlaması Python
+   kademesiyle birebir). Dilimler çakışmaz; dilim bir günün ortasında
+   biterse parça o günün başlığını ikinci kez basmaz (dikiş), `?sayfa=N`
+   ise hep başlıkla açılır; aralık dışı sayfa 404.
 5. **Başarım.** Sorgu sayısı yazar ve yazı sayısıyla BÜYÜMEZ (N+1 yok) ve
-   21 Ekim'deki yeniden kuruluşta ARTMADI (3 / 1 / 2, `assertNumQueries`);
+   21 Ekim'deki iki yeniden kuruluşta ARTMADI (3 / 1 / 2,
+   `assertNumQueries`; vitrin dışlaması aynı sorgunun alt sorgusu);
    anonim sayfa önbelleğine girer ve köşe yazısı kaydedilince düşer.
 6. **Tema ve bağlantılar.** Köşe teması kayıttan; anasayfa yazar kuşağı
    ve `/yazarlar` sayfası bu sayfaya bağlanır.
@@ -41,7 +45,7 @@ from django.utils import dateformat, timezone
 from icerik import temalar
 from icerik.tests_cerceve import KURAL, _blok, medya_blogu
 
-from .models import KoseYazisi, Yazar, duz_giris
+from .models import KoseYazisi, Yazar
 
 LOCMEM = "django.core.cache.backends.locmem.LocMemCache"
 SAYFA_ACIK = override_settings(
@@ -54,7 +58,8 @@ SAYFA_ACIK = override_settings(
 #: Asıl kanıt `test_sorgu_sayisi_kayitla_buyumuyor`: az ve çok veride AYNI.
 #: 21 Ekim 2026 yeniden kuruluşu ÖNCESİ gerçek PG'de ölçülen: sayfa 3,
 #: `/daha-fazla?kaynak=kose&sayfa=2` 1, `?sayfa=2` 2 — `test_sorgu_sayisi_artmadi`
-#: üçünü birebir kilitler.
+#: üçünü birebir kilitler. İkinci turun vitrin dışlaması (`onceki_akis`)
+#: sayım ve dilimin İÇİNDE alt sorgu: sayılar aynı kaldı (PG'de ölçüldü).
 SORGU_TAVANI = 3
 PARCA_SORGU = 1
 SAYFA_N_SORGU = 2
@@ -65,12 +70,18 @@ def _govde(yanit) -> str:
 
 
 def _kartlar(metin: str) -> list[str]:
-    return re.findall(r'<li class="kose-kart">.*?</li>', metin, re.S)
+    return re.findall(r'<li class="kose-kart(?: sutun-sonu)?">.*?</li>', metin, re.S)
+
+
+def _kart_adresleri(metin: str) -> list[str]:
+    """Vitrin kartlarındaki YAZI adresleri, sırasıyla."""
+    return [re.search(r'<h3><a href="([^"]+)">', k).group(1) for k in _kartlar(metin)]
 
 
 def _akis_adresleri(metin: str) -> list[str]:
     """Akış satırlarındaki yazı adresleri (yazar adresi değil), sırasıyla.
-    Satırda yazar adı `<span>` (21 Ekim 2026), ardından yazının bağlantısı."""
+    Satırda üst bilgi `<span class="kose-ust">` (yazar · süre; 21 Ekim 2026
+    ikinci tur), ardından yazının bağlantısı."""
     return re.findall(r'</span><a href="(/yazarlar/[^"/]+/[^"/]+)">', metin)
 
 
@@ -79,8 +90,10 @@ def _gun_basliklari(metin: str) -> list[str]:
 
 
 def _dizin(metin: str, kademe: str) -> list[str]:
-    """Dizinin bir kademesindeki yazar adları, sırasıyla."""
-    blok = re.search(r'<div class="kose-dizin-%s">(.*?)</div>' % kademe, metin, re.S)
+    """Dizinin bir kademesindeki yazar adları, sırasıyla. "Yazıyor" bir
+    `div`, "Arşivde" kapalı `details` (21 Ekim 2026 ikinci tur)."""
+    etiket = "details" if kademe == "arsivde" else "div"
+    blok = re.search(r'<%s class="kose-dizin-%s">(.*?)</%s>' % (etiket, kademe, etiket), metin, re.S)
     return re.findall(r'<li><a href="/yazarlar/[^"/]+">([^<]+)</a>', blok.group(1)) if blok else []
 
 
@@ -99,23 +112,6 @@ class AdresCozumu(SimpleTestCase):
         self.assertEqual(
             resolve("/yazarlar/ali-genc-72/istihdamda-esitlik-bir-hayal-32069").view_name,
             "medya:kose")
-
-
-class DuzGiris(SimpleTestCase):
-    """Giriş metni gövdenin kendi cümlelerinden kırpılır."""
-
-    def test_paragraflar_boslukla_ayrilir_varliklar_cozulur(self):
-        self.assertEqual(duz_giris("<p>Bir&#039;in.</p><p>İki &amp; <b>üç</b>.</p>", 100),
-                         "Bir'in. İki & üç.")
-
-    def test_betik_ve_yarim_etiket_duser(self):
-        ham = '<p>Metin</p><script>var x = "gizli";</script><p>devam</p><img src="x'
-        self.assertEqual(duz_giris(ham, 100), "Metin devam")
-
-    def test_kelime_sinirinda_kesilir(self):
-        metin = duz_giris("<p>" + "kelime " * 50 + "</p>", 40)
-        self.assertTrue(metin.endswith("kelime…"), metin)
-        self.assertLessEqual(len(metin), 41)
 
 
 def _yazi(zaman):
@@ -248,6 +244,64 @@ class KoseStili(SimpleTestCase):
                  / "kose_satiri.html").read_text(encoding="utf-8")
         self.assertNotIn("<time", satir)
 
+    # -- 21 Ekim 2026 ikinci tur: onaylı iskelet ---------------------------
+
+    def test_vitrin_iki_sutun_sutun_sutun(self):
+        """DOM sırası = okuma sırası = sütun sütun; satır sayısı şablondan."""
+        b = _blok(".kose-vitrin")
+        self.assertIn("grid-template-columns:repeat(2,minmax(0,1fr))", b)
+        self.assertIn("grid-template-rows:repeat(var(--satir,1),auto)", b)
+        self.assertIn("grid-auto-flow:column", b)
+        dar = medya_blogu(KURAL, "max-width:600px", ".kose-vitrin{")
+        kural = dar[dar.index(".kose-vitrin{"):].split("}", 1)[0]
+        self.assertIn("grid-auto-flow:row", kural)
+        self.assertIn("grid-template-columns:minmax(0,1fr)", kural)
+
+    def test_kart_sabit_yuvali(self):
+        """Ad + tarih tek satır (ad kısalır, tarih kaymaz); başlık tam
+        basılır, en az iki satırlık yer tutar; portre 72 px (≤600'de 56)."""
+        ad = _blok(".kose-kart a.gorus-ad")
+        for parca in ("white-space:nowrap", "text-overflow:ellipsis", "overflow:hidden", "min-width:0"):
+            self.assertIn(parca, ad)
+        self.assertIn("flex-wrap:nowrap", _blok(".kose-kart .gorus-kimlik"))
+        self.assertIn("flex:none", _blok(".kose-kart .gorus-sayi"))
+        # Başlık kırpılmaz (768'de "…" ile kesiliyordu).
+        self.assertNotIn("line-clamp", _blok(".kose-kart h3 a"))
+        self.assertIn("min-height:2.6em", _blok(".kose-kart h3"))
+        self.assertIn("width:72px;height:72px", _blok(".kose-kart .gorus-bas .portre"))
+        self.assertIn("width:56px;height:56px",
+                      medya_blogu(KURAL, "max-width:600px", ".kose-kart .gorus-bas .portre{"))
+
+    def test_akis_ve_ray(self):
+        """Ana sütun + sağda yapışkan ray; ray açılınca/alçak görünümde
+        yapışmaz (iç kaydırma yok); ≤1000 tek sütun."""
+        self.assertIn("grid-template-columns:minmax(0,1fr) 360px", _blok(".kose-alt"))
+        ray = _blok(".kose-dizin-kutu")
+        self.assertIn("position:sticky", ray)
+        self.assertNotIn("overflow", ray)
+        self.assertIn("position:static", _blok(".kose-dizin-kutu:has(details[open])"))
+        self.assertIn("position:static", medya_blogu(KURAL, "max-height:700px", ".kose-dizin-kutu{"))
+        self.assertIn(".kose-alt{grid-template-columns:minmax(0,1fr)}",
+                      medya_blogu(KURAL, "max-width:1000px", ".kose-alt{"))
+
+    def test_akis_satiri_ust_bilgi_satiri(self):
+        """Yazar ve süre başlığın üstünde tek satırda; sağ kenar sütunu yok.
+        Akış listesi `.gorus-liste` taban kurallarını almıyor."""
+        self.assertIn("display:flex", _blok(".kose-ust"))
+        self.assertIn("flex:none", _blok(".kose-ust .sure"))
+        self.assertNotIn("grid-template-columns", _blok(".kose-gun-liste li"))
+        from pathlib import Path
+        gunler = (Path(__file__).resolve().parent / "sablonlar" / "medya" / "parca"
+                  / "kose_gunleri.html").read_text(encoding="utf-8")
+        self.assertIn('<ol class="kose-gun-liste">', gunler)
+        self.assertNotIn("gorus-liste", gunler.split("{% endcomment %}", 1)[1])
+
+    def test_olu_kurallar_silindi(self):
+        for olu in (".kose-satir-yazar", ".kose-satir{", ".kose-kart p", ".kose-kart>p",
+                    ".kose-kart .gorus-kose", ".kose-dizin>:only-child"):
+            with self.subTest(olu):
+                self.assertNotIn(olu, KURAL)
+
 
 # ---------------------------------------------------------------- sayfa
 
@@ -296,6 +350,12 @@ class KoseYazilariSayfasi(TestCase):
         KoseYazisi.objects.create(
             id=993300, slug="pasif-yazi", baslik="Pasif yazarın yazısı", yazar=cls.pasif,
             govde="<p>Pasif.</p>", yayin_zamani=simdi - timedelta(minutes=5))
+        # Hiç yazısı olmayan listedeki yazar: "son yazı" alt sorgusunda NULL
+        # üretir. Vitrin dışlaması (`NOT IN`) NULL görseydi akışın tamamı
+        # boşalırdı — bu kayıt o tuzağı sınar.
+        Yazar.objects.create(id=990077, slug="yazisiz", ad="Yazısız YAZAR")
+        # Vitrin: Ayşe, Ali, Can → akış 29 - 3 = 26 yazı (2 dilim).
+        cls.vitrin_kimlikleri = {993101, 993000, 993400}
 
     def setUp(self):
         self.yanit = self.client.get("/kose-yazilari")
@@ -311,12 +371,15 @@ class KoseYazilariSayfasi(TestCase):
         self.assertEqual(self.metin.count('class="kutu-bas vurgu"'), 1)
         self.assertRegex(self.metin, r'<header class="kutu bolum-bas kose-bas">\s*'
                                      r'<div class="kutu-bas vurgu">\s*<h1>')
-        for baslik in ("SON YAZILAR", "YAZARLAR A–Z", "TÜM KÖŞE YAZILARI"):
+        for baslik in ("SON YAZILAR", "ÖNCEKİ YAZILAR", "YAZARLAR A–Z"):
             self.assertRegex(self.metin, r'<div class="kutu-bas hafif"><h2 id="[^"]+">%s</h2>' % baslik)
-        # Blok sırası: H1 → son yazılar → dizin → akış.
-        sira = [self.metin.index(s) for s in ("<h1>", 'id="kose-son-bas"',
-                                              'id="kose-dizin"', 'id="kose-tum-bas"')]
+        # Blok sırası (onaylı iskelet; ≤1000'de okuma sırası da bu): H1 →
+        # son yazılar → önceki yazılar → yazar dizini. Akış ve dizin aynı
+        # `kose-alt` ızgarasında (geniş ekranda dizin sağ ray).
+        sira = [self.metin.index(s) for s in ("<h1>", 'id="kose-son-bas"', 'class="kose-alt"',
+                                              'id="kose-onceki-bas"', 'id="kose-dizin"')]
         self.assertEqual(sira, sorted(sira))
+        self.assertNotIn("TÜM KÖŞE YAZILARI", self.metin)
         self.assertIn('<a href="#kose-dizin">Yazar dizini &darr;</a>', self.metin)
         self.assertIn('<body data-bolum="kose">', self.metin)
         self.assertIn("<title>Köşe Yazıları — Bursa Hakimiyet</title>", self.metin)
@@ -349,17 +412,32 @@ class KoseYazilariSayfasi(TestCase):
         self.assertNotIn("Pasif", self.metin)
         self.assertIn('<span class="tumu">3 yazar</span>', self.metin)
 
-    def test_kart_tarihi_girisi_ve_unvani(self):
-        kart = _kartlar(self.metin)[1]
-        self.assertRegex(kart, r'<time class="gorus-sayi" datetime="[^"]+">')
-        self.assertIn("<p>Ali&#x27;nin 0. yazısının ilk cümlesi. İkinci paragraf.</p>", kart)
-        # Spot basılmaz; unvan boşsa yeri de yok.
-        self.assertNotIn("gorus-kose", kart)
-        uzun_kart = _kartlar(self.metin)[2]
-        uzun = re.search(r"<p>(.*?)</p>", uzun_kart).group(1)
-        self.assertTrue(uzun.endswith("…"), uzun)
-        self.assertLessEqual(len(uzun), KoseYazisi.GIRIS_SINIRI + 1)
-        self.assertIn('<span class="gorus-kose">Deneme köşesi</span>', uzun_kart)
+    def test_kart_sabit_yuvalar_giris_yok(self):
+        """21 Ekim 2026 ikinci tur: kart = portre · (ad + kısa tarih) ·
+        başlık. Gövdeden kırpılan giriş metni ve unvan basılmaz (unvan
+        doluyken de — sabit yuva; 37 yazarın hiçbirinde unvan yok)."""
+        kartlar = _kartlar(self.metin)
+        ali = kartlar[1]
+        kisa = dateformat.format(timezone.localtime(self.simdi - timedelta(hours=1)), "j M")
+        self.assertRegex(ali, r'<div class="gorus-kimlik">\s*'
+                              r'<a class="gorus-ad" href="/yazarlar/ali-genc-990072">Ali GENÇ</a>\s*'
+                              r'<time class="gorus-sayi" datetime="[^"]+">%s</time>\s*</div>' % kisa)
+        self.assertIn('<h3><a href="/yazarlar/ali-genc-990072/ali-yazi-0-993000">Ali yazısı 0</a></h3>', ali)
+        for kart in kartlar:
+            self.assertNotIn("<p", kart)
+            self.assertNotIn("gorus-kose", kart)
+        self.assertNotIn("Deneme köşesi", self.metin)
+        # Gövdenin hiçbir cümlesi sayfaya girmez (giriş de, satır da basmıyor).
+        for govde_cumlesi in ("ilk cümlesi", "uzun bir giriş cümlesi", "yayındaki yazısı"):
+            self.assertNotIn(govde_cumlesi, self.metin)
+
+    def test_vitrin_sutun_sutun(self):
+        """3 kart → `--satir:2`: ilk sütun en yeni iki kart, ikincinin son
+        kartı ilk sütunun sonu (`sutun-sonu`). DOM sırası en yeniden eskiye."""
+        self.assertIn('<ul class="kose-vitrin" style="--satir:2">', self.metin)
+        kartlar = _kartlar(self.metin)
+        self.assertEqual([k.startswith('<li class="kose-kart sutun-sonu">') for k in kartlar],
+                         [False, True, False])
 
     def test_taze_arsivde_tarih_uyarisi_yok(self):
         self.assertNotIn("kose-tazelik", self.metin)
@@ -371,15 +449,24 @@ class KoseYazilariSayfasi(TestCase):
         self.assertRegex(self.metin, r'<a href="/yazarlar/eski-yazar-990074">Eski YAZAR</a>'
                                      r'<time datetime="\d{4}-\d{2}">%s</time>' % ay_yil)
         self.assertIn("Yazıyor &middot; 3", self.metin)
-        self.assertIn("Arşivde &middot; 1", self.metin)
         self.assertRegex(self.metin, r'<nav class="kutu kose-dizin-kutu" id="kose-dizin" '
                                      r'aria-labelledby="kose-dizin-bas">')
         self.assertIn('<a href="/yazarlar">Yazarlar sayfası &rarr;</a>', self.metin)
 
+    def test_arsivde_kapali_details(self):
+        """Ray kısa kalsın diye "Arşivde" kapalı gelir; özet sayıyı söyler
+        (yazar gizlenmiş sayılmaz), açılınca ad + ay-yılı. Klavyeyle açılır:
+        yerel `<summary>`, betik yok."""
+        self.assertRegex(self.metin, r'<details class="kose-dizin-arsivde">\s*'
+                                     r'<summary>Arşivde &middot; 1 yazar</summary>\s*<ul>')
+        # Kapalı gelir (menünün kendi `details`i ayrı, kabuğun parçası).
+        self.assertNotRegex(self.metin, r'<details class="kose-dizin-arsivde"[^>]*\bopen\b')
+        self.assertEqual(self.metin.count('class="kose-dizin-arsivde"'), 1)
+
     def test_yazar_basina_son_tek_sorgu(self):
         with self.assertNumQueries(1):
             kartlar = list(KoseYazisi.yazar_basina_son())
-            [(k.giris, k.yazar.ad, k.get_absolute_url()) for k in kartlar]
+            [(k.yazar.ad, k.get_absolute_url()) for k in kartlar]
         self.assertEqual([k.pk for k in kartlar], [993101, 993000, 993400, 993200])
 
     # -- akış -----------------------------------------------------------
@@ -387,20 +474,51 @@ class KoseYazilariSayfasi(TestCase):
     def test_akis_en_yeni_once_ve_ilk_dilim(self):
         adresler = _akis_adresleri(self.metin)
         self.assertEqual(len(adresler), KoseYazisi.AKIS_BOYU)
-        beklenen = [y.get_absolute_url() for y in KoseYazisi.akis()[:KoseYazisi.AKIS_BOYU]]
+        beklenen = [y.get_absolute_url() for y in KoseYazisi.onceki_akis()[:KoseYazisi.AKIS_BOYU]]
         self.assertEqual(adresler, beklenen)
-        self.assertEqual(adresler[0], "/yazarlar/ayse-kaya-990073/ayse-yayinda-993101")
-        self.assertEqual(adresler[1], "/yazarlar/ali-genc-990072/ali-yazi-0-993000")
+        # Vitrindeki Ayşe ve "Ali yazısı 0" akışta yok: akış Ali'nin 1.
+        # yazısıyla başlar.
+        self.assertEqual(adresler[0], "/yazarlar/ali-genc-990072/ali-yazi-1-993001")
         # Akışta yazar da yazılı — bağlantı değil (yazara geçiş dizinden),
-        # satırın tek bağlantısı yazının kendisi.
-        self.assertIn('<span class="kose-satir-yazar">Ayşe KAYA</span>'
-                      '<a href="/yazarlar/ayse-kaya-990073/ayse-yayinda-993101">', self.metin)
-        self.assertNotIn('class="kose-satir-yazar" href', self.metin)
+        # satırın tek bağlantısı yazının kendisi. Yazar ve süre başlığın
+        # üstündeki tek üst bilgi satırında.
+        self.assertRegex(self.metin, r'<li><span class="kose-ust"><span class="kose-ad">Ali GENÇ</span>'
+                                     r'<span class="sure">\d+ dk</span></span>'
+                                     r'<a href="/yazarlar/ali-genc-990072/ali-yazi-1-993001">')
+        self.assertNotIn('class="kose-ad" href', self.metin)
         self.assertIn('<div class="kose-akis">', self.metin)
         # İlk grup başlıklı; her grubun listesi ayrı `ol`.
         self.assertRegex(self.metin, r'<div class="kose-akis">\s*<h3 class="kose-gun">')
         self.assertEqual(len(_gun_basliklari(self.metin)),
-                         self.metin.count('<ol class="gorus-liste kose-gun-liste">'))
+                         self.metin.count('<ol class="kose-gun-liste">'))
+        # Sayaç dışlanmış kümeyi sayar.
+        self.assertIn('<span class="tumu">26 yazı</span>', self.metin)
+
+    def test_vitrin_akis_tekrari_yok(self):
+        """Onaylı iskelet: önceki yazılar vitrini içermez — sayfa, `?sayfa=2`
+        ve "daha fazla" parçası; dilimlerin birleşimi tam küme (atlama yok)."""
+        vitrin = _kart_adresleri(self.metin)
+        self.assertEqual(len(vitrin), 3)
+        dilimler = [_akis_adresleri(self.metin),
+                    _akis_adresleri(_govde(self.client.get("/kose-yazilari?sayfa=2"))),
+                    _akis_adresleri(_govde(self.client.get("/daha-fazla?kaynak=kose&sayfa=2")))]
+        for dilim in dilimler:
+            self.assertFalse(set(vitrin) & set(dilim), dilim)
+        self.assertEqual(dilimler[1], dilimler[2])
+        tum = dilimler[0] + dilimler[1]
+        self.assertEqual(len(tum), len(set(tum)))                  # tekrar 0
+        beklenen = {y.get_absolute_url() for y in KoseYazisi.akis()
+                    if y.pk not in self.vitrin_kimlikleri}
+        self.assertEqual(set(tum), beklenen)                       # atlama 0
+        self.assertEqual(len(tum), 26)
+
+    def test_sql_dislamasi_python_kademesiyle_ayni(self):
+        yaziyor, _ = KoseYazisi.kademele(KoseYazisi.yazar_basina_son())
+        self.assertEqual({y.pk for y in yaziyor}, self.vitrin_kimlikleri)
+        self.assertEqual(set(KoseYazisi.vitrin_kimlikleri().values_list("pk", flat=True)),
+                         self.vitrin_kimlikleri)
+        # Yazısız yazarın NULL'u dışlamayı bozmadı.
+        self.assertEqual(KoseYazisi.onceki_akis().count(), 26)
 
     def test_dugme_baglanti_ve_parca(self):
         self.assertIn('href="?sayfa=2" rel="next"', self.metin)
@@ -409,9 +527,9 @@ class KoseYazilariSayfasi(TestCase):
         parca = self.client.get("/daha-fazla?kaynak=kose&sayfa=2")
         self.assertEqual(parca.status_code, 200)
         parca_metin = _govde(parca)
-        self.assertIn('data-devam="0"', parca_metin)   # 29 yazı: ikinci dilim son
+        self.assertIn('data-devam="0"', parca_metin)   # 26 yazı: ikinci dilim son
         ikinci = _akis_adresleri(parca_metin)
-        self.assertEqual(len(ikinci), 29 - KoseYazisi.AKIS_BOYU)
+        self.assertEqual(len(ikinci), 26 - KoseYazisi.AKIS_BOYU)
         self.assertFalse(set(ikinci) & set(_akis_adresleri(self.metin)))
         self.assertTrue(ikinci[-1].endswith("eski-son-993200"))
 
@@ -454,15 +572,19 @@ class GunDikisi(TestCase):
     dilim 22 Ağustos'ta bitiyor, 2. dilim 22 Ağustos'la başlıyor). Parça o
     günün başlığını ikinci kez basmamalı; `?sayfa=2` ise kendi başına açılan
     sayfadır, başlıkla açılmalı. Tarihler SABİT: "şimdi"ye göre kurulsaydı
-    gün sınırı testin koştuğu saate göre kayardı."""
+    gün sınırı testin koştuğu saate göre kayardı.
+
+    Tek yazar: en yeni yazısı (23 Ağustos 17:30) vitrinde, akışta değil
+    (21 Ekim 2026 ikinci tur) — akış 25 yazı."""
 
     @classmethod
     def setUpTestData(cls):
         yazar = Yazar.objects.create(id=991001, slug="dikis-yazar", ad="Dikiş YAZAR")
         zamanlar = (
-            # 23 Ağustos: 18 yazı, 09:00–17:30 (yerel).
+            # 23 Ağustos: 18 yazı, 09:00–17:30 (yerel); 17:30 vitrinde,
+            # 17'si akışta.
             [datetime(2026, 8, 23, 9, 0, tzinfo=TR) + timedelta(minutes=30 * n) for n in range(18)]
-            # 22 Ağustos: 7 yazı, 10:00–16:00 — 1. dilime 2'si girer, 5'i taşar.
+            # 22 Ağustos: 7 yazı, 10:00–16:00 — 1. dilime 3'ü girer, 4'ü taşar.
             + [datetime(2026, 8, 22, 10, 0, tzinfo=TR) + timedelta(hours=n) for n in range(7)]
             # UTC'de 21 Ağustos 21:30 = TR'de 22 Ağustos 00:30: 22'nin grubuna.
             + [datetime(2026, 8, 21, 21, 30, tzinfo=ZoneInfo("UTC"))])
@@ -480,13 +602,17 @@ class GunDikisi(TestCase):
         metin = _govde(self.client.get("/daha-fazla?kaynak=kose&sayfa=2"))
         self.assertEqual(_gun_basliklari(metin), [])
         self.assertRegex(metin, r'<div class="akis-parca" data-devam="0">\s*'
-                                r'<ol class="gorus-liste kose-gun-liste">')
-        self.assertEqual(metin.count('<ol class="gorus-liste kose-gun-liste">'), 1)
-        self.assertEqual(len(_akis_adresleri(metin)), 26 - KoseYazisi.AKIS_BOYU)
+                                r'<ol class="kose-gun-liste">')
+        self.assertEqual(metin.count('<ol class="kose-gun-liste">'), 1)
+        self.assertEqual(len(_akis_adresleri(metin)), 25 - KoseYazisi.AKIS_BOYU)
         # Bir satır geriden okunan kayıt basılmaz: dilimler çakışmaz.
-        birinci = _akis_adresleri(_govde(self.client.get("/kose-yazilari")))
+        sayfa = _govde(self.client.get("/kose-yazilari"))
+        birinci = _akis_adresleri(sayfa)
         self.assertFalse(set(birinci) & set(_akis_adresleri(metin)))
-        self.assertEqual(len(birinci) + len(_akis_adresleri(metin)), 26)
+        self.assertEqual(len(birinci) + len(_akis_adresleri(metin)), 25)
+        # Vitrindeki yazı (dikis-17) hiçbir dilimde yok.
+        self.assertEqual(_kart_adresleri(sayfa), ["/yazarlar/dikis-yazar-991001/dikis-17-994017"])
+        self.assertNotIn(_kart_adresleri(sayfa)[0], birinci + _akis_adresleri(metin))
 
     def test_sayfa_n_kendi_basina_baslikli(self):
         metin = _govde(self.client.get("/kose-yazilari?sayfa=2"))
@@ -507,13 +633,15 @@ class GunDikisi(TestCase):
 
 
 class YeniGunleBaslayanParca(TestCase):
-    """Dilim sınırı gün sınırına denk gelirse parça başlıkla açılır."""
+    """Dilim sınırı gün sınırına denk gelirse parça başlıkla açılır. En
+    yeni yazı (n=0) vitrinde: 20 Ağustos'un kalan 20 yazısı 1. dilimi tam
+    doldurur."""
 
     @classmethod
     def setUpTestData(cls):
         yazar = Yazar.objects.create(id=991002, slug="sinir-yazar", ad="Sınır YAZAR")
         for n in range(KoseYazisi.AKIS_BOYU + 3):
-            gun = 20 if n < KoseYazisi.AKIS_BOYU else 19
+            gun = 20 if n <= KoseYazisi.AKIS_BOYU else 19
             KoseYazisi.objects.create(
                 id=995000 + n, slug=f"sinir-{n}", baslik=f"Sınır {n}", yazar=yazar,
                 govde="<p>Gövde.</p>",
@@ -589,13 +717,17 @@ class KoseYazilariBasarim(TestCase):
         cok = {yol: self._say(yol) for yol in ("/kose-yazilari", "/daha-fazla?kaynak=kose")}
         self.assertEqual(az, cok)
         self.assertLessEqual(cok["/kose-yazilari"], SORGU_TAVANI, cok)
-        # 32 yazar → 32 kart, yine aynı sorgu sayısıyla.
-        self.assertEqual(len(_kartlar(_govde(self.client.get("/kose-yazilari")))), 32)
+        # 32 yazar → 32 kart, yine aynı sorgu sayısıyla; iki sütun × 16.
+        metin = _govde(self.client.get("/kose-yazilari"))
+        self.assertEqual(len(_kartlar(metin)), 32)
+        self.assertIn('style="--satir:16"', metin)
+        self.assertEqual(metin.count("sutun-sonu"), 1)
 
     def test_sorgu_sayisi_artmadi(self):
-        """21 Ekim 2026: vitrin kademesi, yazar dizini, gün grupları ve
-        parçanın bir satır geriden okuması SORGU AÇMAZ — sayılar yeniden
-        kuruluştan önce ölçülenle birebir (3 / 1 / 2)."""
+        """21 Ekim 2026: vitrin kademesi, yazar dizini, gün grupları,
+        parçanın bir satır geriden okuması ve (ikinci tur) vitrin
+        dışlaması SORGU AÇMAZ — sayılar yeniden kuruluştan önce ölçülenle
+        birebir (3 / 1 / 2)."""
         self._veri(6, 8, 9600)       # 48 yazı: üç dilim
         # Bir yazar "arşivde" kademesine: iki kademe, dizinde ay-yıl.
         KoseYazisi.objects.filter(yazar_id=9605).update(
@@ -605,9 +737,16 @@ class KoseYazilariBasarim(TestCase):
             metin = _govde(self.client.get("/kose-yazilari"))
         self.assertEqual(_dizin(metin, "arsivde"), ["Yazar 9605"])
         with self.assertNumQueries(PARCA_SORGU):
-            self.client.get("/daha-fazla?kaynak=kose&sayfa=2")
+            parca = _govde(self.client.get("/daha-fazla?kaynak=kose&sayfa=2"))
         with self.assertNumQueries(SAYFA_N_SORGU):
-            self.client.get("/kose-yazilari?sayfa=2")
+            ikinci = _govde(self.client.get("/kose-yazilari?sayfa=2"))
+        # 48 yazı, 5 vitrin kartı (arşivdeki yazar kart almaz) → akış 43.
+        self.assertEqual(len(_kartlar(metin)), 5)
+        self.assertIn('style="--satir:3"', metin)
+        self.assertIn('<span class="tumu">43 yazı</span>', metin)
+        self.assertIn('<span class="tumu">43 yazı</span>', ikinci)
+        self.assertFalse(set(_kart_adresleri(metin)) & set(_akis_adresleri(parca)))
+        self.assertEqual(_akis_adresleri(parca), _akis_adresleri(ikinci))
 
     @SAYFA_ACIK
     def test_anonim_sayfa_onbellegi_ve_kayitla_dusmesi(self):
@@ -625,3 +764,44 @@ class KoseYazilariBasarim(TestCase):
         ucuncu = self.client.get("/kose-yazilari")
         self.assertEqual(ucuncu["X-Onbellek"], "kayit")
         self.assertIn("Yepyeni köşe yazısı", _govde(ucuncu))
+
+
+class VitrinEsigiSql(TestCase):
+    """SQL dışlaması Python kademesiyle sınırda da aynı: eşik dahil
+    (tam 45 gün içeride, 45 gün + 1 sn dışarıda); referans en yeni yazı."""
+
+    @classmethod
+    def setUpTestData(cls):
+        ref = datetime(2026, 8, 27, 9, 0, tzinfo=TR)
+        for n, fark in enumerate((timedelta(0), timedelta(days=45),
+                                  timedelta(days=45, seconds=1))):
+            yazar = Yazar.objects.create(id=992000 + n, slug=f"esik-{n}", ad=f"Eşik {n}")
+            KoseYazisi.objects.create(id=997000 + n, slug=f"esik-{n}", baslik=f"Eşik {n}",
+                                      yazar=yazar, govde="<p>G.</p>", yayin_zamani=ref - fark)
+            # Her yazarın daha eski bir yazısı: akışta kalmalı.
+            KoseYazisi.objects.create(id=997100 + n, slug=f"esik-eski-{n}", baslik=f"Eski {n}",
+                                      yazar=yazar, govde="<p>G.</p>",
+                                      yayin_zamani=ref - fark - timedelta(days=1))
+
+    def test_sinir_dahil_ve_python_ile_ayni(self):
+        yaziyor, arsivde = KoseYazisi.kademele(KoseYazisi.yazar_basina_son())
+        self.assertEqual([y.pk for y in yaziyor], [997000, 997001])
+        self.assertEqual([y.pk for y in arsivde], [997002])
+        self.assertEqual(sorted(KoseYazisi.vitrin_kimlikleri().values_list("pk", flat=True)),
+                         [997000, 997001])
+        self.assertEqual(sorted(KoseYazisi.onceki_akis().values_list("pk", flat=True)),
+                         [997002, 997100, 997101, 997102])
+
+
+class SayacBinlikAyraci(TestCase):
+    """Sayaç Türkçe binlik ayracıyla ("1.001 yazı"), dışlanmış kümeyi sayar."""
+
+    def test_nokta_ile(self):
+        yazar = Yazar.objects.create(id=993500, slug="cok-yazan", ad="Çok YAZAN")
+        simdi = timezone.now()
+        KoseYazisi.objects.bulk_create([
+            KoseYazisi(id=998000 + n, slug=f"cok-{n}", baslik=f"Çok {n}", yazar=yazar,
+                       govde="", yayin_zamani=simdi - timedelta(hours=n))
+            for n in range(1002)])
+        metin = _govde(self.client.get("/kose-yazilari"))
+        self.assertIn('<span class="tumu">1.001 yazı</span>', metin)

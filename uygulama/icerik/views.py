@@ -613,9 +613,13 @@ def daha_fazla(request):
         # dilimin sonudur, yalnız günü okunur (`gunlere_bol(..., onceki)`).
         # Hâlâ TEK sorgu — `_dilim`le tek fark OFFSET'in bir eksik olması;
         # "devam var mı" yine bir fazla satırdan.
+        #
+        # 21 Ekim 2026 (ikinci tur): akış vitrindeki yazıları içermez
+        # (`onceki_akis`); sayfanın kendisiyle AYNI küme, yoksa dilimler
+        # kayardı. Dışlama sorgunun içinde alt sorgu — yine tek sorgu.
         boy = KoseYazisi.AKIS_BOYU
         bas = (numara - 1) * boy
-        ham = list(KoseYazisi.akis()[max(bas - 1, 0):bas + boy + 1])
+        ham = list(KoseYazisi.onceki_akis()[max(bas - 1, 0):bas + boy + 1])
         onceki = ham.pop(0) if bas and ham else None
         kalemler, devam = ham[:boy], len(ham) > boy
         return render(request, "parca/akis_parcasi.html", {

@@ -3645,111 +3645,160 @@ a.gorus-ad:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
 /* --- köşe yazıları sayfası (/kose-yazilari, 19 Ekim 2026) ---------------
    21 Ekim 2026 (tasarım önerisi): sayfa başı bölüm sayfasının H1 çubuğu
    (`.kose-bas` = `.bolum-bas` + sayfa içi "Yazar dizini" bağlantısı) ve
-   sayfanın TEK dolu çubuğu; son yazılar, yazar dizini ve akış hafif
-   kademede (K4). Eski `.kose-sayfa-bas` künyesi kalktı.
+   sayfanın TEK dolu çubuğu; son yazılar, önceki yazılar ve yazar dizini
+   hafif kademede (K4). Eski `.kose-sayfa-bas` künyesi kalktı.
 
-   Vitrin TABLO düzeni: hücreleri boşluk değil çizgi ayırır. Kart YATAY:
-   portre solda, sağında kimlik, başlık, giriş. Kartta `.gorus-bas` kutusuz
-   (`display:contents`): çocukları kartın ızgarasına oturur, portre kırpımı
-   yukarıdaki `.gorus-bas .portre` kurallarından aynen gelir, markup
-   değişmez. Taban `.gorus-bas` / `.gorus-liste` kurallarına DOKUNULMAZ —
-   yazar sayfası ve köşe yazısı detayı onları kullanıyor; buradaki her
-   kural `.kose-*` kapsamında.
+   21 Ekim 2026 ikinci tur (kullanıcı "çok düzensiz" dedi; ölçülen teşhis
+   üzerine onaylanan iskelet, URUN-PLANI §72):
+   - Vitrin İKİ SÜTUN, SÜTUN SÜTUN akar (`grid-auto-flow:column`, satır
+     sayısı şablondan `--satir` = ceil(n/2)); DOM sırası okuma sırasıdır.
+   - Kart SABİT YUVALI: portre 72 px · ad + kısa tarih TEK SATIR (ad
+     uzunsa kısalır, tarih alta kaymaz) · başlık tam basılır, en az İKİ
+     SATIRLIK yer tutar. Satırdaki kartlar aynı yükseklikte: kartların
+     ad, tarih ve başlık üst kenarları 0 px farkla hizalı (ölçüldü).
+     Giriş metni ve unvan basılmaz.
+   - Yazı biçimi bütçesi (main, kırıntı hariç) ALTI: H1 · blok başlığı
+     (Condensed 900 18) · yazar adı (Condensed 700 15) · yazı başlığı
+     (serif 700 18) · üst bilgi (Roboto 400 12,5: tarih, süre, sayaç,
+     ay-yılı) · gün başlığı (Condensed 900 15; ray alt başlıkları ve
+     "daha fazla" düğmesi de bu). Yeni kural eklerken bu altıdan birini al.
+   - Önceki yazılar ~700 px ana sütun, sağda yapışkan yazar dizini rayı;
+     ≤1000'de tek sütun (sıra: H1 → son → önceki → dizin).
+
+   Taban `.gorus-bas` / `.gorus-liste` kurallarına DOKUNULMAZ — yazar
+   sayfası ve köşe yazısı detayı onları kullanıyor; buradaki her kural
+   `.kose-*` kapsamında. Akış listesi 21 Ekim ikinci turdan beri
+   `.gorus-liste` sınıfını hiç taşımıyor.
 
    Dokunma hedefi (≤600'de 44x44): kartın ve akış satırının başlık
    bağlantısı `::after` ile bütün kutuya yayılır (uzatılmış bağlantı);
-   kartın yazar adı onun üstünde ayrı hedef (`z-index`). Ölçüldü
-   (prototip): 5 kart başlığı 21 px yüksekti. */
-.kose-bas .kutu-bas .tumu a{font-weight:700;color:var(--tema-bant-vurgu-ikincil)}
+   kartın yazar adı onun üstünde ayrı hedef (`z-index`). */
+.kose-bas .kutu-bas .tumu a{color:var(--tema-bant-vurgu-ikincil);text-decoration:underline;
+  text-underline-offset:3px}
 /* ?sayfa=N'de sayaç ("2. sayfa · Yazar dizini →") 320–390'da h1'i
    "KÖŞE / YAZILARI" diye bölüyordu (doğrulamada ölçüldü). Sığmazsa
    bütün olarak alt satıra iner; h1 de sayaç da kendi içinde kırılmaz. */
 .kose-bas .kutu-bas{flex-wrap:wrap;row-gap:0}
 .kose-bas .kutu-bas .tumu{white-space:nowrap}
+/* Bant sayaçları üst bilgi biçiminde (taban 11,5 px ayrı bir ses olurdu). */
+.kose-bas .kutu-bas .tumu,.kose-vitrin-kutu .kutu-bas .tumu,.kose-onceki .kutu-bas .tumu,
+.kose-dizin-kutu .kutu-bas .tumu{font-size:12.5px}
 /* Sayaçtaki tazelik notu ("en yeni yazı 27 Ağustos 2026") dar ekranda
    satır kırar; kırılan başlık değil not olsun, tarih bölünmesin (360'ta
    ölçüldü: "SON / YAZILAR" iki satıra düşüyordu). */
 .kose-vitrin-kutu .kutu-bas h2{white-space:nowrap}
 .kose-vitrin-kutu .kutu-bas .tumu{text-align:right}
 .kose-tazelik time{white-space:nowrap}
-.kose-vitrin{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-.kose-kart{position:relative;min-width:0;display:grid;grid-template-columns:56px minmax(0,1fr);
-  column-gap:12px;align-content:start;padding:14px 16px;border-bottom:1px solid var(--tema-cizgi)}
-.kose-kart:not(:nth-child(3n)){border-right:1px solid var(--tema-cizgi)}
-.kose-kart:last-child{border-right:0;border-bottom:0}
+/* Vitrin: sütun çizgisi kartların kenarlığı değil kabın tek çizgisi —
+   sütun sütun akışta "ilk sütun hangi kartlar" CSS'te bilinmiyor. İlk
+   sütunun son kartı şablondan `sutun-sonu` alır (alt çizgisiz). */
+.kose-vitrin{list-style:none;margin:0;padding:0;position:relative;display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(var(--satir,1),auto);
+  grid-auto-flow:column}
+.kose-vitrin::before{content:"";position:absolute;top:0;bottom:0;left:50%;
+  border-left:1px solid var(--tema-cizgi)}
+.kose-kart{position:relative;min-width:0;display:grid;grid-template-columns:72px minmax(0,1fr);
+  grid-template-rows:auto auto;column-gap:14px;align-content:start;padding:14px 16px;
+  border-bottom:1px solid var(--tema-cizgi)}
+.kose-kart.sutun-sonu,.kose-kart:last-child{border-bottom:0}
 .kose-kart .gorus-bas{display:contents}
-.kose-kart .gorus-bas .portre{grid-row:1/span 3;width:56px;height:56px}
-.kose-kart .gorus-bas .vesika{font-size:20px}
-.kose-kart .gorus-kimlik{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 8px}
-.kose-kart .gorus-ad{font-size:16px}
-.kose-kart a.gorus-ad{position:relative;z-index:1}
-.kose-kart .gorus-kose{font-size:13px}
-.kose-kart h3,.kose-kart>p{grid-column:2}
-.kose-kart h3{margin-top:2px;font-family:var(--tema-baslik-aile);font-size:18px;font-weight:700;line-height:1.28}
+/* Portre: tek boy, tek nötr zemin. Kaynak görsellerin zemini kırmızı
+   afiş, yeşil afiş, beyaz stüdyo diye üç ayrı renk (ölçüldü); gri tonlama
+   vitrinde 13 portreyi aynı tona indirir. Kırpım taban `-afis`/`-portre`
+   kurallarından aynen. */
+.kose-kart .gorus-bas .portre{grid-row:1/span 2;width:72px;height:72px;background:var(--foto-bekleme)}
+.kose-kart .gorus-bas .portre img{filter:grayscale(1)}
+.kose-kart .gorus-bas .vesika{font-size:24px;background:var(--foto-bekleme);color:var(--tema-koyu)}
+.kose-kart .gorus-kimlik{grid-column:2;grid-row:1;flex-direction:row;flex-wrap:nowrap;
+  align-items:baseline;gap:0 8px;min-width:0}
+.kose-kart a.gorus-ad{position:relative;z-index:1;display:block;min-width:0;padding:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:700;
+  letter-spacing:0;line-height:20px;color:var(--tema-vurgu-koyu)}
+.kose-kart .gorus-sayi{flex:none;font-size:12.5px;line-height:20px;white-space:nowrap}
+.kose-kart .gorus-sayi::before{content:"\00B7" / "";margin-right:8px}
+.kose-kart h3{grid-column:2;grid-row:2;min-width:0;margin-top:4px;min-height:2.6em;
+  font-family:var(--serif);font-size:18px;font-weight:700;line-height:1.3}
+/* Başlık KIRPILMAZ: iki satırlık kırpım 768'de 6 başlığı "…" ile kesiyordu
+   (ölçüldü). Hizayı ızgara sağlıyor: satırdaki iki kart en uzun başlık
+   kadar uzar, üst kenarlar yine 0 px farkla aynı. */
 .kose-kart h3 a{color:var(--murekkep)}
 .kose-kart h3 a::after{content:"";position:absolute;inset:0}
 .kose-kart h3 a:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
-.kose-kart p{margin-top:6px;font-family:var(--serif);font-size:14px;line-height:1.5;color:var(--gri);
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-/* Yazar dizini: "Yazıyor" yalnız adlar (1/3), "Arşivde" ad + son yazının
-   ay-yılı, iki sütun (2/3). Çubuktaki "Yazar dizini ↓" buraya iner;
-   hedef yapışkan bandın altına otursun (akıştaki ölçülmüş 58/92 px). */
-.kose-dizin-kutu{scroll-margin-top:58px}
-.kose-dizin{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:0 24px}
-.kose-dizin>:only-child{grid-column:1/-1}
-.kose-dizin h3{font-family:var(--display);font-size:12.5px;font-weight:700;letter-spacing:.8px;
-  text-transform:uppercase;color:var(--gri);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--tema-cizgi)}
-.kose-dizin ul{list-style:none;margin:0;padding:0}
-.kose-dizin-arsivde ul{columns:2;column-gap:24px}
-.kose-dizin li{break-inside:avoid;display:flex;justify-content:space-between;align-items:baseline;gap:8px;
-  border-bottom:1px dotted var(--tema-cizgi)}
-.kose-dizin a{display:block;padding:6px 0;font-family:var(--display);font-size:15px;font-weight:700;color:var(--tema-koyu)}
-.kose-dizin a:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
-.kose-dizin time{font-size:12.5px;color:var(--gri);white-space:nowrap;font-variant-numeric:tabular-nums}
-/* Akış: gün başlığı + satırlar. Satırda tarih sütunu yok (tarihi başlık
-   söylüyor), iki sütun kalıyor: (yazar + başlık) · süre. */
-.kose-satir{min-width:0}
-.gorus-liste .kose-satir-yazar{display:block;width:max-content;max-width:100%;margin-bottom:2px;
-  font-family:var(--display);font-size:12.5px;font-weight:700;letter-spacing:.4px;line-height:1.3;
-  color:var(--tema-vurgu-koyu)}
-.kose-gun{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:.2px;line-height:1.3;
+/* Önceki yazılar + yazar dizini rayı. */
+.kose-alt{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:0 16px;align-items:start}
+.kose-alt>:only-child{grid-column:1/-1}
+/* Akış: gün başlığı + satırlar. Satır: üst bilgi (yazar · süre), altında
+   başlık. Satırda tarih yok (gün başlığı söylüyor), sağ kenarda sütun yok. */
+.kose-gun{font-family:var(--display);font-size:15px;font-weight:900;letter-spacing:.2px;line-height:1.3;
   color:var(--tema-koyu);padding:16px 0 6px;margin-bottom:10px;border-bottom:2px solid var(--tema-cizgi)}
 .kose-gun:first-child{padding-top:0}
-.kose-gun-liste li{position:relative;grid-template-columns:minmax(0,1fr) auto}
-.kose-gun-liste p{grid-column:1/-1}
+.kose-gun-liste{list-style:none;margin:0;padding:0}
+.kose-gun-liste li{position:relative;padding:10px 0;border-bottom:1px solid var(--tema-cizgi)}
+.kose-gun-liste li:first-child{padding-top:0}
+.kose-gun-liste li:last-child{border-bottom:0}
+.kose-ust{display:flex;align-items:baseline;gap:0 8px;min-width:0;margin-bottom:2px}
+.kose-ad{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:var(--display);font-size:15px;font-weight:700;line-height:20px;color:var(--tema-vurgu-koyu)}
+.kose-ust .sure{flex:none;font-size:12.5px;color:var(--gri);white-space:nowrap}
+.kose-ust .sure::before{content:"\00B7" / "";margin-right:8px}
+.kose-gun-liste a{display:block;font-family:var(--serif);font-size:18px;font-weight:700;line-height:1.3;
+  color:var(--murekkep)}
 .kose-gun-liste a::after{content:"";position:absolute;inset:0}
+.kose-gun-liste a:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
+.kose-gun-liste p{margin-top:4px;font-size:12.5px;line-height:1.45;color:var(--gri)}
 /* "Daha fazla" dikişi: önceki dilimin son günü süren parça başlıksız,
-   yalnız listeyle gelir ve sayfadaki listenin hemen ardına oturur. Taban
-   kural ilk satırın üst boşluğunu, son satırın çizgisini siliyor; iki
-   liste birleşince arada çizgi ve boşluk kaybolurdu. */
+   yalnız listeyle gelir ve sayfadaki listenin hemen ardına oturur. İlk
+   satırın üst boşluğu, son satırın çizgisi silindiği için iki liste
+   birleşince arada çizgi ve boşluk kaybolurdu. */
 .kose-gun-liste+.kose-gun-liste>li:first-child{padding-top:10px;border-top:1px solid var(--tema-cizgi)}
+/* Yazar dizini rayı: yapışkan (top: `.yan-reklam` gibi bandın 50 px'i +
+   nefes). Ray kısa tutulur — arşiv `<details>` kapalı gelir; açılınca ya
+   da görünüm alçaksa yapışkanlık kalkar, iç kaydırma yok. Çubuktaki
+   "Yazar dizini ↓" buraya iner; hedef bandın altına otursun (58/92 px). */
+.kose-dizin-kutu{position:sticky;top:64px;scroll-margin-top:58px}
+.kose-dizin-kutu:has(details[open]){position:static}
+.kose-dizin h3,.kose-dizin summary{font-family:var(--display);font-size:15px;font-weight:900;
+  letter-spacing:.2px;line-height:20px;color:var(--tema-koyu)}
+.kose-dizin h3{padding-bottom:6px;border-bottom:2px solid var(--tema-cizgi)}
+.kose-dizin ul{list-style:none;margin:0;padding:0}
+.kose-dizin li{break-inside:avoid;display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  border-bottom:1px dotted var(--tema-cizgi)}
+.kose-dizin a{display:block;padding:6px 0;font-family:var(--display);font-size:15px;font-weight:700;
+  line-height:20px;color:var(--tema-koyu)}
+.kose-dizin a:hover{color:var(--tema-vurgu-koyu);text-decoration:underline}
+.kose-dizin time{font-size:12.5px;color:var(--gri);white-space:nowrap;font-variant-numeric:tabular-nums}
+.kose-dizin-arsivde{margin-top:12px}
+.kose-dizin summary{padding:12px 0;cursor:pointer;border-bottom:2px solid var(--tema-cizgi)}
+.kose-dizin summary:hover{color:var(--tema-vurgu-koyu)}
+@media(max-height:700px){
+  .kose-dizin-kutu{position:static}
+}
 @media(max-width:1000px){
-  .kose-vitrin{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .kose-kart:not(:nth-child(3n)){border-right:0}
-  .kose-kart:nth-child(odd):not(:last-child){border-right:1px solid var(--tema-cizgi)}
+  .kose-alt{grid-template-columns:minmax(0,1fr)}
+  .kose-dizin-kutu{position:static}
+  .kose-dizin-yaziyor ul{columns:3;column-gap:24px}
+  .kose-dizin-arsivde ul{columns:2;column-gap:24px}
 }
 @media(max-width:900px){
   .kose-dizin-kutu{scroll-margin-top:92px}
 }
-@media(max-width:768px){
-  .kose-dizin{grid-template-columns:minmax(0,1fr)}
-  .kose-dizin-arsivde{margin-top:14px}
-}
 @media(max-width:600px){
-  .kose-vitrin{grid-template-columns:minmax(0,1fr)}
-  .kose-kart{grid-template-columns:48px minmax(0,1fr);padding:12px 0}
-  .kose-kart:nth-child(odd):not(:last-child){border-right:0}
+  .kose-vitrin{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-flow:row}
+  .kose-vitrin::before{content:none}
+  .kose-kart{grid-template-columns:56px minmax(0,1fr);column-gap:12px;padding:12px 0}
+  .kose-kart.sutun-sonu{border-bottom:1px solid var(--tema-cizgi)}
+  .kose-kart:last-child{border-bottom:0}
   .kose-kart:first-child{padding-top:0}
-  .kose-kart .gorus-bas .portre{width:48px;height:48px}
-  .kose-kart a.gorus-ad{display:inline-flex;align-items:center;min-height:44px;padding:0}
+  .kose-kart .gorus-bas .portre{width:56px;height:56px}
+  .kose-kart .gorus-bas .vesika{font-size:20px}
+  .kose-kart a.gorus-ad{min-height:44px;line-height:44px}
   /* Bant bağlantıları: taban `.kutu-bas .tumu a` 6 px dolguyla 29 px
      kalıyordu ("Yazarlar sayfası →", doğrulamada ölçüldü). */
   .kose-bas .kutu-bas .tumu a{display:inline-flex;align-items:center;min-height:44px;padding:0}
   .kose-dizin-kutu .kutu-bas .tumu a{display:inline-flex;align-items:center;min-height:44px;padding:0}
-  .kose-kart p{-webkit-line-clamp:2}
-  .kose-dizin ul{columns:2;column-gap:16px}
+  .kose-dizin-yaziyor ul{columns:2;column-gap:16px}
+  .kose-dizin-arsivde ul{columns:1}
   .kose-dizin a{display:flex;align-items:center;min-height:44px;padding:0}
-  .kose-dizin-arsivde li{flex-direction:column;align-items:flex-start;gap:0}
 }
 
 @media(max-width:768px){

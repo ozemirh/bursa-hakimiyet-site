@@ -12,8 +12,12 @@ kalktı — tarihi başlık söylüyor.
 `surer`: grup önceki dilimin son gününün devamı; başlığı sayfada zaten
 duruyor, burada yalnız liste gelir. Başlık büyük harfe çevrilmez
 ("27 Ağustos 2026, Perşembe"; tasarım önerisinin kararı).
+
+21 Ekim 2026 ikinci tur: liste `.gorus-liste` taban kurallarını artık
+almıyor (yazar sayfasının tarih sütunlu cetveli); satır düzeni tümüyle
+`.kose-gun-liste` kapsamında. Vitrindeki yazılar bu akışa girmez.
 {% endcomment %}{% for g in gunler %}{% if not g.surer %}<h3 class="kose-gun"><time datetime="{{ g.gun|date:'Y-m-d' }}">{{ g.gun|date:'j F Y, l' }}</time></h3>
-{% endif %}<ol class="gorus-liste kose-gun-liste">
+{% endif %}<ol class="kose-gun-liste">
 {% for y in g.yazilar %}{% include "medya/parca/kose_satiri.html" with y=y %}
 {% endfor %}</ol>
 {% endfor %}

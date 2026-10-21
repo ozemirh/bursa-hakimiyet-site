@@ -35,12 +35,10 @@ kayıtların bir bölümünü kaydırırdı.
 
 import re
 from datetime import timedelta
-from html import unescape
 
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django.utils.html import strip_tags
 
 from cekirdek.tr_siralama import tr_sirala
 from taksonomi.models import Kategori, KategoriTur
@@ -55,32 +53,6 @@ from taksonomi.models import Kategori, KategoriTur
 # var. `gorsel_dosya` da bu yüzden **arşiv köküne** göreli saklanır (arşivin
 # JSON'a yazdığı hâliyle birebir), `gorseller/` köküne değil.
 MEDYA_GORSEL_URL = getattr(settings, "MEDYA_GORSEL_URL", "/arsiv-medya/")
-
-# Düz metin girişi için: içeriği okunmayan bloklar (betik, stil, gömme) ve
-# paragraf sınırları. Paragraf kapanışı boşluğa döner; yoksa `strip_tags`
-# iki paragrafı "…sürüyor.Aradan…" diye birleştirir.
-_ICERIKSIZ = re.compile(r"(?is)<(script|style|iframe|noscript)\b.*?(</\1\s*>|$)")
-_BLOK_SONU = re.compile(r"(?i)</(p|div|li|h[1-6]|blockquote|figcaption)\s*>|<br\s*/?>")
-
-
-def duz_giris(html: str, sinir: int) -> str:
-    """HTML gövdenin başından `sinir` karakterlik düz metin giriş.
-
-    Kaynağın kendi cümleleridir, kelime sınırında kesilir ve "…" alır;
-    yeni metin üretilmez. Ham parça bir etiketin ortasında bitebilir
-    (veritabanında `Substr` ile kesildi): yarım kalan son etiket atılır.
-    """
-    ham = html or ""
-    acik = ham.rfind("<")
-    if acik > ham.rfind(">"):
-        ham = ham[:acik]
-    ham = _BLOK_SONU.sub(" ", _ICERIKSIZ.sub(" ", ham))
-    metin = " ".join(unescape(strip_tags(ham)).split())
-    if len(metin) <= sinir:
-        return metin
-    kesik = metin[:sinir + 1].rsplit(" ", 1)[0] if " " in metin[:sinir + 1] else metin[:sinir]
-    return kesik.rstrip(" ,;:–—-") + "…"
-
 
 class ArsivIcerigi(models.Model):
     """Dört ailenin ortak gövdesi. Alanlar `icerik.Haber` ile birebir aynı adı
@@ -342,12 +314,6 @@ class KoseYazisi(ArsivIcerigi):
     #: (`icerik.views.daha_fazla`, kaynak=kose) AYNI sayıyı okur; iki ayrı
     #: sabit olsaydı düğmenin ikinci dilimi birinciyle çakışırdı.
     AKIS_BOYU = 20
-    #: Vitrin kartındaki giriş metninin üst sınırı (karakter, düz metin).
-    GIRIS_SINIRI = 200
-    #: Girişi kurmak için gövdenin veritabanından alınan baş kısmı. Gövde
-    #: ortalama 4.259 karakter (PG, 19 Ekim 2026); 37 kart için hepsini
-    #: çekmek gereksiz. Etiketler düştükten sonra 200 karakter kalsın diye pay.
-    GIRIS_HAM = 1200
     #: `/kose-yazilari` vitrininin "yazıyor" eşiği (21 Ekim 2026, tasarım
     #: önerisi). Son yazısı REFERANSA bundan yakın yazar "yazıyor" kademesinde
     #: kartla, öbürleri "arşivde" kademesinde yalnız dizinde durur. Ölçüldü
@@ -394,18 +360,53 @@ class KoseYazisi(ArsivIcerigi):
         dönüşünde de aynı sorgu çalışsın diye. Yazar başına alt sorgu
         `(yazar, -yayin_zamani)` indeksinden tek satır okur
         (`Yazar.son_yazisiyla` ile aynı düzen); dış sorgu o kimlikleri
-        `IN` ile alır. Girişi kurmak için gövdenin yalnız başı çekilir
-        (`giris_ham`); gövdenin tamamı ertelenir.
+        `IN` ile alır. Gövde ertelenir: 21 Ekim 2026 ikinci turundan beri
+        kart giriş metni basmıyor (gövdeden kırpılan "Bodrum… Iğdır FK…"
+        gürültüsü kalktı).
         """
+        return (cls._son_yazi_kumesi()
+                .select_related("yazar").defer("govde")
+                .order_by("-yayin_zamani", "-pk"))
+
+    @classmethod
+    def _son_yazi_kumesi(cls):
+        """Listedeki her yazarın son yayındaki yazısı — süzgeç, sıra yok.
+        `yazar_basina_son` ve `vitrin_kimlikleri` AYNI kümeden okur; iki
+        ayrı tanım olsaydı vitrin ile akışın dışladığı yazılar ayrışabilirdi."""
         from django.db.models import OuterRef, Subquery
-        from django.db.models.functions import Substr
         son = (cls.yayindakiler().filter(yazar=OuterRef("pk"))
                .order_by("-yayin_zamani", "-pk").values("pk")[:1])
         kimlikler = Yazar.listedekiler().annotate(son_id=Subquery(son)).values("son_id")
-        return (cls.yayindakiler().filter(pk__in=kimlikler)
-                .select_related("yazar").defer("govde")
-                .annotate(giris_ham=Substr("govde", 1, cls.GIRIS_HAM))
-                .order_by("-yayin_zamani", "-pk"))
+        return cls.yayindakiler().filter(pk__in=kimlikler)
+
+    @classmethod
+    def vitrin_kimlikleri(cls):
+        """`kademele(yazar_basina_son())[0]`ın SQL karşılığı: vitrindeki
+        ("yazıyor" kademesi) yazıların kimlikleri, DEĞERLENDİRİLMEMİŞ sorgu.
+
+        `onceki_akis` bunu alt sorgu olarak gömer; `?sayfa=N` ve "daha
+        fazla" ucu vitrini hiç kurmadan aynı yazıları dışlar ve gidiş-dönüş
+        sayısı artmaz. Eşik Python'daki gibi: referans kümedeki en yeni
+        yazı, sınır dahil (`yayin_zamani >= referans - YAZIYOR_ESIGI`).
+        Dış sorgu `KoseYazisi.pk` döndürür, hiçbir satırı NULL değildir —
+        `NOT IN` NULL görseydi akışın TAMAMINI boşaltırdı (yazısı olmayan
+        yazarın `son_id`si NULL; o liste doğrudan dışlamaya verilmez).
+        """
+        from django.db.models import DateTimeField, ExpressionWrapper, Subquery, Value
+        kume = cls._son_yazi_kumesi()
+        referans = kume.order_by("-yayin_zamani").values("yayin_zamani")[:1]
+        alt_sinir = ExpressionWrapper(Subquery(referans) - Value(cls.YAZIYOR_ESIGI),
+                                      output_field=DateTimeField())
+        return kume.filter(yayin_zamani__gte=alt_sinir).values("pk")
+
+    @classmethod
+    def onceki_akis(cls):
+        """`/kose-yazilari` "Önceki yazılar" akışı: `akis()` eksi vitrin
+        (21 Ekim 2026, ikinci tur). Ölçüldü: dışlama yokken akışın ilk 20
+        satırının 9'u vitrindeki kartın aynısıydı. Sayfa, `?sayfa=N` ve
+        "daha fazla" ucu bunu okur — dilimler ve sayaç aynı kümeden;
+        dışlama aynı sorgunun içinde alt sorgu (`NOT IN`), ek sorgu yok."""
+        return cls.akis().exclude(pk__in=cls.vitrin_kimlikleri())
 
     @classmethod
     def kademele(cls, son_yazilar):
@@ -454,18 +455,6 @@ class KoseYazisi(ArsivIcerigi):
                                 "surer": not gruplar and gun == onceki_gun})
             gruplar[-1]["yazilar"].append(yazi)
         return gruplar
-
-    @property
-    def giris(self) -> str:
-        """Gövdenin başından kırpılmış düz metin — yeni cümle YAZILMAZ.
-
-        `yazar_basina_son()` ile geldiyse yalnız `giris_ham` okunur; değilse
-        gövdenin kendisi (ertelenmişse bir sorgu açar).
-        """
-        ham = getattr(self, "giris_ham", None)
-        if ham is None:
-            ham = (self.govde or "")[:self.GIRIS_HAM]
-        return duz_giris(ham, self.GIRIS_SINIRI)
 
     def govde_guvenli(self):
         """Şablonda basılacak hâli. Beyaz liste dışındaki HTML düşer.

@@ -6838,3 +6838,44 @@ iner. 44 px kuralı yalnız ≤600'e alındı (geniş ekranda bant 60 px'ti).
 | `site.js` köşe akışında da "Başka haber yok." / "Haberler yüklenemedi." | frontend, küçük |
 | Sayaçta binlik ayırıcı yok ("6713 yazı"; kategori sayfasında da öyle) | frontend, küçük |
 | Sayfa bütçesi testi köşe sayfasını ölçmüyor; "daha fazla"nın tarayıcı tarafı otomatik testsiz | test-kalite |
+
+### 4. İkinci tur: "çok düzensiz" (aynı gün)
+
+Kullanıcı ilk turun sonucunu "çok düzensiz" buldu. Teşhis 1440 px'te
+ölçüldü: aynı satırdaki kartlarda başlık 1/2/3 satır, giriş metni farklı
+y'de başlıyordu; uzun adda tarih alt satıra kayıyordu; 13. kart tek
+kalıyordu; akışın ilk 20 satırının 9'u vitrinin tekrarıydı; main içinde
+15 yazı biçimi vardı; akış 1.074 px genişlikteydi ve "dk" başlıktan
+~1.000 px uzaktaydı. Kullanıcının onayladığı iskelet uygulandı:
+
+| Konu | Karar |
+|---|---|
+| Vitrin | İki sütun, **sütun sütun** akış (`grid-auto-flow:column`, `--satir` = ceil(n/2)): 13 → 7 + 6, DOM sırası = okuma sırası |
+| Kart | Sabit yuva: portre 72 px (≤600'de 56) gri tonlu, nötr zemin; ad + kısa tarih ("27 Ağu") tek satır; başlık **tam** (kırpılmaz), en az iki satırlık yer. **Giriş metni ve unvan basılmaz** (giriş kodu tümden silindi) |
+| Tekrar | "Önceki yazılar" = `KoseYazisi.onceki_akis()` = akış − vitrin; dışlama aynı SQL'de alt sorgu. Sayfa, `?sayfa=N` ve `/daha-fazla` aynı kümeyi okur. Sayaç binlik ayraçlı ("6.700 yazı") |
+| Alt bölüm | 1. sayfada ana sütun (~700 px) Önceki yazılar + sağ ray (360 px, yapışkan) Yazarlar A–Z; "Arşivde · 24 yazar" kapalı `<details>`, açılınca ad + ay-yıl. ≤1000 tek sütun. `?sayfa=N`'de ray yok, akış tam genişlik |
+| Akış satırı | Yazar · süre başlığın üstünde tek üst bilgi satırı; sağ kenardaki "dk" sütunu kalktı |
+| Yazı biçimi | main'de (kırıntı hariç) **6** birleşim |
+
+İlk uygulamada başlık iki satırda kırpılıyordu; 768'de altı başlığı "…" ile
+kestiği görüldü ve kırpım koordinatörce kaldırıldı. Hizayı ızgara
+sağlıyor: satırdaki iki kart en uzun başlık kadar uzuyor.
+
+| Ölçüm | Birinci tur → ikinci tur |
+|---|---|
+| Satır içi ad / tarih / başlık üst kenarı farkı (1440 · 1024 · 768 · 601 · 390) | başlık 38/56 px, tarih ayrı satırda → **≤0,1 px** |
+| Vitrin satır yüksekliği 1440 | 167–191 px → **101 px** (hepsi eşit) |
+| Tek kalan kart | 1 → **0** (7 + 6) |
+| Kırpılan başlık, 8 genişlik | — → **0** |
+| Vitrin–akış tekrarı (ilk 20 satır) | 9 → **0** |
+| main yazı biçimi birleşimi | 15 → **6** |
+| Akış sütunu genişliği 1440 | 1.074 → **698 px** |
+| Sorgu `/kose-yazilari` · `/daha-fazla` · `?sayfa=2` | 3 · 1 · 2 → **3 · 1 · 2** |
+| HTML ham / gzip | 59.589 / ~14.130 → **55.987 / ~12.780 bayt** |
+| Yatay taşma 8 genişlik · h1 · odaksız durak · ≤600'de 44 px altı (main) | **0 · 1 · 0 · 1** (yalnız kırıntı "Anasayfa") |
+| Test paketi | **1657 test, OK (2 atlandı)** |
+
+Açık kalanlara ek: portrelerdeki gri tonlama (`filter:grayscale(1)`, yalnız
+`.kose-kart`) kaynak görsellerin kırmızı/yeşil afiş zeminlerini eşitlemek
+için; tasarım direktörü değerlendirmeli, tek satırla geri alınır. Unvan
+içeriği gelirse kartta yeri ayrıca kararlaştırılmalı.

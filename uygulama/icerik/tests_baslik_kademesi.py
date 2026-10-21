@@ -70,13 +70,14 @@ class IkiKademe(SimpleTestCase):
 
     def test_kose_yazilari_kapsamda_ve_okunuyor(self):
         """Yol düzeltmesi boşa düşmesin: medya kökünden okunan şablonda
-        tek dolu çubuk h1, üç blok hafif (21 Ekim 2026)."""
+        tek dolu çubuk h1, üç blok hafif (21 Ekim 2026; ikinci turdan beri
+        sıra onaylı iskeletteki gibi: son → önceki → dizin)."""
         bulunan = KUTU_BAS.findall(_sablon("medya/kose_yazilari.html").read_text(encoding="utf-8"))
         self.assertEqual([(s, e, m.strip()) for s, e, m in bulunan], [
             ("kutu-bas vurgu", "h1", "KÖŞE YAZILARI"),
             ("kutu-bas hafif", "h2", "SON YAZILAR"),
-            ("kutu-bas hafif", "h2", "YAZARLAR A–Z"),
-            ("kutu-bas hafif", "h2", "TÜM KÖŞE YAZILARI")])
+            ("kutu-bas hafif", "h2", "ÖNCEKİ YAZILAR"),
+            ("kutu-bas hafif", "h2", "YAZARLAR A–Z")])
 
     def test_sayfa_basligi_dolu_cubukta(self):
         metin = (SABLON / "kategori.html").read_text(encoding="utf-8")

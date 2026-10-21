@@ -27,7 +27,9 @@ tuttuğu hesap `icerik/views.py`de `AKIS_RITMI` başlığı altında.{% endcomme
 gün başlıklı): çocuklar `h3.kose-gun` + `ol.kose-gun-liste` çiftleri, sayfadaki
 hedef `<div class="kose-akis">`. Önceki dilimin son günüyle süren ilk grup
 başlıksız gelir (yalnız `ol`); betik onu sayfadaki son listenin hemen ardına
-ekler, CSS iki listenin birleşme yerini tek cetvel gibi çizer.{% endcomment %}
+ekler, CSS iki listenin birleşme yerini tek cetvel gibi çizer. 21 Ekim 2026
+ikinci turdan beri küme `KoseYazisi.onceki_akis`: vitrindeki yazılar hariç,
+sayfanın kendi dilimleriyle aynı.{% endcomment %}
 <div class="akis-parca" data-devam="{% if devam %}1{% else %}0{% endif %}">
 {% include "medya/parca/kose_gunleri.html" %}</div>
 {% else %}
