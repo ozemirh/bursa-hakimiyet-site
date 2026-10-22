@@ -15,7 +15,8 @@ içeriğinin trafiğini erittiğini ve sert yerel haberin hâlâ tıklandığın
 `EKIP.md` · `URUN-PLANI.md` (§2 adres sözleşmesi, F8 kesim, sitemap/RSS bölümleri,
 §41 nöbetçi eczane SEO deseni, §48 okunma sayacı) · `uygulama/besleme/` ·
 `uygulama/sablonlar/taban.html` ve `haber_detay.html` (meta, kanonik, JSON-LD) ·
-`uygulama/sosyal/` · `PANEL-NOTLARI.md` §25 (sosyal paylaşım).
+`uygulama/sosyal/` · `PANEL-NOTLARI.md` §25 (sosyal paylaşım) ·
+`referans-kutuphanesi/desenler/` (`seo-yapisi`, `basarim`, `gelir-okur-iliskisi`).
 
 ## Ölçülmüş gerçekler ve kararlar
 

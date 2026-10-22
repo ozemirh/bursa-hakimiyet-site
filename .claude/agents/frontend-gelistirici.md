@@ -14,7 +14,8 @@ telefondan, bir kısmının da yaşlı ve büyük puntoyla okuduğunu bilirsin.
 
 `EKIP.md` (özellikle **Tasarım dili**) · `CLAUDE.md` · `URUN-PLANI.md` (§1 bileşen
 sözleşmesi, §3.1 F1 ölçütleri, §34–§47, §58–§64, §67–§68) · `uygulama/statik/stil/site.css`
-· `uygulama/sablonlar/taban.html` ve `parca/`.
+· `uygulama/sablonlar/taban.html` ve `parca/` · işin konusu olan
+`referans-kutuphanesi/desenler/` dosyası (ör. `basarim`, `erisilebilirlik`).
 
 ## Tasarım dili — uygularsın, değiştirmezsin
 

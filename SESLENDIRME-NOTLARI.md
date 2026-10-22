@@ -244,6 +244,151 @@ elektrik parasına iniyor. "İstek üzerine üretim" zorunluluğu bu yolda ortad
 4. **İlk kurulum emeği.** Bulut servisinde bir API anahtarı yeter; burada model
    sunucusu, kuyruk ve dosya yönetimi kurulacak.
 
+## 5c. Higgsfield ses araçları (20 Ekim 2026)
+
+Higgsfield kendi ses modeli olan bir servis değil; başka sağlayıcıların modellerini
+kredi karşılığı satan bir aracı. Fiyatlar hesabın kendi maliyet sorgusuyla
+(`get_cost`, üretim yapmadan) 1.691 karakterlik Türkçe bir metinle ölçüldü,
+haber başına 1.800 karaktere ölçeklendi. Hacim: **günde 50 haber → ayda 1.500
+haber → ~2,7 milyon karakter.**
+
+| Model (Higgsfield içinde) | Kredi/haber | Kredi/ay | Ultra yıllık (99 $) + ek paket |
+|---|---|---|---|
+| Seed Speech (ByteDance) | 3,6 | ~5.430 | ~227 $ · ~11.000 TL |
+| ElevenLabs · MiniMax · Eleven v4 Turbo | 5,4 | ~8.140 | ~370 $ · ~17.900 TL |
+| Eleven v4 | 8,3 | ~12.490 | ~598 $ · ~29.000 TL |
+| Seed Audio 1.0 (varsayılan model) | 12,0 | ~18.040 | ~891 $ · ~43.200 TL |
+
+Kredi fiyatı: Ultra yıllık 3.000 kredi/ay 99 $ (0,033 $/kredi), ek paket 4.000
+kredi 210,53 $ (0,053 $/kredi, **90 günde sona erer**). Kur 48,52 TL (TCMB
+11 Eylül bülteni — `doviz.json` o tarihten beri tazelenmemiş).
+
+**Sonuç:** Higgsfield üzerinden ElevenLabs ~100–160 $/1M karakter ediyor;
+ElevenLabs'ın doğrudan fiyatı (Flash ~50 $, Multilingual ~100 $) bundan ucuz ya
+da eşit. Azure/Polly Neural aynı hacimde ~43 $/ay, yerel model birkaç dolar.
+Aracıya ödeme yapmanın maliyet açısından getirisi yok.
+
+**Doğrulanmayanlar:** Hiçbir Higgsfield sesi Türkçe etiketli değil (hazır seslerin
+hepsi İngilizce adlı); Seed Speech/Seed Audio'nun Türkçe desteği belirsiz, Qwen
+Audio'nun dil listesinde Türkçe **yok**, Vibe Voice ve Cozy Voice'un Türkçesi
+beklenmez. Sitenin sunucusundan otomatik üretim için Higgsfield'in herkese açık
+bir TTS API'si ve ticari kullanım koşulları ayrıca doğrulanmalı — buradaki ölçüm
+kullanıcı hesabının MCP bağlantısıyla yapıldı.
+
+## 5d. Geniş tarama: ücretli, ücretsiz, açık kaynak (20 Ekim 2026)
+
+Hacim: günde 50 haber → ayda ~1.500 haber, **~2,7 milyon karakter, ~50 saat ses.**
+Fiyatlar ikincil kaynaklı liste fiyatları; ücretsiz katman düşüldü.
+
+### Yeni bulunan: Türkçeye özel, ticari kullanıma açık, CPU'da çalışan modeller
+
+6 Eylül turunda görülmemişti. Üçü de GPU istemiyor; mevcut sunucuda çalışabilir.
+
+| Model | Lisans | Ölçülen kalite | Not |
+|---|---|---|---|
+| **FreyaTTS-small** (183M) | Apache-2.0 (kod + ağırlık) | Freya-TR-Eval: WER %8,0, **MOS 3,68** (24 Türk dinleyici) — XTTS-v2 3,82 | Tek ses. CPU'da gerçek zamanlı, GPU'da 10 kat hızlı. Büyük sürüm ticari, satıcıyla görüşülür |
+| **EMA-TTS** (65M) | Apache-2.0 | WER %3,0 (kendi beyanı) | Tek ses, klonlama yok. Uzun cümlede iyi, 1-2 kelimede zayıf; özel isimlerde hata |
+| **Pocket TTS Turkish** (~110M) | CC-BY-4.0 (atıf şart) | WER %1,9 (kendi beyanı) | Tek CPU çekirdeğinde 5 kat gerçek zaman. Klonlama var. Eğitim sesi **sentetik**, yazarın kendi modeliyle üretilmiş — o modelin kökeni belirsiz |
+| **VoxCPM2** (2B) | Apache-2.0 | Türkçe 30 dil arasında; dile göre kalite değişir | 5,5 GB VRAM, GPU ister. Trendyol-TTS bunun üzerine kurulu, Trendyol hâlâ "üretime hazır değil" diyor |
+
+Uyarı: Freya ve EMA eğitim verisini adlandırmıyor. Ağırlık lisansı temiz, veri
+kökeni doğrulanmadı. Freya-TR-Eval tablosunda en düşük hata Piper-dfki ve
+MMS-TTS'te; ikisi de ticari kullanıma kapalı (§2).
+
+### Bulut: aylık tahmini fatura (2,7M karakter)
+
+| Servis | Türkçe | ~Aylık |
+|---|---|---|
+| Google Standard | var | **0 $** (4M/ay ücretsiz katmana sığıyor; kalite eski nesil) |
+| Google Neural2/WaveNet | var | ~27 $ |
+| Azure Neural (Emel/Ahmet) | var | ~35 $ |
+| Polly Neural (Burcu) | var | ~43 $ |
+| OpenAI gpt-4o-mini-tts | çok dilli | ~45 $ (~0,015 $/dk) |
+| Google Chirp 3: HD | var | ~51 $ (ilk 1M ücretsiz) |
+| Gemini TTS (2.5 Pro / 3.1 Flash) | 90+ dil, Türkçe teyit edilmedi | ~90 $ (ses jetonu: 25/sn, 20 $/1M) |
+| ElevenLabs Flash / v3 | var | ~135 $ / ~270 $ |
+| MiniMax speech-2.8 turbo / hd | var | ~162 $ / ~270 $ |
+| Cartesia Sonic-3 | var | kredi tablosu yayımlanmıyor |
+| Deepgram Aura-2 | 7 dil, Türkçe görünmüyor | (~30 $/1M) |
+| Higgsfield (aracı) | belirsiz | 227–891 $ (§5c) |
+
+### Haber sitelerine özel sesli makale platformları
+
+**Trinity Audio**: oynatıcı + ses + reklam paraya çevirme bir arada; WordPress
+eklentisi Türkçeyi listeliyor (bazı diller yalnız ücretli planda). Planlar makale
+adedine göre (~16–150 $/ay, 1.000 kelime = 1 makale); ayda 1.500 makale büyük
+olasılıkla özel teklif ister. **BeyondWords**: fiyat yayımlanmıyor, demo usulü.
+İkisi de ses dosyasını kendi altyapısında tutar — paragraf takipli kendi
+oynatıcımızla uyuşmaz.
+
+## 5e. Gemini TTS denemesi — gerçek haberle ölçüldü (21 Ekim 2026)
+
+Anahtar kökteki `.env` içinde `GEMINI_API_KEY` (git'e girmiyor). Anahtarla açık
+TTS modelleri: `gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts` (ikisi kararlı,
+Türkçe resmî destekli), ayrıca 3.1/2.5 önizlemeleri.
+
+**Fiyat** (USD / 1M jeton, ses jetonu = saniyede 25; 31 Aralık 2026'ya kadar,
+parantezde 1 Ocak 2027'den itibaren):
+
+| Model | Girdi metin | Çıktı ses | Batch/Flex çıktı |
+|---|---|---|---|
+| 3.8 Flash TTS | 0,50 (1,00) | 9,00 (18,00) | 4,50 (9,00) |
+| 3.8 Flash-Lite TTS | 0,50 (1,00) | 6,00 (12,00) | 3,00 (6,00) |
+
+**Deneme haberi:** #1696013 "Bursa Yıldırım'da peş peşe su kesintisi! BUSKİ…",
+2.066 harf, 18 bölüm (başlık + spot + 16 paragraf; 4'ü BÜYÜK HARFLİ ara başlık).
+
+| Deneme | Ses süresi | Çıktı jetonu | Bekleme | Bu haberin maliyeti |
+|---|---|---|---|---|
+| Flash-Lite, tek istek | 119,4 sn | 2.983 | 16,6 sn | 0,018 $ |
+| Flash, tek istek | 126,0 sn | 3.147 | 32,4 sn | 0,029 $ |
+| Flash-Lite, paragraf paragraf (18 istek) | 141,2 sn (6,3 sn'si eklenen sessizlik) | 3.316 | 2–3,5 sn/istek | 0,020 $ |
+
+Paragraf paragraf üretim ~%11 daha fazla jeton harcıyor (her parçanın baş/son
+boşluğu), karşılığında paragraf başlangıç saniyeleri doğrudan elde ediliyor.
+
+**Aylık (2,7M karakter, paragraf paragraf):** Flash-Lite ~26 $ (2027'de ~52 $),
+Flash ~41 $ (2027'de ~82 $). Batch/Flex fiyatıyla yarısı. Girdi jetonu
+(~0,9M) aylık 0,5 $'ın altında, önemsiz.
+
+**Telaffuz denetimi** (sesler `gemini-3.8-flash`'a duyulduğu gibi yazdırıldı —
+bir yapay zekânın dökümü, insan kulağının yerini tutmaz):
+- `09.00` → "dokuz", `25 Ağustos 2026` → "yirmi beş Ağustos iki bin yirmi altı": üçü de doğru.
+- `BUSKİ` → "Buski" (kelime gibi): üçü de doğru, yerel kullanımla aynı.
+- Büyük harfli ara başlıklar bağırarak/aşırı vurguyla **okunmamış**.
+- Sıra sayıları: Flash ve paragraf kipindeki Lite hepsini doğru okudu
+  ("kırkıncı Sokak", "yirmi birinci Cadde"). **Tek istekli Lite iki yerde
+  kaçırdı**: `40. Sokak` → "kırk", `21. ve 22. Caddeler` → "yirmi bir ve yirmi ikinci".
+  Metin düzeltme katmanı (§4.3) sıra sayılarını yazıya çevirirse sorun kalkar.
+
+**Hız sınırı:** Dakikada ~15 istekten sonra 429 döndü (anahtarın katmanı
+ücretsiz olabilir — doğrulanmadı). Günde 50 haber × ~18 parça ≈ 900 istek;
+üretim için faturalı katman ya da istekleri yayına yayan bir kuyruk gerekir.
+Ücretsiz katmanda Google verileri ürün geliştirmede kullanabilir.
+
+### Ses seçimi ve "tek istek" riski (21 Ekim, ikinci tur)
+
+- 30 temel ses çok dilli; ~yarısı kadın (Kore, Erinome, Gacrux, Sulafat, Zephyr,
+  Leda, Aoede, Despina, Achernar…). Genişletilmiş kütüphanede 1.000 ses daha var
+  ama hepsi aksana bağlı; `languageCode=tr-TR` filtresi **0** döndürüyor (aynı
+  filtre de-DE için 87). Kullanıcı kararı: sesin Türkçe olması şart değil.
+- Denenen kadın sesleri (Kore, Erinome, Gacrux, Sulafat) ve iki İngilizce
+  kütüphane sesi (`en-gb-podcaster-2`, `en-ie-podcaster-1`) Türkçeyi aksansız
+  okudu (yapay zekâ değerlendirmesi). En yüksek puan **Gacrux** (10/10, hatasız).
+- **Kritik bulgu:** haber tek istekte gönderilince model metni yer yer kendisi
+  kısaltıyor. Harfiyen dökümle doğrulandı: Erinome ve `en-gb-podcaster-2` bir ara
+  başlığı + bir cümleyi atlayıp sonraki cümleyi yeniden kurdu; Kore bir başlıkla
+  paragrafı birleştirip "2026 tarihinde"yi düşürdü. Bu, büyük dil modeli tabanlı
+  seslendirmenin doğası. **Haberde kabul edilemez.**
+- Paragraf paragraf üretimde (kısa parçalar) atlama görülmedi: Charon ve Gacrux
+  eksiksiz, sıra sayıları doğru.
+- **Sonuç:** üretim yalnız paragraf paragraf yapılmalı, her parça yayından önce
+  denetlenmeli. En ucuz denetim: parçanın süresi harf sayısına göre beklenen
+  aralıkta mı (~14–19 harf/sn); şüpheliyse Gemini'ye yazıya döktürüp metinle
+  karşılaştırmak, tutmazsa yeniden üretmek.
+
+Deneme betikleri ve ses dosyaları oturumun geçici klasöründe; repoya alınmadı.
+
 ## 6. Sonraki adım
 
 Karar dinlemeden verilmemeli. Önerilen: **aynı haberi** — sayı, tarih ve kısaltma

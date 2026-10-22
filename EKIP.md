@@ -65,6 +65,7 @@ artık tek istisna değil, ilk örnektir. Mekanizma §68'deki
 | `devops-altyapi-muhendisi` | DevOps / altyapı mühendisi | Barındırma, dağıtım, F8 kesim, yedek, izleme, zamanlanmış görevler |
 | `hukuk-guvenlik-uyum-uzmani` | Hukuk, güvenlik ve uyum uzmanı | KVKK, Basın Kanunu, BİK, telif, uygulama güvenliği, 2FA |
 | `test-kalite-muhendisi` | Test ve kalite mühendisi | Test stratejisi, ölçümle doğrulama, erişilebilirlik ve başarım denetimi |
+| `haber-siteleri-arastirmacisi` | Haber siteleri araştırmacısı | `referans-kutuphanesi/`: yerel/ulusal/global sitelerin kanıtlı çözümlemesi, desen kataloğu, fark matrisi. Ürün kodu yazmaz |
 | `haber-sayfasi-gelistirici` | (demo dönemi) | Yalnız `tasarim-*.html` demo dosyaları; ürün işinde kullanılmaz |
 
 **Devretme kuralı.** Bir ajan kendi alanı dışına düşen bir sorun bulursa onu
@@ -106,6 +107,9 @@ Bunlar dışındaki kararlar ekip içinde verilir (koordinatör: `haber-sistemi-
 
 ## Çalışma yöntemi
 
+- **Bellekten değil kütüphaneden.** Bir bölüm/özellik tasarlanmadan önce
+  `referans-kutuphanesi/desenler/` altındaki ilgili dosya okunur; yoksa
+  `haber-siteleri-arastirmacisi`ne hedefli tarama yaptırılır.
 - **Ölç, tahmin etme.** Yerleşim için başsız Chrome (`icerik/tests_panel_olcum.py`
   içindeki `Cdp`); başarım için sorgu süresi; bitti için sayı.
 - Testler: `cd uygulama && ../.venv/Scripts/python.exe manage.py test`

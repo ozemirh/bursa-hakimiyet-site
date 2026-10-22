@@ -56,3 +56,7 @@ Desktop.ini
 
 # Ajan çalışma kopyaları
 .claude/worktrees/
+
+# Referans kütüphanesi ham dökümü (başka sitelerin ekran görüntüsü / HTML'i).
+# Depo herkese açık; yalnız çözümleme metni izlenir.
+referans-kutuphanesi/ham/
