@@ -10,4 +10,4 @@ sayfalarının servis paneli tarafından ortak kullanılır.
 Bağlantı çizelgenin resmî sahibine gider (dosyanın `kaynak.adres`ı, yoksa
 `canli.ECZANE_KAYNAK_ADRESI`). Dış bir ÇIKIŞTIR, kaynak değil: sayfa onu
 yüklemez. Yeni sekmede açıldığı ekran okuyucuya söylenir.{% endcomment %}
-<p class="eczane-gecersiz" role="status"><b>Nöbet listesi güncel değil</b> &mdash; <a href="{{ p.kaynak_adresi }}" target="_blank" rel="noopener noreferrer">{{ p.kaynak_adi }}<span class="gorsel-gizli"> nöbet çizelgesi, yeni sekmede açılır</span></a>{% if p.guncelleme %}<span class="eczane-son-guncelleme">Son güncelleme: <time datetime="{{ p.guncelleme|date:'c' }}">{{ p.guncelleme|date:"j F Y, H:i" }}</time></span>{% endif %}</p>
+<p class="eczane-gecersiz" role="status"><b>Nöbet listesi şu an alınamıyor</b> &mdash; <a href="{{ p.kaynak_adresi }}" target="_blank" rel="noopener noreferrer">{{ p.kaynak_adi }}<span class="gorsel-gizli"> nöbet çizelgesi, yeni sekmede açılır</span></a></p>

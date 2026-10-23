@@ -1,5 +1,6 @@
 {% comment %}
-Üst servis şeridi. Tarih sunucudan gelir.
+Üst servis şeridi. Günün tarihi 23 Ekim 2026'da kalktı (kullanıcı isteği:
+"insanlar o gün olduğunu zaten biliyor"); şeridin solunda yalnız hava durur.
 
 Hava durumu ve baraj doluluğu **canlı veri** kalemleridir (URUN-PLANI.md §1,
 "Canlı veri gerektiren bileşenler"); kaynakları F6'da bağlanacak. Uydurma
@@ -8,11 +9,10 @@ sabit "34°C" ve "%81" değerleri 25 Ağustos 2026 demosuna aitti.
 {% endcomment %}
 <div class="servis">
   <div class="servis-ic">
-    <strong>{% now "j F Y, l" %}</strong>
     {% comment %}Şeritte tarih basacak yer yok; bu yüzden sıcaklık YALNIZ
     taze veride görünür (19 Ekim 2026). Bayat ölçüm "Bursa 24°C" diye bugünün
     havası sanılıyordu.{% endcomment %}
-    {% if hava.son_durum.sicaklik %}<span class="ayrac"></span><span>Bursa {{ hava.son_durum.sicaklik|floatformat:0 }}°C · {{ hava.gunler.0.hadise.ad }}{% if hava.tazelik.durum != "taze" and hava.tazelik.guncelleme %} · {{ hava.tazelik.guncelleme|date:"j M" }} ölçümü{% endif %}</span>{% endif %}
+    {% if hava.son_durum.sicaklik %}<span>Bursa {{ hava.son_durum.sicaklik|floatformat:0 }}°C · {{ hava.gunler.0.hadise.ad }}</span>{% endif %}
     <span class="sag">
       {% comment %}Sosyal bağlantılar 30 Ağustos 2026'da (§35) künyeden
       BURAYA taşındı: kullanıcı isteği "sayfanın üstlerinde ve etkileyici".

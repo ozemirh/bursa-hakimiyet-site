@@ -37,6 +37,7 @@ anasayfadaki hâliyle birebir aynı kalsın diye blok olduğu gibi taşındı.{%
   {% comment %}19 Ekim 2026: saatin yanında TARİH de durur (güncelleme
   bugün değilse) — dosya 12 Eylül'de donunca bant yalnız "21:57" yazıyor,
   okur bunu bugünün saati sanıyordu. Kural `canli.tazelik()`te.{% endcomment %}
-  {% with t=doviz.tazelik %}<span class="tarih">{% if t.guncelleme %}<time datetime="{{ t.guncelleme|date:'c' }}">{% if not t.bugun %}{{ t.guncelleme|date:"j F" }} {% endif %}{{ t.guncelleme|date:"H:i" }}</time>{% endif %}{% if t.durum != "taze" %} · güncel değil{% endif %}</span>{% endwith %}
+  {% comment %}23 Ekim 2026, kullanıcı kararı: bantta damga hiç basılmaz —
+  ne saat ne tarih ne "güncel değil".{% endcomment %}
 </div>
 {% endif %}

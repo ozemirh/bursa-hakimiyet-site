@@ -523,17 +523,17 @@ class BolumDurustlugu(TestCase):
 
         Kutuda okurun sorduğu soru "kaçta" değil "ne kadar yeni" —
         incelenen sitelerin hepsi (BBC, Spiegel, CNN Türk) burada göreli
-        zaman yazıyor. Sınır 24 saat: ötesinde `kisa_zaman`a düşer, yoksa
-        arşivdeki kayıt "1.437 saat önce" olurdu.
+        zaman yazıyor. Sınır 24 saat: ötesinde boş döner — 23 Ekim 2026'dan
+        beri tarih basılmıyor (kullanıcı isteği).
         """
         from datetime import timedelta
-        from .templatetags.site_etiket import goreli_zaman, kisa_zaman
+        from .templatetags.site_etiket import goreli_zaman
         simdi = timezone.now()
         self.assertEqual(goreli_zaman(simdi - timedelta(seconds=20)), "şimdi")
         self.assertEqual(goreli_zaman(simdi - timedelta(minutes=14)), "14 dk önce")
         self.assertEqual(goreli_zaman(simdi - timedelta(hours=3)), "3 saat önce")
-        eski = simdi - timedelta(days=40)
-        self.assertEqual(goreli_zaman(eski), kisa_zaman(eski))
+        self.assertEqual(goreli_zaman(simdi - timedelta(hours=30)), "")
+        self.assertEqual(goreli_zaman(simdi - timedelta(days=40)), "")
         self.assertEqual(goreli_zaman(None), "")
         # İleri tarihli kayıtta negatif dakika basılmaz.
         self.assertEqual(goreli_zaman(simdi + timedelta(minutes=5)), "şimdi")
@@ -553,8 +553,12 @@ class BolumDurustlugu(TestCase):
                 id=830000 + n, slug=f"sd-{n}", baslik=f"Son dakika başlığı {n}",
                 spot="spot", govde="<p>gövde</p>", kategori=tur.kategori,
                 yayin_zamani=timezone.now() - timezone.timedelta(minutes=n))
-        yanit = self.client.get("/")
+        # Kutu 23 Ekim 2026'dan beri yalnız haber detayının rayında
+        # (anasayfadan kalktı); listede olmayan en eski haberin sayfası.
+        eski = Haber.objects.get(pk=830000 + SON_DAKIKA_ADET + 1)
+        yanit = self.client.get(eski.get_absolute_url())
         metin = yanit.content.decode()
+        self.assertNotIn('id="son-dakika"', self.client.get("/").content.decode())
         panel = metin[metin.index('id="son-dakika"'):]
         panel = panel[:panel.index("</ul>")]
         ayrac = panel.index('<div class="kutu-ic"')
@@ -563,6 +567,32 @@ class BolumDurustlugu(TestCase):
         self.assertIn(buyult(en_yeni.baslik), serit)
         self.assertNotIn(en_yeni.baslik, liste)
         self.assertEqual(liste.count("<li>"), SON_DAKIKA_ADET - 1)
+
+    def test_son_dakika_bandi_her_sayfanin_tepesinde(self):
+        """23 Ekim 2026, kullanıcı isteği: bant ilk ekranda, rayı olmayan
+        sayfada da. JavaScript'siz yalnız ilk kalem `data-aktif`, düğmeler
+        `hidden`; `id="son-dakika"` çapası bantta DEĞİL (anasayfa kutusu)."""
+        from .baglam import SON_DAKIKA_ADET
+        tur = KategoriTur.objects.filter(
+            tur=Kategori.TUR_HABER, slug="bursaspor").first()
+        for n in range(SON_DAKIKA_ADET):
+            Haber.objects.create(
+                id=831000 + n, slug=f"bant-{n}", baslik=f"Bant başlığı {n}",
+                spot="spot", govde="<p>gövde</p>", kategori=tur.kategori,
+                yayin_zamani=timezone.now() - timezone.timedelta(minutes=n + 1))
+        govde = self.client.get("/bursaspor").content.decode()
+        bant = govde[govde.index('class="sd-bant"'):]
+        bant = bant[:bant.index("</section>")]
+        # İçerik sütununun tepesinde: ana içerikten önce.
+        self.assertLess(govde.index('class="sd-bant"'), govde.index('<main'))
+        self.assertIn("SON DAKİKA", bant)
+        self.assertNotIn("sd-bant-nokta", bant)   # masa kaydı yok: nabız yok
+        self.assertEqual(bant.count("<li"), SON_DAKIKA_ADET)
+        self.assertEqual(bant.count('data-aktif="true"'), 1)
+        self.assertIn("Bant başlığı 0", bant[:bant.index("Bant başlığı 1")])
+        self.assertIn("dk önce", bant)
+        self.assertRegex(bant, r'class="sd-bant-dugmeler" hidden')
+        self.assertNotIn('id="son-dakika"', bant)
 
     def test_bantta_ilceler_yerine_saglik(self):
         """20 Ekim 2026, kullanıcı kararı: §47'deki "İLÇELER → Osmangazi"
@@ -825,9 +855,10 @@ class ReklamDemoAgi(TestCase):
         """Yuva ölçüsü İŞARETTE durur; betik ölçü listesi taşımaz."""
         with override_settings(REKLAM_DEMO=True):
             metin = self.client.get("/").content.decode()
-        # iki pageskin + üst şerit + üç kare
+        # iki pageskin + üst şerit + iki kare (Manşet yanı · Haber arası1;
+        # "Manşet altı1" 23 Ekim 2026'da kullanıcı kararıyla kalktı)
         self.assertEqual(metin.count('data-gpt="160x600"'), 2)
-        self.assertEqual(metin.count('data-gpt="300x250"'), 3)
+        self.assertEqual(metin.count('data-gpt="300x250"'), 2)
         # Üst şerit üç ölçü taşır: 1100x150 gazetenin kendi sattığı yuva,
         # 970x250 programatik billboard, 728x90 yedek.
         self.assertIn('data-gpt="1100x150,970x250,728x90"', metin)

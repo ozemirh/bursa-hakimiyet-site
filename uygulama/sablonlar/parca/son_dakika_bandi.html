@@ -1,0 +1,46 @@
+{% comment %}SON DAKİKA BANDI — sayfanın tepesinde dönen tek başlık (23 Ekim 2026).
+
+Kullanıcı: "başka haber sitelerinde siteye ilk girdiğinde bir son dakika
+bandı görüyorsun … bizim sitemizde son haberler aşağı indiğinde gözüküyor
+ve yeterince dikkat çekici değil."
+
+§36'da kaldırılan şeridin geri dönüşü DEĞİL. O şerit yatay KAYAN yazıydı:
+okunması en zor kalıp, `prefers-reduced-motion` açık okur yalnız başını
+görüyordu. Bu bant bir anda TEK başlık gösterir ve başlık yerinde durur;
+6 saniyede bir sıradakine AŞAĞI doğru geçer (yeni başlık üstten iner).
+  · fare üstündeyken ya da odak içerideyken durur
+  · ‹ › düğmeleri elle gezdirir; elle gezinen okurda otomatik geçiş KAPANIR
+    (WCAG 2.2.2: hareketi durdurmanın yolu)
+  · hareket azaltmayı seçen okurda hiç dönmez, düğmeler çalışır
+  · JavaScript yoksa ilk başlık durur, düğmeler gizli kalır (`hidden`)
+
+Kalemler raydaki kutuyla AYNI kaynaktan: `baglam.son_dakika_bandi` —
+masanın `SonDakika` kayıtları varsa onlar + nabız noktası, yoksa son
+haberler, nokta yok. Etiket her zaman "SON DAKİKA" (23 Ekim 2026,
+kullanıcı kararı: "son dakika kalsın hep, son haberler olmasın").
+
+Geçiş SAF KAYMA, solma yok (aynı gün, kullanıcı: "aşağı kayma olsun"):
+solmayla birlikte başlık yerinde değişiyor gibi okunuyordu.
+
+`id="son-dakika"` burada DEĞİL: o çapa raydaki kutunun (haber detayında
+ikisi aynı sayfada). Etiket `<h2>` değil `<span>`: detayda aynı adlı kutu
+başlığıyla iki eş `<h2>` olurdu; bölge adını `aria-labelledby` taşır.
+Anasayfada kutu yok (23 Ekim 2026) — orada son dakika YALNIZ bu bant.{% endcomment %}
+{% load site_etiket %}{% if son_dakika %}
+<section class="sd-bant" aria-labelledby="sd-bant-ad" data-sd-bant>
+  <span class="sd-bant-plaka">
+    {% if son_dakika.canli %}<span class="sd-bant-nokta" aria-hidden="true"></span>{% endif %}
+    <span id="sd-bant-ad">{{ son_dakika.etiket|default:"SON DAKİKA" }}</span>
+  </span>
+  <ul class="sd-bant-liste">
+    {% for h in son_dakika %}{% with z=h.zaman|goreli_zaman %}
+    <li{% if forloop.first %} data-aktif="true"{% endif %}><a href="{{ h.yol }}">{% if z %}<time datetime="{{ h.zaman|date:'c' }}">{{ z }}</time>{% endif %}<span class="baslik">{{ h.baslik }}</span></a></li>
+    {% endwith %}{% endfor %}
+  </ul>
+  {% if son_dakika|length > 1 %}<span class="sd-bant-dugmeler" hidden>
+    <button type="button" class="sd-bant-ok geri" aria-label="Önceki haber"><span aria-hidden="true">&lsaquo;</span></button>
+    <button type="button" class="sd-bant-ok ileri" aria-label="Sonraki haber"><span aria-hidden="true">&rsaquo;</span></button>
+  </span>{% endif %}
+  <a class="sd-bant-tumu" href="/son-haberler">TÜMÜ <span aria-hidden="true">&rarr;</span></a>
+</section>
+{% endif %}

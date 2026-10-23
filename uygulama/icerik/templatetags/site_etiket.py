@@ -172,9 +172,10 @@ def goreli_zaman(zaman) -> str:
     Spiegel "Vor 6 Min", CNN Türk "2 saat önce") bu kutuda GÖRELİ zaman
     yazıyor; "14:32" yazan bir liste akşam bakan okura tazelik söylemiyor.
 
-    Sınır 24 saat: ötesinde `kisa_zaman`a düşer. Arşivde aylar öncesine
-    ait kayıtlar var ve "1.437 saat önce" saçmalık olurdu; o kalemlerde
-    okur zaten "ne zaman" diye soruyor.
+    Sınır 24 saat: ötesinde BOŞ döner, tarih basılmaz (23 Ekim 2026,
+    kullanıcı isteği: "son haberler zaten o gün yapılmış olacak, tarih
+    bildirisine gerek yok"). Eskiden `kisa_zaman`a düşüp "22 Eki"
+    yazıyordu; şablon boş damgada `<time>` öğesini hiç çizmez.
 
     Gelecek tarihli kayıtta (sunucu saat farkı, ileri tarihli yayın)
     "şimdi" yazılır — negatif dakika basılmaz.
@@ -193,7 +194,7 @@ def goreli_zaman(zaman) -> str:
         return f"{int(saniye // 60)} dk önce"
     if saniye < 86400:
         return f"{int(saniye // 3600)} saat önce"
-    return kisa_zaman(zaman)
+    return ""
 
 
 @register.filter

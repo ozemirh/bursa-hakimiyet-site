@@ -87,7 +87,12 @@ class IkiKademe(SimpleTestCase):
         ana = (SABLON / "anasayfa.html").read_text(encoding="utf-8")
         self.assertRegex(ana, r'<div class="kutu-bas vurgu"><h2>BURSASPOR</h2>')
         self.assertIn("#bursaspor .kutu-bas.vurgu{background:var(--yesil)}", KURAL)
-        self.assertIn('include "parca/son_dakika.html"', ana)
+        # 23 Ekim 2026: anasayfada son dakika kutusu yok, tepedeki bant var
+        # (taban.html); ikisi de aynı koyu plakayı taşıyor.
+        self.assertNotIn('include "parca/son_dakika.html"', ana)
+        taban = (SABLON / "taban.html").read_text(encoding="utf-8")
+        self.assertIn('include "parca/son_dakika_bandi.html"', taban)
+        self.assertIn("background:var(--sd-plaka)", _blok(".sd-bant-plaka"))
         self.assertIn("background:var(--sd-plaka)", _blok(".sondakika-plaka"))
 
     def test_eski_bes_bicim_kalkti(self):
@@ -147,16 +152,17 @@ class SayfaBasiOnce(TestCase):
 class MobilIlkEkran(SimpleTestCase):
 
     def test_dortlu_manset_yani_reklamin_onunde(self):
-        """K2 — ≤600'de manşet → dörtlü → reklam → mini slayt → son dakika."""
+        """K2 — ≤600'de manşet → dörtlü → reklam → mini slayt (23 Ekim 2026:
+        sondaki son dakika satırı kutusu ve panosuyla kalktı)."""
         govde = medya_blogu(KURAL, "max-width:600px", ".ust-blok .manset-alani,.ust-blok .manset-yan")
         self.assertIn(".ust-blok .manset-alani,.ust-blok .manset-yan{display:contents}", govde)
         sira = {}
-        for sec in (".manset-slayt", ".dortlu", ".manset-yan .reklam", ".mini-slayt", ".sondakika-satir"):
+        for sec in (".manset-slayt", ".dortlu", ".manset-yan .reklam", ".mini-slayt"):
             m = re.search(r"\.ust-blok %s\{[^}]*order:(\d)" % re.escape(sec), govde)
             self.assertIsNotNone(m, sec)
             sira[sec] = int(m.group(1))
         self.assertEqual(sorted(sira, key=sira.get), [".manset-slayt", ".dortlu", ".manset-yan .reklam",
-                                                      ".mini-slayt", ".sondakika-satir"])
+                                                      ".mini-slayt"])
 
     def test_ust_blok_dom_sirasi_degismedi(self):
         """Sarmalayıcılar `display:contents` ile açılıyor; DOM'da reklam

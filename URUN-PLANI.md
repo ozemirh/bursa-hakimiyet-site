@@ -6879,3 +6879,74 @@ Açık kalanlara ek: portrelerdeki gri tonlama (`filter:grayscale(1)`, yalnız
 `.kose-kart`) kaynak görsellerin kırmızı/yeşil afiş zeminlerini eşitlemek
 için; tasarım direktörü değerlendirmeli, tek satırla geri alınır. Unvan
 içeriği gelirse kartta yeri ayrıca kararlaştırılmalı.
+
+
+---
+
+## §73 — 23 Ekim 2026: son dakika bandı sayfanın tepesine çıktı
+
+Kullanıcı: (1) "son haberler zaten o gün yapılmış olacak, tarih bildirisine
+gerek yok"; (2) "başka sitelerde siteye ilk girdiğinde bir son dakika bandı
+görüyorsun … bizimki aşağı indiğinde gözüküyor ve yeterince dikkat çekici
+değil".
+
+**Tarih kalktı.** `goreli_zaman` 24 saati geçen kayıtta artık `kisa_zaman`a
+düşmüyor, boş dönüyor; şablon boş damgada `<time>` çizmiyor. Rayın listesinde
+damgasız kalem `zamansiz` sınıfıyla tek sütuna yayılıyor.
+
+**Bant.** `parca/son_dakika_bandi.html`, `taban.html`de içerik sütununun
+tepesinde (reklam şeridinin üstü) — rayı olan olmayan **her sayfada**; §36'nın
+"rayı olmayan sayfada son dakika görünmüyor" kaybı kapandı. Kalemler raydaki
+kutuyla aynı kaynak (`baglam.son_dakika_bandi`; masa kaydı varsa onlar +
+nabız noktası, yoksa son haberler).
+
+§36'da kaldırılan **kayan** şerit geri gelmedi. Bant bir anda tek başlık
+gösterir, 6 sn'de bir aşağı doğru geçer; fare/odak içerideyken durur, ‹ ›
+ile elle gezinen okurda otomatik geçiş kapanır (WCAG 2.2.2), hareket azaltan
+okurda hiç dönmez, JavaScript'siz ilk başlık durur. Renkler §44'ün `--sd-*`
+değişkenleri; yeni renk yok. ≤600 px'te zaman, TÜMÜ ve geri oku düşer, başlık
+iki satıra sarar.
+
+**Önbellek.** Masa boşken düşülen liste de 30 sn önbellekte
+(`SON_HABER_ANAHTARI`); `_surum` iki anahtarı yalnız `Haber`/`SonDakika`
+kaydında siler (köşe yazısı, konu kaydı bandı düşürmez).
+
+**Ölçüm** (CDP, 1600 · 1400 · 1180 · 1000 · 900 · 768 · 600 · 390 · 360;
+anasayfa, haber detay, /gundem): yatay taşma 0; bant 46 px (≤600: 49 px);
+dokunma hedefleri ≥ 38×46. 360 px'te bant y=175, anasayfa manşeti 322 → 378
+— §34 K8 bütçesinin ilk editoryal pikseli artık bandın kendisi (175).
+Dönüş başsız Chrome'da sanal saatle doğrulandı (1 sn: 1. kalem, 7 sn: 2.,
+13 sn: 3.). **1658 test geçiyor.**
+
+**Açık:** anasayfada bandın ilk kalemi, manşet altındaki kutunun kırmızı
+şeridinde de duruyor; haber detayında rayın kutusuyla aynı liste. İkisi de
+bilerek bırakıldı (bant tek başlık, kutu liste) — tekrar rahatsız ederse
+kutunun şeridi kaldırılabilir.
+
+**Aynı gün ikinci tur** (kullanıcı: "son dakika kalsın hep, son haberler
+olmasın" · "aşağı kayma olsun"):
+- Etiket masa boşken de **SON DAKİKA** — bantta ve kutuda. Paket H'nin "masanın
+  vermediği kararı site vermez" kuralı ETİKET için kalktı; CANLI pili ve nabız
+  noktası yine yalnız masanın `SonDakika` kaydında yanar.
+- Geçiş **saf kayma**: solma kaldırıldı, yeni başlık üstten iner, eskisi
+  alttan çıkar (0,5 sn). Gerçek zamanlı ölçüldü: çıkan 0 → +46 px, gelen
+  −46 → 0, ikisi de tam opak. 1658 test geçiyor.
+
+**Üçüncü tur** (kullanıcı: "son haberler kısmını da kaldır, zaten sayfada ilk
+çıkanlar son haberler" — soruldu, cevap: manşet altındaki liste kutusu):
+- Anasayfadaki son dakika kutusu kalktı; anasayfada son dakika YALNIZ tepedeki
+  bant. Kutu haber detayının rayında duruyor. SON HABERLER kart ızgarası yerinde.
+- "Manşet altı1" 300x250 yuvası KALDI (gelir kararı kullanıcının), kendi
+  satırında ortalı (`.manset-alti-reklam`); dar ekran sırasında kutunun yerini
+  aldı (≤768: 2., ≤600: 5.).
+- Mega menüdeki "Son dakika" `/#son-dakika` → `/son-haberler` (çapa anasayfada
+  yok artık).
+- Ölçüm 1600 → 360 px (8 genişlik): yatay taşma 0. 1659 test geçiyor (ayrı adlı
+  test veritabanıyla; aynı anda koşan başka oturum ortak test veritabanını
+  siliyordu).
+
+**Dördüncü tur** (kullanıcı: "manşetin altındaki reklam alanını da kaldır"):
+"Manşet altı1" 300x250 yuvası anasayfadan kalktı; `.manset-alti-reklam` satırı
+ve dar ekran sıra kuralları silindi. Manşetin altına doğrudan yazarlar şeridi
+geliyor. Yuva adı envanterde (eski kampanya kayıtları anıyor) duruyor.
+Ölçüm 1600 → 360 px: yatay taşma 0.

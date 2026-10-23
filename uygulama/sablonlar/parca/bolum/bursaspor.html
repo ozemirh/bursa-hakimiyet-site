@@ -17,7 +17,7 @@ tasarım düzeneğinin ilk örneği olarak `parca/bolum/bursaspor.html` oldu
 ve temanın `alt` yuvasına girer (`icerik/temalar.py`).{% endcomment %}
 {% if yer == "alt" and bursaspor.fikstur %}{% with f=bursaspor.fikstur %}
 <section class="kutu bs-fikstur" id="fikstur" aria-labelledby="bs-fikstur-bas">
-  <div class="kutu-bas hafif"><h2 id="bs-fikstur-bas">FİKSTÜR VE SONUÇLAR</h2><span class="tumu">{% if f.bayat and f.tazelik.guncelleme %}{{ f.tazelik.guncelleme|date:"j F" }} itibarıyla {% endif %}{{ f.oynanan }}/{{ f.toplam }} maç oynandı</span></div>
+  <div class="kutu-bas hafif"><h2 id="bs-fikstur-bas">FİKSTÜR VE SONUÇLAR</h2><span class="tumu">{{ f.oynanan }}/{{ f.toplam }} maç oynandı</span></div>
   <div class="kutu-ic">
     <div class="bs-fikstur-sar" role="region" tabindex="0" aria-label="Bursaspor sezon fikstürü ve sonuçları">
     <table class="bs-tablo">
@@ -37,7 +37,7 @@ ve temanın `alt` yuvasına girer (`icerik/temalar.py`).{% endcomment %}
       </tbody>
     </table>
     </div>
-    <p class="servis-kunye">Kaynak: {{ f.kaynak.ad|default:"TFF" }}. Saati yazılmamış maçlar TFF tarafından henüz programlanmadı.{% if f.bilgi_yok %} &ldquo;?&rdquo; tarihi geçmiş ama sonucu elimizde olmayan maçtır.{% endif %}{% if f.guncelleme %} Son güncelleme {{ f.guncelleme|slice:":10" }} {{ f.guncelleme|slice:"11:16" }}{% if f.bayat %} &middot; <b>güncel değil</b>{% endif %}.{% endif %}</p>
+    <p class="servis-kunye">Kaynak: {{ f.kaynak.ad|default:"TFF" }}. Saati yazılmamış maçlar TFF tarafından henüz programlanmadı.{% if f.bilgi_yok %} &ldquo;?&rdquo; tarihi geçmiş ama sonucu elimizde olmayan maçtır.{% endif %}</p>
   </div>
 </section>
 {% endwith %}{% endif %}

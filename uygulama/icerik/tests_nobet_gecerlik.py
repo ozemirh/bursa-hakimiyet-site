@@ -128,14 +128,19 @@ class _Klasorlu(TestCase):
 
 
 class EskiListeSayfalarda(_Klasorlu):
-    """Eski liste boş bırakılmaz: eczane, günü ve uyarısıyla görünür."""
+    """Eski liste boş bırakılmaz: eczane görünür. 23 Ekim 2026, kullanıcı kararı: bayat veride de tarih/uyarı basılmaz."""
 
     def _son_liste_mi(self, metin):
+        # Sekme başlığı/meta (head) ve JSON-LD arama için günü taşır;
+        # okurun gördüğü gövde taşımaz.
+        import re
+        metin = re.sub(r'<script type="application/ld\+json">.*?</script>', '',
+                       metin.split("</head>", 1)[1], flags=re.S)
         self.assertIn("Deneme Eczanesi", metin)
         self.assertIn("0224 999 88 77", metin)
-        self.assertIn("12 Eylül 2026", metin)
-        self.assertIn("elimizdeki son liste", metin.lower())
-        self.assertNotIn("Nöbet listesi güncel değil", metin)
+        self.assertNotIn("12 Eylül 2026", metin)
+        self.assertNotIn("elimizdeki son liste", metin.lower())
+        self.assertNotIn("Nöbet listesi şu an alınamıyor", metin)
 
     def test_anasayfa(self):
         self.yaz("nobetci-eczane", _eczane(ESKI))
@@ -149,7 +154,7 @@ class EskiListeSayfalarda(_Klasorlu):
         self.yaz("nobetci-eczane", _eczane(ESKI))
         metin = self.sayfa("/nobetci-eczane/nilufer")
         self.assertIn("Deneme Eczanesi", metin)
-        self.assertIn("elimizdeki son liste", metin.lower())
+        self.assertNotIn("elimizdeki son liste", metin.lower())
 
     def test_bolum_servis_paneli(self):
         # Eskiden ilçe sayfasının servis paneli (20 Ekim 2026'da kalktı);
@@ -176,7 +181,7 @@ class EskiListeSayfalarda(_Klasorlu):
 
 
 class PuanBasligiBayat(_Klasorlu):
-    """Servis panelinin başlığındaki hafta numarası bayatlığı da söyler."""
+    """Servis panelinin başlığı hafta numarasını yazar. 23 Ekim 2026, kullanıcı kararı: bayat veride de tarih/uyarı basılmaz."""
 
     def _puan(self, guncelleme):
         return {"guncelleme": guncelleme, "bayat_esik_dakika": 2880,
@@ -187,9 +192,11 @@ class PuanBasligiBayat(_Klasorlu):
                           "attigi": 12, "yedigi": 4, "averaj": 8, "hafta": 7,
                           "mac": None, "fikstur": []}}
 
-    def test_bayat_tabloda_hafta_guncel_degil(self):
+    def test_bayat_tabloda_da_yalniz_hafta(self):
         self.yaz("puan-durumu", self._puan(ESKI))
-        self.assertIn("7. hafta, <b>güncel değil</b>", self.sayfa("/bursaspor"))
+        metin = self.sayfa("/bursaspor")
+        self.assertIn("7. hafta &middot;", metin)
+        self.assertNotIn("güncel değil", metin)
 
     def test_taze_tabloda_yalniz_hafta(self):
         self.yaz("puan-durumu", self._puan(_yerel(0, 0)))

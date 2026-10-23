@@ -181,16 +181,14 @@ class Adres(PiyasaTesti):
 
 class Bayatlik(PiyasaTesti):
 
-    def test_bayat_veri_tarihle_ve_uyariyla_basilir(self):
+    def test_bayat_veri_uyarisiz_basilir(self):
+        """23 Ekim 2026, kullanıcı kararı: bayat veride de tarih/uyarı basılmaz."""
         self.yaz("doviz", _doviz(BAYAT_DAMGA))
         metin = self.icerik(self.sayfa())
-        self.assertIn("GÜNCEL DEĞİL.", metin)
-        self.assertIn("12 Eylül 2026, 21:57</time> tarihli", metin)
-        # Değer gizlenmez ve uyarı değerin ÜSTÜNDE.
         self.assertIn(">48,5250</data>", metin)
-        self.assertLess(metin.index("GÜNCEL DEĞİL"), metin.index(">48,5250<"))
-        # Çevirici de bayat değeri kullandığını söyler.
-        self.assertIn("bu değer güncel değil", metin)
+        self.assertNotIn("GÜNCEL DEĞİL", metin)
+        self.assertNotIn("güncel değil", metin)
+        self.assertNotIn("12 Eylül 2026", metin)
 
     def test_taze_veride_uyari_yok(self):
         self.yaz("doviz", _doviz(_damga(3)))
@@ -199,12 +197,12 @@ class Bayatlik(PiyasaTesti):
         self.assertNotIn("güncel değil", metin)
         self.assertIn(">48,5250</data>", metin)
 
-    def test_kaynak_ve_zaman_her_zaman_gorunur(self):
+    def test_kaynak_her_zaman_gorunur_zaman_yok(self):
         self.yaz("doviz", _doviz(_damga(3)))
         self.yaz("piyasa", PIYASA)
         metin = self.icerik(self.sayfa())
         self.assertIn("Kaynak: <b>doviz.com</b>", metin)
-        self.assertIn('datetime="2026-09-12T21:57:05+03:00">12 Eylül 2026, 21:57:05</time>', metin)
+        self.assertNotIn("21:57:05</time>", metin)
         self.assertIn("TCMB bülteni", metin)
         self.assertIn("2026/171", metin)
         self.assertIn('href="/veri-kaynaklari"', metin)
@@ -215,7 +213,7 @@ class Bayatlik(PiyasaTesti):
             "degisim_yuzde": 0.1, "degisim": 0.0485, "yon": "yukari"}))
         metin = self.icerik(self.sayfa())
         self.assertIn("Kaynak: <b>TCMB</b>", metin)
-        self.assertIn('<time datetime="2026-09-11">11 Eylül 2026</time>', metin)
+        self.assertNotIn("11 Eylül 2026", metin)
         self.assertIn("bir önceki TCMB bültenine göre", metin)
 
     def test_piyasa_dosyasi_yoksa_kaynak_adi_yedekten(self):
@@ -241,7 +239,7 @@ class EksikAlan(PiyasaTesti):
         metin = self.icerik(self.sayfa("/piyasa/gram-altin"))
         self.assertIn("Resmî kapanış", metin)
         self.assertIn("6.808,70", metin)
-        self.assertIn("11 Eylül 2026", metin)
+        self.assertNotIn("11 Eylül 2026", metin)
         self.assertNotIn("Resmî kapanış", self.icerik(self.sayfa("/piyasa/dolar")))
 
     def test_degisim_yoksa_satir_yok(self):
@@ -299,7 +297,7 @@ class EksikAlan(PiyasaTesti):
             "girildi": "2026-09-12", "degisim_yuzde": None, "piyasa_damgasi": None}))
         metin = self.icerik(self.sayfa("/piyasa/gram-altin"))
         self.assertIn("Bursa Kuyumcular Odası (panelden girildi)", metin)
-        self.assertIn('<time datetime="2026-09-12">12 Eylül 2026</time>', metin)
+        self.assertNotIn("12 Eylül 2026", metin)
 
 
 class Baglantilar(PiyasaTesti):
@@ -370,18 +368,15 @@ class CetvelKunyesi(PiyasaTesti):
 
     def test_iki_kaynak_da_adlandirilir(self):
         bolum, kunye = self.kunye()
-        # Son değer: canlı kaynak, adı ve zamanıyla.
-        self.assertIn("Son ve değişim: doviz.com, "
-                      '<time datetime="2026-09-12T21:57:05+03:00">12 Eylül 2026 21:57</time>'
-                      " (Dolar, Euro, Gram altın)", kunye)
+        # Son değer: canlı kaynak adıyla; zaman basılmaz (23 Ekim 2026).
+        self.assertIn("Son ve değişim: doviz.com (Dolar, Euro, Gram altın)", kunye)
+        self.assertNotIn("<time", kunye)
         # BIST 100'ün damgası yok: kaynak yine adlandırılır, zaman uydurulmaz.
         self.assertIn("Son ve değişim: doviz.com (BIST 100)", kunye)
-        # TCMB'den gelen son değer de kendi adıyla ve bülten günüyle.
-        self.assertIn('Son ve değişim: TCMB, <time datetime="2026-09-11">11 Eylül 2026</time>'
-                      ", döviz satış kuru, gösterge niteliğinde (Sterlin)", kunye)
-        # Alış/satış her zaman TCMB bülteni: gün ve numarasıyla.
-        self.assertIn('Alış ve satış: TCMB bülteni <time datetime="2026-09-11">11 Eylül 2026'
-                      "</time> &middot; 2026/171", kunye)
+        # TCMB'den gelen son değer de kendi adıyla.
+        self.assertIn("Son ve değişim: TCMB, döviz satış kuru, gösterge niteliğinde (Sterlin)", kunye)
+        # Alış/satış her zaman TCMB bülteni: numarasıyla.
+        self.assertIn("Alış ve satış: TCMB bülteni &middot; 2026/171", kunye)
         # Değişimin neye göre olduğu kaynağa göre söylenir.
         self.assertIn("değişim doviz.com kaynağının bildirdiği günlük değişim", kunye)
         self.assertIn("değişim bir önceki TCMB bültenine göre", kunye)

@@ -87,21 +87,16 @@ yaşanmıştı.{% endcomment %}
         </div>
       </div>
 
-      {% comment %}SON DAKİKA manşetin hemen altında (30 Ağustos 2026, §37 ·
-      kullanıcı kararı): "günün manşetlerini daha aşağı koy, onun yerine son
-      dakikayı getir, yanına da bir reklam panosu daha koy".
+      {% comment %}SON DAKİKA KUTUSU ANASAYFADAN KALKTI (23 Ekim 2026,
+      kullanıcı kararı): "son haberler kısmını da kaldır, zaten sayfada ilk
+      çıkanlar son haberler". Aynı kalemler artık sayfanın tepesindeki
+      bantta (parca/son_dakika_bandi.html). Kutu haber detayının rayında
+      duruyor.
 
-      Anasayfada kutu RAYDA DEĞİL burada — aynı sayfada iki kez çizilmemeli,
-      `id="son-dakika"` tek olmak zorunda. Ray sürümü haber detay ve köşe
-      yazısı sayfalarında duruyor; `genis` bayrağı yalnız buradaki iki
-      sütunlu yerleşimi açar.
-
-      Reklam yuvası uydurma değil, envanterden: "Manşet altı1" gerçekten
-      manşetin altındaki 300x250 yuvanın adı.{% endcomment %}
-      <div class="sondakika-satir">
-        {% include "parca/son_dakika.html" with genis=1 %}
-        <div class="reklam kare-300" data-gpt="300x250"><span><b>REKLAM ALANI</b><span class="olcu">-Manşet altı1- 300x250</span></span></div>
-      </div>
+      Yanındaki "Manşet altı1" 300x250 yuvası da aynı gün kullanıcı
+      kararıyla kalktı ("manşetin altındaki reklam alanını da kaldır").
+      Envanterde ad olarak duruyor (eski kampanya kayıtları anıyor);
+      sayfada yuvası yok.{% endcomment %}
 
       </div>{# /.ust-blok #}
 
@@ -190,11 +185,15 @@ yaşanmıştı.{% endcomment %}
           31 Ağustos 2026'da kullanıcı isteğiyle BURAYA, rayda "Haber arası1"
           reklam yuvasının altına alındı ve `dikey` biçime geçti: 320 px'lik
           rayda iki sütun sığmıyor, satırlar tek sütunda alt alta dizilir.
-          Ray sırası: en çok okunanlar → ilçeler → reklam → manşetler.{% endcomment %}
+          Ray sırası: en çok okunanlar → ilçeler → reklam → manşetler.
+          Damga yalnız SAAT (23 Ekim 2026, kullanıcı isteği): okur listenin
+          o günün manşetleri olduğunu biliyor, "22 Eki" gereksiz. `kisa_zaman`
+          burada kullanılmıyor — o süzgeç eski kayıtta tarihe geçer. Tam
+          tarih `title`da duruyor.{% endcomment %}
           <section class="manset-liste dikey" aria-labelledby="manset-liste-bas">
             <div class="kutu-bas hafif"><h2 id="manset-liste-bas">GÜNÜN MANŞETLERİ</h2></div>
             <ul>
-{% for h in manset_liste %}              <li><time datetime="{{ h.yayin_zamani|date:'c' }}" title="{{ h.yayin_zamani|date:'j F Y, H:i' }}">{{ h.yayin_zamani|kisa_zaman }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
+{% for h in manset_liste %}              <li><time datetime="{{ h.yayin_zamani|date:'c' }}" title="{{ h.yayin_zamani|date:'j F Y, H:i' }}">{{ h.yayin_zamani|date:'H:i' }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></li>
 {% endfor %}            </ul>
           </section>
         </aside>
@@ -395,10 +394,12 @@ yaşanmıştı.{% endcomment %}
                 </dl>
                 {% endif %}
 
-                {% if hava_panel.simdi.olcum_zamani %}
-                <p class="hava-damga{% if hava_panel.bayat %} bayat{% endif %}">
-                  <time datetime="{{ hava_panel.simdi.olcum_zamani|date:'c' }}">{{ hava_panel.simdi.olcum_zamani|date:"j F Y, H:i" }}</time> ölçümü{% if hava_panel.bayat %} &middot; veri tazelenemedi{% endif %}{% if hava_panel.kaynak.kisa %} &middot; {{ hava_panel.kaynak.kisa }}{% endif %}
-                </p>
+                {% comment %}Ölçüm damgası yalnız BAYAT veride (23 Ekim 2026,
+                kullanıcı isteği): taze ölçümde "23 Ekim 2026, 14:00 ölçümü"
+                okura bir şey söylemiyordu. Kaynak adı her zaman kalır.
+                23 Ekim 2026, kullanıcı kararı: bayat veride de tarih/uyarı basılmaz.{% endcomment %}
+                {% if hava_panel.kaynak.kisa %}
+                <p class="hava-damga">Kaynak: {{ hava_panel.kaynak.kisa }}</p>
                 {% endif %}
 
               </div>
@@ -433,7 +434,7 @@ yaşanmıştı.{% endcomment %}
               vakti istek anında hesaplıyor; bugünün satırı yalnız elle
               giriş tablosu bittiğinde eksik kalır ve o zaman panel tarih
               uydurmaz, "güncel değil" der.{% endcomment %}
-              {% if namaz and not namaz.bugun %}<p class="bos">Vakit bilgisi güncel değil.</p>
+              {% if namaz and not namaz.bugun %}<p class="bos">Vakit bilgisi şu an alınamıyor.</p>
               {% elif namaz %}
                 <figure class="vakit-foto">
                   {% comment %}Fotoğraf 31 Ağustos 2026'da kullanıcı isteğiyle
@@ -487,10 +488,9 @@ yaşanmıştı.{% endcomment %}
               {% elif eczane_panel %}
                 <div class="eczane">
                   {% comment %}`gun` kaynakta ISO metin ("2026-08-29");
-                  panel onu `date` nesnesine çevirip veriyor.{% endcomment %}
-                  <p class="eczane-damga{% if eczane_panel.bayat %} bayat{% endif %}">
-                    <time datetime="{{ eczane_panel.gun|date:'Y-m-d' }}">{{ eczane_panel.gun|date:"j F Y" }}</time> nöbeti{% if eczane_panel.pencere %} &middot; çoğu eczanede {{ eczane_panel.pencere }} ({{ eczane_panel.pencere_adet }} eczane){% endif %}{% if eczane_panel.bayat %} &middot; <b>elimizdeki son liste; bugünkü nöbetçiyi Eczacı Odası'ndan doğrulayın</b>{% endif %}
-                  </p>
+                  panel onu `date` nesnesine çevirip veriyor.
+                  23 Ekim 2026, kullanıcı kararı: bayat veride de tarih/uyarı basılmaz.{% endcomment %}
+                  {% if eczane_panel.pencere %}<p class="eczane-damga">Çoğu eczanede {{ eczane_panel.pencere }} ({{ eczane_panel.pencere_adet }} eczane)</p>{% endif %}
 
                   <div class="eczane-suzgec" hidden>
                     <label for="eczane-ilce">İlçe</label>
@@ -559,7 +559,7 @@ yaşanmıştı.{% endcomment %}
                   {% else %}<span class="sonuc bekliyor">{{ mac.saat|default:"&ndash;" }}</span>{% endif %}
                   <b{% if mac.deplasman_kulup_id == puan_takip.kulup_id %} class="bizim"{% endif %}>{{ mac.deplasman|baslikla }}</b>
                 </div>
-                <span class="durum">{% if mac.durum == "sonuc" %}Tamamlandı &middot; {% endif %}{% if mac.tarih_g %}<time datetime="{{ mac.tarih_g|date:"Y-m-d" }}">{{ mac.tarih_g|date:"j F Y, l" }}</time>{% else %}{{ mac.tarih }}{% endif %}{% if mac.durum == "bilgi_yok" %} &middot; <b>güncel bilgi yok</b>{% if t.guncelleme %}, son güncelleme {{ t.guncelleme|date:"j F Y" }}{% endif %}{% elif t.durum != "taze" %} &middot; <b>güncel değil</b>{% if t.guncelleme %}, son güncelleme {{ t.guncelleme|date:"j F Y" }}{% endif %}{% endif %}</span>
+                <span class="durum">{% if mac.durum == "sonuc" %}Tamamlandı &middot; {% endif %}{% if mac.tarih_g %}<time datetime="{{ mac.tarih_g|date:"Y-m-d" }}">{{ mac.tarih_g|date:"j F Y, l" }}</time>{% else %}{{ mac.tarih }}{% endif %}</span>
                 <span class="konum">{{ puan_takip.ad|baslikla }} &middot; {{ puan_takip.sira }}. sıra &middot; {{ puan_takip.puan }} puan &middot; O{{ puan_takip.oynadi }} G{{ puan_takip.galibiyet }} B{{ puan_takip.beraberlik }} M{{ puan_takip.maglubiyet }} &middot; Av {{ puan_takip.averaj }}</span>
               </div>
               {% endwith %}{% endif %}
@@ -568,7 +568,6 @@ yaşanmıştı.{% endcomment %}
               sekmeleri `.sek` öğesinin ANA öğesinde arıyor; sarmalayıcı
               olmasa lig sekmeleri panellerin içindeki grup sekmelerini de
               toplar ve iki sekme kümesi birbirine karışırdı.{% endcomment %}
-              {% if puan_ligler and puan.tazelik.durum != "taze" %}<p class="canli-bayat">Puan durumu {{ puan.tazelik.metin }}.</p>{% endif %}
               <div class="lig-sek">
                 <div class="sek" role="tablist" aria-label="Lig seçimi">
                   {% for lig in puan_ligler %}<button type="button" role="tab" id="sek-{{ lig.anahtar }}" aria-selected="{{ lig.acik|yesno:"true,false" }}" aria-controls="puan-{{ lig.anahtar }}" tabindex="{{ lig.acik|yesno:"0,-1" }}">{{ lig.ad|kisa_lig }}</button>{% endfor %}
@@ -663,7 +662,7 @@ yaşanmıştı.{% endcomment %}
            içinde süzülür; liste bayatsa tarihiyle "güncel değil" denir,
            kalan filmlerin vizyon tarihi dağıtımcıda değişmiş olabilir.{% endcomment %}
         <div class="kutu-ic">
-          {% if vizyon and vizyon.tazelik.durum != "taze" %}<p class="canli-bayat">Vizyon takvimi {{ vizyon.tazelik.metin }}; tarihleri sinemadan doğrulayın.</p>{% endif %}
+          
           {% if vizyon_filmler %}
           <div class="vizyon-izgara">
             {% for f in vizyon_filmler %}

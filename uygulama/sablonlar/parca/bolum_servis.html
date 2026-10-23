@@ -53,7 +53,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
       </div>
       <p class="servis-kunye">
         {% include "parca/piyasa_kaynaklari.html" with ks=servis.kaynaklar %}
-        {% with t=servis.doviz.tazelik %}{% if t.guncelleme %}Son güncelleme {% if not t.bugun %}{{ t.guncelleme|date:"j F Y" }} {% endif %}{{ t.guncelleme|date:"H:i" }}{% if t.durum != "taze" %} &middot; <b>güncel değil</b>{% endif %}.{% elif t.durum != "taze" %}<b>Güncel değil.</b>{% endif %}{% endwith %}
+        
       </p>
     </div>
 
@@ -64,7 +64,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
       2026, L1): veri bayatken "7. hafta" yalnız başlıkta duruyor ve lig
       o haftadaymış gibi okunuyordu. Bayatken numaranın yanında "güncel
       değil" yazılır; künyedeki tarihli uyarı aynen durur.{% endcomment %}
-      <span class="tumu">{% if servis.takip.hafta %}{{ servis.takip.hafta }}. hafta{% if servis.takip.tazelik.durum != "taze" %}, <b>güncel değil</b>{% endif %} &middot; {% endif %}<a href="/bursaspor">Tüm tablo &rarr;</a></span>
+      <span class="tumu">{% if servis.takip.hafta %}{{ servis.takip.hafta }}. hafta &middot; {% endif %}<a href="/bursaspor">Tüm tablo &rarr;</a></span>
     </div>
     <div class="kutu-ic">
       <div class="puan-panel">
@@ -85,7 +85,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
             {% else %}<span class="mac-skor bekliyor">{{ mac.saat|default:"&ndash;" }}</span>{% endif %}
             <b{% if mac.deplasman_kulup_id == servis.takip.kulup_id %} class="bizim"{% endif %}>{{ mac.deplasman|baslikla }}</b>
           </div>
-          <span class="mac-zaman">{% if mac.tarih_g %}<time datetime="{{ mac.tarih_g|date:"Y-m-d" }}">{{ mac.tarih_g|date:"j F Y, l" }}</time>{% else %}{{ mac.tarih }}{% endif %}{% if mac.durum == "bilgi_yok" %} &middot; <b>sonuç bilgisi yok</b>{% if t.guncelleme %} (veri {{ t.guncelleme|date:"j F Y" }} tarihli){% endif %}{% elif t.durum != "taze" %} &middot; <b>güncel değil</b>{% if t.guncelleme %} (veri {{ t.guncelleme|date:"j F Y" }} tarihli){% endif %}{% endif %}</span>
+          <span class="mac-zaman">{% if mac.tarih_g %}<time datetime="{{ mac.tarih_g|date:"Y-m-d" }}">{{ mac.tarih_g|date:"j F Y, l" }}</time>{% else %}{{ mac.tarih }}{% endif %}{% if mac.durum == "bilgi_yok" %} &middot; <b>sonuç bilgisi yok</b>{% endif %}</span>
         </div>
         {% endwith %}{% endif %}
 
@@ -111,7 +111,6 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
         {{ servis.takip.ad|baslikla }} &middot; {{ servis.takip.sira }}. sıra &middot; {{ servis.takip.puan }} puan &middot;
         O{{ servis.takip.oynadi }} G{{ servis.takip.galibiyet }} B{{ servis.takip.beraberlik }} M{{ servis.takip.maglubiyet }} &middot;
         {{ servis.takip.attigi }} attı, {{ servis.takip.yedigi }} yedi.
-        {% if servis.takip.tazelik.durum != "taze" %}<b>Tablo {{ servis.takip.tazelik.metin }}.</b>{% endif %}
       </p>
     </div>
 
@@ -142,7 +141,7 @@ kutusu ya da boş çerçeve basılmaz.{% endcomment %}
         {% endfor %}
       </ul>
       <p class="servis-kunye">
-        {% if servis.gun %}{{ servis.gun|date:"j F Y, l" }}{% endif %}{% if servis.pencere %} &middot; nöbet {{ servis.pencere }}{% endif %}.{% if servis.bayat %} <b>Elimizdeki son liste; bugünkü nöbetçi eczaneyi Bursa Eczacı Odası'ndan doğrulayın.</b>{% endif %}
+        {% if servis.pencere %}Nöbet {{ servis.pencere }}.{% endif %}
         {% if servis.kaynak.ad %} Kaynak: {{ servis.kaynak.ad }}.{% endif %}
       </p>
       {% endif %}

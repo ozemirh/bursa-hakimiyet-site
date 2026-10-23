@@ -108,10 +108,12 @@ bkz. parca/kategori_bandi.html.{% endcomment %}
     {% if anasayfa_mi %}<h1 class="gorsel-gizli">Bursa Hakimiyet — Bursa'nın günlük haber gazetesi</h1>
     {% else %}<p class="gorsel-gizli">Bursa Hakimiyet</p>{% endif %}
 
-    {% comment %}SON DAKİKA burada DEĞİL artık (30 Ağustos 2026, §36):
-       bandın altındaki kayan kırmızı şerit kaldırıldı, yerine sayfa
-       raylarında sabit liste kutusu geldi — bkz. parca/son_dakika.html.
-       Şablonun tepesine yeni bir şerit eklemeden önce o kararı oku.{% endcomment %}
+    {% comment %}SON DAKİKA BANDI (23 Ekim 2026, kullanıcı isteği): her
+       sayfanın tepesinde, reklam şeridinin üstünde, dönen TEK başlık.
+       30 Ağustos'ta (§36) kaldırılan KAYAN şerit geri gelmedi — neden
+       farklı olduğu parca/son_dakika_bandi.html başında. Raydaki ve
+       anasayfadaki liste kutusu (parca/son_dakika.html) yerinde duruyor.{% endcomment %}
+    {% include "parca/son_dakika_bandi.html" %}
 
     {% comment %}Ust serit yuvasi `parca/ust_serit.html`de; olcu sozlesmesi ve
        gerekceleri orada. Haber detayi blogu BOSALTIR ve ayni parcayi ana

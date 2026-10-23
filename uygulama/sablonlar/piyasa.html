@@ -36,7 +36,7 @@ Tema: ekonomi (`temalar.piyasa_temasi`).{% endcomment %}
           <span class="tumu">{{ enstruman.tam_ad }}</span>
         </div>
         <div class="kutu-ic">
-          {% with t=veri.tazelik %}{% if bayat %}<p class="piyasa-bayat"><b>GÜNCEL DEĞİL.</b> {% if t.guncelleme %}Bu sayfadaki veri <time datetime="{{ t.guncelleme|date:'c' }}">{{ t.guncelleme|date:"j F Y, H:i" }}</time> tarihli; o günden beri tazelenmedi. Aşağıdaki rakamlar elimizdeki son veridir.{% else %}Verinin güncelleme zamanı bilinmiyor.{% endif %}</p>{% endif %}{% endwith %}
+          
 
           {% if not veri.var %}
           {% comment %}Dosya ya da kalem yok: sayfa 200 döner (görünümde
@@ -47,17 +47,17 @@ Tema: ekonomi (`temalar.piyasa_temasi`).{% endcomment %}
           {% else %}
           <p class="piyasa-son"><span class="gorsel-gizli">{{ enstruman.ad }}: </span><data class="rakam" value="{{ veri.deger|stringformat:'s' }}">{{ veri.deger_metni }}</data> <span class="birim">{{ veri.birim_isareti }}</span></p>
           {% if veri.degisim %}{% with d=veri.degisim %}<p class="piyasa-fark{% if d.yon == 'yukari' %} artiyor{% elif d.yon == 'asagi' %} azaliyor{% endif %}"><span aria-hidden="true">{% if d.yon == 'yukari' %}&#9650;{% elif d.yon == 'asagi' %}&#9660;{% else %}&ndash;{% endif %}</span> %{{ d.yuzde|floatformat:2 }}{% if d.tutar %} ({{ d.isaret }}{{ d.tutar }} {{ veri.birim_isareti }}){% endif %}<span class="gorsel-gizli"> {{ d.fiil }}</span> <span class="neye">{{ veri.son.degisim_neye }}</span></p>{% endwith %}{% endif %}
-          <p class="piyasa-damga">Kaynak: <b>{{ veri.son.kaynak }}</b>{% if veri.son.zaman %} &middot; <time datetime="{{ veri.son.zaman|date:'c' }}">{{ veri.son.zaman|date:"j F Y, H:i:s" }}</time>{% elif veri.son.gun %} &middot; <time datetime="{{ veri.son.gun|date:'Y-m-d' }}">{{ veri.son.gun|date:"j F Y" }}</time>{% endif %}{% if veri.son.zaman_metni %} &middot; {{ veri.son.zaman_metni }}{% endif %}</p>
+          <p class="piyasa-damga">Kaynak: <b>{{ veri.son.kaynak }}</b>{% if veri.son.zaman_metni %} &middot; {{ veri.son.zaman_metni }}{% endif %}</p>
           {% if veri.son.uyari %}<p class="piyasa-bayat">{{ veri.son.uyari }}</p>{% endif %}
 
           {% if veri.tcmb or veri.resmi_kapanis %}
           <dl class="piyasa-dokum">
             {% if veri.tcmb %}{% with b=veri.tcmb %}
-            <div><dt>TCMB döviz alış</dt><dd><span class="rakam">{{ b.alis }} {{ veri.birim_isareti }}</span><span class="kaynak">TCMB bülteni{% if b.gun %} <time datetime="{{ b.gun|date:'Y-m-d' }}">{{ b.gun|date:"j F Y" }}</time>{% endif %}{% if b.no %} &middot; {{ b.no }}{% endif %}</span></dd></div>
-            <div><dt>TCMB döviz satış</dt><dd><span class="rakam">{{ b.satis }} {{ veri.birim_isareti }}</span><span class="kaynak">TCMB bülteni{% if b.gun %} <time datetime="{{ b.gun|date:'Y-m-d' }}">{{ b.gun|date:"j F Y" }}</time>{% endif %}{% if b.no %} &middot; {{ b.no }}{% endif %}</span></dd></div>
+            <div><dt>TCMB döviz alış</dt><dd><span class="rakam">{{ b.alis }} {{ veri.birim_isareti }}</span><span class="kaynak">TCMB bülteni{% if b.no %} &middot; {{ b.no }}{% endif %}</span></dd></div>
+            <div><dt>TCMB döviz satış</dt><dd><span class="rakam">{{ b.satis }} {{ veri.birim_isareti }}</span><span class="kaynak">TCMB bülteni{% if b.no %} &middot; {{ b.no }}{% endif %}</span></dd></div>
             {% endwith %}{% endif %}
             {% if veri.resmi_kapanis %}{% with r=veri.resmi_kapanis %}
-            <div><dt>Resmî kapanış</dt><dd><span class="rakam">{{ r.deger_metni }} {{ veri.birim_isareti }}</span><span class="kaynak">{{ r.kaynak }}, Borsa İstanbul Kıymetli Madenler Piyasası &middot; <time datetime="{{ r.gun|date:'Y-m-d' }}">{{ r.gun|date:"j F Y" }}</time></span></dd></div>
+            <div><dt>Resmî kapanış</dt><dd><span class="rakam">{{ r.deger_metni }} {{ veri.birim_isareti }}</span><span class="kaynak">{{ r.kaynak }}, Borsa İstanbul Kıymetli Madenler Piyasası</span></dd></div>
             {% endwith %}{% endif %}
           </dl>
           {% endif %}
@@ -85,7 +85,7 @@ Tema: ekonomi (`temalar.piyasa_temasi`).{% endcomment %}
               <button type="submit">Çevir</button>
             </form>
             <p class="cevirici-sonuc{% if cevirici.hata %} hata{% endif %}" id="cevirici-sonuc" role="status">{% if cevirici.hata %}{{ cevirici.hata }}{% elif cevirici.metin %}<b>{{ cevirici.metin }}</b>{% endif %}</p>
-            <p class="servis-kunye">Çevirici sayfadaki son değeri ({{ veri.deger_metni }} {{ veri.birim_isareti }}, {{ veri.son.kaynak }}{% if veri.son.zaman %}, {{ veri.son.zaman|date:"j F Y H:i" }}{% elif veri.son.gun %}, {{ veri.son.gun|date:"j F Y" }}{% endif %}) kullanır{% if bayat %}; bu değer güncel değil{% endif %}. Sonuç bilgi amaçlıdır.</p>
+            <p class="servis-kunye">Çevirici sayfadaki son değeri ({{ veri.deger_metni }} {{ veri.birim_isareti }}, {{ veri.son.kaynak }}) kullanır. Sonuç bilgi amaçlıdır.</p>
           </div>
         </section>
         {% endif %}
@@ -144,7 +144,7 @@ Tema: ekonomi (`temalar.piyasa_temasi`).{% endcomment %}
         <div class="kutu-bas"><h2 id="piyasa-haber-baslik">EKONOMİDEN SON HABERLER</h2><span class="tumu"><a href="/ekonomi">Ekonomi &rarr;</a></span></div>
         <div class="kutu-ic">
           <ol class="bursa-cetvel">
-            {% for h in haberler %}<li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|date:"j M Y" }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>{% if h.ilce %}<span class="bolum-ad">{{ h.ilce.ad|baslikla }}</span>{% else %}<span></span>{% endif %}</li>
+            {% for h in haberler %}<li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|kisa_zaman }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>{% if h.ilce %}<span class="bolum-ad">{{ h.ilce.ad|baslikla }}</span>{% else %}<span></span>{% endif %}</li>
             {% endfor %}
           </ol>
         </div>

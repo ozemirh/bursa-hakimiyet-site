@@ -30,7 +30,7 @@ bilerek silinmedi.{% endcomment %}
       <span class="tumu">{% if servis.kaynaklar.adlar %}{{ servis.kaynaklar.adlar|join:" · " }} &middot; {% endif %}<a href="/veri-kaynaklari">Veri kaynakları &rarr;</a></span>
     </div>
     <div class="kutu-ic">
-      {% if d.bayat %}<p class="piyasa-bayat"><b>GÜNCEL DEĞİL.</b> Bu tablo {% if d.guncelleme %}{{ d.guncelleme|iso_tarih|date:"j F Y" }}, {{ d.guncelleme|slice:"11:16" }} tarihli; veri o günden beri tazelenmedi.{% else %}son güncelleme zamanını taşımıyor.{% endif %}</p>{% endif %}
+      
       <div class="cetvel-sar" role="region" tabindex="0" aria-label="Piyasa cetveli">
       <table class="cetvel">
         <caption class="gorsel-gizli">Piyasa: son değer, değişim, alış ve satış; her sütunun kaynağı tablonun altında</caption>
@@ -49,8 +49,7 @@ bilerek silinmedi.{% endcomment %}
       </table>
       </div>
       <p class="servis-kunye">{% include "parca/piyasa_kaynaklari.html" with ks=servis.kaynaklar %}
-        Yeşil &#9650; yükseliş, kırmızı &#9660; düşüş, gri değişmedi.
-        {% if d.guncelleme %}Son güncelleme {{ d.guncelleme|iso_tarih|date:"j F Y" }} {{ d.guncelleme|slice:"11:16" }}.{% endif %}</p>
+        Yeşil &#9650; yükseliş, kırmızı &#9660; düşüş, gri değişmedi.</p>
     </div>
   </section>
   {% endwith %}{% endif %}
@@ -60,7 +59,7 @@ bilerek silinmedi.{% endcomment %}
     <div class="kutu-bas hafif"><h2 id="bursa-eko-bas">BURSA EKONOMİSİ</h2></div>
     <div class="kutu-ic">
       <ol class="bursa-cetvel">
-        {% for h in bursa_listesi %}<li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|date:"j M Y" }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>{% if h.ilce %}<span class="bolum-ad">{{ h.ilce.ad|baslikla }}</span>{% else %}<span></span>{% endif %}</li>
+        {% for h in bursa_listesi %}<li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|kisa_zaman }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>{% if h.ilce %}<span class="bolum-ad">{{ h.ilce.ad|baslikla }}</span>{% else %}<span></span>{% endif %}</li>
         {% endfor %}
       </ol>
       <details class="yer-not secim-kurali"><summary>Bu liste nasıl seçildi?</summary><p>Ekonomi bölümünden, başlığında Bursa ya da BTSO geçen veya bir ilçeye bağlı en yeni haberler.</p></details>

@@ -154,6 +154,11 @@ def son_dakika_bandi() -> SonDakikaBandi:
 #: detay, köşe yazısı) bir sorgu daha açıyordu; tablo çoğu zaman BOŞ.
 SON_DAKIKA_ANAHTARI = "bh:son-dakika-kayitlari:v1"
 SON_DAKIKA_TAZE_SANIYE = 30
+#: Masa boşken bandın düştüğü "son haberler" listesi — aynı süre, aynı
+#: anında silinme (`sinyaller._surum`: haber kaydı yayın sürümünü artırır).
+#: 23 Ekim 2026: bant her sayfanın tepesine çıktı; önbelleksiz kalsaydı
+#: ısınmış kabukta bile her sayfa bir sorgu daha açardı.
+SON_HABER_ANAHTARI = "bh:son-haberler-bandi:v1"
 
 
 def _masa_kalemleri() -> list:
@@ -188,25 +193,37 @@ def _son_dakika_kur() -> tuple:
        dolmamış), sıra alanı ve başlangıçla. Bağlı haber yayından
        çekildiyse ve serbest adres yoksa satır düşer — okur 404'e
        gönderilmez. Etiket **SON DAKİKA**, "CANLI" pili yanar.
-    2. Tablo boşsa son haberler — ama etiket **SON HABERLER** ve pil
-       yok: masanın vermediği "son dakika" kararını site vermez.
+    2. Tablo boşsa son haberler. Etiket yine **SON DAKİKA** (23 Ekim 2026,
+       kullanıcı kararı: "son dakika kalsın hep, son haberler olmasın");
+       ama "CANLI" pili ve nabız noktası YANMAZ — onlar yalnız masanın
+       kaydına aittir.
        Nöbetçi eczane servis haberi (§41) bu listeye GİRMEZ; günlük
        otomatik kayıt bant için gürültü. Python'da elenir: `slug LIKE`
        koşulu SQLite'ta indeks sırasını bozabiliyor (sayımı 2,7 sn
        ölçüldü); servis haberi günde bir tane, iki fazla satır yeter.
+       30 sn önbellekte (`SON_HABER_ANAHTARI`), haber kaydında düşer.
     """
-    from .anasayfa_dizilimi import servis_haberi_mi
-
     kalemler = _masa_kalemleri()
     if kalemler:
         return kalemler, "SON DAKİKA", True
+    return _son_haber_kalemleri(), "SON DAKİKA", False
+
+
+def _son_haber_kalemleri() -> list:
+    return onbellek.hesapla(SON_HABER_ANAHTARI, _son_haber_kalemleri_kur,
+                            taze=SON_DAKIKA_TAZE_SANIYE, bayat=SON_DAKIKA_TAZE_SANIYE,
+                            hata=5, yedek=list)
+
+
+def _son_haber_kalemleri_kur() -> list:
+    from .anasayfa_dizilimi import servis_haberi_mi
 
     # Adres slug'ı süreç içi eşlemeden (`slug_eslemesi`): kategori
     # birleştirmesine gerek yok.
     haberler = [h for h in Haber.yayindakiler()[:SON_DAKIKA_ADET + 2]
                 if not servis_haberi_mi(h)]
-    return ([BantKalemi(h.baslik, h.get_absolute_url(), h.yayin_zamani)
-             for h in haberler[:SON_DAKIKA_ADET]], "SON HABERLER", False)
+    return [BantKalemi(h.baslik, h.get_absolute_url(), h.yayin_zamani)
+            for h in haberler[:SON_DAKIKA_ADET]]
 
 
 def site(request):

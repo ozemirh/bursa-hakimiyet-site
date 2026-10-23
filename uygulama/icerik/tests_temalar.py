@@ -265,8 +265,11 @@ class TemaSayfalari(TestCase):
         bolum = metin.split("BURSA EKONOMİSİ", 1)[1].split("</section>", 1)[0]
         self.assertNotIn("Faiz kararı", bolum)
         self.assertIn("BTSO ihracat rakamlarını açıkladı", bolum)
-        # Sayfada zaten basılan haber listede tekrar etmez.
-        self.assertEqual(metin.count("Bursa&#x27;da fabrika açıldı"), 1)
+        # Sayfada zaten basılan haber listede tekrar etmez. Sayım `<main>`
+        # içinde: tepedeki son dakika bandı (23 Ekim 2026) aynı başlığı
+        # kendi kalemi olarak da basabilir.
+        ana = metin.split("<main", 1)[1].split("</main>", 1)[0]
+        self.assertEqual(ana.count("Bursa&#x27;da fabrika açıldı"), 1)
         self.assertNotIn("fabrika", bolum)
         self.assertIn("başlığında Bursa ya da BTSO geçen", bolum)
 

@@ -232,7 +232,10 @@ class ZamanSiniri(TestCase):
             yanit = self.client.get("/ara", {"q": "ışık"})
         self.assertEqual(yanit.status_code, 200)
         self.assertContains(yanit, "zaman sınırını aştı")
-        self.assertNotContains(yanit, "Işıklar yandı")
+        # Yalnız sonuç alanı: sayfa tepesindeki son dakika bandı (23 Ekim
+        # 2026) en yeni haberleri her sayfada basıyor.
+        ana = yanit.content.decode().split('<main', 1)[1].split('</main>', 1)[0]
+        self.assertNotIn("Işıklar yandı", ana)
 
 
 class PanelHaberAra(TestCase):

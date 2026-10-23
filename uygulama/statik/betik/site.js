@@ -127,6 +127,69 @@
   }
   dizi('.slayt-kap').forEach(slaytKur);
 
+  /* ---- son dakika bandı: tek başlık, 6 sn'de bir aşağı doğru döner ----
+     23 Ekim 2026. Fare üstündeyken ve odak içerideyken durur. Okur ‹ ›
+     ile elle gezinince otomatik geçiş o sayfada KAPANIR — hareketi
+     durdurmanın yolu bu (WCAG 2.2.2). Hareket azaltan okurda hiç dönmez;
+     düğmeler JavaScript varken görünür (`hidden` kalkar). */
+  function bantKur(kok){
+    var kalemler = dizi('.sd-bant-liste li', kok);
+    var toplam = kalemler.length;
+    var dugmeler = kok.querySelector('.sd-bant-dugmeler');
+    var aktif = 0;
+    var sayac = null;
+    var elle = false;
+
+    if(toplam < 2){ return; }
+
+    function goster(i){
+      var yeni = ((i % toplam) + toplam) % toplam;
+      if(yeni === aktif){ return; }
+      var eski = kalemler[aktif];
+      eski.removeAttribute('data-aktif');
+      eski.setAttribute('data-cikan', 'true');
+      // Çıkan kalem aşağıda gizlenince eski yerine (üste) döner; görünmezken.
+      window.setTimeout(function(){ eski.removeAttribute('data-cikan'); }, 550);
+      kalemler[yeni].removeAttribute('data-cikan');
+      kalemler[yeni].setAttribute('data-aktif', 'true');
+      aktif = yeni;
+    }
+
+    function otoIstendi(){ return !elle && !azalt.matches && !document.hidden; }
+    function sayacDur(){ if(sayac){ window.clearInterval(sayac); sayac = null; } }
+    function sayacBaslat(){
+      sayacDur();
+      if(!otoIstendi()){ return; }
+      sayac = window.setInterval(function(){ goster(aktif + 1); }, 6000);
+    }
+
+    if(dugmeler){
+      dugmeler.hidden = false;
+      dizi('.sd-bant-ok', dugmeler).forEach(function(b){
+        b.addEventListener('click', function(){
+          elle = true;
+          sayacDur();
+          goster(aktif + (b.classList.contains('geri') ? -1 : 1));
+        });
+      });
+    }
+
+    kok.addEventListener('mouseenter', sayacDur);
+    kok.addEventListener('focusin', sayacDur);
+    kok.addEventListener('mouseleave', sayacBaslat);
+    kok.addEventListener('focusout', function(e){
+      if(!kok.contains(e.relatedTarget)){ sayacBaslat(); }
+    });
+    // Arka plandaki sekmede dönmesin; okur döndüğünde kaldığı yerden.
+    document.addEventListener('visibilitychange', function(){
+      if(document.hidden){ sayacDur(); } else { sayacBaslat(); }
+    });
+    if(azalt.addEventListener){ azalt.addEventListener('change', sayacBaslat); }
+
+    sayacBaslat();
+  }
+  dizi('[data-sd-bant]').forEach(bantKur);
+
   /* ---- reklam anahtarı: sunum aracı, okur özelliği değil ----
      Düğme yalnız geliştirme/panel oturumunda ÇİZİLİYOR (icerik/baglam.py);
      burada da varlığı denetleniyor, yoksa betik sessizce geçiyor.

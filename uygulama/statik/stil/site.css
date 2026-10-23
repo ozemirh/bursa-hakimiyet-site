@@ -2523,7 +2523,8 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 
    Zaman sabit sütunda: başlık sarınca damganın altına kaymaz, göz sütunu
    dikey tarayabilir. 78 px `goreli_zaman`ın en uzun çıktısına göre —
-   "31 Eki 2025" (başka yıla ait arşiv kaydı). */
+   "23 saat önce". 24 saatten eski kalemde damga yok (23 Ekim 2026,
+   tarih basılmıyor); `zamansiz` kalemde başlık tek sütunda tam genişlik. */
 .sondakika-liste{list-style:none;display:grid;grid-template-columns:minmax(0,1fr)}
 .sondakika-liste li{position:relative;display:grid;
   grid-template-columns:78px minmax(0,1fr);gap:10px;align-items:baseline;
@@ -2534,6 +2535,7 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
   background:var(--kagit);border:2px solid var(--sd-saat)}
 .sondakika-liste li:first-child::before{background:var(--sd-saat)}
 .sondakika-liste li:last-child{border-bottom:0}
+.sondakika-liste li.zamansiz{grid-template-columns:minmax(0,1fr)}
 .sondakika-liste time{font-family:var(--display);font-weight:700;font-size:12px;
   color:var(--sd-saat);letter-spacing:.2px;white-space:nowrap;
   font-variant-numeric:tabular-nums}
@@ -2571,39 +2573,12 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 .sondakika:not(.genis) .sondakika-manset .baslik{font-size:16.5px;
   line-height:1.18}
 
-/* --- SON DAKİKA satırı: liste + 300x250 pano (30 Ağustos 2026, §37) --
-   Manşetin hemen altında, iki sütun. Sağ sütun panonun kendi ölçüsü olan
-   300 px; sol sütun kalan genişliği alıyor.
-
-   Kutu panoyla AYNI BOYA çekiliyor (`align-items:stretch`): 6 kalem iki
-   sütunda ~180 px sürüyor, panonun 250 px'i yanında beyaz kutunun altında
-   70 px'lik boşluk kalırdı. Liste esneyen gövdede dikeyde ortalanıyor.
-
-   Dar ekranda (≤1000) tek sütuna iner ve pano listenin ALTINA geçer:
-   300 px sabit sütun 360 px'lik ekranda listeye 40 px bırakırdı. */
-/* SÜTUNLAR MANŞET ALANIYLA AYNI (30 Ağustos 2026, kullanıcı isteği:
-   "son dakika panelini manşet alanının genişliğiyle aynı yap, aradaki
-   boşluklar eşleşsin"). Ölçü `.manset-alani`den kopyalanır — 320 px sağ
-   sütun, 18 px boşluk — ve 1140 px'te onunla BİRLİKTE 300 px'e iner.
-   Panel manşetin tam altında durduğu için sütun kenarları üst üste
-   binmezse göz kaymayı hemen görüyor.
-   Bu iki değer değişirse `.manset-alani` ile birlikte değiştir. */
-.sondakika-satir{display:grid;grid-template-columns:minmax(0,1fr) 320px;
-  gap:18px;align-items:stretch;margin-bottom:16px}
-.sondakika-satir .reklam{margin-bottom:0;align-self:start}
-.sondakika-satir .sondakika{display:flex;flex-direction:column;margin-bottom:0}
-/* Kutu panoyla aynı boya çekilince artan yer LİSTEYE veriliyor ve satırlar
-   dikeyde ortalanıyor (`align-content`); şerit kendi yüksekliğinde kalır. */
-.sondakika-satir .kutu-ic{flex:1;display:flex;flex-direction:column}
-.sondakika-satir .sondakika-liste{width:100%;flex:1;align-content:center}
-/* Manşet alanı 1140 px'te sağ sütunu 320 -> 300 px'e indiriyor; satır onunla
-   BİRLİKTE inmeli. Kural burada, çünkü `.manset-alani`nin 1140 bloğu dosyada
-   çok önce geçiyor ve satırın taban kuralı onu eziyordu (ölçüldü: 1082 px'te
-   sütun kenarları 20 px kayıyordu). */
-@media(max-width:1140px){
-  .sondakika-satir{grid-template-columns:minmax(0,1fr) 300px}
-}
-/* İki sütun: tek sütunda kalemler 320 px'lik bir merdiven olurdu.
+/* `.sondakika-satir` (SON DAKİKA kutusu + "Manşet altı1" 300x250, §37)
+   23 Ekim 2026'da anasayfadan kalktı — önce kutu, aynı gün yuva da
+   (kullanıcı kararları). Kalemler tepedeki bantta.
+   `.genis` (iki sütunlu liste) bugün HİÇBİR sayfada çizilmiyor: tek
+   kullanıcısı anasayfaydı. Parça bayrağı hâlâ tanıyor; kurallar duruyor.
+   İki sütun: tek sütunda kalemler 320 px'lik bir merdiven olurdu.
    Şerit manşeti bir kalemi yukarı aldığı için listede ALTI kalem kalıyor
    (`SON_DAKIKA_ADET` 7) — iki sütunda üç tam satır. Sayı değişirse
    `:nth-last-child(-n+2)` kuralı yeniden ölçülmeli: ikili sütunda son
@@ -2612,10 +2587,6 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 .sondakika.genis .sondakika-liste{grid-template-columns:repeat(2,minmax(0,1fr));
   gap:0 26px}
 .sondakika.genis .sondakika-liste li:nth-last-child(-n+2){border-bottom:0}
-@media(max-width:1000px){
-  .sondakika-satir{grid-template-columns:minmax(0,1fr)}
-  .sondakika-satir .reklam{margin-bottom:0;justify-self:center;width:300px;max-width:100%}
-}
 @media(max-width:768px){
   .sondakika.genis .sondakika-liste{grid-template-columns:minmax(0,1fr)}
   .sondakika.genis .sondakika-liste li:nth-last-child(-n+2){
@@ -2632,6 +2603,72 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
   .sondakika.genis .sondakika-manset .baslik{font-size:17px;line-height:1.18}
 }
 
+/* --- SON DAKİKA BANDI: sayfa tepesinde dönen tek başlık (23 Ekim 2026) --
+   Gerekçe ve davranış parca/son_dakika_bandi.html başında. Renkler raydaki
+   şeritle AYNI değişkenler (`--sd-plaka`, `--sd-serit`; kontrastlar §44
+   tablosunda: beyaz yazı 16,44:1 ve 6,62:1). Yeni renk yok.
+
+   Başlıklar aynı ızgara hücresinde üst üste (`grid-area:1/1`): bant en uzun
+   kalem kadar yüksek olur, sabit yükseklik gerekmez. Görünmeyen kalem
+   `visibility:hidden` — odaklanmaz, ekran okuyucuya okunmaz. Yeni başlık
+   ÜSTTEN iner (`-100%` → 0), eskisi aşağı çıkar (`data-cikan`, +100%).
+   Etiket her durumda "SON DAKİKA"; nabız noktası yalnız masanın kaydında.
+   JavaScript yoksa yalnız ilk kalem `data-aktif` taşır ve o görünür. */
+.sd-bant{display:flex;align-items:stretch;min-height:46px;margin:10px 0 12px;
+  background:var(--sd-serit);color:var(--kagit);overflow:hidden}
+.sd-bant-plaka{flex:none;display:flex;align-items:center;gap:8px;padding:0 16px;
+  background:var(--sd-plaka);font-family:var(--display);font-weight:900;
+  font-size:14.5px;letter-spacing:1.5px;white-space:nowrap}
+.sd-bant-nokta{width:9px;height:9px;border-radius:50%;background:var(--kirmizi);
+  animation:sd-nabiz 1.6s ease-in-out infinite}
+.sd-bant-liste{flex:1;min-width:0;display:grid;list-style:none;margin:0;padding:0}
+/* Saf kayma, solma yok (23 Ekim 2026, kullanıcı: "aşağı kayma olsun"):
+   yeni başlık üstten iner, eskisi alttan çıkar; ikisi aynı anda görünür,
+   bant kırpar (`overflow:hidden`). */
+.sd-bant-liste li{grid-area:1/1;display:flex;min-width:0;
+  visibility:hidden;transform:translateY(-100%);
+  transition:transform .5s ease-in-out,visibility 0s linear .5s}
+.sd-bant-liste li[data-aktif="true"]{visibility:visible;transform:none;
+  transition:transform .5s ease-in-out,visibility 0s}
+.sd-bant-liste li[data-cikan="true"]{transform:translateY(100%)}
+.sd-bant-liste a{flex:1;min-width:0;display:flex;align-items:center;gap:12px;
+  padding:6px 16px;color:var(--kagit)}
+.sd-bant-liste time{flex:none;font-family:var(--display);font-weight:700;
+  font-size:12px;letter-spacing:.4px;white-space:nowrap}
+.sd-bant-liste .baslik{min-width:0;font-family:var(--display);font-weight:700;
+  font-size:17px;line-height:1.2;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.sd-bant-liste a:hover .baslik{text-decoration:underline}
+.sd-bant-dugmeler:not([hidden]){flex:none;display:flex}
+.sd-bant-ok{width:40px;border:0;border-left:1px solid var(--sd-ayrac);
+  background:transparent;color:var(--kagit);font-family:var(--display);
+  font-size:26px;line-height:1;cursor:pointer}
+.sd-bant-ok:hover{background:var(--sd-plaka)}
+.sd-bant-tumu{flex:none;display:flex;align-items:center;gap:5px;padding:0 16px;
+  border-left:1px solid var(--sd-ayrac);color:var(--kagit);
+  font-family:var(--display);font-weight:700;font-size:11.5px;letter-spacing:1px;
+  white-space:nowrap}
+.sd-bant-tumu:hover{text-decoration:underline}
+/* Kırmızı sahada sitenin kırmızı halkası görünmez; beyaz ve İÇERİDE. */
+.sd-bant a:focus-visible,.sd-bant button:focus-visible{outline:2px solid var(--kagit);
+  outline-offset:-4px}
+@media(prefers-reduced-motion:reduce){
+  .sd-bant-nokta{animation:none}
+  .sd-bant-liste li,.sd-bant-liste li[data-aktif="true"]{transition:none}
+}
+/* Dar ekran: başlık iki satıra sarabilir; zaman damgası, TÜMÜ ve geri oku
+   düşer (360 px'de başlığa ~230 px kalsın). İleri oku elle gezinmenin ve
+   otomatik geçişi durdurmanın yolu olarak kalır. */
+@media(max-width:600px){
+  .sd-bant{min-height:0;margin:8px 0 10px}
+  .sd-bant-plaka{padding:0 10px;gap:6px;font-size:11.5px;letter-spacing:1px}
+  .sd-bant-liste a{padding:7px 10px}
+  .sd-bant-liste time,.sd-bant-tumu,.sd-bant-ok.geri{display:none}
+  .sd-bant-liste .baslik{font-size:14.5px;line-height:1.22;white-space:normal;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .sd-bant-ok{width:38px}
+}
+
 /* --- GÜNÜN MANŞETLERİ listesi (manşet 15 -> 5 + 10) ----------------- */
 /* Başlık 20 Ekim 2026'dan beri `.kutu-bas.hafif` (K4): 11,5 px kırmızı
    yazı + 3 px kırmızı üst çizgi, sayfadaki yedi başlık biçiminden biriydi. */
@@ -2639,7 +2676,7 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 .manset-liste ul{list-style:none;columns:2;column-gap:32px;padding:2px 14px 6px}
 .manset-liste li{display:flex;gap:12px;align-items:baseline;padding:8px 0;
   border-bottom:1px dotted var(--cizgi);break-inside:avoid}
-.manset-liste time{flex:none;width:64px;font-size:11.5px;color:var(--gri);
+.manset-liste time{flex:none;width:38px;font-size:11.5px;color:var(--gri);
   font-variant-numeric:tabular-nums;white-space:nowrap}
 .manset-liste a{font-family:var(--display);font-weight:700;font-size:14px;
   line-height:1.25;letter-spacing:.2px;display:inline-block;padding:3px 0;margin:-3px 0}
@@ -2654,7 +2691,7 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
 .manset-liste.dikey ul{columns:1}
 .manset-liste.dikey li{gap:9px;padding:7px 0}
 .manset-liste.dikey li:last-child{border-bottom:0}
-.manset-liste.dikey time{width:62px;font-size:11px}
+.manset-liste.dikey time{width:34px;font-size:11px}
 .manset-liste.dikey a{font-size:13.5px;line-height:1.3}
 
 /* --- bölüm başlığı: İKİ KADEME (20 Ekim 2026, K4 — kullanıcı kararı) ---
@@ -2743,9 +2780,9 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
      geçmeden ana manşeti göremiyordu (1550 px aşağıdaydı).
      30 Ağustos 2026 (§37): GÜNÜN MANŞETLERİ `.ust-blok`tan çıkıp aşağı
      indi, SON DAKİKA satırı onun yerine girdi. Sıra üç değil ÜÇ KARDEŞ
-     üzerinden yeniden kuruldu — manşet · son dakika · dörtlü. */
+     üzerinden yeniden kuruldu — manşet · son dakika · dörtlü.
+     23 Ekim 2026: son dakika satırı (kutu + pano) kalktı; manşet · dörtlü. */
   .ust-blok .manset-alani{order:1}
-  .ust-blok .sondakika-satir{order:2}
   .ust-blok .dortlu{order:3}
 }
 /* TELEFONDA DÖRTLÜ MANŞETİN HEMEN ALTINDA (20 Ekim 2026, K2 — kullanıcı
@@ -2763,7 +2800,6 @@ footer ul a{display:inline-block;padding:4px 0;min-width:24px}
   .ust-blok .dortlu{order:2}
   .ust-blok .manset-yan .reklam{order:3}
   .ust-blok .mini-slayt{order:4;margin-bottom:16px}
-  .ust-blok .sondakika-satir{order:5}
 }
 @media(max-width:700px){
   .servis-uclu{grid-template-columns:minmax(0,1fr)}

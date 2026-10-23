@@ -152,7 +152,7 @@ class NamazBugununSatiri(KlasorluTest):
         self.assertIsNone(n["bugun"])
         self.assertEqual(n["tazelik"]["durum"], "bayat")
         metin = self.sayfa()
-        self.assertIn("Vakit bilgisi güncel değil.", metin)
+        self.assertIn("Vakit bilgisi şu an alınamıyor.", metin)
         self.assertNotIn("vakit-simdi", metin)
 
     def test_elle_tabloda_bugun_varsa_o_gosterilir(self):
@@ -249,12 +249,14 @@ class HaftaninMaci(KlasorluTest):
         self.assertEqual(durum[7], "bilgi_yok")
         self.assertEqual(durum[12], "bekliyor")
 
-    def test_anasayfa_guncel_bilgi_yok_ve_tarih(self):
+    def test_anasayfa_bilgi_yok_damgasiz(self):
+        """23 Ekim 2026, kullanıcı kararı: bayat veride de tarih/uyarı basılmaz."""
         self.yaz("puan-durumu", DONMUS)
         with mock.patch.object(canli, "bugunun_tarihi", lambda: date(2026, 10, 19)):
             metin = self.sayfa()
-        self.assertIn("güncel bilgi yok", metin)
-        self.assertIn("son güncelleme 12 Eylül 2026", metin)
+        self.assertIn('aria-label="sonuç bilgisi yok"', metin)
+        self.assertNotIn("güncel bilgi yok", metin)
+        self.assertNotIn("son güncelleme", metin)
         self.assertNotIn('<span class="sonuc bekliyor">20:00</span>', metin)
 
     def test_bursaspor_sayfasinda_soru_isareti_ve_tarih(self):
@@ -262,7 +264,7 @@ class HaftaninMaci(KlasorluTest):
         with mock.patch.object(canli, "bugunun_tarihi", lambda: date(2026, 10, 19)):
             metin = self.sayfa("/bursaspor")
         self.assertIn('aria-label="sonuç bilgisi yok"', metin)
-        self.assertIn("12 Eylül itibarıyla", metin)
+        self.assertNotIn("itibarıyla", metin)
         self.assertIn("sonuç bilgisi yok", metin)        # servis panelindeki kart
 
 
@@ -281,25 +283,25 @@ class VizyonSuzgeci(KlasorluTest):
         filmler = canli.vizyon_filmleri(v, bugun=date(2026, 10, 19))
         self.assertEqual([f["ad"] for f in filmler], ["Film 2026-10-19", "Film 2026-10-30"])
 
-    def test_bayat_liste_tarihle_isaretlenir(self):
+    def test_bayat_liste_uyarisiz(self):
         ileri = (timezone.localdate() + timedelta(days=11)).isoformat()
         self.yaz("vizyon-takvimi", self._vizyon("2026-09-12T15:12:35+03:00",
                                                 "2026-09-18", ileri))
         metin = self.sayfa()
-        self.assertIn("Vizyon takvimi 12 Eylül 2026, 15:12 tarihli, güncel değil", metin)
+        self.assertNotIn("güncel değil", metin)
         self.assertNotIn("Film 2026-09-18", metin)
         self.assertIn(f"Film {ileri}", metin)
 
     def test_hepsi_gecmisse_son_filmler_gosterilir(self):
         """Kullanıcı kararı (19 Ekim 2026 akşamı): bölüm boş kalmaz; elimizdeki
-        son filmler "vizyona girdi" diye, bayat uyarısının altında durur."""
+        son filmler "vizyona girdi" diye durur. 23 Ekim 2026, kullanıcı kararı: bayat veride de tarih/uyarı basılmaz."""
         self.yaz("vizyon-takvimi", self._vizyon("2026-09-12T15:12:35+03:00",
                                                 "2026-09-11", "2026-09-18"))
         metin = self.sayfa()
         self.assertIn("vizyon-izgara", metin)
         self.assertIn("Film 2026-09-18", metin)
         self.assertIn("vizyona girdi:", metin)
-        self.assertIn("güncel değil", metin)
+        self.assertNotIn("güncel değil", metin)
         self.assertNotIn("Önümüzdeki haftalar için vizyon bilgisi yok.", metin)
         # En yeni vizyon tarihi önde.
         self.assertLess(metin.index("Film 2026-09-18"), metin.index("Film 2026-09-11"))
@@ -327,27 +329,31 @@ def _doviz(guncelleme):
 
 class DovizBandi(KlasorluTest):
 
-    def test_bayat_bant_tarih_ve_guncel_degil(self):
+    def test_bayat_bantta_da_damga_yok(self):
+        """23 Ekim 2026, kullanıcı kararı: bayat veride de tarih/uyarı basılmaz."""
         self.yaz("doviz", _doviz("2026-09-12T21:57:07+03:00"))
         metin = self.sayfa()
-        self.assertIn("12 Eylül 21:57</time> · güncel değil", metin)
+        self.assertIn("doviz-ic", metin)
+        self.assertNotIn("güncel değil", metin)
+        self.assertNotIn('<span class="tarih">', metin)
 
-    def test_taze_bantta_yalniz_saat(self):
+    def test_taze_bantta_damga_yok(self):
+        """23 Ekim 2026, kullanıcı isteği: bantta saat de basılmaz."""
         self.yaz("doviz", _doviz(_damga(3)))
         import re
         metin = self.sayfa()
-        tarih = re.search(r'<span class="tarih">(.*?)</span>', metin, re.S).group(1)
-        self.assertNotIn("güncel değil", tarih)
-        self.assertRegex(re.sub(r"<[^>]+>", "", tarih).strip(), r"^\d\d:\d\d$")
+        self.assertIn("doviz-ic", metin)
+        self.assertIsNone(re.search(r'<span class="tarih">', metin))
 
     def test_yok(self):
         self.assertNotIn("doviz-ic", self.sayfa())
 
-    def test_ekonomi_servis_tarihi(self):
+    def test_ekonomi_bayat_damgasiz(self):
         self.yaz("doviz", _doviz("2026-09-12T21:57:07+03:00"))
         metin = self.sayfa("/ekonomi")
-        self.assertIn("GÜNCEL DEĞİL", metin)
-        self.assertIn("12 Eylül 2026", metin)
+        self.assertIn("piyasa-cetveli", metin)
+        self.assertNotIn("GÜNCEL DEĞİL", metin)
+        self.assertNotIn("12 Eylül 2026", metin)
 
 
 def _hava(guncelleme, kisa="MGM"):
@@ -362,16 +368,15 @@ def _hava(guncelleme, kisa="MGM"):
 
 
 class HavaVeEczane(KlasorluTest):
-    """Davranış aynı kaldı (damga + "tazelenemedi"), kaynak artık sözleşme."""
+    """Kaynak sözleşmedir; damga ve uyarı yok. 23 Ekim 2026, kullanıcı kararı: bayat veride de tarih/uyarı basılmaz."""
 
-    def test_bayat_hava_ust_seritte_tarihiyle(self):
-        """Kullanıcı kararı (19 Ekim 2026 akşamı): şerit boş kalmaz; son
-        ölçüm, günüyle birlikte basılır."""
+    def test_bayat_hava_ust_seritte_damgasiz(self):
+        """Şerit boş kalmaz (19 Ekim 2026); ölçüm damgası 23 Ekim'de kalktı."""
         self.yaz("hava-durumu", _hava("2026-09-12T22:12:11+03:00"))
         metin = self.sayfa()
-        self.assertIn("veri tazelenemedi", metin)
         self.assertIn("Bursa 24°C", metin)
-        self.assertIn("12 Eyl ölçümü", metin)
+        self.assertNotIn("veri tazelenemedi", metin)
+        self.assertNotIn("ölçümü", metin)
 
     def test_taze_hava_ust_seritte(self):
         self.yaz("hava-durumu", _hava(_damga(5)))
@@ -382,7 +387,9 @@ class HavaVeEczane(KlasorluTest):
     def test_elle_girilen_hava_kaynagi_panel(self):
         self.yaz("hava-durumu", _hava(_damga(5), kisa="panel"))
         metin = self.sayfa()
-        self.assertIn("&middot; panel", metin)
+        # Taze ölçümde damga yok (23 Ekim 2026), kaynak adı tek başına kalır.
+        self.assertIn('<p class="hava-damga">Kaynak: panel</p>', metin)
+        self.assertNotIn("ölçümü", metin)
         self.assertIn("Bursa 24°C", metin)
 
     def _eczane(self, guncelleme, kisa="BEO"):
@@ -406,10 +413,12 @@ class HavaVeEczane(KlasorluTest):
                                                   datetime.min.time()))
         return (an + timedelta(minutes=1)).isoformat()
 
-    def test_bayat_eczane_uyarili(self):
+    def test_bayat_eczane_uyarisiz(self):
         self.yaz("nobetci-eczane", self._eczane(self._dun_sabah()))
-        self.assertIn("elimizdeki son liste", self.sayfa())
-        self.assertIn("elimizdeki son liste", self.sayfa("/nobetci-eczane"))
+        for yol in ("/", "/nobetci-eczane"):
+            metin = self.sayfa(yol)
+            self.assertIn("Deneme Eczanesi", metin)
+            self.assertNotIn("elimizdeki son liste", metin)
 
     def test_elle_girilen_taze_eczane_uyarisiz(self):
         self.yaz("nobetci-eczane", self._eczane(_damga(5), kisa="panel"))
@@ -417,10 +426,11 @@ class HavaVeEczane(KlasorluTest):
         self.assertIn("Deneme Eczanesi", metin)
         self.assertNotIn("elimizdeki son liste", metin)
 
-    def test_bolum_servis_panelinde_de_uyari(self):
-        # Eskiden ilçe sayfasında ölçülüyordu (20 Ekim 2026'da kalktı).
+    def test_bolum_servis_panelinde_de_uyarisiz(self):
         self.yaz("nobetci-eczane", self._eczane(self._dun_sabah()))
-        self.assertIn("Elimizdeki son liste", self.sayfa("/saglik"))
+        metin = self.sayfa("/saglik")
+        self.assertIn("Deneme Eczanesi", metin)
+        self.assertNotIn("Elimizdeki son liste", metin)
 
 
 # -- 6. betikler: asgari eşik ve kaynak sağlığı -----------------------------------------

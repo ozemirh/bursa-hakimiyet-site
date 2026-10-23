@@ -260,9 +260,9 @@ class BayrakOnbellegi(Temel):
     def test_son_dakika_kaydi_anasayfayi_aninda_degistirir(self):
         self.haber("Sıradan haber")
         okur = Client()
-        self.assertNotContains(okur.get("/"), "DEPREM UYARISI")
+        self.assertNotContains(okur.get("/"), "Deprem uyarısı")
         SonDakika.objects.create(baslik="Deprem uyarısı", adres="/gundem/x-1")
-        self.assertContains(okur.get("/"), "DEPREM UYARISI")
+        self.assertContains(okur.get("/"), "Deprem uyarısı")
 
 
 # --------------------------------------------------------------------------
@@ -271,26 +271,30 @@ class BayrakOnbellegi(Temel):
 class SonDakikaBandi(Temel):
 
     def _bant(self, yanit):
+        """Sayfa tepesindeki bant (23 Ekim 2026'dan beri anasayfada son
+        dakika YALNIZ orada; kutu kalktı). Bant başlığı büyütmez."""
         metin = yanit.content.decode()
-        bas = metin.index('id="son-dakika"')
-        return metin[bas:metin.index("</ul>", bas)]
+        bas = metin.index('class="sd-bant"')
+        return metin[bas:metin.index("</section>", bas)]
 
     def test_tablodan_beslenir_ve_canli_etiketi(self):
         self.haber("Sıradan son haber")
         SonDakika.objects.create(baslik="Köprüde kaza", adres="/gundem/kopru-1")
         bant = self._bant(self.client.get("/"))
         self.assertIn("SON DAKİKA", bant)
-        self.assertIn("CANLI", bant)
-        self.assertIn("KÖPRÜDE KAZA", bant)
+        self.assertIn("sd-bant-nokta", bant)     # nabız: masanın kaydı
+        self.assertIn("Köprüde kaza", bant)
         self.assertNotIn("Sıradan son haber", bant)
 
     def test_tablo_bosken_son_haberler_etiketi(self):
+        """23 Ekim 2026, kullanıcı kararı: etiket masa boşken de SON DAKİKA;
+        CANLI pili yalnız masanın kaydına aittir."""
         self.haber("En yeni haber")
         bant = self._bant(self.client.get("/"))
-        self.assertIn("SON HABERLER", bant)
-        self.assertNotIn("SON DAKİKA", bant)
-        self.assertNotIn("CANLI", bant)
-        self.assertIn("EN YENİ HABER", bant)
+        self.assertIn("SON DAKİKA", bant)
+        self.assertNotIn("SON HABERLER", bant)
+        self.assertNotIn("sd-bant-nokta", bant)
+        self.assertIn("En yeni haber", bant)
 
     def test_suresi_dolan_ve_pasif_kayit_bantta_yok(self):
         self.haber("Yedek haber")
@@ -302,8 +306,9 @@ class SonDakikaBandi(Temel):
         SonDakika.objects.create(baslik="Gelecek", adres="/c-1",
                                  baslangic=simdi + timedelta(hours=1))
         bant = self._bant(self.client.get("/"))
-        self.assertIn("SON HABERLER", bant)
-        for baslik in ("BİTEN", "KAPALI", "GELECEK"):
+        self.assertNotIn("sd-bant-nokta", bant)   # masa kaydı yok: yedek liste
+        self.assertIn("Yedek haber", bant)
+        for baslik in ("Biten", "Kapalı", "Gelecek"):
             self.assertNotIn(baslik, bant)
 
     def test_yayindan_cekilen_bagli_haber_dusurulur(self):
@@ -312,7 +317,7 @@ class SonDakikaBandi(Temel):
         SonDakika.objects.create(baslik="Çekilen haberin bandı", haber=cekilen)
         SonDakika.objects.create(baslik="Yayındaki haberin bandı", haber=canli)
         bant = self._bant(self.client.get("/"))
-        self.assertNotIn("ÇEKİLEN HABERİN BANDI", bant)
+        self.assertNotIn("Çekilen haberin bandı", bant)
         self.assertIn(canli.get_absolute_url(), bant)
 
     def test_tehlikeli_adres_basilmaz_ve_form_reddeder(self):
@@ -331,7 +336,7 @@ class SonDakikaBandi(Temel):
                    slug="19-ekim-2026-bursa-nobetci-eczaneler")
         bant = self._bant(self.client.get("/"))
         self.assertNotIn("ECZANELER", bant.upper().replace("İ", "I"))
-        self.assertIn("GERÇEK HABER", bant)
+        self.assertIn("Gerçek haber", bant)
 
     def test_haber_detayinin_rayi_da_ayni_bant(self):
         h = self.haber("Detay haberi")

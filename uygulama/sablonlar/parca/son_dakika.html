@@ -21,14 +21,14 @@ kayan yazı okunması en zor kalıptır ve `prefers-reduced-motion` açık olan
 okur yalnız ilk kalemleri görüyordu. Aynı başlık DOM'da bir kez geçer,
 hepsi arama motoruna metin olarak görünür.
 
-`id="son-dakika"` KORUNUYOR: mega menüdeki "Son dakika" bağlantısının
-hedefi bu. Kutu rayda olduğu için ray taşıyan sayfalarda (anasayfa, haber
+`id="son-dakika"` duruyor ama mega menünün hedefi DEĞİL artık: 23 Ekim
+2026'da kutu anasayfadan kalktı, menü `/son-haberler`e gidiyor. Kutu rayda olduğu için ray taşıyan sayfalarda (anasayfa, haber
 detay, köşe yazısı) çizilir.
 
 19 Ekim 2026 (Paket H): kalemler `baglam.son_dakika_bandi`nden gelir —
-masanın `SonDakika` kayıtları varsa onlar ("SON DAKİKA", CANLI pili),
-yoksa son haberler ("SON HABERLER", pil YOK: masanın vermediği "son
-dakika" kararını site vermez). Kalemin üç alanı var: baslik · yol · zaman.{% endcomment %}
+masanın `SonDakika` kayıtları varsa onlar (CANLI pili yanar), yoksa son
+haberler (pil YOK). Etiket iki durumda da "SON DAKİKA" (23 Ekim 2026,
+kullanıcı kararı). Kalemin üç alanı var: baslik · yol · zaman.{% endcomment %}
 {% load site_etiket %}{% comment %}`genis`: anasayfada manşetin altında, reklam
  panosunun yanında iki sütunlu; raylarda (haber detay, köşe yazısı) bayraksız
  ve tek sütun.{% endcomment %}
@@ -39,7 +39,7 @@ dakika" kararını site vermez). Kalemin üç alanı var: baslik · yol · zaman
   <div class="sondakika-serit">
     <span class="sondakika-plaka">
       {% if son_dakika.canli %}<span class="sondakika-canli"><span class="nokta" aria-hidden="true"></span>CANLI</span>{% endif %}
-      <h2>{{ son_dakika.etiket|default:"SON HABERLER" }}</h2>
+      <h2>{{ son_dakika.etiket|default:"SON DAKİKA" }}</h2>
     </span>
     {% with bas=son_dakika.0 %}{% if bas %}
     {% comment %}Başlık BÜYÜK harfe `buyult` ile çevriliyor, CSS
@@ -47,7 +47,7 @@ dakika" kararını site vermez). Kalemin üç alanı var: baslik · yol · zaman
     "I" yapıyor ("İzmir" -> "IZMIR"). Süzgeç i/İ ve ı/I çiftlerini elle
     çevirir.{% endcomment %}
     <a class="sondakika-manset" href="{{ bas.yol }}">
-      <time datetime="{{ bas.zaman|date:'c' }}">{{ bas.zaman|goreli_zaman }}</time>
+      {% with z=bas.zaman|goreli_zaman %}{% if z %}<time datetime="{{ bas.zaman|date:'c' }}">{{ z }}</time>{% endif %}{% endwith %}
       <span class="baslik">{{ bas.baslik|buyult }}</span>
     </a>
     {% endif %}{% endwith %}
@@ -60,14 +60,15 @@ dakika" kararını site vermez). Kalemin üç alanı var: baslik · yol · zaman
     <ul class="sondakika-liste">
       {% comment %}İlk kalem şeritte basıldı, liste ikinciden başlar.
       `goreli_zaman`: 24 saate kadar "14 dk önce" / "3 saat önce", ötesinde
-      tarih. Ham `H:i` yanlıştı — arşivde farklı günlere ait kayıtlar var ve
-      hepsi saat olarak basılınca liste sırasız görünüyordu.{% endcomment %}
-      {% for h in son_dakika|slice:"1:" %}
-      <li>
-        <time datetime="{{ h.zaman|date:'c' }}">{{ h.zaman|goreli_zaman }}</time>
+      BOŞ — tarih basılmaz (23 Ekim 2026, kullanıcı isteği: son haberler
+      zaten o günün haberi). Damgası olmayan kalem `zamansiz` alır, başlık
+      zaman sütununa da yayılır.{% endcomment %}
+      {% for h in son_dakika|slice:"1:" %}{% with z=h.zaman|goreli_zaman %}
+      <li{% if not z %} class="zamansiz"{% endif %}>
+        {% if z %}<time datetime="{{ h.zaman|date:'c' }}">{{ z }}</time>{% endif %}
         <a href="{{ h.yol }}">{{ h.baslik }}</a>
       </li>
-      {% endfor %}
+      {% endwith %}{% endfor %}
     </ul>
   </div>
 </div>

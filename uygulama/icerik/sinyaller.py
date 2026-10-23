@@ -26,12 +26,21 @@ from contextlib import contextmanager
 from django.db.models.signals import post_delete, post_save
 
 
-def _surum(**_):
+#: Son dakika bandının kalemlerini değiştirebilen modeller.
+BANT_MODELLERI = {"Haber", "SonDakika"}
+
+
+def _surum(sender=None, **_):
     from . import baglam, onbellek
     onbellek.surumu_artir()
     # Son dakika bandının masa kayıtları (Paket H): kayıt ya da bağlı
-    # haber değişince bant bir sonraki istekte yeniden kurulur.
-    onbellek.sil(baglam.SON_DAKIKA_ANAHTARI)
+    # haber değişince bant bir sonraki istekte yeniden kurulur. Masa boşken
+    # düşülen "son haberler" listesi de (23 Ekim 2026). Köşe yazısı, konu
+    # vb. kaydı bandı DÜŞÜRMEZ: bant her sayfanın tepesinde ve boşuna
+    # yeniden kurulursa her kayıttan sonra her sayfa iki sorgu fazla açar.
+    if sender is None or sender.__name__ in BANT_MODELLERI:
+        onbellek.sil(baglam.SON_DAKIKA_ANAHTARI)
+        onbellek.sil(baglam.SON_HABER_ANAHTARI)
 
 
 def _kategori_degisti(**_):
