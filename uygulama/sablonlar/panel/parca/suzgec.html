@@ -1,0 +1,22 @@
+{% comment %}Süzgeç şeridi — PANEL-NOTLARI.md §12 "daralt-ve-bul".
+Süzgeçler birleşiktir: hepsi tek GET sorgusunda daraltır. Etiketler ekran
+okuyucuya görünür, gözle görünmez; açılırın ilk seçeneği etiketi tekrar eder
+(mevcut panelde de "Kategori Seç" böyleydi).{% endcomment %}
+<form class="suzgec" method="get" role="search">
+  {% for s in suzgecler %}
+    {% if s.tur == "arama" %}
+      <label class="gorsel-gizli" for="s-{{ s.ad }}">{{ s.etiket }}</label>
+      <input id="s-{{ s.ad }}" type="search" name="{{ s.ad }}" value="{{ s.deger }}" placeholder="{{ s.yer_tutucu }}">
+    {% else %}
+      <label class="gorsel-gizli" for="s-{{ s.ad }}">{{ s.etiket }}</label>
+      <select id="s-{{ s.ad }}" name="{{ s.ad }}">
+        {% if s.bos %}<option value="">{{ s.bos }}</option>{% endif %}
+        {% for deger, ad in s.secenekler %}
+          <option value="{{ deger }}"{% if s.deger == deger|stringformat:"s" %} selected{% endif %}>{{ ad }}</option>
+        {% endfor %}
+      </select>
+    {% endif %}
+  {% endfor %}
+  <button type="submit" class="dugme">Daralt</button>
+  <a class="dugme ufak" href="{% url temiz_adi %}">Temizle</a>
+</form>

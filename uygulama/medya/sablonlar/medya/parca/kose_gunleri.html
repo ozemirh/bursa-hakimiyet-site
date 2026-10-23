@@ -1,0 +1,23 @@
+{% comment %}
+Köşe yazıları akışının gün grupları (21 Ekim 2026, tasarım önerisi §2/§5).
+Hem `/kose-yazilari` sayfası hem `/daha-fazla?kaynak=kose` parçası bunu
+basar; ikisi aynı kaba (`.kose-akis`) çocuk ekliyor.
+
+Neden gün, ay değil: 2026'da günde ortalama 3,9 (en çok 8) yazı çıkıyor,
+20'lik dilim 5–6 güne yayılıyor; ay başlığı ancak her ~5 dilimde bir
+görünürdü. Gazete de günlük çıkıyor. Satırdaki tarih sütunu bu yüzden
+kalktı — tarihi başlık söylüyor.
+
+`gunler` = `KoseYazisi.gunlere_bol(...)`: `[{gun, yazilar, surer}]`.
+`surer`: grup önceki dilimin son gününün devamı; başlığı sayfada zaten
+duruyor, burada yalnız liste gelir. Başlık büyük harfe çevrilmez
+("27 Ağustos 2026, Perşembe"; tasarım önerisinin kararı).
+
+21 Ekim 2026 ikinci tur: liste `.gorus-liste` taban kurallarını artık
+almıyor (yazar sayfasının tarih sütunlu cetveli); satır düzeni tümüyle
+`.kose-gun-liste` kapsamında. Vitrindeki yazılar bu akışa girmez.
+{% endcomment %}{% for g in gunler %}{% if not g.surer %}<h3 class="kose-gun"><time datetime="{{ g.gun|date:'Y-m-d' }}">{{ g.gun|date:'j F Y, l' }}</time></h3>
+{% endif %}<ol class="kose-gun-liste">
+{% for y in g.yazilar %}{% include "medya/parca/kose_satiri.html" with y=y %}
+{% endfor %}</ol>
+{% endfor %}

@@ -43,7 +43,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--yesil-parlak);outli
 .t-toprak{--s1:#A0632F;--s2:#E0AE79;--s3:#6F3C16;--s4:#40210B;--s5:#F7C74E}
 .t-kirmizi{--s1:#A33B42;--s2:#DBA09B;--s3:#7E1720;--s4:#4A0B11;--s5:#F7DCB0}
 .t-gri{--s1:#5F6A62;--s2:#AFB8B1;--s3:#36423B;--s4:#202A24;--s5:#E0A32E}
-.t-mor{--s1:#5C5081;--s2:#B0A5CC;--s3:#392F5A;--s4:#241D3B;--s5:#EBC46A}
+.t-mor{--s1:#5C5081;--s2:#B0A5CC;--s3:#392F5A;--s4:#241D3B;--s5:#EBC46A}.gok{fill:var(--s2)}
 
 header{position:sticky;top:0;z-index:50;background:var(--kagit);border-bottom:1px solid var(--cizgi)}
 header .kapsa{display:flex;align-items:center;gap:26px;height:70px}
@@ -69,7 +69,7 @@ html[data-tema="koyu"] .logo-img{filter:brightness(0) invert(1)}
 .arac.dolu{background:var(--murekkep);color:var(--kagit);border-color:var(--murekkep)}
 .hero-gorsel{aspect-ratio:4/4.3;border-radius:16px}
 
-.ana{display:grid;grid-template-columns:minmax(0,1fr) 316px;gap:52px;padding:36px 0 60px;align-items:start}
+.ana{display:grid;grid-template-columns:minmax(0,1fr) 316px;gap:52px;padding-top:36px;padding-bottom:60px;align-items:start}
 
 .bolum{display:flex;align-items:baseline;gap:14px;margin:0 0 22px}
 .bolum h2{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
@@ -228,13 +228,13 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 
 /* --- haber detay --- */
 .ilerleme{position:fixed;top:0;left:0;height:3px;width:0;background:var(--yesil-parlak);z-index:95}
-.iz{font-family:var(--mono);font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--gri);padding:26px 0 0}
+.iz{font-family:var(--mono);font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--gri);padding-top:26px}
 .iz a:hover{color:var(--yesil)}
 .detay-bas{max-width:830px;padding:18px 0 0}
 .detay-bas h1{font-family:var(--display);font-size:clamp(32px,4.4vw,56px);line-height:1.01;font-weight:800;letter-spacing:-2px}
 .detay-bas .spot{font-family:var(--okuma);font-size:20px;color:var(--gri);margin-top:20px;max-width:60ch}
 .kunye{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:26px;padding:14px 0;border-top:1px solid var(--cizgi);border-bottom:1px solid var(--cizgi);font-family:var(--mono);font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:var(--gri)}
-.detay-ana{display:grid;grid-template-columns:214px minmax(0,690px);gap:52px;justify-content:start;padding:32px 0 56px;align-items:start}
+.detay-ana{display:grid;grid-template-columns:214px minmax(0,690px);gap:52px;justify-content:start;padding-top:32px;padding-bottom:56px;align-items:start}
 .icindekiler{position:sticky;top:96px}
 .icindekiler h2{font-family:var(--display);font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gri);font-weight:700;margin-bottom:12px}
 .icindekiler ol{list-style:none;display:grid;gap:2px}
@@ -357,7 +357,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </defs>
 
 <symbol id="sc-uludag" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <circle cx="312" cy="58" r="26" fill="var(--s5)" opacity=".85"/>
   <path d="M0 250 L0 168 L74 108 L132 152 L186 96 L248 158 L310 118 L400 176 L400 250Z" fill="var(--s3)"/>
   <path d="M186 96 L162 121 L176 128 L196 118 L214 130 L228 118Z" fill="#F2F6F9" opacity=".9"/>
@@ -366,7 +366,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-cami" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <circle cx="330" cy="52" r="22" fill="var(--s5)" opacity=".75"/>
   <rect x="96" y="46" width="12" height="150" fill="var(--s3)"/>
   <path d="M96 46 L102 22 L108 46Z" fill="var(--s3)"/>
@@ -386,7 +386,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-gol" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <circle cx="86" cy="62" r="24" fill="var(--s5)" opacity=".8"/>
   <path d="M0 132 L70 96 L142 128 L226 90 L312 126 L400 100 L400 148 L0 148Z" fill="var(--s3)"/>
   <rect x="0" y="148" width="400" height="34" fill="var(--s4)" opacity=".55"/>
@@ -397,7 +397,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-fabrika" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <circle cx="288" cy="52" r="30" fill="var(--s5)" opacity=".3"/>
   <circle cx="316" cy="42" r="22" fill="var(--s5)" opacity=".25"/>
   <rect x="44" y="96" width="22" height="106" fill="var(--s3)"/>
@@ -414,7 +414,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-adliye" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <path d="M84 92 L200 44 L316 92Z" fill="var(--s3)"/>
   <rect x="84" y="92" width="232" height="12" fill="var(--s4)"/>
   <rect x="102" y="104" width="18" height="88" fill="var(--s3)"/>
@@ -428,7 +428,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-yangin" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <circle cx="238" cy="62" r="46" fill="var(--s3)" opacity=".45"/>
   <circle cx="286" cy="44" r="34" fill="var(--s3)" opacity=".35"/>
   <circle cx="196" cy="40" r="28" fill="var(--s3)" opacity=".3"/>
@@ -438,7 +438,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-baraj" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <path d="M0 250 L0 84 L74 60 L110 250Z" fill="var(--s3)"/>
   <path d="M400 250 L400 84 L326 60 L290 250Z" fill="var(--s3)"/>
   <path d="M110 118 L290 118 L268 250 L132 250Z" fill="var(--s4)"/>
@@ -449,7 +449,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-ulasim" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <rect x="0" y="182" width="400" height="68" fill="var(--s4)"/>
   <path d="M0 200 h400 M0 224 h400" stroke="var(--s1)" stroke-width="3" opacity=".3"/>
   <rect x="70" y="86" width="200" height="98" rx="10" fill="var(--s3)"/>
@@ -462,7 +462,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-muze" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <path d="M150 40 L250 40 L228 96 L172 96Z" fill="var(--s5)" opacity=".2"/>
   <path d="M182 78 h36 l10 18 c16 26 14 62 -10 82 h-36 c-24 -20 -26 -56 -10 -82Z" fill="var(--s3)"/>
   <path d="M178 74 h44 v10 h-44Z" fill="var(--s4)"/>
@@ -473,7 +473,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-saglik" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <rect x="92" y="76" width="216" height="126" fill="var(--s3)"/>
   <rect x="112" y="98" width="26" height="26" fill="var(--s1)" opacity=".6"/>
   <rect x="150" y="98" width="26" height="26" fill="var(--s1)" opacity=".6"/>
@@ -490,7 +490,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 
 <symbol id="sc-spor" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
   <rect width="400" height="250" fill="var(--s3)"/>
-  <rect x="0" y="0" width="400" height="250" fill="url(#gsky)" opacity=".28"/>
+  <rect x="0" y="0" width="400" height="250" class="gok" opacity=".28"/>
   <rect x="24" y="30" width="352" height="190" fill="none" stroke="#fff" stroke-width="3" opacity=".7"/>
   <line x1="200" y1="30" x2="200" y2="220" stroke="#fff" stroke-width="3" opacity=".7"/>
   <circle cx="200" cy="125" r="42" fill="none" stroke="#fff" stroke-width="3" opacity=".7"/>
@@ -500,7 +500,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-tarim" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <circle cx="322" cy="54" r="24" fill="var(--s5)" opacity=".8"/>
   <path d="M0 250 L0 152 L400 128 L400 250Z" fill="var(--s3)"/>
   <path d="M0 178 L400 154 M0 202 L400 178 M0 226 L400 202" stroke="var(--s4)" stroke-width="6" opacity=".55"/>
@@ -511,7 +511,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-market" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <rect x="70" y="70" width="260" height="30" fill="var(--s5)" opacity=".65"/>
   <path d="M70 100 h260 v18 h-260Z" fill="var(--s3)"/>
   <rect x="88" y="130" width="70" height="52" fill="var(--s3)"/>
@@ -523,7 +523,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
 </symbol>
 
 <symbol id="sc-kaza" viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-  <rect width="400" height="250" fill="url(#gsky)"/>
+  <rect width="400" height="250" class="gok"/>
   <path d="M0 250 L0 160 L120 132 L236 166 L400 126 L400 250Z" fill="var(--s3)"/>
   <path d="M150 250 L182 152 L226 152 L268 250Z" fill="var(--s4)"/>
   <path d="M196 168 h16 M192 192 h24 M186 216 h36" stroke="#fff" stroke-width="6" opacity=".8"/>
@@ -770,7 +770,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
       <ul>
         <li>
           <a href="#">
-            <div class="foto t-mavi"><img src="gorseller/kare/baraj.jpg" alt="Baraj gövdesi ve su seviyesi" width="240" height="240" loading="lazy" decoding="async"></div>
+            <div class="foto t-mavi"><img src="gorseller/kare/baraj.jpg" alt="Barajı besleyen dere yatağı" width="240" height="240" loading="lazy" decoding="async"></div>
             <h3>Barajlarda doluluk yüzde 81'e geriledi</h3>
             <span class="yer">Çevre ve su</span>
           </a>
@@ -784,7 +784,7 @@ mark{background:var(--isaret);color:var(--murekkep);border-radius:3px;padding:0 
         </li>
         <li>
           <a href="#">
-            <div class="foto t-kirmizi"><img src="gorseller/kare/orman.jpg" alt="Orman yangınına müdahale" width="240" height="240" loading="lazy" decoding="async"></div>
+            <div class="foto t-kirmizi"><img src="gorseller/kare/itfaiye.jpg" alt="Sokakta duran itfaiye ihbar dolabı" width="240" height="240" loading="lazy" decoding="async"></div>
             <h3>Mudanya'daki yangında soğutma çalışmaları sürüyor</h3>
             <span class="yer">Mudanya</span>
           </a>

@@ -1,0 +1,16 @@
+{% if liste %}
+  <ul class="sira-liste">
+    {% for h in liste %}
+      <li class="is-kart">
+        <span class="ad"><a href="{% url 'panel-haber-duzenle' kimlik=h.pk %}">{{ h.baslik }}</a></span>
+        <span class="kim-not">
+          {{ h.kategori.ad }}
+          {% if h.olusturan %} · {{ h.olusturan.get_full_name|default:h.olusturan.get_username }}{% endif %}
+          {% if h.yayin_zamani %} · {{ h.yayin_zamani|date:"d.m.Y H:i" }}{% endif %}
+        </span>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="alt-not">{{ bos_metin }}</p>
+{% endif %}

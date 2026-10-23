@@ -1,0 +1,13 @@
+# /etc/systemd/system/bh-canli-gunluk.timer — namaz + puan + vizyon, günde bir.
+# 05:10: imsaktan önce namaz vakitleri tazelenmiş olsun. YALNIZ DOSYA.
+
+[Unit]
+Description=Bursa Hakimiyet canli veri - gunluk
+
+[Timer]
+OnCalendar=*-*-* 05:10:00 Europe/Istanbul
+Persistent=true
+Unit=bh-canli@gunluk.service
+
+[Install]
+WantedBy=timers.target

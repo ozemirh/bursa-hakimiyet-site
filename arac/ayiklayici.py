@@ -10,13 +10,10 @@ Disari verdigi sozluk `haber_taslak.py` tarafindan kullanilir.
 
 from __future__ import annotations
 
-import gzip
 import io
 import json
 import re
-import urllib.error
 import urllib.parse
-import urllib.request
 from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
@@ -133,19 +130,48 @@ class _Toplayici(HTMLParser):
 
 # -- ag ---------------------------------------------------------------
 
-def getir(url: str, zaman_asimi: int = 30) -> str:
-    """Sayfayi indirir ve metin olarak dondurur."""
-    istek = urllib.request.Request(url, headers={
-        "User-Agent": TARAYICI,
-        "Accept": "text/html,application/xhtml+xml",
-        "Accept-Language": "tr,en;q=0.8",
-        "Accept-Encoding": "gzip",
-    })
-    with urllib.request.urlopen(istek, timeout=zaman_asimi) as yanit:
-        ham = yanit.read()
-        if yanit.headers.get("Content-Encoding") == "gzip":
-            ham = gzip.decompress(ham)
-        tur = yanit.headers.get_content_charset()
+_KAPI = None
+
+
+def guvenli_kapi():
+    """Disari istegin TEK kapisi: `uygulama/icerik/dis_istek.py`.
+
+    19 Ekim 2026 (Paket F): bu islev eskiden `urllib.request.urlopen` ile
+    her adrese gidiyordu — ic ag, 127.0.0.1, 169.254.169.254 (bulut ust
+    verisi) aciktı, boyut siniri yoktu, yonlendirme denetimsiz izleniyordu.
+    Kapi standart kutuphaneyle yazildi ve Django istemez; arac onu dosya
+    yolundan yukler. Dosya yoksa istek YAPILMAZ (kapali kalir).
+    """
+    global _KAPI
+    if _KAPI is None:
+        import importlib.util
+        yol = (Path(__file__).resolve().parent.parent / "uygulama" / "icerik"
+               / "dis_istek.py")
+        if not yol.exists():
+            raise RuntimeError("Guvenli istek kapisi bulunamadi; istek yapilmadi.")
+        tanim = importlib.util.spec_from_file_location("bh_dis_istek", yol)
+        modul = importlib.util.module_from_spec(tanim)
+        # `dataclass` modülü sys.modules'ta arar; kayıt yürütmeden ÖNCE.
+        import sys
+        sys.modules["bh_dis_istek"] = modul
+        tanim.loader.exec_module(modul)
+        _KAPI = modul
+    return _KAPI
+
+
+def getir(url: str, zaman_asimi: int = 20) -> str:
+    """Sayfayi guvenli kapidan indirir ve metin olarak dondurur.
+
+    Yalniz http(s); DNS cozumunden sonra ozel/yerel adresler reddedilir,
+    yonlendirme basina yeniden denetlenir, 5 MB sinir (gzip acilmis hal
+    dahil). Hata `DisIstekHatasi` olarak yukselir; metni ic ayrinti tasimaz.
+    """
+    kapi = guvenli_kapi()
+    yanit = kapi.getir(url, en_cok_bayt=kapi.HTML_SINIRI,
+                       kabul="text/html,application/xhtml+xml",
+                       zaman_asimi=zaman_asimi)
+    tur = yanit.karakter_kumesi
+    ham = yanit.govde
     for kodlama in filter(None, [tur, "utf-8", "windows-1254", "latin-1"]):
         try:
             return ham.decode(kodlama)
@@ -190,9 +216,18 @@ def _jsonld_haber(bloklar: list[str]) -> dict:
 
 
 def _duz(deger) -> str:
-    """JSON-LD alanlarindaki degisken sekilleri tek bir metne indirger."""
+    """JSON-LD alanlarindaki degisken sekilleri tek bir metne indirger.
+
+    VARLIK KACISLARI BURADA COZULUYOR (5 Eylul 2026). JSON-LD bir <script>
+    blogunun icinde durur ve HTMLParser script govdesini CDATA sayip
+    `convert_charrefs`i kapatir -- yani meta etiketlerinden gelen deger
+    cozulmusken JSON-LD'den gelen deger HAM kalir. Olculdu: olay.com.tr
+    basligi `OECD&#039;den Turkiye&#039;nin...` diye geliyordu ve panelde
+    de oyle gorunuyordu. Tek gecis yapiliyor; cift kodlanmis metni ikinci
+    kez cozmek `&amp;lt;` gibi bilerek yazilmis metni bozardi.
+    """
     if isinstance(deger, str):
-        return deger.strip()
+        return unescape(deger).strip()
     if isinstance(deger, dict):
         for anahtar in ("name", "url", "@id", "contentUrl", "headline"):
             if deger.get(anahtar):
@@ -240,6 +275,25 @@ def _gorsel_adayi(deger) -> str:
     if not d or "#" in d:          # "...html#primaryimage" gibi @id degerleri
         return ""
     return d if re.search(r"\.(jpe?g|png|webp|avif|gif)(\?|$)", d, re.I) else ""
+
+
+def _yayin_kuyrugu_at(baslik: str, kaynak_adi: str, alan: str) -> str:
+    """Basligin sonundaki YAYIN ADINI atar.
+
+    JSON-LD `headline` alani cogu sitede sayfa <title>'inin kopyasidir ve
+    yayin adini tasir: "...destek - Olay Gazetesi Bursa". <title> yolunda
+    bu kuyruk zaten kesiliyordu, JSON-LD yolunda kesilmiyordu.
+
+    Ayiriciya bakip korlemesine kesmek yanlis olurdu -- haber basliginda
+    tire bulunabilir ("Bursa - Ankara hatti"). Bu yuzden kuyruk yalnizca
+    YAYIN ADIYLA ya da ALAN ADIYLA eslesiyorsa kesiliyor.
+    """
+    for ad in filter(None, (kaynak_adi, alan)):
+        yeni = re.sub(r"\s*[|\-–—:·]\s*" + re.escape(ad) + r"\s*$", "",
+                      baslik, flags=re.IGNORECASE)
+        if yeni.strip() and yeni != baslik:
+            return yeni.strip()
+    return baslik
 
 
 def _etiketsiz(metin: str) -> str:
@@ -329,14 +383,26 @@ def ayikla(html: str, url: str) -> dict:
     if spot:
         yontemler.append("jsonld:description" if ld.get("description") else "og:description")
 
-    # govde
-    govde = _etiketsiz(_duz(ld.get("articleBody")))
-    if govde and len(govde) > 400:
+    # govde -- iki aday: JSON-LD articleBody ve paragraf sezgisi.
+    #
+    # ESKIDEN 400 karakterin altindaki articleBody tumden atiliyordu; eski
+    # sayfalarda (2014-2016 duzeni) paragraf sezgisi de tutmadigi icin haber
+    # GOVDESIZ kaliyordu -- 31 Agustos 2026'da 1.000 haberlik ornekte 2015
+    # icin %21, 2016 icin %12 olculdu. Artik sezgi bos donerse kisa
+    # adayi son care olarak kullaniliyor. 400 esigi ve articleBody tercihi
+    # aynen duruyor -- modern sayfalarda davranis degismiyor.
+    ld_govde = _etiketsiz(_duz(ld.get("articleBody")))
+    if ld_govde and len(ld_govde) > 400:
+        govde = ld_govde
         yontemler.append("jsonld:articleBody")
     else:
         govde = _govde_sezgisi(ayristirici.paragraflar)
         if govde:
             yontemler.append("paragraf-sezgisi")
+        elif ld_govde:
+            # Son care: sezgi bos dondu, elimizde kisa da olsa articleBody var.
+            govde = ld_govde
+            yontemler.append("jsonld:articleBody")
 
     # gorsel — JSON-LD'de image alani sik sik yalnizca @id tasir ve bu @id
     # sayfanin kendi adresi olur ("...html#primaryimage"). Gercek bir gorsele
@@ -364,6 +430,7 @@ def ayikla(html: str, url: str) -> dict:
     )
     guncelleme = _duz(ld.get("dateModified")) or meta.get("article:modified_time", "")
     kaynak_adi = _isim(ld.get("publisher")) or meta.get("og:site_name", "") or alan
+    baslik = _yayin_kuyrugu_at(baslik, kaynak_adi, alan)
 
     kelime = len(govde.split()) if govde else 0
     return {
@@ -475,8 +542,6 @@ def coz(url: str) -> dict:
         raise ValueError(f"Desteklenmeyen adres: {url}")
     try:
         html = getir(url)
-    except urllib.error.HTTPError as e:
-        raise RuntimeError(f"Kaynak {e.code} dondurdu: {url}") from e
-    except urllib.error.URLError as e:
-        raise RuntimeError(f"Kaynaga ulasilamadi ({e.reason}): {url}") from e
+    except guvenli_kapi().DisIstekHatasi as e:
+        raise RuntimeError(f"{e} ({url})") from e
     return ayikla(html, url)

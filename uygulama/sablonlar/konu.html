@@ -1,0 +1,54 @@
+{% extends "taban.html" %}
+{% load site_etiket seo_etiket %}
+
+{% comment %}İnce konu dosyası (Paket G): INCE_KONU_ESIGI'nin (5) altında haber
+taşıyan dosya `noindex, follow` — sayfa okura açık, bağlantıları izlenir.{% endcomment %}
+{% block robots %}{% if konu|ince_konu %}noindex, follow{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld_kirinti "Konu Dosyaları" "/konular" konu.ad konu.get_absolute_url %}</script>{% endblock %}
+
+{% block baslik %}{{ konu.ad }} — Konu Dosyası — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ konu.ad }} dosyası: {{ konu.haber_sayisi }} haber, {{ konu.baslangic|date:"j F Y" }} – {{ konu.bitis|date:"j F Y" }}.{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ site_koku }}{{ konu.get_absolute_url }}">{% endblock %}
+
+{% comment %}KONU DOSYASI SAYFASI (5 Eylül 2026).
+
+Bir dosyanın bütün haberleri tarih sırasında; gün değiştikçe tarih ayracı.
+Yerleşim bölüm sayfasıyla aynı iskelet (`.kutu.bolum` + `.akis`), yeni bir
+kalıp icat edilmedi: okur bölüm sayfasında öğrendiği düzeni burada da bulur.
+Fark, üstteki künye şeridi (dönem · haber sayısı · sürüyor rozeti) ve varsa
+editörün yazdığı özet.
+
+Akış EN ESKİDEN EN YENİYE: bölüm sayfasının tersi. Dosya bir hikâyedir,
+baştan okunur; bölüm sayfası "ne oldu" sorusuna en yeniden yanıt verir.{% endcomment %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <a href="/konular">Konu Dosyaları</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">{{ konu.ad }}</span>
+      </nav>
+
+      <section class="kutu bolum konu-sayfa">
+        <div class="kutu-bas vurgu">
+          <h1>{{ konu.ad|buyult }}</h1>
+          <span class="tumu">{{ konu.haber_sayisi }} haber</span>
+        </div>
+        <div class="konu-kunye">
+          <span><b>DÖNEM</b> {{ konu.baslangic|date:"j F Y" }} – {{ konu.bitis|date:"j F Y" }}</span>
+          {% if konu.suruyor %}<span class="suruyor">SÜRÜYOR</span>{% else %}<span><b>DURUM</b> Kapandı</span>{% endif %}
+          {% if konu.anahtarlar %}<span><b>ANAHTAR</b> {{ konu.anahtarlar|join:" · " }}</span>{% endif %}
+        </div>
+        {% if konu.ozet %}<p class="konu-ozet-metin">{{ konu.ozet }}</p>{% endif %}
+
+        <div class="kutu-ic">
+          <h2 class="gorsel-gizli">Dosyadaki haberler</h2>
+          {% if haberler %}
+          <ul class="akis">
+            {% for h in haberler %}
+            {% ifchanged h.yayin_zamani|date:"Y-m-d" %}<li class="gun"><span>{{ h.yayin_zamani|date:"j F Y" }}</span></li>{% endifchanged %}
+            {% include "parca/akis_satiri.html" with h=h %}
+            {% endfor %}
+          </ul>
+          {% else %}<p class="bos">Bu dosyada yayında haber yok.</p>
+          {% endif %}
+        </div>
+      </section>
+{% endblock %}

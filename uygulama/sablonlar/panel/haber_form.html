@@ -1,0 +1,154 @@
+{% extends "panel/taban.html" %}
+{% load static %}
+
+{% block icerik %}
+  {# Alan sırası PANEL-NOTLARI.md §4'teki sözleşmeyi izler. #}
+  <form method="post" class="haber-form" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="uyari" role="alert">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    {% if haber %}
+      <p class="alt-not">
+        Adres: <code>{{ haber.get_absolute_url }}</code>
+        {% if not kendisinin %}· bu haberi <b>{{ haber.olusturan.get_username|default:"başkası" }}</b> girdi{% endif %}
+      </p>
+    {% endif %}
+
+    <fieldset>
+      <legend>Metin</legend>
+      {% include "panel/parca/alan.html" with alan=form.baslik ipucu="En çok 60 karakter." %}
+      {% comment %}İkinci başlık — §4 alan 3: "varsayılan kapalı, açılır".
+         `<details>` betiksiz de çalışır; JS gerekmiyor. Doluysa açık
+         geliyor ki editör gözden kaçırmasın.{% endcomment %}
+      <details class="acilir-alan"{% if form.ikinci_baslik.value %} open{% endif %}>
+        <summary>İkinci başlık ekle</summary>
+        {% include "panel/parca/alan.html" with alan=form.ikinci_baslik ipucu="İsteğe bağlı." %}
+      </details>
+      {% include "panel/parca/alan.html" with alan=form.spot ipucu="En çok 320 karakter. Arama sonucunda ilk ~160 karakter görünür; önemli olanı başa yazın. Yayına almak için zorunlu." %}
+      {% include "panel/parca/alan.html" with alan=form.govde ipucu="Yayına almak için en az iki paragraf." %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Sınıflandırma</legend>
+      {% include "panel/parca/alan.html" with alan=form.kategori ipucu="Kategori haberin ADRESİNİ belirler. Değiştirirseniz eski adres otomatik yönlendirilir." %}
+
+      {% comment %}Adres önizlemesi — §4 alan 14, §21'de ölçülmüştü ama üründe
+         eksikti. Betik doldurur; betik yoksa kutu kaydedilmiş adresi
+         gösterir (yeni haberde boş kalır). Kaydedilen slug'ı SUNUCU üretir;
+         bu yalnız önizleme.{% endcomment %}
+      <div class="alan">
+        <label id="adres-onizleme-etiket">Adres</label>
+        <div class="adres-onizleme" data-adres-onizleme
+             data-kimlik="{% if haber %}{{ haber.pk }}{% endif %}"
+             aria-labelledby="adres-onizleme-etiket">{% if haber %}{{ haber.get_absolute_url }}{% endif %}</div>
+        <p class="sag-not">Adres deseni <code>/{kategori-slug}/{slug}-{id}</code>.
+          Kimlik kayıtta verilir; slug'ı sunucu üretir.</p>
+      </div>
+      {% include "panel/parca/alan.html" with alan=form.ilce ipucu="İsteğe bağlı, tek seçim. Dolu ilçe haberi anasayfa düşüş kuralında Bursa haberi sayar." %}
+      {% include "panel/parca/alan.html" with alan=form.etiketler ipucu="Virgülle ayırın. Olmayan etiket kaydederken açılır; yayına almak için en az bir tane şart." %}
+      {% comment %}Öneri listesi: betiksiz çalışır, tarayıcı kendisi tamamlar.
+      Boşken de zararsız — etiket tablosu dolduça listeye düşer.{% endcomment %}
+      <datalist id="etiket-onerileri">
+        {% for ad in form.etiket_onerileri %}<option value="{{ ad }}"></option>{% endfor %}
+      </datalist>
+    </fieldset>
+
+    <fieldset>
+      <legend>Kaynak ve sorumluluk</legend>
+      {% include "panel/parca/alan.html" with alan=form.kaynak_turu ipucu="Meta Yazar Bilgisi bundan türetilir. Boş bırakılırsa ölçülmüş değer korunur." %}
+      {% include "panel/parca/alan.html" with alan=form.muhabir ipucu="Kaynak türü 'Kendi muhabirimiz' ise zorunlu." %}
+      {% include "panel/parca/alan.html" with alan=form.kaynaklar %}
+      {% include "panel/parca/alan.html" with alan=form.meta_yazar ipucu="Yasal sonuç doğurur. Boş bırakırsanız kaynak türünden türetilir." kullanilmiyor="Okura basılmaz; yasal sonucu hukuki teyit bekliyor. Sitedeki imza satırı muhabir, ajans ya da dış yayın kaynağından kurulur." %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Görsel</legend>
+      {% include "panel/parca/alan.html" with alan=form.gorsel_url %}
+      {% include "panel/parca/alan.html" with alan=form.gorsel_alt ipucu="Ekran okuyucu için. Eski panelde bu alan hiç yoktu." %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Yayın</legend>
+      {% include "panel/parca/alan.html" with alan=form.durum %}
+      {% if not form.durum %}<p class="alt-not">Durum: {% if haber %}{{ haber.get_durum_display }}{% else %}Pasif{% endif %}. Yayına alma masanın kararıdır; haberi “Yayına hazır” işaretleyip masaya bırakabilirsiniz.</p>{% endif %}
+      {% include "panel/parca/alan.html" with alan=form.hazirlik ipucu="Yalnız durum Pasif iken anlamlıdır." %}
+      {% include "panel/parca/alan.html" with alan=form.yayin_zamani %}
+      {% include "panel/parca/alan.html" with alan=form.guncelleme_zamani %}
+    </fieldset>
+
+    {% comment %}Sosyal paylaşım — §25. Kutular Yayın bölümünün hemen
+       ardında: paylaşım kararı yayın kararının devamı ve editör ikisini
+       aynı anda veriyor. Alan yalnız yayınlayabilen kullanıcıda var;
+       görünmemesi yetki denetimi değildir, denetim formda.{% endcomment %}
+    {% if form.sosyal_hesaplar %}
+      <fieldset>
+        <legend>Sosyal medyada paylaş</legend>
+        {% if form.sosyal_hesaplar.field.queryset.exists %}
+          {% include "panel/parca/alan.html" with alan=form.sosyal_hesaplar %}
+          <p class="alt-not">Gönderi metni başlık, spot, adres ve
+            etiketlerden kurulur; kuyrukta düzenlenebilir. Kaydettikten
+            sonra <a href="{% url 'panel-sosyal' %}">Sosyal Paylaşım</a>
+            ekranından izleyin.</p>
+        {% else %}
+          <p class="alt-not">Tanımlı sosyal hesap yok. Hesaplar
+            {% if kullanici_yonetir %}<a href="{% url 'panel-sosyal-hesaplar' %}">Ayarlar › Sosyal Hesaplar</a>{% else %}Ayarlar › Sosyal Hesaplar{% endif %}
+            ekranında tanımlanır.</p>
+        {% endif %}
+      </fieldset>
+    {% endif %}
+
+    {% if mansete_alabilir %}
+      <fieldset>
+        <legend>Manşet</legend>
+        <p class="alt-not">Manşete alma ayrı yetkidir: anasayfanın sırasını değiştirmek yayımlamaktan farklı bir karardır.</p>
+        <p class="alt-not">Bayraklı haber yuvasında en öne, en yeni bayrak önde girer; bayrağın önceliği bayrak verildikten sonra 48 saat sürer (ayar: BH_MANSET_BAYRAK_SAAT). Boş kalan yuvaları “önce Bursa” kuralı doldurur. Anasayfanın güncel dizilimi <a href="{% url 'panel-mansetler' %}">Manşetler</a> ekranında.</p>
+        {% include "panel/parca/alan.html" with alan=form.manset_ana ipucu="Manşet slaytı (15); taşarsa altındaki “Günün manşetleri” listesi (10)." %}
+        {% include "panel/parca/alan.html" with alan=form.manset_tepe ipucu="Manşetin üstündeki dörtlü kutucuk (4)." %}
+        {% include "panel/parca/alan.html" with alan=form.manset_kare ipucu="Manşetin yanındaki küçük slayt (5)." %}
+      </fieldset>
+    {% endif %}
+
+    <fieldset>
+      <legend>Seçenekler ve SEO</legend>
+      {% include "panel/parca/alan.html" with alan=form.rss %}
+      {% include "panel/parca/alan.html" with alan=form.yorumlar_acik kullanilmiyor="Sitede okur yorumu bölümü henüz yok." %}
+      {% include "panel/parca/alan.html" with alan=form.yonlendirme_url kullanilmiyor="Güvenlik gereği kapalı: haber sayfası bu adrese yönlendirmez. Taşınan haber için kategori/adres değişimi kendi 301 yönlendirmesini yazar." %}
+      {% include "panel/parca/alan.html" with alan=form.gomulu_kod ipucu="Kod olduğu gibi BASILMAZ. YouTube, X ve Instagram bağlantıları tanınır ve haberin altında bağlantı kartı olarak gösterilir; diğer her şey düşer." %}
+      {% include "panel/parca/alan.html" with alan=form.odak_kelime %}
+      {% include "panel/parca/alan.html" with alan=form.seo_baslik %}
+      {% comment %}İlgili haberler — arama tabanlı seçim.
+
+         Alan 356.839 <option> basıyordu (36,5 MB, 32,7 sn). Artık yalnız
+         SEÇİLİ olanlar basılıyor; yenisi arama kutusundan geliyor.
+
+         Arama kutusu `hidden` sınıfıyla saklanmıyor: betik yoksa kutu
+         görünür ama işlevsizdir — bu yüzden betik onu kendisi ekliyor.
+         Betiksiz durumda alan yine çalışır: bağlı haberler görünür,
+         kaldırılabilir, haber kaydedilebilir.{% endcomment %}
+      <div class="alan ilgili-alan" data-ilgili-kap
+           data-ara-adres="{% url 'panel-haber-ara' %}"
+           data-haric="{% if haber %}{{ haber.pk }}{% endif %}">
+        {% include "panel/parca/alan.html" with alan=form.ilgili_haberler %}
+      </div>
+
+      {% comment %}Bağlı galeriler — §4 alan 27. Aynı desen, aynı kap
+         nitelikleri; betik ikisini de tanır.{% endcomment %}
+      <div class="alan ilgili-alan" data-ilgili-kap
+           data-secim="select[data-galeri]"
+           data-ara-adres="{% url 'panel-galeri-ara' %}">
+        {% include "panel/parca/alan.html" with alan=form.bagli_galeriler kullanilmiyor="Haber sayfasında bağlı galeri bölümü henüz yok." %}
+      </div>
+    </fieldset>
+
+    <div class="eylem">
+      <button type="submit" class="dugme">Kaydet</button>
+      <a class="dugme ufak" href="{% url 'panel-akis' %}">Vazgeç</a>
+    </div>
+  </form>
+
+  {% if haber %}{% include "panel/parca/duzeltme_bolumu.html" %}{% endif %}
+  <script src="{% static 'betik/panel.js' %}" defer></script>
+{% endblock %}

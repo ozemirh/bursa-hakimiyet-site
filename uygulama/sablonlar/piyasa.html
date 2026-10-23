@@ -1,0 +1,153 @@
+{% extends "taban.html" %}
+{% load site_etiket seo_etiket %}
+{% comment %}KALICI ENSTRÜMAN SAYFASI — /piyasa/dolar · /piyasa/euro ·
+/piyasa/gram-altin (20 Ekim 2026). Veri ve kurallar `icerik/piyasa.py`.
+
+Rakamın güveni kaynak + zaman + gecikme notundan gelir: değerin yanında
+HER ZAMAN kim söyledi ve ne zaman söyledi yazar. Bayat veri gizlenmez —
+tarihiyle ve kutunun ÜSTÜNDE "GÜNCEL DEĞİL" uyarısıyla basılır (piyasa
+cetvelinin deseni, `parca/bolum/ekonomi.html`). Kaynakta olmayan alan
+(alış/satış, değişim, resmî kapanış, geçmiş) hiç çizilmez; "–" bile yok.
+
+Renk yalnız değişimde ve bilgi taşıyor (yeşil ▲, kırmızı ▼, gri =);
+ok işareti rengi tek başına bırakmıyor, ekran okuyucu fiili duyuyor.
+Tema: ekonomi (`temalar.piyasa_temasi`).{% endcomment %}
+
+{% block baslik %}{{ enstruman.seo_baslik }} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ aciklama }}{% endblock %}
+{% block og_baslik %}{{ enstruman.soru }}{% endblock %}
+{% block robots %}{% if cevirici.istendi %}noindex, follow{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ site_koku }}{{ yol }}">{% endblock %}
+{% block og_adres %}{{ site_koku }}{{ yol }}{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld_kirinti "Ekonomi" "/ekonomi" enstruman.ad yol %}</script>
+<script type="application/ld+json">{{ yapisal_veri }}</script>{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span>
+        <a href="/ekonomi">Ekonomi</a> <span aria-hidden="true">&rsaquo;</span>
+        <span aria-current="page">{{ enstruman.ad }}</span>
+      </nav>
+
+      <div class="eko-bas piyasa-bas">
+      <section class="kutu piyasa-sayfa" aria-labelledby="piyasa-baslik">
+        <div class="kutu-bas vurgu">
+          <h1 id="piyasa-baslik">{{ enstruman.soru|buyult }}</h1>
+          <span class="tumu">{{ enstruman.tam_ad }}</span>
+        </div>
+        <div class="kutu-ic">
+          
+
+          {% if not veri.var %}
+          {% comment %}Dosya ya da kalem yok: sayfa 200 döner (görünümde
+          gerekçesi yazılı), rakam uydurulmaz.{% endcomment %}
+          <p class="bos">{{ enstruman.ad }} verisi şu an alınamıyor. Kaynaklar ve yöntem: <a href="/veri-kaynaklari">Veri kaynakları</a>.</p>
+          {% elif veri.deger is None %}
+          <p class="bos">{{ enstruman.ad }} için kaynaktan değer gelmedi; uydurma değer basılmaz.</p>
+          {% else %}
+          <p class="piyasa-son"><span class="gorsel-gizli">{{ enstruman.ad }}: </span><data class="rakam" value="{{ veri.deger|stringformat:'s' }}">{{ veri.deger_metni }}</data> <span class="birim">{{ veri.birim_isareti }}</span></p>
+          {% if veri.degisim %}{% with d=veri.degisim %}<p class="piyasa-fark{% if d.yon == 'yukari' %} artiyor{% elif d.yon == 'asagi' %} azaliyor{% endif %}"><span aria-hidden="true">{% if d.yon == 'yukari' %}&#9650;{% elif d.yon == 'asagi' %}&#9660;{% else %}&ndash;{% endif %}</span> %{{ d.yuzde|floatformat:2 }}{% if d.tutar %} ({{ d.isaret }}{{ d.tutar }} {{ veri.birim_isareti }}){% endif %}<span class="gorsel-gizli"> {{ d.fiil }}</span> <span class="neye">{{ veri.son.degisim_neye }}</span></p>{% endwith %}{% endif %}
+          <p class="piyasa-damga">Kaynak: <b>{{ veri.son.kaynak }}</b>{% if veri.son.zaman_metni %} &middot; {{ veri.son.zaman_metni }}{% endif %}</p>
+          {% if veri.son.uyari %}<p class="piyasa-bayat">{{ veri.son.uyari }}</p>{% endif %}
+
+          {% if veri.tcmb or veri.resmi_kapanis %}
+          <dl class="piyasa-dokum">
+            {% if veri.tcmb %}{% with b=veri.tcmb %}
+            <div><dt>TCMB döviz alış</dt><dd><span class="rakam">{{ b.alis }} {{ veri.birim_isareti }}</span><span class="kaynak">TCMB bülteni{% if b.no %} &middot; {{ b.no }}{% endif %}</span></dd></div>
+            <div><dt>TCMB döviz satış</dt><dd><span class="rakam">{{ b.satis }} {{ veri.birim_isareti }}</span><span class="kaynak">TCMB bülteni{% if b.no %} &middot; {{ b.no }}{% endif %}</span></dd></div>
+            {% endwith %}{% endif %}
+            {% if veri.resmi_kapanis %}{% with r=veri.resmi_kapanis %}
+            <div><dt>Resmî kapanış</dt><dd><span class="rakam">{{ r.deger_metni }} {{ veri.birim_isareti }}</span><span class="kaynak">{{ r.kaynak }}, Borsa İstanbul Kıymetli Madenler Piyasası</span></dd></div>
+            {% endwith %}{% endif %}
+          </dl>
+          {% endif %}
+          {% endif %}
+
+          <p class="servis-kunye">Rakamlar anlık değildir: değerler kaynaklardan belirli aralıklarla çekilir ve sayfa en son çekilen değeri, zamanıyla birlikte gösterir.{% if veri.tcmb %} TCMB kurları gösterge niteliğindedir ve iş günü bir kez (15.30) açıklanır; bankaların alış-satış kuru farklıdır.{% if veri.kunye %} {{ veri.kunye }}{% endif %}{% endif %} <a href="/veri-kaynaklari">Veri kaynakları &rarr;</a></p>
+        </div>
+      </section>
+
+      <div class="piyasa-yan">
+        {% if veri.deger %}
+        <section class="kutu cevirici" id="cevirici" aria-labelledby="cevirici-baslik">
+          <div class="kutu-bas"><h2 id="cevirici-baslik">ÇEVİRİCİ</h2></div>
+          <div class="kutu-ic">
+            <form method="get" action="{{ yol }}#cevirici">
+              <div class="cevirici-alanlar">
+                <label for="cevirici-miktar">Miktar</label>
+                <input id="cevirici-miktar" name="miktar" type="text" inputmode="decimal" autocomplete="off" value="{{ cevirici.ham }}" placeholder="ör. 100"{% if cevirici.hata %} aria-invalid="true" aria-describedby="cevirici-sonuc"{% endif %}>
+                <label for="cevirici-yon">Yön</label>
+                <select id="cevirici-yon" name="yon">
+                  <option value="doviz"{% if cevirici.yon == "doviz" %} selected{% endif %}>{{ enstruman.ad }} &rarr; TL</option>
+                  <option value="tl"{% if cevirici.yon == "tl" %} selected{% endif %}>TL &rarr; {{ enstruman.ad }}</option>
+                </select>
+              </div>
+              <button type="submit">Çevir</button>
+            </form>
+            <p class="cevirici-sonuc{% if cevirici.hata %} hata{% endif %}" id="cevirici-sonuc" role="status">{% if cevirici.hata %}{{ cevirici.hata }}{% elif cevirici.metin %}<b>{{ cevirici.metin }}</b>{% endif %}</p>
+            <p class="servis-kunye">Çevirici sayfadaki son değeri ({{ veri.deger_metni }} {{ veri.birim_isareti }}, {{ veri.son.kaynak }}) kullanır. Sonuç bilgi amaçlıdır.</p>
+          </div>
+        </section>
+        {% endif %}
+
+        <nav class="kutu piyasa-diger" aria-labelledby="piyasa-diger-baslik">
+          <div class="kutu-bas"><h2 id="piyasa-diger-baslik">DİĞER PİYASA SAYFALARI</h2></div>
+          <ul class="kutu-ic">
+            {% for ad, adres in digerleri %}<li><a href="{{ adres }}">{{ ad }} kaç TL?</a></li>{% endfor %}
+            <li><a href="/ekonomi">Ekonomi bölümü ve piyasa cetveli</a></li>
+          </ul>
+        </nav>
+      </div>
+      </div>
+
+      {% if veri.gecmis %}
+      <section class="kutu piyasa-gecmis" aria-labelledby="gecmis-baslik">
+        <div class="kutu-bas"><h2 id="gecmis-baslik">GEÇMİŞ</h2><span class="tumu">{{ enstruman.oran }} &middot; {{ veri.gecmis_kaynak }}</span></div>
+        <div class="kutu-ic">
+          {% if veri.grafik %}{% with g=veri.grafik %}
+          <figure class="piyasa-grafik">
+            <div class="grafik-cerceve">
+              <span class="grafik-birim" aria-hidden="true">{{ veri.birim_isareti }}{% if enstruman.birim == "gram" %} / gram{% endif %}</span>
+              <div class="grafik-y" aria-hidden="true">{% for e in g.y_etiketleri %}<span>{{ e }}</span>{% endfor %}</div>
+              <svg viewBox="0 0 {{ g.en }} {{ g.boy }}" preserveAspectRatio="none" role="img" aria-labelledby="grafik-baslik grafik-aciklama" focusable="false">
+                <title id="grafik-baslik">{{ enstruman.ad }} ({{ enstruman.oran }}), {{ g.ilk|date:"j F Y" }} – {{ g.son|date:"j F Y" }}, {{ g.adet }} gözlem</title>
+                <desc id="grafik-aciklama">En düşük {{ g.en_dusuk.deger }} ({{ g.en_dusuk.tarih|date:"j F" }}), en yüksek {{ g.en_yuksek.deger }} ({{ g.en_yuksek.tarih|date:"j F" }}), son {{ g.son_deger }}. Kaynak: {{ veri.gecmis_kaynak }}.</desc>
+                {% for y in g.yatay %}<line class="izgara" x1="0" y1="{{ y|stringformat:'s' }}" x2="{{ g.en }}" y2="{{ y|stringformat:'s' }}"/>{% endfor %}
+                <polyline class="cizgi" points="{{ g.noktalar }}"/>
+              </svg>
+              <div class="grafik-x" aria-hidden="true"><span>{{ g.ilk|date:"j M Y" }}</span><span>{{ g.son|date:"j M Y" }}</span></div>
+            </div>
+            <figcaption>{{ enstruman.ad }}, {{ veri.birim_isareti }}{% if enstruman.birim == "gram" %} / gram{% endif %} — {{ g.ilk|date:"j F Y" }} ile {{ g.son|date:"j F Y" }} arası, {{ g.adet }} gözlem; yatay eksen tarih. Kaynak: {{ veri.gecmis_kaynak }}.</figcaption>
+          </figure>
+          {% endwith %}{% endif %}
+          <div class="cetvel-sar" role="region" tabindex="0" aria-label="{{ enstruman.ad }} geçmiş tablosu">
+          <table class="cetvel">
+            <caption class="gorsel-gizli">{{ enstruman.ad }}: son {{ veri.gecmis|length }} gözlem, değişim bir önceki gözleme göre. Kaynak: {{ veri.gecmis_kaynak }}.</caption>
+            <thead><tr><th scope="col">Tarih</th><th scope="col">Değer</th><th scope="col">Değişim</th></tr></thead>
+            <tbody>
+              {% for s in veri.gecmis %}
+              <tr class="cetvel-kalem{% if s.fark.yon == 'yukari' %} artiyor{% elif s.fark.yon == 'asagi' %} azaliyor{% endif %}">
+                <th scope="row"><time datetime="{{ s.tarih|date:'Y-m-d' }}">{{ s.tarih|date:"j F Y" }}</time></th>
+                <td class="deger">{{ s.deger }} <span class="birim">{{ veri.birim_isareti }}</span></td>
+                <td class="fark">{% if s.fark %}<span aria-hidden="true">{% if s.fark.yon == 'yukari' %}&#9650;{% elif s.fark.yon == 'asagi' %}&#9660;{% else %}&ndash;{% endif %}</span> %{{ s.fark.yuzde|floatformat:2 }}<span class="gorsel-gizli"> {{ s.fark.fiil }}</span>{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
+      {% if haberler %}
+      <section class="kutu bursa-listesi piyasa-haberler" aria-labelledby="piyasa-haber-baslik">
+        <div class="kutu-bas"><h2 id="piyasa-haber-baslik">EKONOMİDEN SON HABERLER</h2><span class="tumu"><a href="/ekonomi">Ekonomi &rarr;</a></span></div>
+        <div class="kutu-ic">
+          <ol class="bursa-cetvel">
+            {% for h in haberler %}<li><time datetime="{{ h.yayin_zamani|date:'c' }}">{{ h.yayin_zamani|kisa_zaman }}</time><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>{% if h.ilce %}<span class="bolum-ad">{{ h.ilce.ad|baslikla }}</span>{% else %}<span></span>{% endif %}</li>
+            {% endfor %}
+          </ol>
+        </div>
+      </section>
+      {% endif %}
+{% endblock %}

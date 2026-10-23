@@ -1,0 +1,38 @@
+{% comment %}AKIŞIN SONRAKİ DİLİMİ — "Daha fazla göster" düğmesinin çektiği parça
+(6 Eylül 2026, §48).
+
+Bu bir SAYFA DEĞİL: yanıtın tamamı tek bir kaptır ve JavaScript kabın
+çocuklarını olduğu gibi listenin sonuna taşır. Kalem şablonları sayfadakiyle
+AYNI (`kart.html`, `akis_bloklari.html`) — ikinci bir kopyayı JavaScript'te
+tutmak, kart bir gün değiştiğinde ikisinin sessizce ayrışması demekti.
+
+Kap her iki kaynakta da `<div>`: bölüm akışı 7 Eylül 2026'da (§60) listeden
+blok ızgarasına döndü ve taşınan çocuklar artık `<li>` değil `.akis-blok`
+kapları. Kap etiketinin sayfadaki hedefle uyumlu olması yeterli.
+
+`data-devam` düğmenin tek karar kaynağı: 0 ise arşivin sonuna gelinmiştir
+ve düğme yerini "tümü yüklendi" satırına bırakır. Bilgi SAYIMDAN gelmiyor —
+görünüm bir fazla kayıt çekiyor ve gelirse "devam var" diyor (`_dilim`,
+icerik/views.py). Sayım burada hem pahalı hem gereksizdi: yanıtta ne toplam
+sayı var ne sayfa numarası.
+
+Ritim seamde tekmiyor: 1. sayfa akışı ikiliyle bitiyor, bu parça üçlüyle
+başlıyor (`_akis_bloklari(..., ilk_uclu=True)`). Gerekçe ve sayıların
+tuttuğu hesap `icerik/views.py`de `AKIS_RITMI` başlığı altında.{% endcomment %}
+{% if kaynak == "anasayfa" %}
+<div class="akis-parca" data-devam="{% if devam %}1{% else %}0{% endif %}">
+{% for h in kalemler %}{% include "parca/kart.html" with h=h goster_foto=1 zaman_gizle=1 %}
+{% endfor %}</div>
+{% elif kaynak == "kose" %}{% comment %}Köşe yazıları akışı (19 Ekim 2026; 21 Ekim'den beri
+gün başlıklı): çocuklar `h3.kose-gun` + `ol.kose-gun-liste` çiftleri, sayfadaki
+hedef `<div class="kose-akis">`. Önceki dilimin son günüyle süren ilk grup
+başlıksız gelir (yalnız `ol`); betik onu sayfadaki son listenin hemen ardına
+ekler, CSS iki listenin birleşme yerini tek cetvel gibi çizer. 21 Ekim 2026
+ikinci turdan beri küme `KoseYazisi.onceki_akis`: vitrindeki yazılar hariç,
+sayfanın kendi dilimleriyle aynı.{% endcomment %}
+<div class="akis-parca" data-devam="{% if devam %}1{% else %}0{% endif %}">
+{% include "medya/parca/kose_gunleri.html" %}</div>
+{% else %}
+<div class="akis-parca" data-devam="{% if devam %}1{% else %}0{% endif %}">
+{% include "parca/akis_bloklari.html" %}</div>
+{% endif %}

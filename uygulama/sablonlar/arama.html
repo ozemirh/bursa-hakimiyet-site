@@ -1,0 +1,51 @@
+{% extends "taban.html" %}
+
+{% block baslik %}{{ baslik }} — Bursa Hakimiyet{% endblock %}
+{% block robots %}noindex, follow{% endblock %}
+{% block kanonik %}{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Arama</span>
+      </nav>
+
+      <section class="kutu">
+        <div class="kutu-bas vurgu">
+          <h1>ARAMA</h1>
+          {% comment %}Sayım üst sınırla kesiliyor (icerik/views.py
+          SinirliSayfalayici.UST_SINIR = 1000): "41.074 sonuç" ile "1.000+ sonuç"
+          arasındaki fark okurun kararını değiştirmiyordu ama taramanın yarısı
+          ona gidiyordu. Sınırı aşınca kesin sayı yerine "1.000+" yazılır.{% endcomment %}
+          {% if sorgu and not uyari %}<span class="tumu">{% if sayfa.paginator.kesildi_mi %}1.000+{% else %}{{ toplam }}{% endif %} sonuç</span>{% endif %}
+        </div>
+        <div class="kutu-ic">
+          <form class="ara-sayfa" role="search" action="/ara" method="get">
+            <label class="gorsel-gizli" for="ara-sayfa-kutu">Haberlerde ara</label>
+            <input id="ara-sayfa-kutu" name="q" type="search" value="{{ sorgu }}" placeholder="Haberlerde ara" autofocus>
+            <button type="submit">Ara</button>
+          </form>
+
+          {% if uyari %}
+            <p class="bos" role="status">{{ uyari }}</p>
+          {% elif sorgu %}
+            <h2 class="gorsel-gizli">Haberler</h2>
+            {% comment %}İlk ekran (19 Ekim 2026, ölçüm: LCP görseli 7 genişliğin
+            7'sinde lazy idi). Izgara iki sütunlu, 900 px yüksekliğinde iki
+            satır (dört kart) ilk ekranda. LCP her zaman ilk kart DEĞİL:
+            görselsiz haber SVG çizer, doğal boyu küçük görsel LCP'de
+            küçük sayılır (ölçüldü: 820'de 3. kart LCP oldu). Bu yüzden ilk
+            iki satırın dördü de eager; ilk satırın ikisi fetchpriority=high.
+            Kalanı tembel.{% endcomment %}
+            <div class="kutu-izgara liste-izgara arama-izgara">
+              {% for h in sayfa %}{% if forloop.counter <= 2 %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 gorsel_oncelikli=1 %}{% elif forloop.counter <= 4 %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 gorsel_hemen=1 %}{% else %}{% include "parca/kart.html" with h=h goster_foto=1 goster_spot=1 %}{% endif %}
+              {% empty %}<p class="bos">“{{ sorgu }}” için sonuç bulunamadı.</p>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="bos">Aramak istediğiniz kelimeyi yazın.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      {% include "parca/sayfalama.html" %}
+{% endblock %}

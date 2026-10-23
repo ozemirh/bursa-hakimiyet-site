@@ -1,0 +1,178 @@
+{
+  "kaynak": {
+    "kaynak_url": "https://www.sozcu.com.tr/unlu-sarkici-kerem-akturkoglu-nun-sozleriyle-cileden-cikti-p355713",
+    "kaynak_alan": "sozcu.com.tr",
+    "kaynak_adi": "Sözcü",
+    "orijinal_baslik": "Ünlü şarkıcı, Kerem Aktürkoğlu'nun sözleriyle çileden çıktı",
+    "orijinal_spot": "Beşiktaş derbisinde alınan 2-1'lik yenilginin ardından Fenerbahçeli milli futbolcu Kerem Aktürkoğlu'nun açıklamalarına ünlü şarkıcı Oğuzhan Koç'tan sert tepki geldi. Sosyal medya hesabından paylaşımda bulunan Koç, \"Hakem diye ağlayan Fenerli futbolcu görmek istemiyoruz\" diyerek oyunculara yüklendi.",
+    "orijinal_govde": "Fenerbahçe'nin Kadıköy'de Beşiktaş'a 2-1 mağlup olduğu dev derbi sonrası Kerem Aktürkoğlu'nun hakem kararları ve takımın form durumu hakkındaki açıklamaları gündemdeki yerini koruyor. Sıkı bir Fenerbahçe taraftarı olan ünlü şarkıcı Oğuzhan Koç, milli futbolcunun \"Kötü oynadık, bu bizim iç meselemiz\" şeklindeki ifadelerine sert çıktı. Sosyal medya hesabından paylaşım yapan Koç, \"Sizin kötü oynamaya da 'kötü oynamak bizim iç meselemiz' demeye de zerre hakkınız yok. Sizin daha ligin başında bir iç meseleniz olamaz sevgili kardeşim! Asıl mesele biz, sizi ne olursa olsun destekleyen Fenerlilerin meselesi\" diyerek tepkisini dile getirdi. \"AYAKTA KAL, HAKEME SIĞINMA\" Kerem Aktürkoğlu'nun saha içi mücadelesini de eleştiren Oğuzhan Koç, genç yıldızdan fiziksel anlamda daha dirençli olmasını beklediklerini ifade etti. Oğuzhan Koç, milli futbolcuya yönelik eleştirilerini şu sözlerle sürdürdü: \"Senden herhangi bir ikili mücadelede sadece ayakta kalmanı bekliyoruz. Senden tek beklentimiz, yanına başka bir futbolcu gelip dokunduğunda yere düşmemen, yıkılmaman.\" \"ÇIKIP 'UTANIYORUZ' DEYİN\" Sarı-lacivertli futbolcuların mağlubiyeti hakem yönetimine bağlamasını kabul edilemez bulan ünlü sanatçı, açıklamasını sitem dolu şu ifadelerle noktaladı: \"Allah aşkına saçma sapan açıklamaları bırakıp bir taneniz 'utanıyoruz' deyin. En azından aynı duygudayız deriz, yine sizi sever sahip çıkarız. 'Hakem' diye ağlayan Fenerli futbolcu görmek istemiyoruz!\"",
+    "gorsel_url": "https://sozcu01.sozcucdn.com/sozcu/production/uploads/images/2026/9/oguzhanjpg-X4qLVqq2EkSIjc92wz07Jg.jpg?w=1200&h=900&mode=crop&scale=both",
+    "gorsel_alt": "Süper Lig'e tam 202 takviye! İşte tüm transferler",
+    "yazar": "Haber Merkezi",
+    "asil_kaynak": "",
+    "yayin_tarihi": "2026-09-06T08:51:25+03:00",
+    "guncelleme_tarihi": "2026-09-06T08:51:25+03:00",
+    "dil": "tr",
+    "kelime_sayisi": 187,
+    "ayiklama_yontemleri": [
+      "jsonld:headline",
+      "jsonld:description",
+      "jsonld:articleBody",
+      "jsonld:image"
+    ],
+    "ayiklama_guveni": "yuksek"
+  },
+  "taslak": {
+    "baslik_secenekleri": [
+      {
+        "metin": "Oğuzhan Koç'tan Fenerbahçeli futbolculara hakem tepkisi",
+        "gerekce": "Düz haber başlığı: kim, kime, ne konuda tepki gösterdi sorusunu tek cümlede karşılıyor."
+      },
+      {
+        "metin": "Derbi yenilgisi sonrası taraftar tepkisi futbolculara yöneldi",
+        "gerekce": "Sonuç/etki odaklı: olayın futbol kamuoyundaki yansımasını öne çıkarıyor."
+      },
+      {
+        "metin": "Koç'tan Aktürkoğlu'na: Hakeme sığınma",
+        "gerekce": "Kısa ve vurucu; tepkinin özünü doğrudan alıntıyla veriyor, tıklama tuzağı içermiyor."
+      }
+    ],
+    "onerilen_baslik_indeksi": 0,
+    "spot": "Fenerbahçe'nin Kadıköy'de Beşiktaş'a 2-1 yenilmesinin ardından Kerem Aktürkoğlu'nun \"iç meselemiz\" sözlerine şarkıcı Oğuzhan Koç sosyal medyadan yanıt verdi. Koç, futbolculardan hakem eleştirisi yerine özeleştiri beklediğini söyledi.",
+    "uc_madde": [
+      "Fenerbahçe, Kadıköy'de oynanan derbide Beşiktaş'a 2-1 yenildi.",
+      "Maç sonrası Kerem Aktürkoğlu'nun \"Kötü oynadık, bu bizim iç meselemiz\" sözleri tartışma yarattı.",
+      "Fenerbahçe taraftarı olduğu bilinen şarkıcı Oğuzhan Koç, sosyal medyadan futbolculara tepki gösterdi."
+    ],
+    "govde": [
+      {
+        "tur": "paragraf",
+        "metin": "Fenerbahçe'nin Kadıköy'de Beşiktaş'a 2-1 kaybettiği derbinin ardından yaşanan tartışma sürüyor. Maç sonunda konuşan milli futbolcu Kerem Aktürkoğlu'nun hakem kararlarına ve takımın form durumuna ilişkin sözleri, taraftar cephesinde tepki topladı."
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Fenerbahçe taraftarı olduğu bilinen şarkıcı Oğuzhan Koç, sosyal medya hesabından yaptığı paylaşımda futbolcunun \"Kötü oynadık, bu bizim iç meselemiz\" ifadesini hedef aldı. Koç, sezonun bu aşamasında böyle bir savunmanın kabul edilemeyeceğini savundu."
+      },
+      {
+        "tur": "alinti",
+        "metin": "\"Sizin kötü oynamaya da 'kötü oynamak bizim iç meselemiz' demeye de zerre hakkınız yok. Sizin daha ligin başında bir iç meseleniz olamaz sevgili kardeşim! Asıl mesele biz, sizi ne olursa olsun destekleyen Fenerlilerin meselesi.\" — Oğuzhan Koç"
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": "Saha içi mücadeleye eleştiri"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Koç, paylaşımında Aktürkoğlu'nun ikili mücadelelerdeki duruşunu da eleştirdi. Şarkıcı, futbolcudan fiziksel olarak daha dirençli olmasını beklediklerini belirtti."
+      },
+      {
+        "tur": "alinti",
+        "metin": "\"Senden herhangi bir ikili mücadelede sadece ayakta kalmanı bekliyoruz. Senden tek beklentimiz, yanına başka bir futbolcu gelip dokunduğunda yere düşmemen, yıkılmaman.\" — Oğuzhan Koç"
+      },
+      {
+        "tur": "ara_baslik",
+        "metin": "\"Utanıyoruz deyin\" çağrısı"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Sarı-lacivertli futbolcuların yenilgiyi hakem yönetimine bağlamasını da eleştiren Koç, oyunculardan açık bir özeleştiri beklediğini dile getirdi. Paylaşımını, taraftarın takımın yanında olmayı sürdüreceği vurgusuyla tamamladı."
+      },
+      {
+        "tur": "alinti",
+        "metin": "\"Allah aşkına saçma sapan açıklamaları bırakıp bir taneniz 'utanıyoruz' deyin. En azından aynı duygudayız deriz, yine sizi sever sahip çıkarız. 'Hakem' diye ağlayan Fenerli futbolcu görmek istemiyoruz!\" — Oğuzhan Koç"
+      },
+      {
+        "tur": "paragraf",
+        "metin": "Aktürkoğlu ve Fenerbahçe kulübünden, paylaşıma ilişkin bir açıklama gelip gelmediği kaynakta yer almıyor."
+      }
+    ],
+    "kategori": "Spor",
+    "ilce": "Bursa dışı",
+    "etiketler": [
+      "derbi",
+      "hakem tartışması",
+      "sosyal medya",
+      "taraftar tepkisi",
+      "futbol",
+      "süper lig"
+    ],
+    "seo_baslik": "Oğuzhan Koç'tan Fenerbahçeli futbolculara tepki",
+    "seo_aciklama": "Beşiktaş derbisindeki 2-1'lik yenilgi sonrası Kerem Aktürkoğlu'nun sözlerine şarkıcı Oğuzhan Koç sosyal medyadan yanıt verdi.",
+    "url_slug": "oguzhan-koctan-fenerbahceli-futbolculara-hakem-tepkisi",
+    "gorsel_alt": "Sarı-lacivertli formalı futbolcular derbi maçının ardından saha içinde",
+    "gorsel_altyazi": "Fenerbahçe ile Beşiktaş arasında Kadıköy'de oynanan derbiden bir kare. Fotoğrafın hak durumu yayın öncesi doğrulanmalı.",
+    "okuma_suresi_dk": 2,
+    "onem": "normal",
+    "kaynak_atfi": "Sözcü haberine göre",
+    "dogrulanmasi_gerekenler": [
+      "Derbinin oynandığı tarih ve tam skor bağımsız kaynaktan teyit edilmeli; kaynakta maç tarihi yok.",
+      "Oğuzhan Koç'un paylaşımının hangi platformda ve hangi saatte yapıldığı doğrulanmalı; kaynak yalnızca \"sosyal medya hesabı\" diyor.",
+      "Alıntıların paylaşımın özgün metniyle birebir aynı olduğu, hesabın kendi sayfasından kontrol edilmeli.",
+      "Kerem Aktürkoğlu'nun \"Kötü oynadık, bu bizim iç meselemiz\" sözünün tam bağlamı ve hangi açıklamada geçtiği teyit edilmeli.",
+      "Kaynak fotoğrafın hak durumu doğrulanmadan yayına girmemeli."
+    ],
+    "hassas_konu": {
+      "var_mi": false,
+      "turu": "",
+      "uyari": ""
+    },
+    "bursa_ilgisi": {
+      "var_mi": false,
+      "aciklama": "Haberin Bursa ile doğrudan bağı yok; olay İstanbul'da oynanan bir derbi ve sonrasındaki sosyal medya tartışmasıyla ilgili. Yerelleştirme yapılmadı, ilçe alanı \"Bursa dışı\" olarak işaretlendi."
+    },
+    "editor_notu": "Kaynak metin baştan kendi cümlelerimizle yeniden yazıldı; yalnızca Oğuzhan Koç'a ait üç doğrudan alıntı tırnak içinde ve kime ait olduğu belirtilerek korundu. Kaynakta olmayan hiçbir olgu eklenmedi: maçın tarihi, paylaşımın platformu ve saati kaynakta geçmediği için yazılmadı, doğrulama listesine alındı. Aktürkoğlu'nun sözleri kaynakta dolaylı aktarıldığı için tek cümlelik kısmı alıntı olarak verildi; tam açıklama metni bulunup genişletilebilir. Haberin Bursa ilgisi yok, magazin-spor kesişiminde bir tartışma; masa isterse yayınlamama kararı verebilir. Önem \"normal\" bırakıldı."
+  },
+  "tezgah": [
+    {
+      "metin": "Asıl mesele biz, sizi ne olursa olsun destekleyen Fenerlilerin meselesi\" diyerek tepkisini dile getirdi. \"AYAKTA KAL, HAKEME SIĞINMA\" Kerem Aktürkoğlu'nun saha içi mücadelesini de eleştiren Oğuzhan Koç, genç yıldızdan fiziksel anlamda daha dirençli olmasını beklediklerini ifade etti.",
+      "puan": 100,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "Senden tek beklentimiz, yanına başka bir futbolcu gelip dokunduğunda yere düşmemen, yıkılmaman.\" \"ÇIKIP 'UTANIYORUZ' DEYİN\" Sarı-lacivertli futbolcuların mağlubiyeti hakem yönetimine bağlamasını kabul edilemez bulan ünlü sanatçı, açıklamasını sitem dolu şu ifadelerle noktaladı: \"Allah aşkına saçma sapan açıklamaları bırakıp bir taneniz 'utanıyoruz' deyin.",
+      "puan": 100,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "Fenerbahçe'nin Kadıköy'de Beşiktaş'a 2-1 mağlup olduğu dev derbi sonrası Kerem Aktürkoğlu'nun hakem kararları ve takımın form durumu hakkındaki açıklamaları gündemdeki yerini koruyor.",
+      "puan": 81,
+      "oneri": "giriş"
+    },
+    {
+      "metin": "Sıkı bir Fenerbahçe taraftarı olan ünlü şarkıcı Oğuzhan Koç, milli futbolcunun \"Kötü oynadık, bu bizim iç meselemiz\" şeklindeki ifadelerine sert çıktı.",
+      "puan": 76,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "Oğuzhan Koç, milli futbolcuya yönelik eleştirilerini şu sözlerle sürdürdü: \"Senden herhangi bir ikili mücadelede sadece ayakta kalmanı bekliyoruz.",
+      "puan": 68,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "Sosyal medya hesabından paylaşım yapan Koç, \"Sizin kötü oynamaya da 'kötü oynamak bizim iç meselemiz' demeye de zerre hakkınız yok.",
+      "puan": 66,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "En azından aynı duygudayız deriz, yine sizi sever sahip çıkarız. 'Hakem' diye ağlayan Fenerli futbolcu görmek istemiyoruz!\"",
+      "puan": 66,
+      "oneri": "alıntı adayı"
+    },
+    {
+      "metin": "Sizin daha ligin başında bir iç meseleniz olamaz sevgili kardeşim!",
+      "puan": 35,
+      "oneri": "gelişme"
+    }
+  ],
+  "uretim": {
+    "saglayici": "cli",
+    "model": "claude-code-cli",
+    "surum": "1.0",
+    "sema_uyarilari": []
+  },
+  "panel_notlari": [
+    "Araç 'Spor' dedi → SPOR.",
+    "Kaynak: Sözcü.",
+    "Etiketler: derbi, hakem tartışması, sosyal medya, taraftar tepkisi, futbol, süper lig."
+  ]
+}

@@ -204,9 +204,11 @@ FOTO_ALT = {
     "adliye": "Adliye binası", "belediye": "Bursa Büyükşehir Belediyesi hizmet binası",
     "kent": "Bursa kent merkezinden görünüm", "sanayi": "Sanayi bölgesinden görünüm",
     "hastane": "Hastane binası", "okul": "Okul binası ve bahçesi",
-    "baraj": "Baraj gövdesi ve su seviyesi", "tramvay": "Kent içi raylı sistem aracı",
+    "baraj": "Barajı besleyen dere yatağı", "tramvay": "Kent içi raylı sistem aracı",
     "spor": "Spor tesisinden görünüm", "muze": "Müze binası",
     "carsi": "Tarihi çarşıdan görünüm", "tarim": "Tarım arazisi",
+    "itfaiye": "Sokakta duran itfaiye ihbar dolabı",
+    "mudanya": "Mudanya sahilinden genel görünüm",
 }
 
 
@@ -227,23 +229,20 @@ def gorsel_indir(kaynak: dict, slug: str, kok: Path) -> str | None:
     url = (kaynak.get("gorsel_url") or "").strip()
     if not url.lower().startswith(("http://", "https://")):
         return None
-    istek = urllib.request.Request(url, headers={
-        "User-Agent": TARAYICI,
-        "Accept": "image/avif,image/webp,image/png,image/jpeg,*/*;q=0.8",
-        "Referer": kaynak.get("kaynak_url") or url,
-    })
+    # 19 Ekim 2026 (Paket F): indirme guvenli kapidan (`uygulama/icerik/
+    # dis_istek.py`). Ic aga istek yok; yalniz JPEG/PNG/WebP/GIF, tur hem
+    # baslikta hem sihirli baytta tutmali; uzanti TURDEN, adresten degil —
+    # `.svg`/`.html` diske hic yazilmaz.
+    from ayiklayici import guvenli_kapi
+    kapi = guvenli_kapi()
     try:
-        with urllib.request.urlopen(istek, timeout=30) as yanit:
-            tur = (yanit.headers.get("Content-Type") or "").split(";")[0].strip().lower()
-            if not tur.startswith("image/"):
-                return None
-            veri = yanit.read(EN_BUYUK_GORSEL + 1)
-    except (urllib.error.URLError, OSError, ValueError):
+        veri, _tur, uzanti = kapi.gorsel_getir(
+            url, en_cok_bayt=EN_BUYUK_GORSEL,
+            ek_basliklar={"Referer": kaynak.get("kaynak_url") or url})
+    except kapi.DisIstekHatasi:
         return None
-    if not veri or len(veri) > EN_BUYUK_GORSEL:
+    if not slug or "/" in slug or "\\" in slug or slug.startswith("."):
         return None
-
-    uzanti = UZANTI.get(tur) or Path(url.split("?")[0]).suffix.lower() or ".jpg"
     klasor = kok / GORSEL_KLASOR
     klasor.mkdir(parents=True, exist_ok=True)
     (klasor / (slug + uzanti)).write_bytes(veri)
@@ -424,6 +423,14 @@ def detay_2(sablon: str, v: dict) -> str:
             '<p class="spot">%s</p>' % kacir(v["spot"]), "spot")
     s = tek(s, r'<div class="etiket-k">.*?</div>',
             '<div class="etiket-k">%s</div>' % kacir(v["kategori"].upper()), "etiket-k")
+    # "3 MADDEDE NE OLDU" kutusu: sablondan ornek haberin maddeleri geliyordu.
+    # Taslak zaten `uc_madde` uretiyor (SEMA'da bu kutu icin tanimli); baglanmamisti.
+    madde = v["taslak"].get("uc_madde") or []
+    yer = s.find('<div class="ozet">')
+    if madde and yer != -1:
+        ic = "\n".join(
+            "            <li>%s</li>" % kacir(m) for m in madde)
+        s = ic_degistir(s, "<ul>", "ul", "\n" + ic + "\n          ", yer)
     s = ic_degistir(s, '<div class="govde" id="govde">', "div",
                     govde_html(v["taslak"]["govde"], "2", " " * 10,
                                son_blok=kaynak_bolmesi(v, " " * 10)))

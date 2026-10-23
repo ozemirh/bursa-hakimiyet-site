@@ -398,7 +398,7 @@ def taslak_uret_kural(kaynak: dict, sozluk: dict | None = None) -> dict:
     taslak = {
         "baslik_secenekleri": [
             {"metin": "", "gerekce": "Düz haber başlığı: ne oldu, kim yaptı, nerede. "
-                                     "En fazla 70 karakter."},
+                                     "En fazla 60 karakter."},
             {"metin": "", "gerekce": "Sonuç/etki odaklı: bu gelişme okur için ne değiştiriyor?"},
             {"metin": "", "gerekce": "Kısa ve vurucu: 6-7 kelime. Tıklama tuzağı yok."},
         ],

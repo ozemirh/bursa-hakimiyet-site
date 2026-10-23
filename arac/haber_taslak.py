@@ -82,8 +82,10 @@ MUTLAK KURALLAR
 
 ALAN KURALLARI
 - `baslik_secenekleri`: tam 3 secenek. Biri duz haber basligi, biri sonuc/etki
-  odakli, biri kisa ve vurucu olsun. Her birinin gerekcesini yaz. En fazla 70 karakter.
-- `spot`: 1-2 cumle, 160-260 karakter. Basligi tekrar etme, bilgi ekle.
+  odakli, biri kisa ve vurucu olsun. Her birinin gerekcesini yaz. En fazla 60
+  karakter -- panelin baslik siniri bu, asan baslik yayina alinamaz.
+- `spot`: 1-2 cumle, 160-300 karakter. Panelin siniri 320; ustunde yazarsan
+  editor kisaltmak zorunda kalir. Basligi tekrar etme, bilgi ekle.
 - `uc_madde`: "3 maddede ne oldu" kutusu icin uc kisa madde.
 - `govde`: en az 5 blok. Ilk blok paragraf olmali. Uzun haberlerde ara_baslik kullan.
 - `etiketler`: 3-8 adet, kucuk harf, ozel isimler haric.

@@ -1,0 +1,48 @@
+{% extends "panel/taban.html" %}
+
+{% comment %}Köşe yazısı · yazar · galeri · video · kategori · kullanıcı
+düzenleme formlarının ortak kabuğu.
+
+Haber formu (`haber_form.html`) ayrı duruyor: onun alan sırası
+PANEL-NOTLARI.md §4'teki 31 satırlık sözleşmeden geliyor ve gruplamayı
+sözleşme belirliyor. Burada böyle bir döküm YOK — mevcut panelin
+`gallery_add`, `video_add`, `editorialist_add` ekranlarının dökümü elimizde
+değil (§11). Bu yüzden alanlar modelin kendi sırasında basılıyor ve
+uydurulmuş bir gruplama eklenmiyor.{% endcomment %}
+
+{% block icerik %}
+  <div class="kayit-duzen">
+    <form method="post" class="kayit-form" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="kutu tehlike" role="alert">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      {% for alan in form %}
+        {% include "panel/parca/alan.html" with alan=alan ipucu="" %}
+      {% endfor %}
+
+      <div class="eylem">
+        <button type="submit" class="dugme dolu">Kaydet</button>
+        <a class="dugme ufak" href="{% url geri_adi %}">Vazgeç</a>
+      </div>
+    </form>
+
+    <aside class="kayit-yan" aria-label="Kayıt künyesi">
+      <div class="yan-kart">
+        <h2>Künye</h2>
+        <dl class="kunye-liste">
+          {% for ad, deger in kilitli %}
+            <dt>{{ ad }}</dt><dd>{{ deger }}</dd>
+          {% endfor %}
+        </dl>
+        {% if kilit_notu %}<p class="alt-not">{{ kilit_notu }}</p>{% endif %}
+        {% if adres %}
+          <p class="alt-not">Adres: <code>{{ adres }}</code></p>
+          <a class="dugme ufak" href="{{ adres }}">Sayfada gör</a>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+{% endblock %}

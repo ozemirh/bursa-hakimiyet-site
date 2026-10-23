@@ -1,0 +1,51 @@
+{% extends "taban.html" %}
+{% load site_etiket gorsel_etiket %}
+{% comment %}
+Yazar dizini. Veri gelmeden de doğru çalışır: boş liste "henüz göç etmedi"
+diye karşılanır, böylece bu sayfa bekleme sayfasının yerini erkenden alabilir.
+{% endcomment %}
+
+{% block baslik %}Yazarlar — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}Bursa Hakimiyet köşe yazarları ve son yazıları.{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Yazarlar</span>
+      </nav>
+
+      <section class="kutu">
+        <div class="kutu-bas vurgu">
+          <h1>YAZARLAR</h1>
+          <span class="tumu">{{ yazarlar|length }} yazar &middot; <a href="/kose-yazilari">Tüm köşe yazıları &rarr;</a></span>
+        </div>
+        <div class="kutu-ic">
+          <h2 class="gorsel-gizli">Yazar dizini</h2>
+          <div class="yazarlar">
+            {% for y in yazarlar %}
+            <div class="yazar">
+              {% comment %}`.portre` sarmalayıcısı (19 Ekim 2026): kare
+              `object-fit` afişin ORTASINI kesiyordu ve 18 yazarda yüz yerine
+              harita ve ad harfleri görünüyordu. Kırpım anasayfa kuşağının
+              ölçülmüş penceresiyle (`site.css`, `.portre img[src*="-afis"]`).{% endcomment %}
+              {% if y.gorsel_yolu %}
+                <span class="portre">{% gorsel y "vesika" alt=y.ad %}</span>
+              {% else %}
+                <span class="vesika" aria-hidden="true">{{ y.basharfler }}</span>
+              {% endif %}
+              <span>
+                <b><a href="{{ y.get_absolute_url }}">{{ y.ad }}</a></b>
+                {% comment %}`son_yazi` bir SORGU açar; `{% if y.son_yazi %}{{ y.son_yazi }}`
+                yazımı onu yazar başına İKİ kez çağırıyordu (ölçüm: 37 yazar → 74 sorgu).
+                `with` bir kez çağırıp sonucu tutar. Sorguyu tümden kaldırmak DENENDİ
+                ve geri alındı: tek sorguyla harita kurmak 6.713 satır çekiyor ve
+                42,9 ms sürüyor; yazar başına indeks araması 19,0 ms.{% endcomment %}
+                {% with son=y.son_yazi %}{% if son %}<p class="son-yazi">{{ son }}</p>{% endif %}{% endwith %}
+              </span>
+            </div>
+            {% empty %}
+            <p class="bos">Yazar dizini henüz göç etmedi.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+{% endblock %}

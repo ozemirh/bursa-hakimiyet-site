@@ -1,0 +1,56 @@
+{% extends "panel/taban.html" %}
+
+{% comment %}Toplu işlem onayı.
+
+İki durumda açılır: fiil kategori değiştirmekse (**her zaman**, çünkü adres
+kırar) ya da seçim eşikten genişse. PANEL-NOTLARI.md §12'nin şartı burada
+karşılanıyor: kaç adresin değişeceği işlemden ÖNCE söyleniyor ve adres
+deseni hatırlatılıyor.{% endcomment %}
+
+{% block icerik %}
+  <div class="onay-kutu">
+    {% if fiil.kod == "kategori" %}
+      <div class="kutu tehlike" role="alert">
+        <p><b>Bu işlem adresleri değiştirir.</b></p>
+        <p>
+          Haber adresi <code>/{kategori-slug}/{slug}-{id}</code> desenindedir;
+          kategori değişince haberin <b>kanonik adresi de değişir</b>.
+        </p>
+        <p>
+          Seçili <b>{{ sayi }}</b> kaydın <b>{{ adres_degisecek }}</b> tanesinin
+          adresi değişecek{% if hedef %}, hedef kategori <b>{{ hedef.ad }}</b>{% endif %}.
+          Her biri için <b>301 yönlendirme</b> yazılacak; eski bağlantılar
+          kırılmayacak ama <b>kanonik adres artık başka</b> olacak.
+        </p>
+      </div>
+
+      {% if ornekler %}
+        <h2 class="onay-bas">Örnek adres değişimleri</h2>
+        <ul class="onay-ornek">
+          {% for eski, yeni in ornekler %}
+            <li><code>{{ eski }}</code> → <code>{{ yeni }}</code></li>
+          {% endfor %}
+        </ul>
+        <p class="alt-not">İlk beş kayıt gösteriliyor.</p>
+      {% endif %}
+    {% else %}
+      <div class="kutu uyari" role="alert">
+        <p>
+          <b>{{ sayi }}</b> kayıt üzerinde <b>{{ fiil.ad }}</b> işlemi
+          yapılacak. Bu, {{ esik }} kayıtlık onay eşiğinin üstünde.
+        </p>
+        <p>İşlem geri alınamaz; yalnızca aynı fiilin tersi uygulanabilir.</p>
+      </div>
+    {% endif %}
+
+    <form method="post" action="{{ request.path }}" class="onay-form">
+      {% csrf_token %}
+      {% for ad, deger in veri %}<input type="hidden" name="{{ ad }}" value="{{ deger }}">{% endfor %}
+      <input type="hidden" name="onay" value="1">
+      <div class="eylem">
+        <button type="submit" class="dugme dolu">Yine de uygula</button>
+        <a class="dugme ufak" href="{{ geri_adresi|default:"/panel/akis" }}">Vazgeç</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

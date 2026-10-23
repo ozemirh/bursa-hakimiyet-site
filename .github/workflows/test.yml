@@ -1,0 +1,155 @@
+# Bursa Hakimiyet — test turu (19 Ekim 2026)
+#
+# İki veritabanında aynı paket: SQLite (bugünkü geliştirme) ve PostgreSQL
+# (üretim hedefi). PostgreSQL işi göç tamamlanana kadar KIRMIZI olabilir;
+# `continue-on-error` ile turu düşürmez ama sonucu görünür (paket B yeşile
+# çekince bu satır kaldırılır).
+#
+# Başsız Chrome ölçüm testleri (BH_PANEL_OLCUM=1) burada KAPALI: Chrome ve
+# gerçek veri ister, birim turunun parçası değil.
+#
+# Hermetik paket (Paket K, 19 Ekim 2026): test ayarı canlı veriyi depodaki
+# fixture'a (uygulama/icerik/test_verisi/canli/), arşiv ve türev kökünü var
+# olmayan geçici yola yönlendirir; BH_CANLI_VERI_KOK / BH_ARSIV_KOK testte
+# yok sayılır (cekirdek/tests_hermetik.py). Eskiden bu iş
+# test_servis_panelleri_kaldi yüzünden kırmızıydı.
+#
+# Sıra: `--shuffle` ile rastgele; tohum günlükte yazar, düşen sıra
+# `--shuffle <tohum>` ile yerelde aynen yeniden kurulur.
+# Kapsam raporu bilgi amaçlı (uygulama/.coveragerc), turu düşürmez.
+
+name: test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (${{ matrix.veritabani }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    continue-on-error: ${{ matrix.veritabani == 'postgresql' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        veritabani: [sqlite, postgresql]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: bh
+          POSTGRES_PASSWORD: bh-ci-parola
+          POSTGRES_DB: bursahakimiyet
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U bh"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Tek belgelenmiş değişken: test ortamı (manage.py test bunu zaten
+      # kendisi seçer; açık yazmak CI'da tahmine yer bırakmamak için).
+      BH_ORTAM: test
+      PYTHONIOENCODING: utf-8
+      # Arşiv görselleri CI'da yok; yol bilerek boş bir yeri gösterir.
+      BH_ARSIV_KOK: ${{ github.workspace }}/.ci-arsiv-yok
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-gelistirme.txt
+
+      - name: Sistem paketleri (psycopg2 derlemesi için libpq)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libpq-dev
+
+      - name: Bağımlılıklar
+        run: python -m pip install -r requirements-gelistirme.txt
+
+      - name: Veritabanı seçimi
+        if: matrix.veritabani == 'postgresql'
+        run: echo "BH_VERITABANI=postgresql://bh:bh-ci-parola@localhost:5432/bursahakimiyet" >> "$GITHUB_ENV"
+
+      - name: Eksik migration var mı
+        working-directory: uygulama
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Testler
+        working-directory: uygulama
+        env:
+          # Hermetiklik kanıtı: gerçek kökler var olmayan yeri gösterir.
+          BH_CANLI_VERI_KOK: ${{ github.workspace }}/.ci-canli-veri-yok
+        run: python -m coverage run manage.py test --noinput -v 1 --shuffle
+
+      - name: Kapsam özeti (bilgi)
+        if: always()
+        continue-on-error: true
+        working-directory: uygulama
+        run: |
+          python -m coverage report | tail -n 40
+          python -m coverage report --format=total | xargs -I{} echo "Toplam kapsam: %{}"
+
+  denetim:
+    name: üretim ayarları + statik derleme
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PYTHONIOENCODING: utf-8
+      BH_ORTAM: uretim
+      # Gerçek anahtar DEĞİL; yalnız CI'da üretim ayarlarını yüklemek için,
+      # her koşuda yeniden üretilir.
+      BH_SUNUCU_ADLARI: www.bursahakimiyet.com.tr,bursahakimiyet.com.tr
+      # Üretimde zorunlu (bh.E001, cekirdek/denetimler.py): nginx aynı makinede.
+      BH_GUVENILIR_VEKIL: 127.0.0.1,::1
+      BH_STATIK_KOK: ${{ github.workspace }}/.ci-statik
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq libpq-dev
+      - run: python -m pip install -r requirements-gelistirme.txt
+
+      - name: Geçici anahtar
+        run: echo "BH_GIZLI_ANAHTAR=$(python -c 'import secrets; print(secrets.token_urlsafe(64))')" >> "$GITHUB_ENV"
+
+      - name: Fail-closed — anahtarsız üretim AÇILMAMALI
+        working-directory: uygulama
+        run: |
+          if env -u BH_GIZLI_ANAHTAR python manage.py check 2>/dev/null; then
+            echo "HATA: anahtarsız üretim ayarı açıldı"; exit 1
+          fi
+
+      - name: check --deploy (hata düzeyi; W005/W021 HSTS kararı bekliyor)
+        working-directory: uygulama
+        run: python manage.py check --deploy --fail-level ERROR
+
+      - name: collectstatic (özetli adlar + .gz/.br + CSS yorum ayıklama)
+        working-directory: uygulama
+        run: |
+          python manage.py collectstatic --noinput --verbosity 1
+          ls -l "$BH_STATIK_KOK"/stil/site.*.css*
+          test ! -e "$BH_STATIK_KOK/sitemap"
+
+      - name: Kullanılmayan içe aktarma (bilgi; turu düşürmez)
+        continue-on-error: true
+        working-directory: uygulama
+        run: python -m pyflakes .

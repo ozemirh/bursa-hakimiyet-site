@@ -1,0 +1,21 @@
+{% comment %}AKIŞ BLOKLARI — 7 Eylül 2026 (§60, kullanıcı isteği: "kategori
+sayfalarında haberlerin tarihlere bölünmesini kaldır, onun yerine 2'li ve
+3'lü haberlerin sunulacağı bir akış hazırla").
+
+İki geniş kart, üç dar kart, iki, üç… Bloklara bölme görünümde yapılıyor
+(`icerik/views.py`, `_akis_bloklari`); burası yalnız çiziyor. Şablon
+`blok.tur`e bakar, kalem sayısına değil — blok bir gün eksik gelirse
+(bölümün son sayfası) ızgara hücreyi boş bırakır, biçim değişmez.
+
+Kalem şablonu `parca/kart.html`: erişilebilirlik sözleşmesi orada yazılı ve
+akış artık ayrı bir satır bileşeni kullanmıyor. Tek fark spot — ikilide
+basılır, üçlüde basılmaz (`blok.spot`); sütun 357 px'e indiğinde üç satırlık
+spot başlığı bastırıyordu. İki blok aynı görünseydi bölmenin anlamı kalmazdı.
+
+TARİH AYRACI YOK. Bilgi kaybolmuyor: kartın kendi zaman damgası duruyor ve
+`kisa_zaman` süzgeci aynı günün haberinde saat, eskisinde tarih basıyor
+("31 Eki 2025") — ayracın söylediğini kart tek başına söylüyor.{% endcomment %}
+{% for blok in akis %}<div class="akis-blok {{ blok.tur }}">
+{% for h in blok.kalemler %}  {% include "parca/kart.html" with h=h goster_foto=1 goster_spot=blok.spot kategori_gizle=kategori gorsel_yuva=blok.tur %}
+{% endfor %}</div>
+{% endfor %}

@@ -1,0 +1,67 @@
+{% extends "taban.html" %}
+{% load site_etiket gorsel_etiket seo_etiket %}
+{% comment %}
+Yazar sayfası — künye + köşe yazıları listesi.
+
+Portresi olmayan yazarda uzak adrese bağlanmak yerine baş harfli `.vesika`
+kutusu çiziliyor; sayfa internetsiz de açılmalı ve kırık görsel görünmemeli
+(kart şablonundaki kararla aynı).
+{% endcomment %}
+
+{% block baslik %}{{ yazar.ad }} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ yazar.ad }} köşe yazıları — Bursa Hakimiyet.{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ site_koku }}{{ yazar.get_absolute_url }}">{% endblock %}
+{% block og_tur %}profile{% endblock %}
+{% block paylasim_gorseli %}{% include "parca/og_gorsel.html" with nesne=yazar %}{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld "yazar" yazar %}</script>
+<script type="application/ld+json">{% jsonld_kirinti "Yazarlar" "/yazarlar" yazar.ad yazar.get_absolute_url %}</script>{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <ol>
+          <li><a href="/">Anasayfa</a></li>
+          <li><a href="/yazarlar">Yazarlar</a></li>
+          <li><span aria-current="page">{{ yazar.ad }}</span></li>
+        </ol>
+      </nav>
+
+      {% comment %}YAZARIN KÜNYESİ (19 Ekim 2026, sayfaya özel tasarım): köşe
+      yazısının sütun başının büyük hâli. Sayfanın h1'i yazarın adı; altında
+      yalnız arşivden gelen bilgi — yazı sayısı, son yazının tarihi, varsa
+      köşe adı ve özgeçmiş. Köşe adı ve özgeçmiş bugün 37 yazarın hiçbirinde
+      dolu değil (ölçüldü); boş alan için satır basılmaz.{% endcomment %}
+      <section class="kutu gorus-yazar" aria-labelledby="yazar-bas">
+        <header class="gorus-bas">
+          {% comment %}Görsel etiketi (Paket D): `portre` yuvası — afiş şablonu
+          %288 yakınlaştırıldığı için 120 px'lik dairede de geniş türev
+          gerekir. Türev adı kaynak dosya adını taşıdığından `-afis`/`-portre`
+          kırpım kuralları çalışmaya devam eder.{% endcomment %}
+          {% if yazar.gorsel_yolu %}<span class="portre">{% gorsel yazar "portre" alt=yazar.ad hemen=True %}</span>
+          {% else %}<span class="portre vesika" aria-hidden="true">{{ yazar.basharfler }}</span>{% endif %}
+          <div class="gorus-kimlik">
+            <span class="gorus-tur">KÖŞE YAZARI</span>
+            <h1 id="yazar-bas">{{ yazar.ad }}</h1>
+            {% if yazar.unvan %}<span class="gorus-kose">{{ yazar.unvan }}</span>{% endif %}
+            <span class="gorus-sayi">{{ sayfa.paginator.count }} köşe yazısı{% if sayfa.number == 1 and sayfa.0.yayin_zamani %} &middot; son yazı <time datetime="{{ sayfa.0.yayin_zamani|date:'c' }}">{{ sayfa.0.yayin_zamani|date:'j F Y' }}</time>{% endif %}</span>
+          </div>
+        </header>
+        {% if yazar.ozgecmis %}<p class="gorus-ozgecmis">{{ yazar.ozgecmis }}</p>{% endif %}
+        {% if not yazar.sayfasi_tarandi %}
+        <p class="yer-not">Bu yazarın künyesi henüz arşivden alınmadı; kayıt köşe yazılarından türetildi.</p>
+        {% endif %}
+      </section>
+
+      <section class="kutu gorus-arsiv" aria-labelledby="yazilar-bas">
+        <div class="kutu-bas"><h2 id="yazilar-bas">KÖŞE YAZILARI</h2>{% if sayfa.paginator.num_pages > 1 %}<span class="tumu">{{ sayfa.number }}. sayfa / {{ sayfa.paginator.num_pages }}</span>{% endif %}</div>
+        <div class="kutu-ic">
+          {% if sayfa %}
+          <ol class="gorus-liste">
+            {% for y in sayfa %}{% include "medya/parca/yazi_satiri.html" with y=y %}
+            {% endfor %}
+          </ol>
+          {% else %}<p class="bos">Bu yazarın arşivde yazısı yok.</p>{% endif %}
+        </div>
+      </section>
+
+      {% include "parca/sayfalama.html" %}
+{% endblock %}

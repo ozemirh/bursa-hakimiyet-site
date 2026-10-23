@@ -1,0 +1,17 @@
+{% load site_etiket %}{% comment %}
+Köşe yazıları akışının satırı (19 Ekim 2026, `/kose-yazilari`). Yazarın
+kendi arşiv satırının (`yazi_satiri.html`) kardeşi; farkı satırın YAZARI
+da söylemesi — bu akışta yazılar birçok yazardan geliyor. Spot yalnız
+başlıktan FARKLIYSA basılır (arşivin %99'unda ikisi aynı cümle).
+
+21 Ekim 2026 (tasarım önerisi): tarih sütunu KALKTI, tarihi gün başlığı
+söylüyor (`kose_gunleri.html`). Yazar adı bağlantı DEĞİL, `<span>`:
+yazara geçiş sayfanın yazar dizininden yapılıyor ve satırda tek bağlantı
+kalınca o bağlantı bütün satıra yayılabiliyor (dokunma hedefi, site.css
+`.kose-gun-liste a::after`).
+
+21 Ekim 2026 ikinci tur (onaylı iskelet): sağ kenardaki "dk" sütunu da
+kalktı — 1.074 px'lik satırda süre başlıktan ~1.000 px uzakta duruyordu.
+Yazar ve süre başlığın ÜSTÜNDE tek üst bilgi satırı (`.kose-ust`).
+`y.yazar` sorgu açmaz: akış `select_related("yazar")` ile gelir.
+{% endcomment %}<li><span class="kose-ust"><span class="kose-ad">{{ y.yazar.ad }}</span>{% if y.kelime_sayisi %}<span class="sure">{{ y.kelime_sayisi|okuma_dakikasi }} dk</span>{% endif %}</span><a href="{{ y.get_absolute_url }}">{{ y.baslik }}</a>{% if y.spot and y.spot != y.baslik %}<p>{{ y.spot|truncatechars:160 }}</p>{% endif %}</li>

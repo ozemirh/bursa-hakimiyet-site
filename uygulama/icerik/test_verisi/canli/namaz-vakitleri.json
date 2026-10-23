@@ -1,0 +1,166 @@
+{
+ "_not": "Vakitler Diyanet ölçütleriyle hesaplanır: imsak 18°, yatsı 17°, ikindi Şafii (gölge çarpanı 1), güneş/akşam rakım düzeltmeli ufuk. Temkin değerleri Diyanet'in yayımladığı tabloyla karşılaştırılarak ölçülmüştür; denetim bloğuna bakınız.",
+ "guncelleme": "2026-09-12T15:12:02+03:00",
+ "bayat_esik_dakika": 2880,
+ "kaynak": {
+  "ad": "Diyanet İşleri Başkanlığı ölçütleriyle astronomik hesap",
+  "kisa": "hesap",
+  "adres": "",
+  "kosullar": "",
+  "kunye": "Vakitler Diyanet İşleri Başkanlığı'nın ölçütlerine göre hesaplanmıştır."
+ },
+ "yer": {
+  "ad": "Bursa",
+  "enlem": 40.1826,
+  "boylam": 29.0665,
+  "rakim": 155
+ },
+ "yontem": {
+  "imsak_aci": 18.0,
+  "yatsi_aci": 17.0,
+  "ikindi_carpan": 1,
+  "zaman_dilimi": 3.0,
+  "temkin_dakika": {
+   "imsak": 0,
+   "gunes": -5,
+   "ogle": 5,
+   "ikindi": 4,
+   "aksam": 5,
+   "yatsi": 1
+  }
+ },
+ "vakit_adlari": {
+  "imsak": "İmsak",
+  "gunes": "Güneş",
+  "ogle": "Öğle",
+  "ikindi": "İkindi",
+  "aksam": "Akşam",
+  "yatsi": "Yatsı"
+ },
+ "gunler": [
+  {
+   "tarih": "2026-09-12",
+   "vakitler": {
+    "imsak": "05:09",
+    "gunes": "06:34",
+    "ogle": "13:05",
+    "ikindi": "16:37",
+    "aksam": "19:25",
+    "yatsi": "20:46"
+   }
+  },
+  {
+   "tarih": "2026-09-13",
+   "vakitler": {
+    "imsak": "05:10",
+    "gunes": "06:35",
+    "ogle": "13:05",
+    "ikindi": "16:36",
+    "aksam": "19:23",
+    "yatsi": "20:44"
+   }
+  },
+  {
+   "tarih": "2026-09-14",
+   "vakitler": {
+    "imsak": "05:11",
+    "gunes": "06:36",
+    "ogle": "13:04",
+    "ikindi": "16:35",
+    "aksam": "19:22",
+    "yatsi": "20:42"
+   }
+  },
+  {
+   "tarih": "2026-09-15",
+   "vakitler": {
+    "imsak": "05:12",
+    "gunes": "06:37",
+    "ogle": "13:04",
+    "ikindi": "16:34",
+    "aksam": "19:20",
+    "yatsi": "20:40"
+   }
+  },
+  {
+   "tarih": "2026-09-16",
+   "vakitler": {
+    "imsak": "05:13",
+    "gunes": "06:38",
+    "ogle": "13:04",
+    "ikindi": "16:33",
+    "aksam": "19:18",
+    "yatsi": "20:39"
+   }
+  },
+  {
+   "tarih": "2026-09-17",
+   "vakitler": {
+    "imsak": "05:14",
+    "gunes": "06:39",
+    "ogle": "13:03",
+    "ikindi": "16:32",
+    "aksam": "19:17",
+    "yatsi": "20:37"
+   }
+  },
+  {
+   "tarih": "2026-09-18",
+   "vakitler": {
+    "imsak": "05:15",
+    "gunes": "06:40",
+    "ogle": "13:03",
+    "ikindi": "16:31",
+    "aksam": "19:15",
+    "yatsi": "20:35"
+   }
+  }
+ ],
+ "denetim": {
+  "gun": 7,
+  "eksik_vakit": 0,
+  "dogrulama": {
+   "referans": "Diyanet İşleri Başkanlığı vakitleri, 2026 Ağustos, Bursa. 27 Ağustos 2026'da iki bağımsız yayından alınıp birebir aynı olduğu doğrulandı.",
+   "gun": 31,
+   "vakitler": {
+    "imsak": {
+     "azami_sapma_dk": 0,
+     "ortalama_sapma_dk": 0.0,
+     "birebir": 31,
+     "gun": 31
+    },
+    "gunes": {
+     "azami_sapma_dk": 1,
+     "ortalama_sapma_dk": -0.32,
+     "birebir": 21,
+     "gun": 31
+    },
+    "ogle": {
+     "azami_sapma_dk": 1,
+     "ortalama_sapma_dk": -0.16,
+     "birebir": 26,
+     "gun": 31
+    },
+    "ikindi": {
+     "azami_sapma_dk": 1,
+     "ortalama_sapma_dk": -0.35,
+     "birebir": 20,
+     "gun": 31
+    },
+    "aksam": {
+     "azami_sapma_dk": 1,
+     "ortalama_sapma_dk": -0.68,
+     "birebir": 10,
+     "gun": 31
+    },
+    "yatsi": {
+     "azami_sapma_dk": 1,
+     "ortalama_sapma_dk": -0.42,
+     "birebir": 18,
+     "gun": 31
+    }
+   },
+   "azami_sapma_dk": 1
+  }
+ }
+}

@@ -1,0 +1,13 @@
+{% comment %}Nöbet listesi GEÇERSİZ — `p` bekler (`canli.eczane_paneli` paketi,
+`p.gecersiz` doğru).
+
+19 Ekim 2026 (L1): dünden eski liste artık hiç basılmıyor. Nöbet günde bir
+devrediyor; 12 Eylül listesi 37 gün "tazelenemedi" uyarısıyla gösterilmişti
+ve okuru kapalı eczaneye gönderiyordu. Kural tek yerde:
+`canli.GECERLIK_GUN`. Bu parça anasayfa paneli, `/nobetci-eczane` ve ilçe
+sayfalarının servis paneli tarafından ortak kullanılır.
+
+Bağlantı çizelgenin resmî sahibine gider (dosyanın `kaynak.adres`ı, yoksa
+`canli.ECZANE_KAYNAK_ADRESI`). Dış bir ÇIKIŞTIR, kaynak değil: sayfa onu
+yüklemez. Yeni sekmede açıldığı ekran okuyucuya söylenir.{% endcomment %}
+<p class="eczane-gecersiz" role="status"><b>Nöbet listesi şu an alınamıyor</b> &mdash; <a href="{{ p.kaynak_adresi }}" target="_blank" rel="noopener noreferrer">{{ p.kaynak_adi }}<span class="gorsel-gizli"> nöbet çizelgesi, yeni sekmede açılır</span></a></p>

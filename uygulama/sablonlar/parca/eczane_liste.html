@@ -1,0 +1,20 @@
+{% comment %}Nöbetçi eczane satırları — `kayitlar` bekler.
+
+Anasayfa panelindeki satırla aynı bilgiyi taşır ama burası liste sayfası:
+kutu genişliği iki katı ve satır kırpılmıyor. Sınıf adları `.eczane-kart`
+ile ayrı; paneldeki `.eczane-liste` kendi kaydırma kutusuna bağlı.
+
+Adres kaynaktaki hâliyle basılır: başlık biçimine sokmak "NO:1A/A"yı
+"No:1a/a" yapıyor (31 Ağustos ölçümü).{% endcomment %}
+{% load site_etiket %}
+<ol class="eczane-kartlar">
+{% for e in kayitlar %}  <li{% if e.nobette %} class="acik"{% endif %}>
+    <h3>{{ e.ad|baslikla }}</h3>
+    <p class="nerede">{{ e.ilce|baslikla }}{% if e.saat %} &middot; <span class="saat">Nöbet {{ e.saat }}</span>{% endif %}{% if e.nobette %} &middot; <span class="simdi">şu an nöbette</span>{% endif %}</p>
+    {% if e.adres %}<p class="adres">{{ e.adres }}</p>{% endif %}
+    <p class="baglantilar">
+      {% if e.telefon %}<a class="telefon" href="tel:{{ e.telefon_baglanti }}">{{ e.telefon }}</a>{% endif %}
+      {% if e.harita %}<a class="yol" href="{{ e.harita }}" target="_blank" rel="noopener noreferrer">Yol tarifi<span class="gorsel-gizli"> ({{ e.ad|baslikla }}, yeni sekmede haritada açılır)</span></a>{% endif %}
+    </p>
+  </li>
+{% endfor %}</ol>

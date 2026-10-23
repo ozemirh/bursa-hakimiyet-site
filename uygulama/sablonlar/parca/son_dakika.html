@@ -1,0 +1,74 @@
+{% comment %}SON DAKİKA — şerit manşeti + zaman rayı (2 Eylül 2026, §44).
+
+Kullanıcı: "tamamen kırmızı yapma, ama onu dikkat çekici yap" — ardından
+"global ve ulusal haber sitelerinde son dakika nasıl sunuluyor incele".
+
+İncelenen kalıplar: Sözcü (koyu plaka + dolu kırmızı şeritte TEK manşet),
+Milliyet/Hürriyet (nav altında tek satırlık şerit), CNN Türk "CANLI
+ANLATIM" (noktalı dikey zaman rayı, "2 saat önce"), BBC/Guardian (panel
+yok; kırmızı ● LIVE rozeti + "17 mins ago"), Spiegel (son üç başlık,
+"Vor 6 Min").
+
+Ortak ders: iyi çalışan hiçbir örnek RENKLİ KUTU İÇİNDE TARİH LİSTESİ
+değil. Ya tek satıra indirip orada bağırıyorlar, ya kutuyu sakinleştirip
+tazeliği GÖRELİ ZAMANLA gösteriyorlar. Panel ikisini birden yapıyor:
+  · en yeni kalem ŞERİDE çıktı — koyu plaka + dolu kırmızı alanda tek
+    manşet, bir satır yüksekliğinde
+  · kalanlar beyaz zeminde ZAMAN RAYINDA, "14 dk önce" damgasıyla
+
+30 Ağustos'tan (§36) devralınanlar: kutu kayan şerit DEĞİL sabit liste —
+kayan yazı okunması en zor kalıptır ve `prefers-reduced-motion` açık olan
+okur yalnız ilk kalemleri görüyordu. Aynı başlık DOM'da bir kez geçer,
+hepsi arama motoruna metin olarak görünür.
+
+`id="son-dakika"` duruyor ama mega menünün hedefi DEĞİL artık: 23 Ekim
+2026'da kutu anasayfadan kalktı, menü `/son-haberler`e gidiyor. Kutu rayda olduğu için ray taşıyan sayfalarda (anasayfa, haber
+detay, köşe yazısı) çizilir.
+
+19 Ekim 2026 (Paket H): kalemler `baglam.son_dakika_bandi`nden gelir —
+masanın `SonDakika` kayıtları varsa onlar (CANLI pili yanar), yoksa son
+haberler (pil YOK). Etiket iki durumda da "SON DAKİKA" (23 Ekim 2026,
+kullanıcı kararı). Kalemin üç alanı var: baslik · yol · zaman.{% endcomment %}
+{% load site_etiket %}{% comment %}`genis`: anasayfada manşetin altında, reklam
+ panosunun yanında iki sütunlu; raylarda (haber detay, köşe yazısı) bayraksız
+ ve tek sütun.{% endcomment %}
+<div class="kutu sondakika{% if genis %} genis{% endif %}" id="son-dakika">
+  {% comment %}ŞERİT iki parça: koyu plaka (CANLI pili + bölüm adı) ve dolu
+  kırmızı manşet alanı. Tek renk olsaydı "SON DAKİKA" yazısı manşetin
+  parçası gibi okunuyordu.{% endcomment %}
+  <div class="sondakika-serit">
+    <span class="sondakika-plaka">
+      {% if son_dakika.canli %}<span class="sondakika-canli"><span class="nokta" aria-hidden="true"></span>CANLI</span>{% endif %}
+      <h2>{{ son_dakika.etiket|default:"SON DAKİKA" }}</h2>
+    </span>
+    {% with bas=son_dakika.0 %}{% if bas %}
+    {% comment %}Başlık BÜYÜK harfe `buyult` ile çevriliyor, CSS
+    `text-transform` ile değil: tarayıcının büyütmesi Türkçe'de "i" harfini
+    "I" yapıyor ("İzmir" -> "IZMIR"). Süzgeç i/İ ve ı/I çiftlerini elle
+    çevirir.{% endcomment %}
+    <a class="sondakika-manset" href="{{ bas.yol }}">
+      {% with z=bas.zaman|goreli_zaman %}{% if z %}<time datetime="{{ bas.zaman|date:'c' }}">{{ z }}</time>{% endif %}{% endwith %}
+      <span class="baslik">{{ bas.baslik|buyult }}</span>
+    </a>
+    {% endif %}{% endwith %}
+    {% comment %}"TÜMÜ" şeridin sağ ucunda, kendi ayracının arkasında: kutunun
+    dibinde ayrı satır olduğunda panel yandaki 300x250 panodan 55 px uzuyordu
+    (1400 px ölçümü).{% endcomment %}
+    <a class="sondakika-tumu" href="/son-haberler">TÜMÜ &rarr;</a>
+  </div>
+  <div class="kutu-ic">
+    <ul class="sondakika-liste">
+      {% comment %}İlk kalem şeritte basıldı, liste ikinciden başlar.
+      `goreli_zaman`: 24 saate kadar "14 dk önce" / "3 saat önce", ötesinde
+      BOŞ — tarih basılmaz (23 Ekim 2026, kullanıcı isteği: son haberler
+      zaten o günün haberi). Damgası olmayan kalem `zamansiz` alır, başlık
+      zaman sütununa da yayılır.{% endcomment %}
+      {% for h in son_dakika|slice:"1:" %}{% with z=h.zaman|goreli_zaman %}
+      <li{% if not z %} class="zamansiz"{% endif %}>
+        {% if z %}<time datetime="{{ h.zaman|date:'c' }}">{{ z }}</time>{% endif %}
+        <a href="{{ h.yol }}">{{ h.baslik }}</a>
+      </li>
+      {% endwith %}{% endfor %}
+    </ul>
+  </div>
+</div>

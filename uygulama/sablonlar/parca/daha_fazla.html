@@ -1,0 +1,48 @@
+{% comment %}"DAHA FAZLA GÖSTER" DÜĞMESİ (6 Eylül 2026, §48, kullanıcı isteği:
+"hem anasayfada hem de kategori sayfalarında daha fazla göster seçeneği ekle
+haberler için, numaralara bölme sayfaları").
+
+Numaralı sayfalama (`parca/sayfalama.html`) kategori ve ilçe sayfasından
+kalktı; bu düğme onun yerini aldı. Sayfalama parçası SİLİNMEDİ — arama,
+konu dizini ve resmî ilan dizini onu kullanmaya devam ediyor; oralarda okur
+bir SONUÇ KÜMESİNDE geziniyor ve "kaçıncı sayfadayım" bilgisi işine yarıyor.
+
+Düğme bir `<button>` DEĞİL, gerçek bir bağlantıdır ve bu bilinçli:
+
+  - JavaScript kapalıysa ya da yüklenemediyse tıklama gerçek bir sayfaya
+    gider (`?sayfa=2`, anasayfada `/son-haberler`). Numaralar gitti, arşivin
+    tarama yolu gitmedi.
+  - Arama motoru `rel="next"` zincirini yürüyerek bölümün tamamına iner.
+    `<button>` olsaydı arşivin ikinci sayfasından sonrası dizinde yoktu.
+
+JavaScript varsa (site.js) tıklama yakalanır, `data-uc` ucundan dilim
+çekilir ve `data-hedef` seçicisinin gösterdiği listenin sonuna eklenir.
+
+Beklenen değişkenler:
+  devam       — düğme basılsın mı (kategori sayfasında `sayfa.has_next`)
+  sonraki     — uçtan istenecek dilim numarası
+  daha_uc     — parça ucu, `/daha-fazla?kaynak=…`
+  daha_adres  — JavaScript'siz tıklamanın gideceği gerçek adres. Boşsa
+                `?sayfa=<sonraki>` kullanılır: kategori, ilçe ve son haberler
+                sayfalarında düğme aynı sayfanın devamına gider, o yüzden
+                adresi yalnız anasayfa açıkça yollar.
+  daha_hedef  — kalemlerin ekleneceği kabın CSS seçicisi
+  daha_metin  — düğme metni (boşsa "Daha fazla haber göster")
+  daha_son    — arşivin sonundaki satır (boşsa betikteki "…tüm haberler
+                yüklendi."); köşe yazıları akışı "yazılar" der{% endcomment %}
+{% if devam %}
+<div class="daha-fazla-kap">
+  <a class="daha-fazla" href="{% if daha_adres %}{{ daha_adres }}{% else %}?sayfa={{ sonraki }}{% endif %}" rel="next"
+     data-uc="{{ daha_uc }}" data-hedef="{{ daha_hedef }}" data-sayfa="{{ sonraki }}"{% if daha_son %} data-son="{{ daha_son }}"{% endif %}>{% if daha_metin %}{{ daha_metin }}{% else %}Daha fazla haber göster{% endif %}</a>
+  {% comment %}Yükleme HATASINI bildiren alan. Başarı durumunda yazı yok
+  (7 Eylül 2026, kullanıcı isteği: "20 haber eklendi… yazısını kaldır") —
+  aynı gün odak yeni yığının ilk kalemine taşınmaya başladı ve ekran
+  okuyucu onu zaten okuyor, satır ikinci kez söylüyordu.
+
+  Alan yine de duruyor ve `role="status"` taşıyor: uç çökerse düğme
+  görünüşte hiçbir şey yapmamış olur, o durumda okurun ne olduğunu ve ne
+  yapabileceğini okuması gerekiyor. İçi boşken `:empty` ile gizleniyor,
+  yer kaplamıyor (site.css).{% endcomment %}
+  <p class="daha-fazla-durum" role="status" aria-live="polite"></p>
+</div>
+{% endif %}

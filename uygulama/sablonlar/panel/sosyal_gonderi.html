@@ -1,0 +1,100 @@
+{% extends "panel/taban.html" %}
+
+{% comment %}Kuyruk satırının ekranı.
+
+Kabuk `kayit_form.html` ile aynı (`kayit-duzen` + `yan-kart`); ayrı şablon
+olmasının sebebi düğmeler: burada beş ayrı fiil var ve her biri aynı formu
+farklı `eylem` değeriyle gönderiyor.
+
+Düğmeler duruma göre çizilir ama yetki denetimi GÖRÜNÜMDE: çizilmemiş
+düğmenin isteği elle kurulabilir.{% endcomment %}
+
+{% block icerik %}
+  <div class="kayit-duzen">
+    <form method="post" class="kayit-form" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="kutu tehlike" role="alert">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      {% if gonderi.durum == "hata" %}
+        <div class="kutu tehlike" role="alert">
+          <p><b>Son deneme başarısız.</b> {{ gonderi.hata_metni }}</p>
+          <p>Deneme sayısı: {{ gonderi.deneme }}. Metni düzeltip yeniden
+             gönderebilir ya da elle paylaşıp işaretleyebilirsiniz.</p>
+        </div>
+      {% elif not otomatik_olur %}
+        <div class="kutu bilgi">
+          <p><b>Bu platforma panelden gönderilmiyor.</b> {{ yardim }}</p>
+        </div>
+      {% elif eksik_alanlar %}
+        <div class="kutu uyari">
+          <p><b>Hesabın anahtarı eksik:</b> {{ eksik_alanlar|join:", " }}.</p>
+          <p>Gönderi elle paylaşılacak. Metni kopyalayın, paylaşın, sonra
+             “Paylaşıldı” düğmesine basın.</p>
+        </div>
+      {% elif not yayinda %}
+        <div class="kutu uyari">
+          <p><b>Haber henüz yayında değil.</b> Satır kuyrukta kalıyor;
+             haber yayına alınınca gönderilecek.</p>
+        </div>
+      {% endif %}
+
+      {% include "panel/parca/alan.html" with alan=form.metin %}
+      {% if sinir %}
+        <p class="alt-not">Ölçülen uzunluk <b>{{ uzunluk }}</b> / {{ sinir }}.
+          X'te bağlantı kaç karakter olursa olsun 23 sayılır.</p>
+      {% endif %}
+      {% include "panel/parca/alan.html" with alan=form.gorsel_adres %}
+      {% include "panel/parca/alan.html" with alan=form.dis_adres %}
+
+      <div class="eylem">
+        <button type="submit" class="dugme dolu" name="eylem" value="kaydet">Kaydet</button>
+        {% if gonderilebilir %}
+          <button type="submit" class="dugme" name="eylem" value="gonder">Şimdi gönder</button>
+        {% endif %}
+        {% if gonderi.durum != "gonderildi" %}
+          <button type="submit" class="dugme" name="eylem" value="paylasildi">Paylaşıldı işaretle</button>
+        {% endif %}
+        <button type="submit" class="dugme ufak" name="eylem" value="tazele">Metni tazele</button>
+        {% if gonderi.durum != "gonderildi" and gonderi.durum != "iptal" %}
+          <button type="submit" class="dugme ufak" name="eylem" value="iptal">İptal et</button>
+        {% endif %}
+        <a class="dugme ufak" href="{% url 'panel-sosyal' %}">Kuyruğa dön</a>
+      </div>
+    </form>
+
+    <aside class="kayit-yan" aria-label="Gönderi künyesi">
+      <div class="yan-kart">
+        <h2>Künye</h2>
+        <dl class="kunye-liste">
+          <dt>Durum</dt>
+          <dd><span class="durum-etiket {{ gonderi.durum_sinifi }}">{{ gonderi.get_durum_display }}</span></dd>
+          <dt>Hesap</dt><dd>{{ gonderi.hesap.ad }}</dd>
+          <dt>Platform</dt><dd>{{ gonderi.hesap.get_platform_display }}</dd>
+          <dt>Açan</dt><dd>{{ gonderi.olusturan.get_username|default:"—" }}</dd>
+          <dt>Açılış</dt><dd>{{ gonderi.olusma_zamani|date:"d.m.Y H:i" }}</dd>
+          <dt>Gönderim</dt>
+          <dd>{{ gonderi.gonderim_zamani|date:"d.m.Y H:i"|default:"—" }}</dd>
+          <dt>Deneme</dt><dd>{{ gonderi.deneme }}</dd>
+        </dl>
+        <p class="alt-not">Haber: <a href="/panel/haber/{{ gonderi.haber_id }}">[{{ gonderi.haber_id }}] {{ gonderi.haber.baslik }}</a></p>
+        <p class="alt-not">Yayın adresi: <code>{{ haber_adresi }}</code></p>
+        {% if gonderi.dis_adres %}
+          <a class="dugme ufak" href="{{ gonderi.dis_adres }}" rel="noopener">Paylaşımı aç</a>
+        {% endif %}
+      </div>
+
+      {% if paylas_adresi %}
+        <div class="yan-kart">
+          <h2>Elle paylaşım</h2>
+          <p class="alt-not">Bağlantı platformun kendi paylaşım penceresini
+             metinle birlikte açar. Paylaştıktan sonra “Paylaşıldı”
+             düğmesine basmayı unutmayın.</p>
+          <a class="dugme ufak" href="{{ paylas_adresi }}" target="_blank" rel="noopener">{{ gonderi.hesap.get_platform_display }} penceresini aç</a>
+        </div>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

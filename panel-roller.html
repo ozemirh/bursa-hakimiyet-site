@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Roller — Bursa Hakimiyet Yönetim Paneli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===== değişkenler — yapay-zeka-editor.html araç dilinden miras ===== */
+:root{
+  --murekkep:#12181F;--gri:#5B6672;--gri-acik:#8B97A3;
+  --kirmizi:#D51C24;--lacivert:#1B2A6B;--deniz:#0E6E6E;
+  --cizgi:#E3E8EC;--yuzey:#FFFFFF;--zemin:#F4F6F8;
+  --artis:#0B6E3B;
+  --uyari-zemin:#FFF8E6;--uyari-cizgi:#E8C766;--uyari-yazi:#6B4E00;
+  --tehlike-zemin:#FDECEC;--tehlike-cizgi:#F0A9A9;--tehlike-yazi:#8C1D1D;
+  --bilgi-zemin:#EAF4F4;--bilgi-cizgi:#A8CFCF;--bilgi-yazi:#0B4A4A;
+  --tezgah-zemin:#FBF7EF;--tezgah-cizgi:#E4D9C4;--tezgah-yazi:#6B5A38;
+  --guclu-zemin:#ECF6F0;--guclu-cizgi:#9BC9AE;--guclu-yazi:#0B5A32;
+  /* panel kabuğuna özgü */
+  --kenar-zemin:#12181F;--kenar-yazi:#AEB8C2;--kenar-aktif:#FFFFFF;--kenar-cizgi:#232C36;
+  --beyaz:#FFFFFF;--etiket-vurgu:rgba(11,74,74,.14);
+  --toplu-cizgi:rgba(255,255,255,.28);--toplu-vurgu:rgba(255,255,255,.12);
+  --toplu-ayrac:rgba(255,255,255,.2);
+  --serif:"Source Serif 4",Georgia,serif;
+  --sans:"Inter",-apple-system,Segoe UI,Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --golge:0 1px 2px rgba(18,24,31,.05),0 8px 24px rgba(18,24,31,.06);
+  --duyuru-golge:0 8px 30px rgba(18,24,31,.28);
+  --kenar-genislik:212px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--zemin);color:var(--murekkep);font-family:var(--sans);font-size:15px;line-height:1.5}
+a{color:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--deniz);outline-offset:2px}
+
+.atla{position:absolute;left:-9999px;top:0;background:var(--yuzey);padding:12px 18px;z-index:60;border-radius:0 0 8px 0;font-weight:600}
+.atla:focus{left:0}
+
+/* ===== üst bant ===== */
+.bant{background:var(--yuzey);border-bottom:1px solid var(--cizgi);position:sticky;top:0;z-index:30;
+  display:flex;align-items:center;gap:16px;padding:11px 20px;flex-wrap:wrap}
+.logo-img{height:30px;width:auto;display:block}
+.arac-ad{font-family:var(--serif);font-weight:700;font-size:17px;letter-spacing:-.3px;
+  border-left:1px solid var(--cizgi);padding-left:16px}
+.rozet{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  border:1px solid var(--cizgi);border-radius:999px;padding:4px 10px;color:var(--gri);white-space:nowrap}
+.rozet.demo{border-color:var(--uyari-cizgi);background:var(--uyari-zemin);color:var(--uyari-yazi)}
+.bant .sag{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13.5px;color:var(--gri)}
+.kim{display:flex;align-items:center;gap:8px}
+.kim .bas-harf{width:28px;height:28px;border-radius:50%;background:var(--lacivert);color:var(--beyaz);
+  display:grid;place-items:center;font-size:12px;font-weight:600}
+
+/* ===== kabuk ===== */
+.panel{display:flex;align-items:flex-start;min-height:calc(100vh - 53px)}
+.kenar{width:var(--kenar-genislik);flex:0 0 var(--kenar-genislik);background:var(--kenar-zemin);
+  align-self:stretch;padding:16px 0;position:sticky;top:53px;height:calc(100vh - 53px);overflow-y:auto}
+.kenar-bas{font-family:var(--mono);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--gri-acik);padding:0 18px 10px}
+.kenar ul{list-style:none}
+.kenar a{display:flex;align-items:center;gap:10px;padding:9px 18px;color:var(--kenar-yazi);
+  text-decoration:none;font-size:14px;border-left:3px solid transparent}
+.kenar a:hover{color:var(--kenar-aktif);background:var(--kenar-cizgi)}
+.kenar a[aria-current="page"]{color:var(--kenar-aktif);border-left-color:var(--kirmizi);
+  background:var(--kenar-cizgi);font-weight:600}
+.kenar .alt{list-style:none;padding-left:0}
+.kenar .alt a{padding-left:40px;font-size:13.5px}
+.kenar .im{width:16px;text-align:center;flex:0 0 16px;font-size:13px;opacity:.75}
+.kenar .say{margin-left:auto;font-family:var(--mono);font-size:10.5px;background:var(--kirmizi);
+  color:var(--beyaz);border-radius:999px;padding:1px 6px}
+
+.calisma{flex:1;min-width:0;padding:0 0 60px}
+
+/* ===== sayfa başlığı ===== */
+.sayfa-bas{background:var(--yuzey);border-bottom:1px solid var(--cizgi);padding:16px 26px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:53px;z-index:20}
+.sayfa-bas h1{font-family:var(--serif);font-size:22px;letter-spacing:-.4px;font-weight:700}
+.iz{font-size:12.5px;color:var(--gri-acik);width:100%;margin-bottom:-4px}
+.iz a{text-decoration:none}
+.iz a:hover{text-decoration:underline}
+.sayfa-bas .eylem{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+.btn{border:1px solid var(--cizgi);background:var(--yuzey);border-radius:9px;padding:9px 15px;
+  font:inherit;font-size:14px;font-weight:600;cursor:pointer;color:var(--murekkep);white-space:nowrap}
+.btn:hover{border-color:var(--deniz);color:var(--deniz)}
+.btn.dolu{background:var(--lacivert);border-color:var(--lacivert);color:var(--beyaz)}
+.btn.dolu:hover{background:var(--deniz);border-color:var(--deniz);color:var(--beyaz)}
+.btn.ufak{padding:6px 11px;font-size:13px;border-radius:7px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:disabled:hover{border-color:var(--cizgi);color:var(--murekkep)}
+
+/* ===== iki sütun ===== */
+.duzen{display:grid;grid-template-columns:minmax(0,1fr) 316px;gap:22px;padding:22px 26px;align-items:start}
+
+/* ===== form blokları ===== */
+.blok{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:12px;
+  padding:20px 22px;margin-bottom:18px;box-shadow:var(--golge)}
+.blok-bas{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.blok-bas h2{font-family:var(--serif);font-size:17px;font-weight:700;letter-spacing:-.2px}
+.blok-bas .no{font-family:var(--mono);font-size:11px;color:var(--gri-acik);
+  border:1px solid var(--cizgi);border-radius:6px;padding:2px 7px}
+.blok-not{color:var(--gri);font-size:13.5px;margin-bottom:16px;max-width:78ch}
+
+.alan{margin-bottom:16px}
+.alan:last-child{margin-bottom:0}
+.alan>label,.alan .etiket{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.alan .zorunlu{color:var(--kirmizi);margin-left:2px}
+.ipucu{color:var(--gri);font-size:12.5px;margin-top:5px;line-height:1.45}
+input[type=text],input[type=url],input[type=datetime-local],textarea,select{
+  width:100%;border:1px solid var(--cizgi);border-radius:9px;padding:10px 12px;font:inherit;
+  font-size:14.5px;background:var(--zemin);color:var(--murekkep)}
+textarea{resize:vertical;line-height:1.55}
+select{cursor:pointer}
+input:disabled,textarea:disabled,select:disabled{opacity:.55;cursor:not-allowed}
+.ikili{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.uclu{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:760px){.ikili,.uclu{grid-template-columns:1fr}}
+
+.sayac{float:right;font-family:var(--mono);font-size:11.5px;color:var(--gri-acik);font-weight:400}
+.sayac.dolmak-uzere{color:var(--uyari-yazi)}
+.sayac.tasti{color:var(--tehlike-yazi);font-weight:600}
+
+/* onay kutuları */
+.kutucuk{display:flex;align-items:flex-start;gap:9px;margin-bottom:10px;font-size:14px;cursor:pointer}
+.kutucuk:last-child{margin-bottom:0}
+.kutucuk input{margin-top:2.5px;width:16px;height:16px;flex:0 0 16px;accent-color:var(--lacivert);cursor:pointer}
+.kutucuk .yazi b{display:block;font-weight:600}
+.kutucuk .yazi span{color:var(--gri);font-size:12.5px}
+fieldset{border:0}
+legend{font-weight:600;font-size:14px;margin-bottom:6px}
+.yatay{display:flex;gap:18px;flex-wrap:wrap}
+
+/* ===== rozet / uyarı kutuları ===== */
+.bekleme{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.6px;text-transform:uppercase;background:var(--uyari-zemin);
+  border:1px solid var(--uyari-cizgi);color:var(--uyari-yazi);border-radius:999px;padding:2px 8px;
+  vertical-align:middle;margin-left:6px}
+.yeni{display:inline-flex;font-family:var(--mono);font-size:10px;letter-spacing:.6px;text-transform:uppercase;
+  background:var(--guclu-zemin);border:1px solid var(--guclu-cizgi);color:var(--guclu-yazi);
+  border-radius:999px;padding:2px 8px;vertical-align:middle;margin-left:6px}
+.kutu{border-radius:10px;padding:12px 14px;font-size:13.5px;line-height:1.5;margin-top:12px}
+.kutu.uyari{background:var(--uyari-zemin);border:1px solid var(--uyari-cizgi);color:var(--uyari-yazi)}
+.kutu.tehlike{background:var(--tehlike-zemin);border:1px solid var(--tehlike-cizgi);color:var(--tehlike-yazi)}
+.kutu.bilgi{background:var(--bilgi-zemin);border:1px solid var(--bilgi-cizgi);color:var(--bilgi-yazi)}
+.kutu.tezgah{background:var(--tezgah-zemin);border:1px solid var(--tezgah-cizgi);color:var(--tezgah-yazi)}
+.kutu b{font-weight:600}
+
+/* ===== kaynak bloğu ===== */
+.adres-satir{display:flex;gap:9px;flex-wrap:wrap}
+.adres-satir input{flex:1 1 340px;min-width:0}
+.yollar{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;align-items:center}
+.yollar .baslik{font-size:12px;color:var(--gri-acik);font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+.cip{border:1px solid var(--cizgi);background:var(--zemin);border-radius:999px;padding:6px 13px;
+  font:inherit;font-size:13px;cursor:pointer;color:var(--gri)}
+.cip[aria-pressed="true"]{background:var(--lacivert);border-color:var(--lacivert);color:var(--beyaz);font-weight:600}
+.kaynak-bolme{margin-top:14px;border:1px solid var(--cizgi);border-radius:10px;overflow:hidden}
+.kaynak-bolme dl{display:grid;grid-template-columns:130px 1fr;font-size:13.5px}
+.kaynak-bolme dt{padding:9px 13px;background:var(--zemin);font-weight:600;border-bottom:1px solid var(--cizgi);color:var(--gri)}
+.kaynak-bolme dd{padding:9px 13px;border-bottom:1px solid var(--cizgi);word-break:break-word}
+.kaynak-bolme dl>:nth-last-child(-n+2){border-bottom:0}
+
+/* ===== etiket çipleri ===== */
+.etiketler{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px;min-height:2px}
+.etiket-cip{display:inline-flex;align-items:center;gap:6px;background:var(--bilgi-zemin);
+  border:1px solid var(--bilgi-cizgi);color:var(--bilgi-yazi);border-radius:999px;
+  padding:4px 6px 4px 11px;font-size:13px;font-weight:500}
+.etiket-cip button{border:0;background:transparent;cursor:pointer;color:inherit;font-size:15px;
+  line-height:1;padding:0 3px;border-radius:50%}
+.etiket-cip button:hover{background:var(--etiket-vurgu)}
+
+/* ===== adres önizleme ===== */
+.adres-onizleme{font-family:var(--mono);font-size:13px;background:var(--zemin);
+  border:1px solid var(--cizgi);border-radius:9px;padding:11px 13px;word-break:break-all;line-height:1.7}
+.adres-onizleme .kok{color:var(--gri-acik)}
+.adres-onizleme .kat{background:var(--uyari-zemin);border-bottom:2px solid var(--uyari-cizgi);
+  color:var(--uyari-yazi);font-weight:500;padding:1px 2px}
+.adres-onizleme .slug{color:var(--murekkep)}
+.adres-onizleme .kimlik{color:var(--gri-acik)}
+
+/* ===== görsel bırakma alanı ===== */
+.gorsel-alan{border:2px dashed var(--cizgi);border-radius:11px;padding:26px;text-align:center;
+  background:var(--zemin);color:var(--gri)}
+.gorsel-alan .oran{font-family:var(--mono);font-size:11.5px;color:var(--gri-acik);margin-top:7px}
+.gorsel-eylem{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;justify-content:center}
+
+/* ===== yan sütun ===== */
+.yan{position:sticky;top:125px;display:flex;flex-direction:column;gap:16px}
+.yan-kart{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:12px;
+  padding:16px 17px;box-shadow:var(--golge)}
+.yan-kart h2{font-family:var(--serif);font-size:15.5px;font-weight:700;margin-bottom:11px;
+  display:flex;align-items:center;gap:8px}
+.yan-kart h2 .oran-yazi{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--gri-acik);font-weight:400}
+
+.kontrol{list-style:none;font-size:13.5px}
+.kontrol li{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--cizgi)}
+.kontrol li:last-child{border-bottom:0}
+.kontrol .im{flex:0 0 17px;font-family:var(--mono);font-size:13px;text-align:center;line-height:1.45}
+.kontrol li[data-durum="tamam"] .im{color:var(--artis)}
+.kontrol li[data-durum="tamam"] .ad{color:var(--gri)}
+.kontrol li[data-durum="eksik"] .im{color:var(--tehlike-yazi)}
+.kontrol li[data-durum="eksik"] .ad{font-weight:600}
+.kontrol li[data-durum="istege-bagli"] .im{color:var(--gri-acik)}
+.kontrol li[data-durum="istege-bagli"] .ad{color:var(--gri-acik)}
+.kontrol .not{display:block;font-size:12px;color:var(--gri-acik);font-weight:400}
+
+.olcer{height:6px;background:var(--zemin);border:1px solid var(--cizgi);border-radius:999px;
+  overflow:hidden;margin-bottom:12px}
+.olcer i{display:block;height:100%;background:var(--artis);width:0;transition:width .25s ease}
+
+.konu-kart .aday{border:1px solid var(--cizgi);border-radius:10px;padding:12px;background:var(--zemin)}
+.konu-kart .aday h3{font-size:14px;font-weight:600;margin-bottom:5px}
+.konu-kart .gerekce{font-size:12.5px;color:var(--gri);line-height:1.5}
+.konu-kart .gerekce b{color:var(--murekkep)}
+.konu-kart .eylem{display:flex;gap:7px;margin-top:11px}
+.bagli-konu{background:var(--guclu-zemin);border:1px solid var(--guclu-cizgi);color:var(--guclu-yazi);
+  border-radius:10px;padding:12px;font-size:13.5px}
+.bagli-konu b{display:block;margin-bottom:3px}
+
+.manset-liste{list-style:none;font-size:13.5px}
+.manset-liste li{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--cizgi)}
+.manset-liste li:last-child{border-bottom:0}
+.manset-liste .yer{font-family:var(--mono);font-size:11px;color:var(--gri-acik);
+  border:1px solid var(--cizgi);border-radius:5px;padding:1px 6px;flex:0 0 auto}
+.manset-liste .dolu-ad{color:var(--gri);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ===== hata durumu ===== */
+.hatali input,.hatali textarea,.hatali select,.hatali .etiket-girdi{border-color:var(--tehlike-cizgi);background:var(--tehlike-zemin)}
+.hata-yazi{display:none;color:var(--tehlike-yazi);font-size:12.5px;margin-top:5px;font-weight:500}
+.hatali .hata-yazi{display:block}
+
+/* ===== duyuru bölgesi ===== */
+.duyuru{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;z-index:50;
+  background:var(--murekkep);color:var(--beyaz);border-radius:10px;padding:12px 18px;font-size:14px;
+  box-shadow:var(--duyuru-golge);max-width:min(560px,92vw);display:none}
+.duyuru.gorunur{display:block}
+.gizli-ama-okunur{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ===== kırılma noktaları ===== */
+@media(max-width:1180px){
+  .duzen{grid-template-columns:minmax(0,1fr)}
+  .yan{position:static;flex-direction:row;flex-wrap:wrap}
+  .yan-kart{flex:1 1 280px}
+}
+@media(max-width:880px){
+  :root{--kenar-genislik:60px}
+  .kenar a span:not(.im):not(.say){display:none}
+  .kenar-bas,.kenar .alt a{display:none}
+  .kenar a{justify-content:center;padding:11px 0}
+  .kenar .im{font-size:16px}
+}
+@media(max-width:620px){
+  .duzen{padding:16px 14px}
+  .blok{padding:16px 15px}
+  .sayfa-bas{padding:13px 15px;position:static}
+  .bant{padding:10px 14px}
+  .arac-ad{padding-left:12px;font-size:15px}
+  .yan{flex-direction:column}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important}
+}
+
+/* ===== yönetici ekranları ===== */
+.kutu-kart{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:12px;
+  box-shadow:var(--golge);margin-bottom:18px;overflow:hidden}
+.kutu-kart>h2{font-family:var(--serif);font-size:16px;font-weight:700;padding:15px 18px 12px;
+  display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--cizgi)}
+.kutu-kart>h2 .sag-not{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--gri-acik);font-weight:400}
+.kutu-govde{padding:15px 18px}
+
+.tablo-sar{overflow-x:auto}
+table.veri{width:100%;border-collapse:collapse;font-size:13.5px;min-width:680px}
+table.veri th,table.veri td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--cizgi);vertical-align:middle}
+table.veri thead th{background:var(--zemin);font-size:12px;font-weight:600;color:var(--gri);
+  text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0}
+table.veri tbody tr:hover{background:var(--zemin)}
+table.veri td.orta,table.veri th.orta{text-align:center}
+table.veri th[scope="row"]{font-weight:500}
+
+.var-im{color:var(--artis);font-weight:700}
+.yok-im{color:var(--cizgi)}
+.kismi-im{color:var(--uyari-yazi);font-weight:700}
+
+.rol-ad{display:flex;flex-direction:column;gap:2px}
+.rol-ad b{font-weight:600}
+.rol-ad span{font-size:12px;color:var(--gri-acik)}
+
+.kisi{display:flex;align-items:center;gap:9px}
+.kisi .yuvarlak{width:28px;height:28px;border-radius:50%;background:var(--lacivert);color:var(--beyaz);
+  display:grid;place-items:center;font-size:11px;font-weight:600;flex:0 0 28px}
+.kisi .yuvarlak.sorunlu{background:var(--tehlike-yazi)}
+.kisi .yuvarlak.dis{background:var(--gri-acik)}
+
+.rozet-rol{font-family:var(--mono);font-size:10.5px;letter-spacing:.4px;border:1px solid var(--cizgi);
+  border-radius:999px;padding:2px 9px;color:var(--gri);white-space:nowrap;background:var(--zemin)}
+.rozet-rol.yonetici{background:var(--tehlike-zemin);border-color:var(--tehlike-cizgi);color:var(--tehlike-yazi)}
+.rozet-rol.editor{background:var(--bilgi-zemin);border-color:var(--bilgi-cizgi);color:var(--bilgi-yazi)}
+.rozet-rol.atanmamis{background:var(--uyari-zemin);border-color:var(--uyari-cizgi);color:var(--uyari-yazi)}
+
+tr.dikkat td{background:var(--tehlike-zemin)}
+tr.dikkat:hover td{background:var(--tehlike-zemin)}
+
+.aciklama-satiri{font-size:12.5px;color:var(--gri);margin-bottom:14px;max-width:82ch;line-height:1.5}
+</style>
+</head>
+<body>
+<a class="atla" href="#ana">İçeriğe atla</a>
+
+<header class="bant">
+  <img class="logo-img" src="logo-seffaf.png" alt="Bursa Hakimiyet" width="406" height="120">
+  <span class="arac-ad">Yönetim Paneli</span>
+  <span class="rozet demo">Demo</span>
+  <div class="sag">
+    <span class="rozet">v2 taslak</span>
+    <span class="kim"><span class="bas-harf" aria-hidden="true">CS</span> Coşkun SAİTOĞLU</span>
+  </div>
+</header>
+
+<div class="panel">
+  <nav class="kenar" aria-label="Panel bölümleri">
+    <p class="kenar-bas">Bölümler</p>
+    <ul>
+      <li>
+        <a href="panel-bugun.html"><span class="im" aria-hidden="true">◵</span><span>Bugün</span></a>
+      </li>
+      <li>
+        <a href="panel-akis.html"><span class="im" aria-hidden="true">▤</span><span>İçerik</span></a>
+        <ul class="alt">
+          <li><a href="panel-haber-ekle.html"><span>Haber Ekle</span></a></li>
+          <li><a href="panel-akis.html"><span>Akış</span></a></li>
+          <li><a href="panel-akis.html#kose"><span>Köşe</span></a></li>
+        </ul>
+      </li>
+      <li>
+        <a href="panel-sayfa-duzeni.html"><span class="im" aria-hidden="true">▦</span><span>Sayfa Düzeni</span></a>
+      </li>
+      <li>
+        <a href="panel-konu-takibi.html"><span class="im" aria-hidden="true">◈</span><span>Konu Takibi</span></a>
+      </li>
+      <li>
+        <a href="panel-etkilesim.html"><span class="im" aria-hidden="true">◍</span><span>Etkileşim</span><span class="say"><span class="gizli-ama-okunur">, </span>7<span class="gizli-ama-okunur"> bekleyen yorum</span></span></a>
+      </li>
+      <li>
+        <a href="panel-ilan-reklam.html"><span class="im" aria-hidden="true">▧</span><span>İlan &amp; Reklam</span></a>
+      </li>
+      <li>
+        <a href="panel-ayarlar.html" aria-current="page"><span class="im" aria-hidden="true">⚙</span><span>Ayarlar</span></a>
+        <ul class="alt">
+          <li><a href="panel-ayarlar.html"><span>Taksonomi</span></a></li>
+          <li><a href="panel-roller.html" aria-current="page"><span>Roller</span></a></li>
+          <li><a href="panel-kullanicilar.html"><span>Kullanıcılar</span></a></li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+  <main id="ana" class="calisma">
+    <div class="sayfa-bas">
+      <p class="iz">Ayarlar › Roller</p>
+      <h1>Roller</h1>
+      <span class="rozet">Yönetici ekranı</span>
+      <div class="eylem">
+        <button type="button" class="btn" data-git="Rol ekleme formu">Rol ekle</button>
+      </div>
+    </div>
+
+    <div style="padding:22px 26px">
+
+      <div class="yetki-serit" role="note">
+        <span class="im" aria-hidden="true">&#128274;</span>
+        <span><b>Bu bölüm salt okunur.</b> Kullanıcı ve rol yönetimi yetkisi <b>Yayın Yönetmeni</b> rolünde.
+        Oturumdaki rol: <b>Editör</b>. Kayıtları görebilir, değiştiremezsiniz.
+        <a href="panel-roller.html">Yetki dağılımı</a></span>
+      </div>
+
+      <div class="kutu bilgi" style="margin-top:0;margin-bottom:18px">
+        Mevcut panelde bu ekran <b>görünmüyor</b> — elimizdeki 21 döküm bir <b>operatör</b>
+        hesabına ait. Yazılımın menü betiğinde <code>usertype_list</code>,
+        <code>usertype_add</code>, <code>usertype_edit</code> uçları var; yönetici katmanı
+        buradan kuruldu.
+      </div>
+
+      <section class="kutu-kart">
+        <h2>Yetki dağılımı <span class="sag-not">5 rol · 14 yetki</span></h2>
+        <div class="kutu-govde">
+          <p class="aciklama-satiri">
+            Roller gazete masasının gerçek iş bölümünden çıkarıldı. Dökümdeki kanıt:
+            manşet kayıtlarının ve resmi ilanların neredeyse tamamı <b>iki kişide</b>
+            toplanmış — yani ayrım fiilen zaten var, sistemde karşılığı yoktu.
+          </p>
+          <div class="tablo-sar">
+            <table class="veri">
+              <caption class="gizli-ama-okunur">Rollere göre yetki dağılımı</caption>
+              <thead>
+                <tr><th scope="col">Yetki</th><th scope="col" class="orta"><span class="rol-ad"><b>Muhabir</b><span>Sahadan girer, yayınlamaz</span></span></th><th scope="col" class="orta"><span class="rol-ad"><b>Editör</b><span>Masanın omurgası</span></span></th><th scope="col" class="orta"><span class="rol-ad"><b>Sayfa Sekreteri</b><span>Manşet ve sayfa</span></span></th><th scope="col" class="orta"><span class="rol-ad"><b>İlan Sorumlusu</b><span>Resmi ilan ve reklam</span></span></th><th scope="col" class="orta"><span class="rol-ad"><b>Yayın Yönetmeni</b><span>Tam yetki</span></span></th></tr>
+              </thead>
+              <tbody>
+              <tr><th scope="row">Haber girme (taslak)</th><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Kendi haberini yayınlama</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Başkasının haberini yayınlama</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Haberi arşive alma</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Manşete alma</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Sayfa düzeni ve reklam alanları</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Resmi ilan girme</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Reklam kampanyası</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Yorum onaylama</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Köşe yazısı ve yazar yönetimi</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Konu açma ve bağlama</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Taksonomi düzenleme</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Kullanıcı ve rol yönetimi</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              <tr><th scope="row">Log kayıtları</th><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="yok-im" aria-hidden="true">–</span><span class="gizli-ama-okunur">yok</span></td><td class="orta"><span class="var-im" aria-hidden="true">●</span><span class="gizli-ama-okunur">var</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="kutu-kart">
+        <h2>Neden böyle bölündü</h2>
+        <div class="kutu-govde">
+          <ul class="sira-liste" style="list-style:none">
+            <li style="display:block;padding:10px 0;border-bottom:1px solid var(--cizgi)">
+              <b>Muhabir yayınlayamaz.</b> Sahadan giren haber Pasif/Taslak'ta doğar,
+              yayına alma kararı masada verilir. Bu, hazırlık ekseninin karşılığıdır.
+            </li>
+            <li style="display:block;padding:10px 0;border-bottom:1px solid var(--cizgi)">
+              <b>Manşet ayrı yetkidir.</b> Manşet atmak yayınlamaktan farklı bir karardır;
+              anasayfanın sırasını değiştirir. Dökümde bu işi tek kişi yapıyordu.
+            </li>
+            <li style="display:block;padding:10px 0;border-bottom:1px solid var(--cizgi)">
+              <b>Resmi ilan ayrı yetkidir.</b> BIK yükümlülüğü taşır, yasal sonuç doğurur,
+              ve dökümde iki kişide toplanmış.
+            </li>
+            <li style="display:block;padding:10px 0;border-bottom:1px solid var(--cizgi)">
+              <b>Yorum onayı editördedir.</b> Sorumluluk yayın tarafındadır; ilan veya
+              sayfa tarafının işi değildir.
+            </li>
+            <li style="display:block;padding:10px 0">
+              <b>Taksonomi yalnız Yayın Yönetmeni'nde.</b> Kategori slug'ı adresin parçası —
+              <b>556.824 haber adresi</b> buna bağlı. Kategori adını değiştirmek bir göç
+              işidir; günlük yetkiye bırakılamaz.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+</div>
+
+<div class="duyuru" id="duyuru" role="status" aria-live="polite"></div>
+<script>
+(function(){
+  "use strict";
+  var z = null;
+  function duyur(m){
+    var d = document.getElementById('duyuru');
+    d.textContent = m; d.classList.add('gorunur');
+    if (z) clearTimeout(z);
+    z = setTimeout(function(){ d.classList.remove('gorunur'); }, 4000);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-git]'), function(b){
+    b.addEventListener('click', function(){
+      duyur('Demo: “' + this.dataset.git + '” henüz yapılmadı.');
+    });
+  });
+})();
+</script>
+</body>
+</html>

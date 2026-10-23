@@ -364,7 +364,7 @@
 
     var taslak = {
       baslik_secenekleri: [
-        { metin: "", gerekce: "Düz haber başlığı: ne oldu, kim yaptı, nerede. En fazla 70 karakter." },
+        { metin: "", gerekce: "Düz haber başlığı: ne oldu, kim yaptı, nerede. En fazla 60 karakter." },
         { metin: "", gerekce: "Sonuç/etki odaklı: bu gelişme okur için ne değiştiriyor?" },
         { metin: "", gerekce: "Kısa ve vurucu: 6-7 kelime. Tıklama tuzağı yok." }
       ],

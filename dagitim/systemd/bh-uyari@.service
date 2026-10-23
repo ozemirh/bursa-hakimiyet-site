@@ -1,0 +1,18 @@
+# /etc/systemd/system/bh-uyari@.service — başarısız birim için uyarı.
+# Diğer birimlerin `OnFailure=bh-uyari@%n.service` satırı çağırır.
+#
+# Uyarı kanalı BİLİNMİYOR (gazetenin e-posta/mesaj altyapısı sorulacak).
+# Bugün: journald'a "crit" önceliğiyle yazar; BH_UYARI_ADRESI verilmişse
+# oraya POST eder (ör. healthchecks.io /fail adresi, Slack/Telegram webhook).
+# `$$`: systemd'nin kendi değişken açımı atlansın, değeri kabuk okusun.
+
+[Unit]
+Description=Bursa Hakimiyet uyari: %i
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/bursahakimiyet/ortam
+ExecStart=/bin/sh -c 'logger -p daemon.crit -t bursahakimiyet "BIRIM BASARISIZ: %i"; \
+  if [ -n "$${BH_UYARI_ADRESI:-}" ]; then \
+    curl -fsS -m 10 --retry 3 --data-raw "Bursa Hakimiyet: %i basarisiz ($$(hostname))" "$$BH_UYARI_ADRESI" >/dev/null; \
+  fi'

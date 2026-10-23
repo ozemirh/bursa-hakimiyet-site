@@ -1,0 +1,139 @@
+{% extends "taban.html" %}
+{% load static site_etiket gorsel_etiket seo_etiket %}
+{% comment %}
+Köşe yazısı detayı. İskelet `haber_detay.html` ile bilerek aynı: seslendirme
+betiği `.detay h1`, `.detay .spot` ve `.metin > p` seçicilerine bağlı, bu
+sınıflar değişirse sesli okuma sessizce susar.
+
+Haber detayından tek farkı künyedir: köşe yazısında sorumluluk kaynakta değil
+**yazardadır**, o yüzden künyede "Haber Merkezi" değil yazarın adı ve sayfasına
+bağlantı durur.
+{% endcomment %}
+
+{% block baslik %}{{ yazi.baslik }} — {{ yazar.ad }} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ yazi.spot|striptags|truncatechars:300|default:yazi.baslik }}{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ site_koku }}{{ yazi.get_absolute_url }}">{% endblock %}
+{% comment %}SEO (Paket G): OpinionNewsArticle + yazar Person; yazının görseli yoksa
+paylaşım görseli yazarın portresi.{% endcomment %}
+{% block og_tur %}article{% endblock %}
+{% block og_baslik %}{{ yazi.baslik }} — {{ yazar.ad }}{% endblock %}
+{% block paylasim_gorseli %}{% if yazi.gorsel_yolu %}{% include "parca/og_gorsel.html" with nesne=yazi %}{% else %}{% include "parca/og_gorsel.html" with nesne=yazar %}{% endif %}{% endblock %}
+{% block og_ek %}{% include "parca/og_makale.html" with kayit=yazi bolum="Köşe Yazıları" %}{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld "kose" yazi %}</script>
+<script type="application/ld+json">{% jsonld "kose_kirinti" yazi %}</script>{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Kırıntı navigasyonu">
+        <ol>
+          <li><a href="/">Anasayfa</a></li>
+          <li><a href="/yazarlar">Yazarlar</a></li>
+          <li><a href="{{ yazar.get_absolute_url }}">{{ yazar.ad }}</a></li>
+          <li><span aria-current="page">{{ yazi.baslik|truncatechars:60 }}</span></li>
+        </ol>
+      </nav>
+
+      <div class="izgara">
+        <div>
+          <article class="detay gorus">
+            {% comment %}SÜTUN BAŞI (19 Ekim 2026, sayfaya özel tasarım): yazarın
+            vesikası, adı, varsa köşesinin adı. Klasik gazete köşesinde okur
+            yazıdan ÖNCE kimin konuştuğunu görür — görüş, haberden böyle
+            ayrışır. Köşe adı (`unvan`) arşivde 37 yazarın hiçbirinde dolu
+            değil (ölçüldü); alan boşken satır basılmaz.
+
+            Eski sayfa yazının üstüne 1280x720'lik bir görsel basıyordu: kaydın
+            kendi görseli, yani o tarihteki yazar AFİŞİ (adı ve haritasıyla).
+            Afiş yazıyla aynı bilgiyi iki kez veriyordu; yerini sütun başındaki
+            kırpılmış portre aldı. Portre yazarın kendi kaydından gelir — kırpım
+            kuralları (`.portre img[src*="-afis"]`) o dosya adlarına bağlı.{% endcomment %}
+            <header class="gorus-bas">
+              {% if yazar.gorsel_yolu %}<a class="portre" href="{{ yazar.get_absolute_url }}" tabindex="-1" aria-hidden="true">{% gorsel yazar "portre" alt="" hemen=True %}</a>
+              {% else %}<span class="portre vesika" aria-hidden="true">{{ yazar.basharfler }}</span>{% endif %}
+              <div class="gorus-kimlik">
+                <span class="gorus-tur">KÖŞE YAZISI</span>
+                <a class="gorus-ad" href="{{ yazar.get_absolute_url }}">{{ yazar.ad }}</a>
+                {% if yazar.unvan %}<span class="gorus-kose">{{ yazar.unvan }}</span>{% endif %}
+              </div>
+            </header>
+            <h1>{{ yazi.baslik }}</h1>
+            {% comment %}Arşivdeki köşe yazılarının %99'unda spot başlığın
+            aynısı (ölçüldü: son 200 yazının 198'i boş ya da başlıkla aynı).
+            Aynı cümle iki kez basılmaz — sesli okuma da iki kez okurdu.{% endcomment %}
+            {% if yazi.spot and yazi.spot != yazi.baslik %}<p class="spot">{{ yazi.spot }}</p>{% endif %}
+
+            <div class="detay-kunye">
+              {% comment %}Sorumluluk yazarda: adı sütun başında ve bağlantılı,
+              künyede ikinci kez basılmıyor.{% endcomment %}
+              {% if yazi.yayin_zamani %}<span><time datetime="{{ yazi.yayin_zamani|date:'c' }}">{{ yazi.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
+              {% if yazi.kategori %}<span>{{ yazi.kategori.ad|baslikla }}</span>{% endif %}
+              {% if yazi.kelime_sayisi %}<span>{{ yazi.kelime_sayisi|okuma_dakikasi }} dk okuma</span>{% endif %}
+              <div class="arac">
+                <div class="paylas" role="group" aria-label="Yazıyı paylaş">{% include "parca/paylas.html" with adres=site_koku|add:yazi.get_absolute_url metin=yazi.baslik %}<button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button></div>
+                <button type="button" class="yazi-kucult" aria-label="Yazı boyutunu küçült">A&minus;</button>
+                <button type="button" class="yazi-buyut" aria-label="Yazı boyutunu büyüt">A+</button>
+                <button type="button" class="yazdir">YAZDIR</button>
+              </div>
+            </div>
+
+            {% comment %}Köşe sayfasının kendi görseli yazının fotoğrafı değil,
+               o tarihteki YAZAR AFİŞİDİR (ölçüldü: gorsel_alt yazarın adını
+               taşıyor). 19 Ekim 2026'dan beri yazının üstüne basılmıyor;
+               yazar kimliği sütun başındaki portrede (yukarıda). Paket D'nin
+               bu blok için yazdığı `{% gorsel yazi "detay" oncelikli=True %}`
+               çağrısı da bu yüzden düştü; LCP artık yazının metni.{% endcomment %}
+
+            {% include "parca/seslendirme.html" %}
+
+            <div class="metin">{{ yazi.govde_guvenli }}</div>
+          </article>
+
+          <section class="kutu gorus-arsiv" aria-labelledby="diger-bas">
+            <div class="kutu-bas">
+              <h2 id="diger-bas">{{ yazar.ad|buyult }} — DİĞER YAZILARI</h2>
+              <span class="tumu"><a href="{{ yazar.get_absolute_url }}">Tümü &rarr;</a></span>
+            </div>
+            <div class="kutu-ic">
+              {% if digerleri %}
+              <ol class="gorus-liste">
+                {% for y in digerleri %}{% include "medya/parca/yazi_satiri.html" with y=y %}
+                {% endfor %}
+              </ol>
+              {% else %}<p class="bos">Bu yazarın arşivde başka yazısı yok.</p>{% endif %}
+            </div>
+          </section>
+        </div>
+
+        <aside class="ray" aria-label="Öne çıkan listeler">
+          {% comment %}29 Ağustos 2026 görsel denetimi (Ö1): haber detayla
+          aynı gerekçe — `.izgara`nın ikinci sütunu boş kalıyordu. Köşe
+          sayfasının rayında yazar dizini öncelikli.{% endcomment %}
+          {% include "parca/son_dakika.html" %}
+
+          <div class="reklam kare-300" data-gpt="300x250"><span><b>REKLAM ALANI</b><span class="olcu">-Haber arası1- 300x250</span></span></div>
+
+          {% if ray_yazarlar %}
+          <div class="kutu">
+            <div class="kutu-bas"><h2>YAZARLAR</h2><span class="tumu"><a href="/yazarlar">Tüm yazarlar &rarr;</a></span></div>
+            <div class="kutu-ic">
+              <ul class="yazar-ray">
+{% for y in ray_yazarlar %}                <li><a href="{{ y.yol }}"><span class="vesika" aria-hidden="true">{{ y.basharfler }}</span><span><b>{{ y.ad }}</b><span class="yazi-bas">{{ y.son_yazi }}</span></span></a></li>
+{% endfor %}              </ul>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if en_cok %}
+          <div class="kutu">
+            <div class="kutu-bas vurgu"><h2>EN ÇOK OKUNANLAR</h2></div>
+            <div class="kutu-ic">
+              <ol class="sira">
+{% for h in en_cok %}                <li><span class="no">{{ forloop.counter }}</span><h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3></li>
+{% endfor %}              </ol>
+            </div>
+          </div>
+          {% endif %}
+        </aside>
+      </div>
+{% endblock %}
+
+{% block betik %}<script src="{% static 'betik/seslendirme.js' %}"></script>{% endblock %}

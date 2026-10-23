@@ -1,0 +1,84 @@
+{% load site_etiket %}
+{% comment %}KÜNYE — 3 Eylül 2026'da yeniden kuruldu (§49, kullanıcı isteği).
+
+Kaldırılan yapı: üstte sütunlar, altlarından ENİNE akan iki ayrı sıra
+vardı — 17 ilçenin tek satırda dizildiği şerit ve orta noktalarla akan
+künye satırı. İki ritim yan yana durunca künye dağınık görünüyordu.
+İlçeler sütuna çevrildi; künye bilgileri (imtiyaz sahibi, sorumlu yazı
+işleri müdürü, yayın türü, adres) ve uzun veri kaynağı beyanı ise
+kullanıcı isteğiyle künyeden tamamen KALDIRILDI. Altta yalnız telif
+satırı var.
+
+Ölü bağlantı bırakılmaz: sayfası olmayan kalem künyeye yazılmaz. Anasayfa
+çapaları "/" önekiyle verilir (`/#panel-hava`), yoksa kategori ve haber
+sayfalarında hiçbir yere gitmezler.{% endcomment %}
+<footer id="kunye">
+  <div class="kunye-ic">
+    <div class="kunye-ust">
+
+      <div>
+        <h2 class="kunye-ad">BURSA HAKİMİYET</h2>
+        <p class="kunye-slogan">Bursa'nın yerel gündemini takip ediyor. Haber merkezi 7/24 açıktır.</p>
+        {% comment %}Arşiv kapsamı VERİDEN gelir (`baglam._kunye_arsiv`).
+        Sayılamazsa cümle hiç basılmaz — yanlış sayı yazmaktansa hiç
+        yazmamak (27 Ağustos'ta "1484 video" ölçümünün dersi).{% endcomment %}
+        {% if kunye_arsiv %}
+        <p class="kunye-kapsam"><strong>{{ kunye_arsiv.ilk_yil }}</strong>'den bugüne
+          <strong>{{ kunye_arsiv.adet }}</strong> haber arşivde.</p>
+        {% endif %}
+        <p class="kunye-ihbar">Haber ihbar hattı<b>0224 000 00 00</b><span>(yer tutucu)</span></p>
+        {% comment %}Sosyal hesapların gerçek adresleri henüz verilmedi;
+        RSS'in adresi var ve bağlandı. Diğer dördü yer tutucu olarak
+        duruyor (kullanıcı kararı, 3 Eylül 2026).
+
+        Etiket METNİ yok, `aria-label` var. Ölçüldü (3 Eylül): yazılı
+        etiketlerle beş düğme 440 px istiyordu, marka sütunu 1600 px'te
+        374 px veriyor — satır 4+1 diye kırılıyordu. Simgeler evrensel
+        tanınır; ad ekran okuyucuya ve fare ipucuna veriliyor.{% endcomment %}
+        <div class="sosyal">
+          <a href="#" aria-label="X" title="X"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-x"/></svg></a><a href="#" aria-label="Instagram" title="Instagram"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-instagram"/></svg></a><a href="#" aria-label="YouTube" title="YouTube"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-youtube"/></svg></a><a href="#" aria-label="WhatsApp" title="WhatsApp"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-whatsapp"/></svg></a><a href="/rss" aria-label="RSS beslemesi" title="RSS beslemesi"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-rss"/></svg></a>
+        </div>
+      </div>
+
+      <nav aria-label="Bölümler">
+        <h2>BÖLÜMLER</h2>
+        <ul>
+          {% for k in tum_kategoriler|slice:":6" %}<li><a href="/{{ k.slug }}">{{ k.ad|baslikla }}</a></li>{% endfor %}
+          <li><a href="/yazarlar">Yazarlar</a></li>
+          <li><a href="/galeriler">Foto galeri</a></li>
+          <li><a href="/videolar">Videolar</a></li>
+        </ul>
+      </nav>
+
+      <nav aria-label="Servisler">
+        <h2>SERVİSLER</h2>
+        <ul>
+          <li><a href="/nobetci-eczane">Nöbetçi eczane</a></li>
+          <li><a href="/resmi-ilan">Resmî ilanlar</a></li>
+          <li><a href="/#panel-hava">Hava durumu</a></li>
+          <li><a href="/#panel-vakit">Namaz vakitleri</a></li>
+          <li><a href="/#vizyon">Vizyon takvimi</a></li>
+        </ul>
+      </nav>
+
+      <nav aria-label="Kurumsal">
+        <h2>KURUMSAL</h2>
+        <ul>
+          <li><a href="/veri-kaynaklari">Veri kaynakları ve kapsam</a></li>
+          <li><a href="/ara">Arama</a></li>
+          <li><a href="/rss">RSS beslemesi</a></li>
+          <li><a href="/static/sitemap/sitemap.xml">Site haritası</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    {% comment %}Alt satırda YALNIZ telif kalıyor (kullanıcı isteği,
+       3 Eylül 2026). Buradaki uzun veri kaynağı beyanı ve yanındaki
+       bağlantı kaldırıldı; beyanın kendisi silinmedi, KURUMSAL
+       sütunundaki "Veri kaynakları ve kapsam" ile /veri-kaynaklari
+       sayfasında duruyor.{% endcomment %}
+    <div class="kunye-alt">
+      <p>© 2026 Bursa Hakimiyet, hakları saklıdır.</p>
+    </div>
+  </div>
+</footer>

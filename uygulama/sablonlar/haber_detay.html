@@ -1,0 +1,176 @@
+{% extends "taban.html" %}
+{% load static site_etiket gorsel_etiket seo_etiket %}
+
+{% comment %}SEO (Paket G): `seo_baslik` doluysa <title> ve og:title onu kullanır;
+JSON-LD NewsArticle + BreadcrumbList icerik/seo.py'den.{% endcomment %}
+{% block baslik %}{{ haber.seo_baslik|default:haber.baslik }} — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}{{ haber.spot|striptags|truncatechars:300|default:haber.baslik }}{% endblock %}
+{% block kanonik %}<link rel="canonical" href="{{ site_koku }}{{ haber.get_absolute_url }}">{% endblock %}
+{% block og_tur %}article{% endblock %}
+{% block og_baslik %}{{ haber.seo_baslik|default:haber.baslik }}{% endblock %}
+{% block og_adres %}{{ site_koku }}{{ haber.get_absolute_url }}{% endblock %}
+{% block paylasim_gorseli %}{% include "parca/og_gorsel.html" with nesne=haber %}{% endblock %}
+{% block og_ek %}{% include "parca/og_makale.html" with kayit=haber bolum=haber.kategori.ad|baslikla %}{% endblock %}
+{% block rss_bolum %}<link rel="alternate" type="application/rss+xml" title="Bursa Hakimiyet — {{ haber.kategori.ad|baslikla }}" href="{{ site_koku }}/rss/{{ haber.kategori.slug_al }}">{% endblock %}
+{% block yapisal %}<script type="application/ld+json">{% jsonld "haber" haber %}</script>
+<script type="application/ld+json">{% jsonld "haber_kirinti" haber %}</script>{% endblock %}
+{% comment %}K1 (b), 20 Ekim 2026: üst şerit haberin ÜSTÜNDE değil, ana görselin
+altında — 1440'ta H1 478 px'te başlıyordu. Taban yuvası burada boş; aynı
+parça aşağıda, `ust_serit.html` tek tanım.{% endcomment %}
+{% block ust_serit %}{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Kırıntı navigasyonu">
+        <ol>
+          <li><a href="/">Anasayfa</a></li>
+          <li><a href="/{{ haber.kategori.slug_al }}">{{ haber.kategori.ad|baslikla }}</a></li>
+          <li><span aria-current="page">{{ haber.baslik|truncatechars:60 }}</span></li>
+        </ol>
+      </nav>
+
+      <div class="izgara">
+        <div>
+          <article class="detay">
+            <span class="rozet-k">{{ haber.kategori.ad }}</span>
+            <h1>{{ haber.baslik }}</h1>
+            {% comment %}İkinci başlık (Paket H): panelin §4 alan 3'ü, başlıkla
+               spot arasında. Boşsa hiç basılmaz.{% endcomment %}
+            {% if haber.ikinci_baslik %}<p class="ikinci-baslik">{{ haber.ikinci_baslik }}</p>{% endif %}
+            {% if haber.spot %}<p class="spot">{{ haber.spot }}</p>{% endif %}
+            {% comment %}Düzeltme işareti (20 Ekim 2026): yalnız yayındaki not varsa;
+               gövde sonundaki bloğa bağlanır. Metni notun türünden.{% endcomment %}
+            {% if duzeltme_isareti %}<p class="duzeltme-isaret"><a href="#duzeltmeler">{{ duzeltme_isareti }}</a></p>{% endif %}
+
+            <div class="detay-kunye">
+              {% comment %}İmza (Paket H): muhabir · ajans · "Kaynak: X" · Haber
+                 Merkezi — `Haber.imza`. Meta Yazar Bilgisi okura basılmaz
+                 (hukuki teyit bekliyor).{% endcomment %}
+              {% with imza=haber.imza %}<span class="imza" data-imza="{{ imza.tur }}">{{ imza.metin }}</span>{% endwith %}
+              {% if haber.yayin_zamani %}<span><time datetime="{{ haber.yayin_zamani|date:'c' }}">{{ haber.yayin_zamani|date:'j F Y, H:i' }}</time></span>{% endif %}
+              {% comment %}Güncelleme damgası tarih + saat (5187 md. 4, Paket G); yalnız
+              yayından en az bir dakika sonraysa — arşivde iki alan çoğunlukla eşit.{% endcomment %}
+              {% with g=haber|guncelleme %}{% if g %}<span>Güncelleme: <time datetime="{{ g|date:'c' }}">{{ g|date:'j F Y, H:i' }}</time></span>{% endif %}{% endwith %}
+              {% comment %}Okuma süresi (29 Ağustos): kelime_sayisi 485.388/486.667
+              kayıtta dolu; boşsa hiç basılmaz — uydurma süre yazılmaz.{% endcomment %}
+              {% if haber.kelime_sayisi %}<span>{{ haber.kelime_sayisi|okuma_dakikasi }} dk okuma</span>{% endif %}
+              <div class="arac">
+                <div class="paylas" role="group" aria-label="Haberi paylaş">
+                  {% include "parca/paylas.html" with adres=site_koku|add:haber.get_absolute_url metin=haber.baslik %}
+                  <button type="button" class="kopyala">BAĞLANTIYI KOPYALA</button>
+                </div>
+                <button type="button" class="yazi-kucult" aria-label="Yazı boyutunu küçült">A&minus;</button>
+                <button type="button" class="yazi-buyut" aria-label="Yazı boyutunu büyüt">A+</button>
+                <button type="button" class="yazdir">YAZDIR</button>
+              </div>
+            </div>
+
+            {% comment %}Ana görsel (19 Ekim 2026): `{% gorsel %}` etiketi srcset/sizes ve
+               gerçek ölçüyü basar; LCP adayı olduğu için öncelikli. Foto altı
+               `foto_alti` süzgecinden: arşivin 1.038.222 haberinde alt metin
+               "Google News" ve okura foto altı diye basılıyordu — anlamsız
+               sabitler boş sayılır, veri değişmez.{% endcomment %}
+            {% if haber.gorsel_yolu %}
+              <div class="foto ana-gorsel">
+                {% gorsel haber "detay" oncelikli=True %}
+              </div>
+              {% with fa=haber|foto_alti %}{% if fa %}<p class="foto-alt">{{ fa }}</p>{% endif %}{% endwith %}
+            {% else %}
+              {% comment %}2023-07 öncesi görseller sağlayıcı tarafından silindi ve
+                 kurtarılamıyor (URUN-PLANI.md F3 notu). Kırık görsel yerine
+                 kategori temsilî çizimi konur. "Silinmiş" notu YALNIZ arşiv
+                 haberine: panelden girilen fotoğrafsız haberde yanlış olurdu.{% endcomment %}
+              <div class="foto ana-gorsel {{ haber|kart_rengi }}">
+                <svg role="img" aria-label="{{ haber.kategori.ad|baslikla }} haberini temsil eden çizim"><use href="#{{ haber.kategori|simge_adi }}"/></svg>
+              </div>
+              {% if haber|arsiv_gorseli_kayip %}<p class="foto-alt">Görsel temsilîdir: bu haberin arşiv fotoğrafı kaynak sunucudan silinmiş.</p>
+              {% else %}<p class="foto-alt">Görsel temsilîdir.</p>{% endif %}
+            {% endif %}
+
+            {% include "parca/ust_serit.html" with gorsel_alti=1 %}
+
+            {% include "parca/seslendirme.html" %}
+
+            <div class="metin">{{ haber.govde_guvenli }}</div>
+
+            {% if duzeltmeler %}{% include "parca/duzeltme_bolmesi.html" with notlar=duzeltmeler %}{% endif %}
+
+            {% comment %}Gömülü kod (Paket H): ham kod ASLA basılmaz. Tanınan
+               YouTube / X / Instagram bağlantısı kimliğinden yeniden kurulur
+               ve kart olarak çizilir; dış çerçeve ya da betik yüklenmez
+               (icerik/temizle.py `gomulu_kartlari`).{% endcomment %}
+            {% with kartlar=haber.gomulu_kartlari %}{% if kartlar %}
+              <ul class="gomulu-kartlar" aria-label="Habere eklenen dış içerik">
+                {% for k in kartlar %}<li class="gomulu-kart" data-tur="{{ k.tur }}"><a href="{{ k.adres }}" rel="noopener nofollow external">{{ k.etiket }} &rarr;</a></li>{% endfor %}
+              </ul>
+            {% endif %}{% endwith %}
+
+            {% if haber.kaynaklar.all %}
+              <div class="kaynak-bolmesi">
+                <b>KAYNAK</b>
+                {% for k in haber.kaynaklar.all %}<p>{{ k.ad }}</p>{% endfor %}
+              </div>
+            {% endif %}
+
+            {% comment %}Etiketler (Paket H): etiket sayfası YOK, bu yüzden
+               bağlantısız liste — ölü adrese bağlantı verilmez.{% endcomment %}
+            {% with etiketler=haber.etiketler.all %}{% if etiketler %}
+              <div class="etiket-listesi">
+                <b>ETİKETLER</b>
+                <ul>{% for e in etiketler %}<li>{{ e.ad }}</li>{% endfor %}</ul>
+              </div>
+            {% endif %}{% endwith %}
+
+            {% comment %}KONUNUN AKIŞI (5 Eylül 2026): haber onaylı bir konu
+            dosyasındaysa dosyanın önceki ve sonraki haberleri. Motor önerisi
+            burada görünmez; onay panelde verilir (icerik/konu.py).{% endcomment %}
+            {% if konu_akisi %}{% include "parca/konu_akisi.html" with a=konu_akisi %}{% endif %}
+          </article>
+
+          <div class="kutu">
+            <div class="kutu-bas"><h2>İLGİLİ HABERLER</h2><span class="tumu"><a href="/{{ haber.kategori.slug_al }}">Tümü &rarr;</a></span></div>
+            <div class="kutu-ic">
+              <div class="kutu-izgara ilgili-izgara">
+                {% for h in ilgili %}{% include "parca/kart.html" with h=h goster_foto=1 gorsel_yuva="kart-yatay" %}
+                {% empty %}<p class="bos">Bu kategoride başka haber yok.</p>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="ray" aria-label="Öne çıkan listeler">
+          {% comment %}29 Ağustos 2026 görsel denetimi (Ö1): `.izgara` iki
+          sütun ayırıyor ama şablon tekini dolduruyordu — her makale
+          sayfasında 342 px ölü sütun (ölçüldü). Ray anasayfanın hazır
+          bileşenlerini yeniden kullanır; reklam yuvası adı envanterden.{% endcomment %}
+          {% include "parca/son_dakika.html" %}
+
+          <div class="reklam kare-300" data-gpt="300x250"><span><b>REKLAM ALANI</b><span class="olcu">-Haber arası1- 300x250</span></span></div>
+
+          {% if en_cok %}
+          <div class="kutu">
+            <div class="kutu-bas vurgu"><h2>EN ÇOK OKUNANLAR</h2></div>
+            <div class="kutu-ic">
+              <ol class="sira">
+{% for h in en_cok %}                <li><span class="no">{{ forloop.counter }}</span><h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3></li>
+{% endfor %}              </ol>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if ilcedekiler %}
+          <div class="kutu">
+            <div class="kutu-bas"><h2>{{ haber.ilce.ad|buyult }} HABERLERİ</h2></div>
+            <div class="kutu-ic">
+              <ul class="liste">
+{% for h in ilcedekiler %}                <li><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a>{% if h.yayin_zamani %}<span class="zaman">{{ h.yayin_zamani|kisa_zaman }}</span>{% endif %}</li>
+{% endfor %}              </ul>
+            </div>
+          </div>
+          {% endif %}
+        </aside>
+      </div>
+      {% include "parca/yukari.html" %}
+{% endblock %}
+
+{% block betik %}<script src="{% static 'betik/seslendirme.js' %}"></script>{% endblock %}

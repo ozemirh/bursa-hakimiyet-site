@@ -1,0 +1,32 @@
+{% load site_etiket %}
+{% comment %}AKIŞ SATIRI — kategori/ilçe listesinin yoğun kalemi (2 Eylül 2026, §46).
+
+Kart DEĞİL: kartta fotoğraf üstte ve tam genişlikte, burada solda 150 px'lik
+küçük kare. Gerekçe listenin kendisinde yazılı — sayfanın ilk üç haberi kart
+kalıyor, gerisi bu satırla iniyor; yirmi eşit kart 5.000 px'lik bir merdiven
+yapıyordu.
+
+Erişilebilirlik `kart.html` ile AYNI sözleşmede: fotoğraf da bağlantıdır ama
+`tabindex="-1"` ve `aria-hidden="true"` taşır — klavye ve ekran okuyucu
+haberi yalnız başlıktaki bağlantıdan görür, liste iki katına çıkmaz. İkisini
+silme.
+
+Görsel yoksa kategori temsilî SVG'si çizilir (arşivde 2023-07 öncesi dosyalar
+yok); uzak adrese bağlanılmaz, sayfa internetsiz de açılmalı.{% endcomment %}{% load gorsel_etiket %}
+<li>
+  <a class="foto {{ h|kart_rengi }}" href="{{ h.get_absolute_url }}" tabindex="-1" aria-hidden="true">
+    {% if h.gorsel_yolu %}
+      {% gorsel h "satir" %}
+    {% else %}
+      <svg role="img" aria-label="{{ h.kategori.ad|baslikla }} haberini temsil eden çizim"><use href="#{{ h.kategori|simge_adi }}"/></svg>
+    {% endif %}
+  </a>
+  <div class="ic">
+    <div class="ust">
+      {% if h.ilce %}<span{% if h.kategori %} class="etiket-{{ h.kategori.slug_al }}"{% endif %}>{{ h.ilce.ad|baslikla }}</span>{% elif not kategori_gizle %}<span{% if h.kategori %} class="etiket-{{ h.kategori.slug_al }}"{% endif %}>{{ h.kategori.ad|baslikla }}</span>{% endif %}
+      {% if h.yayin_zamani %}<time datetime="{{ h.yayin_zamani|date:'c' }}" title="{{ h.yayin_zamani|date:'j F Y, H:i' }}">{{ h.yayin_zamani|date:'H:i' }}</time>{% endif %}
+    </div>
+    <h3><a href="{{ h.get_absolute_url }}">{{ h.baslik }}</a></h3>
+    {% if h.spot %}<p>{{ h.spot|truncatechars:110 }}</p>{% endif %}
+  </div>
+</li>

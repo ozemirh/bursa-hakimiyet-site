@@ -1,0 +1,310 @@
+"""Şablon süzgeçleri — görselsiz haberi kategori temsiliyle çizmek için.
+
+Arşivin büyük bölümünde yerel görsel yok (URUN-PLANI.md F3 notu: 2023-07
+öncesi dosyalar sağlayıcı tarafından silindi, kurtarılamıyor). Karar:
+uzak adrese bağlanmak yerine kategoriye ait **temsilî SVG** çizilir. Simge
+kütüphanesi `parca/simgeler.html` içinde duruyor ve tasarımdan geliyor.
+
+Eşleme kategori **adına** göredir; slug adresin parçası olduğu için burada
+kullanılmaz — slug değişmez ama ad birleştirilebilir.
+"""
+
+from django import template
+
+register = template.Library()
+
+# kategori adı -> (svg simge kimliği, renk sınıfı)
+ESLEME = {
+    "GÜNDEM": ("sc-cami", "t-mavi"),
+    "BURSA": ("sc-cami", "t-mavi"),
+    "BURSASPOR": ("sc-spor", "t-yesil"),
+    "SPOR": ("sc-spor", "t-yesil"),
+    "EKONOMİ": ("sc-fabrika", "t-turuncu"),
+    "DÜNYA": ("sc-gol", "t-mavi"),
+    "MAGAZİN": ("sc-muze", "t-mor"),
+    "SAĞLIK": ("sc-saglik", "t-kirmizi"),
+    "TEKNOLOJİ": ("sc-fabrika", "t-mor"),
+    "YAŞAM": ("sc-tarim", "t-yesil"),
+    "AKTÜALİTE": ("sc-adliye", "t-gri"),
+    "SAVUNMA SANAYİ": ("sc-fabrika", "t-gri"),
+    "KÜLTÜR": ("sc-muze", "t-mor"),
+    "ASAYİŞ": ("sc-adliye", "t-gri"),
+}
+
+VARSAYILAN = ("sc-uludag", "t-gri")
+
+
+def _esle(kategori):
+    if kategori is None:
+        return VARSAYILAN
+    return ESLEME.get((kategori.ad or "").upper(), VARSAYILAN)
+
+
+@register.filter
+def simge_adi(kategori) -> str:
+    return _esle(kategori)[0]
+
+
+@register.filter
+def renk_sinifi(kategori) -> str:
+    return _esle(kategori)[1]
+
+
+# -- Türkçe büyük/küçük harf ----------------------------------------------
+#
+# Kategori adları kaynakta BÜYÜK harf ("EKONOMİ"); sayfada kimi yerde başlık,
+# kimi yerde büyük harf isteniyor. Python'un kendi metotları Türkçe'de yanlış
+# sonuç verir:
+#   "EKONOMİ".title()   -> "Ekonomi̇"  (İ'nin noktası ayrı birleşen kalır)
+#   "IĞDIR".lower()     -> "iğdir"    (doğrusu "ığdır")
+#   "Ekonomi".upper()   -> "EKONOMI"  (doğrusu "EKONOMİ")
+# Bu yüzden i/ı ve İ/I çiftleri elle çevrilir.
+
+_KUCULT = {"I": "ı", "İ": "i"}
+_BUYULT = {"i": "İ", "ı": "I"}
+
+
+def _kucult(metin: str) -> str:
+    return "".join(_KUCULT.get(c, c) for c in metin).lower()
+
+
+def _buyult(metin: str) -> str:
+    return "".join(_BUYULT.get(c, c) for c in metin).upper()
+
+
+def _kisaltma_mi(kelime: str) -> bool:
+    """Kısaltmalar küçültülmemeli: "A.Ş." -> "A.ş." olurdu.
+
+    Ölçüt: noktalı ve kısa (A.Ş. · T.C.) ya da üç harfe kadar tümü büyük
+    (FK · TFF · BB). "TOFAŞ" gibi beş harfli adlar kısaltma sayılmaz,
+    onlar başlık biçimine girer.
+    """
+    if not kelime:
+        return False
+    if "." in kelime and len(kelime) <= 5:
+        return True
+    harfler = [c for c in kelime if c.isalpha()]
+    return bool(harfler) and len(harfler) <= 3 and kelime == _buyult(kelime)
+
+
+@register.filter
+def baslikla(metin) -> str:
+    '''"EKONOMİ" -> "Ekonomi", "GALATASARAY A.Ş." -> "Galatasaray A.Ş.".'''
+    if not metin:
+        return ""
+    cikti = []
+    for kelime in str(metin).split():
+        if _kisaltma_mi(kelime):
+            cikti.append(kelime)
+            continue
+        kucuk = _kucult(kelime)
+        cikti.append(_buyult(kucuk[:1]) + kucuk[1:])
+    return " ".join(cikti)
+
+
+@register.filter
+def buyult(metin) -> str:
+    '''"Ekonomi" -> "EKONOMİ". Django'nun `|upper` süzgeci i harfini bozar.'''
+    return _buyult(str(metin)) if metin else ""
+
+
+@register.filter
+def kucult(metin) -> str:
+    '''"İHALE" -> "ihale". Django'nun `|lower` süzgeci İ harfini bozar.
+
+    Ölçüldü (29 Ağustos 2026): `"İHALE"|lower` tarayıcıda **"i̇hale"**
+    basıyor — Unicode "İ"yi "i" + birleşen nokta (U+0307) olarak küçültüyor
+    ve harfin üstünde iki nokta kalıyor. Resmî ilan bölümündeki tür adları
+    veriden büyük harfle geldiği için bu süzgeç gerekti.
+    '''
+    return _kucult(str(metin)) if metin else ""
+
+
+# -- canlı veri süzgeçleri ------------------------------------------------
+
+GUN_KISA = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
+
+
+@register.filter
+def kisa_gun(tarih_iso) -> str:
+    """`2026-08-28` -> `Cum`. Hava şeridinde yalnız üç harf sığıyor."""
+    from datetime import date
+    try:
+        return GUN_KISA[date.fromisoformat(str(tarih_iso)).weekday()]
+    except (TypeError, ValueError):
+        return ""
+
+
+AY_KISA = ["Oca", "Şub", "Mar", "Nis", "May", "Haz",
+           "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"]
+
+
+@register.filter
+def kisa_zaman(zaman) -> str:
+    """Başlık listelerinin tarih sütunu: bugünse SAAT, değilse TARİH.
+
+    Gazete masasının kuralı: aynı günün haberinde okur "kaçta" diye sorar,
+    eski haberde "ne zaman" diye. Yıl yalnız başka bir yıla aitse yazılır —
+    arşivde 2025 kayıtları var ve yılsız "31 Eki" onları bu yılın haberi
+    gibi gösteriyordu (29 Ağustos 2026'da ölçüldü: Bursaspor bölümündeki
+    en yeni haber 31 Ekim 2025 tarihli).
+    """
+    from django.utils import timezone
+    if not zaman:
+        return ""
+    try:
+        yerel = timezone.localtime(zaman)
+    except (ValueError, TypeError, AttributeError):
+        return ""
+    bugun = timezone.localdate()
+    if yerel.date() == bugun:
+        return yerel.strftime("%H:%M")
+    kisa = f"{yerel.day} {AY_KISA[yerel.month - 1]}"
+    return kisa if yerel.year == bugun.year else f"{kisa} {yerel.year}"
+
+
+@register.filter
+def goreli_zaman(zaman) -> str:
+    """SON DAKİKA rayının damgası: taze haberde "14 dk önce".
+
+    2 Eylül 2026, §44. Son dakika kutusunda okurun sorduğu soru "kaçta"
+    değil "ne kadar yeni". İncelenen sitelerin hepsi (BBC "17 mins ago",
+    Spiegel "Vor 6 Min", CNN Türk "2 saat önce") bu kutuda GÖRELİ zaman
+    yazıyor; "14:32" yazan bir liste akşam bakan okura tazelik söylemiyor.
+
+    Sınır 24 saat: ötesinde BOŞ döner, tarih basılmaz (23 Ekim 2026,
+    kullanıcı isteği: "son haberler zaten o gün yapılmış olacak, tarih
+    bildirisine gerek yok"). Eskiden `kisa_zaman`a düşüp "22 Eki"
+    yazıyordu; şablon boş damgada `<time>` öğesini hiç çizmez.
+
+    Gelecek tarihli kayıtta (sunucu saat farkı, ileri tarihli yayın)
+    "şimdi" yazılır — negatif dakika basılmaz.
+    """
+    from django.utils import timezone
+    if not zaman:
+        return ""
+    try:
+        fark = timezone.now() - zaman
+    except TypeError:
+        return ""
+    saniye = fark.total_seconds()
+    if saniye < 60:
+        return "şimdi"
+    if saniye < 3600:
+        return f"{int(saniye // 60)} dk önce"
+    if saniye < 86400:
+        return f"{int(saniye // 3600)} saat önce"
+    return ""
+
+
+@register.filter
+def iso_tarih(metin):
+    """`2026-08-29` -> `date` nesnesi; `|date:"j F Y"` ile zincirlenir.
+
+    Canlı veri paketleri tarihi ISO METİN olarak taşıyor ve Django'nun
+    `date` süzgeci metinle çalışmıyor. Ay adları Django'nun kendi Türkçe
+    çevirisinden gelsin diye burada biçimlendirme YAPILMIYOR — yalnız tür
+    dönüşümü. Çözülemeyen değerde boş döner, şablon o cümleyi basmaz.
+    """
+    from datetime import date
+    try:
+        return date.fromisoformat(str(metin)[:10])
+    except (TypeError, ValueError):
+        return ""
+
+
+@register.filter
+def okuma_dakikasi(kelime_sayisi):
+    """Kelime sayısından okuma süresi (dakika): 200 kelime/dk, en az 1.
+
+    Değer yoksa boş döner ve şablon `{% if %}` ile zaten hiç basmaz —
+    uydurma süre yazılmaz (29 Ağustos 2026, görsel denetim Ö12).
+    """
+    try:
+        kelime = int(kelime_sayisi)
+    except (TypeError, ValueError):
+        return ""
+    if kelime <= 0:
+        return ""
+    return max(1, round(kelime / 200))
+
+
+@register.filter
+def sozluk(kaynak, anahtar):
+    """Şablonda `sozluk[anahtar]` yazılamaz; anahtar değişkense bu gerekir."""
+    try:
+        return kaynak.get(anahtar, "")
+    except AttributeError:
+        return ""
+
+
+@register.filter
+def kisa_lig(ad) -> str:
+    """Sekmeye sığan kısa lig adı: sponsor adı düşer.
+
+    "Trendyol Süper Lig" -> "SÜPER", "Nesine 2. Lig" -> "2. LİG".
+    Sponsor adları sezon başında değiştiği için kodda sabit tutulamaz;
+    baştaki sponsor kelimesi atılıyor.
+    """
+    parcalar = str(ad).split()
+    if len(parcalar) > 2:          # sponsor adı baştan düşer
+        parcalar = parcalar[1:]
+    kisa = _buyult(" ".join(parcalar))
+    # Tasarımdaki sekme adları: SÜPER · 1. LİG · 2. LİG · 3. LİG
+    return "SÜPER" if kisa.startswith("SÜPER") else kisa
+
+
+# -- görselsiz kartlar ----------------------------------------------------
+#
+# Arşivin %99,98'inde yerel görsel yok, yani bir kategori kutusundaki
+# kartların hepsi aynı temsilî çizimi alıyordu: Bursaspor kutusunda altı
+# birebir aynı yeşil saha. Ölü ve dikkat dağıtıcı duruyordu.
+#
+# Çözüm: çizim kategoriye bağlı kalır (anlamını korur), **rengi** kaydın
+# kimliğinden türetilir. Aynı haber her zaman aynı rengi alır — sayfa
+# yenilenince kart rengi değişmez, bu da titremeyi önler.
+
+# Gri bilerek yok: cesitleme paletinde soluk kaliyordu. Yalnizca
+# kategorisi bilinmeyen kayitlarin taban rengi olarak duruyor.
+PALET = ["t-mavi", "t-yesil", "t-turuncu", "t-mor", "t-kirmizi"]
+
+
+@register.filter
+def kart_rengi(kayit) -> str:
+    """Kaydın kimliğinden türeyen, sabit ve tekrarlanabilir renk sınıfı."""
+    kategori = getattr(kayit, "kategori", None)
+    taban = _esle(kategori)[1]
+    kimlik = getattr(kayit, "pk", None)
+    if not kimlik:
+        return taban
+    # Kategorinin kendi rengi listenin başına alınır ki baskın renk o olsun.
+    sirali = [taban] + [r for r in PALET if r != taban]
+    return sirali[kimlik % len(sirali)]
+
+
+@register.filter
+def kart_simgesi(kayit) -> str:
+    """Çizim kategoriye bağlı kalır; anlamı taşıyan taraf budur."""
+    return _esle(getattr(kayit, "kategori", None))[0]
+
+
+@register.filter
+def mutlak(sayi):
+    """İşaretsiz değer.
+
+    Bandda yön zaten okla gösteriliyor; değerin başındaki eksi ile
+    birlikte "▼ %-0,28" gibi çift olumsuz okunuyordu.
+    """
+    try:
+        return abs(float(sayi))
+    except (TypeError, ValueError):
+        return sayi
+
+
+@register.filter
+def piyasa_adresi(anahtar) -> str:
+    """Döviz kalemi anahtarının kalıcı enstrüman sayfası (`/piyasa/dolar`);
+    sayfası olmayan kalemde (sterlin, BIST 100) boş — şablon bağ kurmaz.
+    Eşleme tek yerde: `icerik/piyasa.ENSTRUMANLAR` (20 Ekim 2026)."""
+    from ..piyasa import adres
+    return adres(str(anahtar or ""))

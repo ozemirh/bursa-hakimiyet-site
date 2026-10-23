@@ -1,0 +1,43 @@
+{% load site_etiket %}{% load l10n %}
+{% comment %}DÖVİZ BANDI — anasayfanın tek satırlık piyasa şeridi.
+
+6 Eylül 2026'da (§59) anasayfadan parçaya çıkarılmıştı, çünkü EKONOMİ
+bölümünün servis şeridi de aynı bandı basıyordu. **Artık basmıyor**
+(7 Eylül 2026, §62): bölüm sayfası bandı beş gözlü bir ızgaraya çevirdi ve
+alış/satış ile künyeyi de gösteriyor. Biçim BİLEREK ayrıldı — aynı veriyi
+iki farklı yerde iki farklı işe koşuyoruz; ortak olan sayının kaynağı
+(`oku("doviz")`), sunumu değil.
+
+Parça yine de duruyor: anasayfa onu çağırıyor ve bandın kendi kuralları tek
+bir yerde okunuyor. Biçim, alanlar ve kararlar değişmedi:
+
+Beş kalem sabittir (URUN-PLANI.md §1, bileşen 9). Kaynağı bulunamayan kalem
+(gram altın · BIST 100) çizgiyle gösterilir — uydurma değer basmaktansa
+"veri yok" demek doğru.
+
+`l10n`: yüzde değerleri Türkçe yerelleştirmeyle virgüllü basılıyor; bu
+bandın kendi sayıları için sorun değil, ama `localize` kapatılmıyor —
+anasayfadaki hâliyle birebir aynı kalsın diye blok olduğu gibi taşındı.{% endcomment %}
+{% if doviz %}
+<div class="doviz-ic">
+  <span class="etiket">PİYASA</span>
+  <dl>
+    {% for k in doviz.kalemler %}
+      <div>
+        {# 20 Ekim 2026: sayfası olan kalem (dolar, euro, gram altın) kalıcı enstrüman sayfasına bağlanır; bağ gözün tamamını kaplar (site.css). #}
+        <dt>{% with a=k.anahtar|piyasa_adresi %}{% if a %}<a href="{{ a }}">{{ k.ad }}</a>{% else %}{{ k.ad }}{% endif %}{% endwith %}</dt>
+        <dd>
+          {% if k.deger %}{{ k.deger|floatformat:2 }}{% if k.birim == "TL" %} &#8378;{% endif %}
+            {% if k.degisim_yuzde %}<span class="fark {% if k.yon == 'yukari' %}artis{% else %}azalis{% endif %}" aria-label="yüzde {{ k.degisim_yuzde|mutlak|floatformat:2 }} {% if k.yon == 'yukari' %}yükseldi{% else %}geriledi{% endif %}">{% if k.yon == 'yukari' %}&#9650;{% else %}&#9660;{% endif %} %{{ k.degisim_yuzde|mutlak|floatformat:2 }}</span>{% endif %}
+          {% else %}<span class="veri-yok" title="Kaynak bulunamadı, panelden elle girilir">&ndash;</span>{% endif %}
+        </dd>
+      </div>
+    {% endfor %}
+  </dl>
+  {% comment %}19 Ekim 2026: saatin yanında TARİH de durur (güncelleme
+  bugün değilse) — dosya 12 Eylül'de donunca bant yalnız "21:57" yazıyor,
+  okur bunu bugünün saati sanıyordu. Kural `canli.tazelik()`te.{% endcomment %}
+  {% comment %}23 Ekim 2026, kullanıcı kararı: bantta damga hiç basılmaz —
+  ne saat ne tarih ne "güncel değil".{% endcomment %}
+</div>
+{% endif %}

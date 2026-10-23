@@ -1,0 +1,584 @@
+"""Medya modelleri — yazar · köşe yazısı · foto galeri · video.
+
+`icerik.Haber` ile aynı sözleşmeye uyar, çünkü aynı adres kuralına tabidirler:
+
+    /yazarlar/{yazar-slug}-{yazar_id}/{slug}-{id}   köşe yazısı
+    /yazarlar/{yazar-slug}-{yazar_id}               yazar
+    /galeriler/{kategori-slug}-{katid}/{slug}-{id}  foto galeri
+    /videolar/{kategori-slug}-{katid}/{slug}-{id}   video
+
+**Birincil anahtar = eski kimlik.** Kimlik adresin parçasıdır ve site adresi
+kimlikten çözer; kimliği değiştirmek 599.793 eski bağlantının bir kısmını
+sessizce kırardı. Bu yüzden `id` göçte açıkça yazılır, otomatik üretilmez.
+
+**Slug adresten çıkarılır, başlıktan üretilmez.** Aynı gerekçe: adres kanonik
+kaynaktır, başlık değil. Başlıktan slug üretmek Türkçe harf dönüşümü yüzünden
+kayıtların bir bölümünü kaydırırdı.
+
+Ölçülmüş üç gerçek bu dosyanın biçimini belirledi (27 Ağustos 2026):
+
+1. **`haber-213` diye bir foto kategorisi var ve taksonomide karşılığı yok.**
+   Taranan 3.660 galerinin 998'i (%27) bu dilimde. Kategori kimliği tanınmıyor
+   diye kaydı düşürmek arşivin dörtte birini ve o adreslerin hepsini yok
+   ederdi. Karar: `kategori` bağı **boş bırakılabilir**, ham dilim
+   (`kategori_dilimi`) her kayıtta **birebir** saklanır ve adres ondan kurulur.
+2. **Galeri ve yazar görsellerinin %100'ü indirilebiliyor.** Haber tarafında
+   yerel görsel oranı %0,02 idi (dosyalar sunucudan silinmiş); medya ailelerinde
+   kapak `/cdn/` altından geliyor ve duruyor. Yani bu modellerde görsel istisna
+   değil kural — şablon önce yerel dosyayı dener.
+3. **Galeri kareleri statik HTML'de yok** (arşivleyicinin ölçümü): sayfadaki tek
+   `ItemList` sitenin "son galeriler" kutusu. Bu yüzden `kareler_eksik` alanı
+   var ve varsayılanı **doğru**; kareler ancak sağlayıcı dökümünden ya da
+   panelden gelir. Eksikliği kaydın içinde taşımak, sonradan "neden boş?"
+   sorusunu ölçüyle cevaplar.
+"""
+
+import re
+from datetime import timedelta
+
+from django.conf import settings
+from django.db import models
+from django.utils import timezone
+
+from cekirdek.tr_siralama import tr_sirala
+from taksonomi.models import Kategori, KategoriTur
+
+# Arşiv görsellerinin adres öneki.
+#
+# `icerik.Haber` görselini `settings.ARSIV_GORSEL_URL` (= /arsiv-gorsel/)
+# altından servis eder ve o adres `<arşiv kökü>/gorseller/` klasörüne bakar.
+# Medya aileleri **kardeş klasörlere** yazıyor: `gorseller-galeri/`,
+# `gorseller-video/`, `gorseller-yazar/`, `gorseller-kose/`. Bunlar
+# `/arsiv-gorsel/` kökünün altında değil, yanındadır; o yüzden kendi önekleri
+# var. `gorsel_dosya` da bu yüzden **arşiv köküne** göreli saklanır (arşivin
+# JSON'a yazdığı hâliyle birebir), `gorseller/` köküne değil.
+MEDYA_GORSEL_URL = getattr(settings, "MEDYA_GORSEL_URL", "/arsiv-medya/")
+
+class ArsivIcerigi(models.Model):
+    """Dört ailenin ortak gövdesi. Alanlar `icerik.Haber` ile birebir aynı adı
+    taşır ki panel formları ve şablon parçaları tek bir sözleşmeyle çalışsın."""
+
+    DURUM_AKTIF, DURUM_PASIF, DURUM_SILINMIS, DURUM_ARSIV = 1, 2, 3, 4
+    DURUMLAR = [
+        (DURUM_AKTIF, "Aktif"), (DURUM_PASIF, "Pasif"),
+        (DURUM_SILINMIS, "Silinmiş"), (DURUM_ARSIV, "Arşiv"),
+    ]
+
+    id = models.BigIntegerField(
+        primary_key=True, editable=False,
+        help_text="Eski sistemdeki kimlik. Adresin parçası; değiştirilemez.")
+    slug = models.SlugField(
+        max_length=220, editable=False,
+        help_text="DONDURULMUŞ. Eski adresten çıkarıldı, başlıktan üretilmedi.")
+    baslik = models.CharField(max_length=300)
+    spot = models.TextField(blank=True)
+
+    durum = models.PositiveSmallIntegerField(choices=DURUMLAR, default=DURUM_AKTIF)
+    yayin_zamani = models.DateTimeField(null=True, blank=True, db_index=True)
+    guncelleme_zamani = models.DateTimeField(null=True, blank=True)
+
+    gorsel_url = models.URLField(
+        max_length=600, blank=True,
+        help_text="Kaynaktaki adres. Yalnız izdir; sayfa uzağa bağlanmaz.")
+    gorsel_alt = models.CharField(max_length=300, blank=True)
+    gorsel_var = models.BooleanField(default=False, help_text="Yerelde dosya var mı.")
+    gorsel_dosya = models.CharField(
+        max_length=300, blank=True,
+        help_text="ARŞİV KÖKÜNE göreli yol, ör. gorseller-galeri/2021-02/x.webp.")
+
+    eski_url = models.URLField(max_length=600, blank=True)
+    goc_guveni = models.CharField(max_length=12, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self) -> str:
+        return f"[{self.pk}] {self.baslik[:60]}"
+
+    @classmethod
+    def yayindakiler(cls):
+        """Sayfada gösterilebilir kayıtlar.
+
+        Sitemap yalnız yayındakileri listeliyor, yani göç eden her kayıt
+        Aktif geliyor; süzgeç panelden gelecek içerik için duruyor. Yayın
+        zamanı olmayan kayıt listelenmez — sıralama ona dayanıyor.
+        """
+        return cls.objects.filter(durum=cls.DURUM_AKTIF, yayin_zamani__isnull=False)
+
+    def gorsel_yolu(self) -> str:
+        """Sayfada basılacak görsel adresi — **yerel**, uzak değil.
+
+        Sayfanın internetsiz açılması kuralı burada da geçerli: dosya yereldeyse
+        gösterilir, değilse boş döner ve şablon kategori temsilî çizimine düşer.
+        """
+        if not (self.gorsel_var and self.gorsel_dosya):
+            return ""
+        return MEDYA_GORSEL_URL + self.gorsel_dosya.lstrip("/")
+
+
+class KategoriliIcerik(ArsivIcerigi):
+    """Adres diliminin kategoriden geldiği aileler: foto galeri ve video.
+
+    `TUR` alt sınıfta doldurulur; `KategoriTur` satırı ondan bulunur.
+    """
+
+    TUR = ""  # alt sınıf Kategori.TUR_FOTO / TUR_VIDEO ile doldurur
+
+    kategori = models.ForeignKey(
+        Kategori, null=True, blank=True, on_delete=models.PROTECT,
+        related_name="+",
+        help_text="Taksonomide karşılığı yoksa boş kalır; adres yine çalışır.")
+    kategori_dilimi = models.CharField(
+        max_length=120,
+        help_text="Adresteki `{slug}-{katid}` parçası, kaynaktan BİREBİR. "
+                  "Taksonomi tanımayan dilimler (ör. haber-213) buradan yaşar.")
+
+    class Meta:
+        abstract = True
+
+    def adres_dilimi(self) -> str:
+        """Adreste geçecek `{slug}-{katid}`.
+
+        Taksonomi kategoriyi tanıyorsa **kanonik** dilim oradan gelir; sapan
+        slug'lar (ölçüldü: `bursada-spor-250`) böylece kendiliğinden kanoniğe
+        çekilir. Tanımıyorsa kaynaktaki ham dilim kullanılır.
+
+        `.filter()` değil `.all()` üzerinden dönülüyor: liste sayfasında onlarca
+        kayıt adresini buradan kuruyor ve `.filter()` prefetch önbelleğini
+        atlayıp her çağrıda veritabanına giderdi (`Kategori.slug_al` ile aynı
+        gerekçe).
+        """
+        if self.kategori_id:
+            for satir in self.kategori.turler.all():
+                if satir.tur == self.TUR:
+                    return satir.adres_dilimi
+        return self.kategori_dilimi
+
+    @classmethod
+    def kategori_bul(cls, kategori_id: int):
+        """Adres dilimindeki kimlikten `Kategori` bulur. Yoksa None."""
+        satir = KategoriTur.objects.filter(tur=cls.TUR, eski_id=kategori_id).first()
+        return satir.kategori if satir else None
+
+
+class Yazar(models.Model):
+    """Köşe yazarı.
+
+    Kimlik yine adresin parçası (`/yazarlar/{slug}-{id}`), o yüzden birincil
+    anahtar eski kimliktir.
+
+    **Eksik kayıt sorunu — ölçüldü, sanılandan büyük.** Sitemap yalnız **18**
+    yazar sayfası listeliyor ve biri 404 (17 alınabildi); ama köşe yazılarının
+    adreslerinde **37 ayrı yazar kimliği** geçiyor (27 Ağustos 2026, 5.755
+    yazı taranmışken). Yani yazarların yarısından fazlasının sayfası yok, köşe
+    yazıları var. Bağlanacak kayıt bulunamayınca yazının düşmesi 6.903 adresin
+    büyük bölümünü yok ederdi.
+
+    Karar: göç, adresteki dilimden (`namik-goz-76`) ve yazının künyesinden
+    geçici bir yazar kaydı açar, `sayfasi_tarandi` alanını yanlış bırakır.
+    Portre de yazıdan gelir — köşe sayfasının og:image'ı yazının değil
+    **yazarın** fotoğrafıdır. Yazar sayfası sonradan taranırsa aynı kayıt
+    künyesiyle tamamlanır; taranamazsa sayfa yine de eksiksiz görünür.
+    """
+
+    id = models.BigIntegerField(
+        primary_key=True, editable=False,
+        help_text="Eski sistemdeki yazar kimliği. Adresin parçası.")
+    slug = models.SlugField(
+        max_length=120, editable=False,
+        help_text="DONDURULMUŞ. Eski adresten çıkarıldı.")
+    ad = models.CharField(max_length=120)
+    unvan = models.CharField(max_length=120, blank=True)
+    ozgecmis = models.TextField(blank=True)
+    eposta = models.EmailField(blank=True)
+
+    aktif = models.BooleanField(
+        default=True,
+        help_text="Yalnız LİSTELERİ süzer. Pasif yazarın sayfası yine açılır; "
+                  "eski bağlantılar 404 olmamalı.")
+    sira = models.PositiveSmallIntegerField(default=0)
+    sayfasi_tarandi = models.BooleanField(
+        default=False,
+        help_text="Yazar sayfası arşivden alındı mı. Yanlışsa kayıt köşe "
+                  "yazısından türetilmiş geçici kayıttır.")
+
+    gorsel_url = models.URLField(max_length=600, blank=True)
+    gorsel_var = models.BooleanField(default=False)
+    gorsel_dosya = models.CharField(max_length=300, blank=True)
+
+    eski_url = models.URLField(max_length=600, blank=True)
+
+    class Meta:
+        ordering = ["sira", "ad"]
+        verbose_name = "yazar"
+        verbose_name_plural = "yazarlar"
+
+    def __str__(self) -> str:
+        return f"[{self.pk}] {self.ad}"
+
+    #: Dizin sıralamasında atlanan unvan önekleri (21 Ekim 2026): arşivde
+    #: "Av. Veysel TAYYAR" ve "Doç. Dr. Filiz ERYILMAZ" adın parçası olarak
+    #: kayıtlı; okur onları A'da ve D'de değil V'de ve F'de arar.
+    DIZIN_ONEKI = re.compile(r"^(?:(?:Av|Doç|Dr|Prof|Op|Uzm|Yrd|Öğr|Gör)\.\s*)+", re.I)
+
+    @property
+    def dizin_anahtari(self) -> tuple:
+        """Türkçe alfabeyle, unvan öneki atılmış, KELİME KELİME sıralama
+        anahtarı. Kelime kelime: boşluk alfabe dışı sayılıp harflerin
+        ardına düşerdi, "Ali GENÇ" "Alican"ın arkasında kalırdı."""
+        ad = self.DIZIN_ONEKI.sub("", self.ad or "")
+        return tuple(tr_sirala(kelime) for kelime in ad.split())
+
+    @classmethod
+    def listedekiler(cls):
+        return cls.objects.filter(aktif=True)
+
+    @classmethod
+    def son_yazisiyla(cls, sorgu=None):
+        """Yazar listesi + her yazarın son yazısının başlığı TEK sorguda.
+
+        `son_yazi` niteliği yazar başına bir sorgu açıyordu (PG ölçümü,
+        19 Ekim 2026: `/yazarlar` 38 sorgu, köşe yazısı rayı +5). İlişkili
+        alt sorgu `(yazar, -yayin_zamani)` indeksinden tek satır okur;
+        `son_yazi` önce bu açıklamaya bakar.
+        """
+        from django.db.models import OuterRef, Subquery
+        son = (KoseYazisi.yayindakiler().filter(yazar=OuterRef("pk"))
+               .order_by("-yayin_zamani").values("baslik")[:1])
+        sorgu = cls.listedekiler() if sorgu is None else sorgu
+        return sorgu.annotate(son_yazi_basligi=Subquery(son))
+
+    def get_absolute_url(self) -> str:
+        return f"/yazarlar/{self.slug}-{self.pk}"
+
+    @property
+    def yol(self) -> str:
+        """Anasayfadaki `parca` şablonları `y.yol` bekliyor; aynı adres."""
+        return self.get_absolute_url()
+
+    @property
+    def adres_dilimi(self) -> str:
+        return f"{self.slug}-{self.pk}"
+
+    @property
+    def basharfler(self) -> str:
+        """Portresi olmayan yazar için vesika yerine baş harfler basılır.
+
+        Türkçe büyük harf dönüşümü `str.upper()` ile yanlış çıkıyor
+        ("ismail" → "ISMAIL"), o yüzden i/ı çifti elle çevriliyor —
+        `site_etiket.buyult` ile aynı gerekçe.
+        """
+        harfler = [k[0] for k in self.ad.split() if k]
+        cikti = "".join(harfler[:2])
+        return "".join({"i": "İ", "ı": "I"}.get(h, h) for h in cikti).upper()
+
+    def gorsel_yolu(self) -> str:
+        if not (self.gorsel_var and self.gorsel_dosya):
+            return ""
+        return MEDYA_GORSEL_URL + self.gorsel_dosya.lstrip("/")
+
+    def yazilari(self):
+        return KoseYazisi.yayindakiler().filter(yazar=self)
+
+    @property
+    def son_yazi(self) -> str:
+        """Sağ raydaki yazar kutusu yazar adının altında son yazının başlığını
+        gösteriyor (URUN-PLANI.md §1, bileşen 13).
+
+        Liste `son_yazisiyla()` ile geldiyse sorgu açmaz."""
+        if hasattr(self, "son_yazi_basligi"):
+            return self.son_yazi_basligi or ""
+        yazi = self.yazilari().only("baslik").first()
+        return yazi.baslik if yazi else ""
+
+
+class KoseYazisi(ArsivIcerigi):
+    """Köşe yazısı. Adresi **yazarın** dilimine bağlıdır.
+
+    Yazar bağı zorunlu (`PROTECT`): bağ olmadan kanonik adres kurulamaz, yani
+    bağsız kayıt adressiz kayıt demektir.
+
+    `kategori` isteğe bağlıdır. Kaynakta köşe yazısının kategorisi ayrı bir
+    adres dilimi değil, JSON-LD'deki `articleSection` alanıdır (ölçüldü: 3.000
+    haber örneğinde değerler kategori adlarıyla birebir eşleşiyor); tanınmayan
+    değer kaydı düşürmez.
+    """
+
+    yazar = models.ForeignKey(Yazar, on_delete=models.PROTECT, related_name="tum_yazilari")
+    kategori = models.ForeignKey(
+        Kategori, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    govde = models.TextField(blank=True)
+    kelime_sayisi = models.PositiveIntegerField(default=0)
+
+    #: `/kose-yazilari` akışının dilim boyu — sayfa ve "daha fazla" ucu
+    #: (`icerik.views.daha_fazla`, kaynak=kose) AYNI sayıyı okur; iki ayrı
+    #: sabit olsaydı düğmenin ikinci dilimi birinciyle çakışırdı.
+    AKIS_BOYU = 20
+    #: `/kose-yazilari` vitrininin "yazıyor" eşiği (21 Ekim 2026, tasarım
+    #: önerisi). Son yazısı REFERANSA bundan yakın yazar "yazıyor" kademesinde
+    #: kartla, öbürleri "arşivde" kademesinde yalnız dizinde durur. Ölçüldü
+    #: (PG): aylık yazanların son 12 aydaki en uzun aralığı 43 gün; en yeni
+    #: yazıya uzaklıklar 0…10, 35, ardından 98 — doğal kırılma 35 ile 98
+    #: arasında. 45 aylık yazarı karşılıyor, 98 günlük düzensiz yazarı almıyor.
+    YAZIYOR_ESIGI = timedelta(days=45)
+    #: En yeni köşe yazısı bugünden bu kadar eskiyse vitrin başlığı tarihini
+    #: söyler (bayat veri gizlenmez, tarihiyle gösterilir). 2025–26'da köşe
+    #: yazısı çıkmayan en uzun dönem 5 gün (bayram); 7 gün yanlış alarm vermez.
+    TAZELIK_UYARISI = timedelta(days=7)
+
+    class Meta:
+        ordering = ["-yayin_zamani"]
+        verbose_name = "köşe yazısı"
+        verbose_name_plural = "köşe yazıları"
+        indexes = [models.Index(fields=["yazar", "-yayin_zamani"])]
+
+    def get_absolute_url(self) -> str:
+        return f"/yazarlar/{self.yazar.adres_dilimi}/{self.slug}-{self.pk}"
+
+    @classmethod
+    def akis(cls):
+        """`/kose-yazilari` akışı: bütün köşe yazıları, en yeniden eskiye.
+
+        Pasif yazarın yazısı listeye girmez (`Yazar.aktif` "yalnız listeleri
+        süzer"; yazının kendi adresi açık kalır). İkincil sıra kimlik: aynı
+        dakikada yayımlanmış iki yazı dilim sınırına düşerse OFFSET'li
+        dilimleme birini iki kez, öbürünü hiç göstermezdi.
+
+        `defer("govde")`: satır gövde basmıyor ve gövde ortalama 4,3 KB.
+        Gövdeye yanlışlıkla erişen kod satır başına sorgu açar — bunu
+        `tests_kose_yazilari` sorgu sayısı sınırıyla yakalar.
+        """
+        return (cls.yayindakiler().filter(yazar__aktif=True)
+                .select_related("yazar").defer("govde")
+                .order_by("-yayin_zamani", "-pk"))
+
+    @classmethod
+    def yazar_basina_son(cls):
+        """Her (listedeki) yazarın en son yazısı, en yeniden eskiye — TEK sorgu.
+
+        PostgreSQL'in `DISTINCT ON`u yerine ilişkili alt sorgu: SQLite geri
+        dönüşünde de aynı sorgu çalışsın diye. Yazar başına alt sorgu
+        `(yazar, -yayin_zamani)` indeksinden tek satır okur
+        (`Yazar.son_yazisiyla` ile aynı düzen); dış sorgu o kimlikleri
+        `IN` ile alır. Gövde ertelenir: 21 Ekim 2026 ikinci turundan beri
+        kart giriş metni basmıyor (gövdeden kırpılan "Bodrum… Iğdır FK…"
+        gürültüsü kalktı).
+        """
+        return (cls._son_yazi_kumesi()
+                .select_related("yazar").defer("govde")
+                .order_by("-yayin_zamani", "-pk"))
+
+    @classmethod
+    def _son_yazi_kumesi(cls):
+        """Listedeki her yazarın son yayındaki yazısı — süzgeç, sıra yok.
+        `yazar_basina_son` ve `vitrin_kimlikleri` AYNI kümeden okur; iki
+        ayrı tanım olsaydı vitrin ile akışın dışladığı yazılar ayrışabilirdi."""
+        from django.db.models import OuterRef, Subquery
+        son = (cls.yayindakiler().filter(yazar=OuterRef("pk"))
+               .order_by("-yayin_zamani", "-pk").values("pk")[:1])
+        kimlikler = Yazar.listedekiler().annotate(son_id=Subquery(son)).values("son_id")
+        return cls.yayindakiler().filter(pk__in=kimlikler)
+
+    @classmethod
+    def vitrin_kimlikleri(cls):
+        """`kademele(yazar_basina_son())[0]`ın SQL karşılığı: vitrindeki
+        ("yazıyor" kademesi) yazıların kimlikleri, DEĞERLENDİRİLMEMİŞ sorgu.
+
+        `onceki_akis` bunu alt sorgu olarak gömer; `?sayfa=N` ve "daha
+        fazla" ucu vitrini hiç kurmadan aynı yazıları dışlar ve gidiş-dönüş
+        sayısı artmaz. Eşik Python'daki gibi: referans kümedeki en yeni
+        yazı, sınır dahil (`yayin_zamani >= referans - YAZIYOR_ESIGI`).
+        Dış sorgu `KoseYazisi.pk` döndürür, hiçbir satırı NULL değildir —
+        `NOT IN` NULL görseydi akışın TAMAMINI boşaltırdı (yazısı olmayan
+        yazarın `son_id`si NULL; o liste doğrudan dışlamaya verilmez).
+        """
+        from django.db.models import DateTimeField, ExpressionWrapper, Subquery, Value
+        kume = cls._son_yazi_kumesi()
+        referans = kume.order_by("-yayin_zamani").values("yayin_zamani")[:1]
+        alt_sinir = ExpressionWrapper(Subquery(referans) - Value(cls.YAZIYOR_ESIGI),
+                                      output_field=DateTimeField())
+        return kume.filter(yayin_zamani__gte=alt_sinir).values("pk")
+
+    @classmethod
+    def onceki_akis(cls):
+        """`/kose-yazilari` "Önceki yazılar" akışı: `akis()` eksi vitrin
+        (21 Ekim 2026, ikinci tur). Ölçüldü: dışlama yokken akışın ilk 20
+        satırının 9'u vitrindeki kartın aynısıydı. Sayfa, `?sayfa=N` ve
+        "daha fazla" ucu bunu okur — dilimler ve sayaç aynı kümeden;
+        dışlama aynı sorgunun içinde alt sorgu (`NOT IN`), ek sorgu yok."""
+        return cls.akis().exclude(pk__in=cls.vitrin_kimlikleri())
+
+    @classmethod
+    def kademele(cls, son_yazilar):
+        """`yazar_basina_son()` listesini `(yaziyor, arsivde)` diye böler —
+        SORGU AÇMAZ, liste zaten elde.
+
+        Referans BUGÜN değil, listenin başındaki (en yeni) yazı. Bugüne göre
+        ölçülseydi göç hattı durduğunda (arşiv 6 Eylül'de durdu) eşiği kimse
+        geçemez, vitrin boşalırdı — oysa duran yazarlar değil hat. Referans
+        en yeni yazı olunca o yazının yazarı eşiği her zaman geçer: liste
+        boş değilse vitrin YAPISI GEREĞİ boş kalamaz. Panelden yeni yazı
+        girdikçe referans kendiliğinden bugüne yaklaşır. Sıra korunur (en
+        yeniden eskiye).
+        """
+        son_yazilar = list(son_yazilar)
+        if not son_yazilar:
+            return [], []
+        referans = son_yazilar[0].yayin_zamani
+        yaziyor, arsivde = [], []
+        for yazi in son_yazilar:
+            hedef = yaziyor if referans - yazi.yayin_zamani <= cls.YAZIYOR_ESIGI else arsivde
+            hedef.append(yazi)
+        return yaziyor, arsivde
+
+    @staticmethod
+    def gunlere_bol(yazilar, onceki=None):
+        """Akış dilimini yayın gününe göre gruplar: `[{gun, yazilar, surer}]`.
+
+        Gün YEREL saatle hesaplanır (UTC'de 05:01 saklanan yazı TR'de
+        08:01; gece yarısına yakın yazı başka güne düşebilir) — şablonun
+        `|date` süzgeci de yerel saati basıyor, ikisi ayrışmasın.
+
+        `onceki`: "daha fazla" ucunun aynı sorguda okuduğu, ÖNCEKİ dilimin son
+        kaydı. İlk grup onun gününe denk geliyorsa `surer=True`: sayfada o
+        günün başlığı zaten duruyor, parça başlığı ikinci kez basmaz, yalnız
+        listeyi getirir. `?sayfa=N` kendi başına açılan bir sayfadır; ona
+        `onceki` verilmez, ilk grup hep başlıklıdır.
+        """
+        onceki_gun = (timezone.localtime(onceki.yayin_zamani).date()
+                      if onceki is not None else None)
+        gruplar = []
+        for yazi in yazilar:
+            gun = timezone.localtime(yazi.yayin_zamani).date()
+            if not gruplar or gruplar[-1]["gun"] != gun:
+                gruplar.append({"gun": gun, "yazilar": [],
+                                "surer": not gruplar and gun == onceki_gun})
+            gruplar[-1]["yazilar"].append(yazi)
+        return gruplar
+
+    def govde_guvenli(self):
+        """Şablonda basılacak hâli. Beyaz liste dışındaki HTML düşer.
+
+        Gövde kazımayla geldi ve panelden de HTML girilecek; temizleyici
+        `icerik.temizle` ile ortaktır — iki ayrı beyaz liste iki ayrı açık
+        demek olurdu.
+        """
+        from icerik.temizle import govde_temizle
+        return govde_temizle(self.govde)
+
+
+class FotoGaleri(KategoriliIcerik):
+    """Foto galeri.
+
+    `kareler_eksik` varsayılanı **doğru**: arşivleyici ölçtü, kareler statik
+    HTML'de yok ve sayfada bir ajax ucu bulunamadı. Kapak alınabiliyor.
+    """
+
+    TUR = Kategori.TUR_FOTO
+
+    kareler_eksik = models.BooleanField(
+        default=True,
+        help_text="Kareler kaynaktan alınamadıysa doğru. Sayfa bunu okura söyler.")
+    kareler_notu = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        ordering = ["-yayin_zamani"]
+        verbose_name = "foto galeri"
+        verbose_name_plural = "foto galeriler"
+        indexes = [models.Index(fields=["kategori", "-yayin_zamani"])]
+
+    def get_absolute_url(self) -> str:
+        return f"/galeriler/{self.adres_dilimi()}/{self.slug}-{self.pk}"
+
+    @property
+    def kare_sayisi(self) -> int:
+        return self.kareler.count()
+
+
+class GaleriKaresi(models.Model):
+    """Galerinin tek fotoğrafı.
+
+    Göçte boş kalır (kareler kaynaktan alınamıyor); panelin Foto Galeri
+    ekranı buraya yazacak. Kimliği eski sistemden gelmiyor, bu yüzden burada
+    birincil anahtar **otomatiktir** — kare adresin parçası değil.
+    """
+
+    galeri = models.ForeignKey(FotoGaleri, on_delete=models.CASCADE, related_name="kareler")
+    sira = models.PositiveSmallIntegerField(default=0)
+    dosya = models.CharField(max_length=300, help_text="Arşiv köküne göreli yol.")
+    alt = models.CharField(max_length=300, blank=True)
+    aciklama = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["sira", "id"]
+        verbose_name = "galeri karesi"
+        verbose_name_plural = "galeri kareleri"
+
+    def __str__(self) -> str:
+        return f"{self.galeri_id}/{self.sira}"
+
+    def gorsel_yolu(self) -> str:
+        return MEDYA_GORSEL_URL + self.dosya.lstrip("/") if self.dosya else ""
+
+
+class Video(KategoriliIcerik):
+    """Video.
+
+    İki adres saklanır ama **eşit değiller** (ölçüldü, 312 kayıt): JSON-LD
+    `contentUrl` bir medya dosyası değil, **sayfanın kendi adresi**; gerçek
+    oynatıcı `embedUrl`de duruyor (`bursahakimiyet.web.tv/embed/...`). İkisi
+    de saklanıyor çünkü `contentUrl` ileride düzelirse iz gerekli, ama
+    bağlantı `oynatma_adresi` üzerinden kuruluyor.
+
+    Kaynak `embedUrl` alanına bazen komple `<iframe>` HTML'i koyuyor;
+    arşivleyici `src`yi ayıklıyor, biz ham HTML saklamıyoruz.
+
+    Sayfa videoyu **kendiliğinden gömmez**: gömülü çerçeve dış adrese bağlanır
+    ve bu, sayfanın internetsiz açılması kuralına aykırıdır. Şablon kapak
+    görselini ve kaynağa giden açık bir bağlantıyı gösterir; gömme kararı
+    ayrı bir iştir.
+    """
+
+    TUR = Kategori.TUR_VIDEO
+
+    video_url = models.URLField(max_length=600, blank=True)
+    gomulu_url = models.URLField(max_length=600, blank=True)
+    sure = models.CharField(
+        max_length=40, blank=True,
+        help_text="Kaynaktaki hâli (ISO 8601, ör. PT2M30S). İz olarak durur.")
+    sure_saniye = models.PositiveIntegerField(
+        default=0, help_text="Gösterim ve sıralama için çözülmüş hâli.")
+
+    class Meta:
+        ordering = ["-yayin_zamani"]
+        verbose_name = "video"
+        verbose_name_plural = "videolar"
+        indexes = [models.Index(fields=["kategori", "-yayin_zamani"])]
+
+    def get_absolute_url(self) -> str:
+        return f"/videolar/{self.adres_dilimi()}/{self.slug}-{self.pk}"
+
+    @property
+    def oynatma_adresi(self) -> str:
+        """Videoyu açacak dış adres; yoksa boş.
+
+        Kendi adresine dönen bağlantı hiç basılmaz: okuru zaten bulunduğu
+        sayfaya yollamak kırık bağlantıdan beterdir. Ölçüm bunun kural
+        olduğunu gösterdi — `video_url` 312 kaydın hepsinde sayfanın kendisi.
+        """
+        for aday in (self.gomulu_url, self.video_url):
+            if aday and not aday.rstrip("/").endswith(self.get_absolute_url()):
+                return aday
+        return ""
+
+    @property
+    def sure_yazi(self) -> str:
+        """"2:05" · "1:02:05". Süresi bilinmeyen videoda boş döner ki şablon
+        uydurma bir değer basmasın."""
+        if not self.sure_saniye:
+            return ""
+        saat, kalan = divmod(self.sure_saniye, 3600)
+        dakika, saniye = divmod(kalan, 60)
+        if saat:
+            return f"{saat}:{dakika:02d}:{saniye:02d}"
+        return f"{dakika}:{saniye:02d}"

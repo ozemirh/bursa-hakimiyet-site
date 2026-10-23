@@ -1,0 +1,21 @@
+{% comment %}
+DÜZELTMELER bölmesi (20 Ekim 2026) — haber gövdesinin hemen sonunda.
+
+Notları editör panelin haber düzenleme ekranından yayımlar; yapay zekâ
+yazmaz. Her not: tür (düzeltme · güncelleme notu) · yayın tarihi+saati ·
+metin. Metin düz metindir, `linebreaks` kaçışlıdır — güvenli işaretleme
+yok. Not yoksa haber_detay.html bu parçayı hiç çağırmaz; boş bölme basılmaz.
+
+`id="duzeltmeler"` başlık altındaki "Bu haberde düzeltme var" işaretinin
+hedefi; adı `/duzeltmeler` sayfasındaki bağlantılar da kullanır.
+{% endcomment %}
+<section class="duzeltme-bolmesi" id="duzeltmeler" aria-labelledby="duzeltme-bolmesi-baslik">
+  <h2 id="duzeltme-bolmesi-baslik">DÜZELTMELER</h2>
+  <ol class="duzeltme-liste">
+{% for n in notlar %}    <li class="duzeltme" data-tur="{{ n.tur }}">
+      <p class="duzeltme-ust"><b class="duzeltme-tur">{{ n.get_tur_display }}</b> <time datetime="{{ n.yayin_zamani|date:'c' }}">{{ n.yayin_zamani|date:'j F Y, H:i' }}</time></p>
+      <div class="duzeltme-metin">{{ n.metin|linebreaks }}</div>
+    </li>
+{% endfor %}  </ol>
+  <p class="duzeltme-tumu"><a href="/duzeltmeler">Tüm düzeltmeler &rarr;</a></p>
+</section>

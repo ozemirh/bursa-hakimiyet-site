@@ -30,7 +30,8 @@ EN_FAZLA_TUR = 2
 
 
 def bulgu_bul(paket: dict) -> list[str]:
-    """Paketi `denetim.py` ile denetler. K2 (uydurma olgu) elle kalir."""
+    """Paketi `denetim.py` ile denetler. K2 (19 Ekim 2026'dan beri) sayi,
+    tarih, yuzde ve ozel adlar icin otomatik; anlamsal dogrulama elle kalir."""
     hal = denetim.hal_bul(paket)
     return denetim.mekanik(paket["taslak"], hal) + denetim.kural_denetimi(paket, hal)
 
@@ -44,6 +45,10 @@ def _duzeltme_istemi(kaynak: dict, taslak: dict, bulgular: list[str]) -> str:
         "- K1: kaynakla 8 kelime birebir ortusuyor. O cumleyi KENDI sozcuklerinle "
         "bastan yaz; olguyu koru, kalibi degistir. Alintiyi korumak istiyorsan "
         "blogun turunu `alinti` yap ve tirnak icine al.\n"
+        "- K2: taslakta kaynakta GECMEYEN bir sayi, tarih, yuzde ya da ad var. "
+        "Kaynakta yoksa CIKAR ya da kaynaktaki bicimiyle yaz; tahminle, hesapla "
+        "ya da genel bilgiyle doldurma. Kaynakta varsa ama farkli yazilmissa "
+        "kaynaktaki yazimi kullan.\n"
         "- K3/K4/K5/K6/K7 ve ALAN bulgulari: ilgili alani duzelt.\n"
         "Bulgusu olmayan alanlari OLDUGU GIBI birak.",
         "SEMA:",
@@ -80,11 +85,13 @@ def taslak_uret_skill(kaynak: dict, en_fazla_tur: int = EN_FAZLA_TUR) -> dict:
         "tezgah": tezgah_kur(kaynak, sozluk_yukle()),
         "uretim": {
             "saglayici": "skill",
-            "model": "claude-code-cli",
+            # Gercek model kimligi `yz_cli`den (Paket F, 19 Ekim 2026).
+            "model": yz_cli.SON_MODEL or sonuc["uretim"].get("model", ""),
             "surum": "1.0",
             "turlar": gunluk,
             "kalan_bulgular": gunluk[-1]["bulgular"],
-            "not": "taslak-denetimi Mod 1 zinciri uygulandi; K2 (uydurma olgu) elle kalir.",
+            "not": "taslak-denetimi Mod 1 zinciri uygulandi; K2 sayi/tarih/ad "
+                   "otomatik, anlamsal dogrulama elle kalir.",
         },
     }
 

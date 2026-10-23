@@ -1,0 +1,262 @@
+{
+ "_not": "MGM'nin açık uçlarından çekildi. Yayınlanırken kaynak belirtilir. Ölçülemeyen alanlar null bırakılır; MGM'nin -9999 değeri sıfır gibi gösterilmez. Tanınmayan hadise kodu uydurulmaz, ham kod yazılır.",
+ "guncelleme": "2026-09-12T22:12:11+03:00",
+ "bayat_esik_dakika": 180,
+ "kaynak": {
+  "ad": "Meteoroloji Genel Müdürlüğü",
+  "kisa": "MGM",
+  "adres": "https://www.mgm.gov.tr/",
+  "kosullar": "https://www.mgm.gov.tr/site/yasal-uyari.aspx",
+  "kunye": "Kaynak: Meteoroloji Genel Müdürlüğü."
+ },
+ "merkez": {
+  "il": "Bursa",
+  "ilce": "Osmangazi",
+  "merkez_id": 91601,
+  "enlem": 40.2308,
+  "boylam": 29.0133,
+  "yukseklik": 100,
+  "sondurum_istno": 17116,
+  "gunluk_istno": 91601,
+  "saatlik_istno": 17116
+ },
+ "son_durum": {
+  "olcum_zamani": "2026-09-12T22:08:00+03:00",
+  "sicaklik": 23.1,
+  "hissedilen": 23.1,
+  "nem": 73,
+  "basinc": 1002.6,
+  "gorus_metre": 20000,
+  "kapalilik": 0,
+  "ruzgar_hiz": 11.5,
+  "ruzgar_yon_derece": 236,
+  "ruzgar_yon": "güneybatı",
+  "yagis_1saat": 0,
+  "yagis_24saat": 0,
+  "kar_yukseklik": null,
+  "hadise": {
+   "kod": "A",
+   "ad": "Açık"
+  }
+ },
+ "gunler": [
+  {
+   "tarih": "2026-09-12",
+   "en_dusuk": 16,
+   "en_yuksek": 31,
+   "en_dusuk_nem": 43,
+   "en_yuksek_nem": 80,
+   "ruzgar_hiz": 8,
+   "ruzgar_yon_derece": 327,
+   "ruzgar_yon": "kuzey-kuzeybatı",
+   "hadise": {
+    "kod": "AB",
+    "ad": "Az bulutlu"
+   }
+  },
+  {
+   "tarih": "2026-09-13",
+   "en_dusuk": 17,
+   "en_yuksek": 30,
+   "en_dusuk_nem": 39,
+   "en_yuksek_nem": 80,
+   "ruzgar_hiz": 10,
+   "ruzgar_yon_derece": 330,
+   "ruzgar_yon": "kuzey-kuzeybatı",
+   "hadise": {
+    "kod": "PB",
+    "ad": "Parçalı bulutlu"
+   }
+  },
+  {
+   "tarih": "2026-09-14",
+   "en_dusuk": 16,
+   "en_yuksek": 25,
+   "en_dusuk_nem": 46,
+   "en_yuksek_nem": 92,
+   "ruzgar_hiz": 11,
+   "ruzgar_yon_derece": 334,
+   "ruzgar_yon": "kuzey-kuzeybatı",
+   "hadise": {
+    "kod": "GSY",
+    "ad": "Gök gürültülü sağanak yağışlı"
+   }
+  },
+  {
+   "tarih": "2026-09-15",
+   "en_dusuk": 15,
+   "en_yuksek": 28,
+   "en_dusuk_nem": 36,
+   "en_yuksek_nem": 84,
+   "ruzgar_hiz": 19,
+   "ruzgar_yon_derece": 28,
+   "ruzgar_yon": "kuzey-kuzeydoğu",
+   "hadise": {
+    "kod": "PB",
+    "ad": "Parçalı bulutlu"
+   }
+  },
+  {
+   "tarih": "2026-09-16",
+   "en_dusuk": 14,
+   "en_yuksek": 28,
+   "en_dusuk_nem": 35,
+   "en_yuksek_nem": 86,
+   "ruzgar_hiz": 16,
+   "ruzgar_yon_derece": 31,
+   "ruzgar_yon": "kuzey-kuzeydoğu",
+   "hadise": {
+    "kod": "PB",
+    "ad": "Parçalı bulutlu"
+   }
+  },
+  {
+   "tarih": "2026-09-17",
+   "en_dusuk": 14,
+   "en_yuksek": 31,
+   "en_dusuk_nem": 25,
+   "en_yuksek_nem": 69,
+   "ruzgar_hiz": 12,
+   "ruzgar_yon_derece": 27,
+   "ruzgar_yon": "kuzey-kuzeydoğu",
+   "hadise": {
+    "kod": "PB",
+    "ad": "Parçalı bulutlu"
+   }
+  }
+ ],
+ "saatlik": [
+  {
+   "zaman": "2026-09-13T00:00:00+03:00",
+   "sicaklik": 22,
+   "hissedilen": 22,
+   "nem": 73,
+   "ruzgar_hiz": 1,
+   "ruzgar_azami": 8,
+   "ruzgar_yon_derece": 180,
+   "ruzgar_yon": "güney",
+   "hadise": {
+    "kod": "AB",
+    "ad": "Az bulutlu"
+   }
+  },
+  {
+   "zaman": "2026-09-13T03:00:00+03:00",
+   "sicaklik": 20,
+   "hissedilen": 20,
+   "nem": 78,
+   "ruzgar_hiz": 3,
+   "ruzgar_azami": 7,
+   "ruzgar_yon_derece": 223,
+   "ruzgar_yon": "güneybatı",
+   "hadise": {
+    "kod": "AB",
+    "ad": "Az bulutlu"
+   }
+  },
+  {
+   "zaman": "2026-09-13T06:00:00+03:00",
+   "sicaklik": 17,
+   "hissedilen": 17,
+   "nem": 80,
+   "ruzgar_hiz": 1,
+   "ruzgar_azami": 7,
+   "ruzgar_yon_derece": 173,
+   "ruzgar_yon": "güney",
+   "hadise": {
+    "kod": "AB",
+    "ad": "Az bulutlu"
+   }
+  },
+  {
+   "zaman": "2026-09-13T09:00:00+03:00",
+   "sicaklik": 21,
+   "hissedilen": 21,
+   "nem": 78,
+   "ruzgar_hiz": 4,
+   "ruzgar_azami": 16,
+   "ruzgar_yon_derece": 292,
+   "ruzgar_yon": "batı-kuzeybatı",
+   "hadise": {
+    "kod": "PB",
+    "ad": "Parçalı bulutlu"
+   }
+  },
+  {
+   "zaman": "2026-09-13T12:00:00+03:00",
+   "sicaklik": 25,
+   "hissedilen": 25,
+   "nem": 53,
+   "ruzgar_hiz": 6,
+   "ruzgar_azami": 23,
+   "ruzgar_yon_derece": 345,
+   "ruzgar_yon": "kuzey-kuzeybatı",
+   "hadise": {
+    "kod": "PB",
+    "ad": "Parçalı bulutlu"
+   }
+  },
+  {
+   "zaman": "2026-09-13T15:00:00+03:00",
+   "sicaklik": 30,
+   "hissedilen": 30,
+   "nem": 40,
+   "ruzgar_hiz": 11,
+   "ruzgar_azami": 32,
+   "ruzgar_yon_derece": 330,
+   "ruzgar_yon": "kuzey-kuzeybatı",
+   "hadise": {
+    "kod": "PB",
+    "ad": "Parçalı bulutlu"
+   }
+  },
+  {
+   "zaman": "2026-09-13T18:00:00+03:00",
+   "sicaklik": 26,
+   "hissedilen": 26,
+   "nem": 60,
+   "ruzgar_hiz": 10,
+   "ruzgar_azami": 35,
+   "ruzgar_yon_derece": 336,
+   "ruzgar_yon": "kuzey-kuzeybatı",
+   "hadise": {
+    "kod": "PB",
+    "ad": "Parçalı bulutlu"
+   }
+  },
+  {
+   "zaman": "2026-09-13T21:00:00+03:00",
+   "sicaklik": 23,
+   "hissedilen": 23,
+   "nem": 76,
+   "ruzgar_hiz": 6,
+   "ruzgar_azami": 27,
+   "ruzgar_yon_derece": 24,
+   "ruzgar_yon": "kuzey-kuzeydoğu",
+   "hadise": {
+    "kod": "PB",
+    "ad": "Parçalı bulutlu"
+   }
+  },
+  {
+   "zaman": "2026-09-14T00:00:00+03:00",
+   "sicaklik": 21,
+   "hissedilen": 21,
+   "nem": 84,
+   "ruzgar_hiz": 3,
+   "ruzgar_azami": 17,
+   "ruzgar_yon_derece": 313,
+   "ruzgar_yon": "kuzeybatı",
+   "hadise": {
+    "kod": "PB",
+    "ad": "Parçalı bulutlu"
+   }
+  }
+ ],
+ "denetim": {
+  "gun": 6,
+  "saatlik_adim": 9,
+  "son_durum_var": true,
+  "tanimsiz_hadise_kodu": []
+ }
+}

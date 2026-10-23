@@ -1,0 +1,56 @@
+{% comment %}
+Üst servis şeridi. Günün tarihi 23 Ekim 2026'da kalktı (kullanıcı isteği:
+"insanlar o gün olduğunu zaten biliyor"); şeridin solunda yalnız hava durur.
+
+Hava durumu ve baraj doluluğu **canlı veri** kalemleridir (URUN-PLANI.md §1,
+"Canlı veri gerektiren bileşenler"); kaynakları F6'da bağlanacak. Uydurma
+değer basmamak için kaynak bağlanana kadar gösterilmezler — tasarımdaki
+sabit "34°C" ve "%81" değerleri 25 Ağustos 2026 demosuna aitti.
+{% endcomment %}
+<div class="servis">
+  <div class="servis-ic">
+    {% comment %}Şeritte tarih basacak yer yok; bu yüzden sıcaklık YALNIZ
+    taze veride görünür (19 Ekim 2026). Bayat ölçüm "Bursa 24°C" diye bugünün
+    havası sanılıyordu.{% endcomment %}
+    {% if hava.son_durum.sicaklik %}<span>Bursa {{ hava.son_durum.sicaklik|floatformat:0 }}°C · {{ hava.gunler.0.hadise.ad }}</span>{% endif %}
+    <span class="sag">
+      {% comment %}Sosyal bağlantılar 30 Ağustos 2026'da (§35) künyeden
+      BURAYA taşındı: kullanıcı isteği "sayfanın üstlerinde ve etkileyici".
+      Ayrı bir şerit açılmadı — mobil tepe bütçesi (ilk haber ≤322 px, §34
+      K8) piksel piksel kazanılmıştı, geri yakılmıyor.
+
+      İHBAR HATTI pili yerel gazetenin en işlek kanalıdır; künyedeki
+      numaranın üst şeritteki karşılığı. Simgeler `parca/simgeler.html`
+      içinde, dış kaynak yok.{% endcomment %}
+      <a class="ihbar-bag" href="#kunye"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-whatsapp"/></svg><span>İHBAR HATTI</span></a>
+      <nav class="sosyal-ust" aria-label="Sosyal medya hesaplarımız">
+        <a href="#" aria-label="X hesabımız"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-x"/></svg></a>
+        <a href="#" aria-label="Instagram hesabımız"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-instagram"/></svg></a>
+        <a href="#" class="dar-gizle" aria-label="YouTube kanalımız"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-youtube"/></svg></a>
+        <a href="#" aria-label="WhatsApp kanalımız"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-whatsapp"/></svg></a>
+        <a href="#" class="dar-gizle" aria-label="RSS beslemesi"><svg class="sosyal-simge" aria-hidden="true" focusable="false"><use href="#sos-rss"/></svg></a>
+      </nav>
+      <span class="ust-baglar">
+        <a href="#kunye">Künye</a>
+        <span class="ayrac"></span><a href="#kunye">İletişim</a>
+        <span class="ayrac"></span><a href="#">E-Gazete</a>
+      </span>
+      {% if reklam_dugmesi %}{% comment %}SUNUM ANAHTARI, okur ozelligi degil:
+      yayin ekibine sayfayi reklamsiz gosterebilmek icin. Siradan ziyaretcide
+      hic cizilmez — kapisi `icerik/baglam.py` icindeki `sunum_araci_mi`.
+      `aria-pressed` acik/kapali durumu ekran okuyucuya soyler.{% endcomment %}
+      <span class="ayrac"></span>
+      <button class="reklam-anahtar" type="button" aria-pressed="false">
+        <span class="reklam-anahtar-yazi">Reklamları gizle</span>
+      </button>{% endif %}{% if reklam_test %}{% comment %}Test reklami anahtari
+      (7 Eylul 2026). Ayni kapidan gecer; kutulari yerel test yaraticisiyla
+      doldurur, disariya istek atmaz. Reklam gizleme anahtarinin YANINDA
+      duruyor cunku ikisi de sunum araci.{% endcomment %}
+      <span class="ayrac"></span>
+      <button class="reklam-anahtar reklam-test-anahtar" type="button"
+              aria-pressed="false">
+        <span class="reklam-test-yazi">Test reklamı</span>
+      </button>{% endif %}
+    </span>
+  </div>
+</div>

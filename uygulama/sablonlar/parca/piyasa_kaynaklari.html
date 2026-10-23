@@ -1,0 +1,8 @@
+{% comment %}Piyasa cetvelinin/panelinin kaynak künyesi — 20 Ekim 2026.
+
+`ks` = `icerik/piyasa.cetvel_kaynaklari(doviz, piyasa)`. Sütun sütun kim
+söyledi, ne zaman: "Son" ve "Değişim" yayına giden değerin kaynağından
+(canlı kaynak tazeyken doviz.com vb., düşünce TCMB bülteni), alış/satış
+HER ZAMAN TCMB bülteninden. Dil `/piyasa/*` sayfalarıyla aynı
+(`piyasa.html`, `_son_deger`). Kapsayan öğe çağıranındır (`p.servis-kunye`).
+Tarih/saat damgası basılmaz (23 Ekim 2026, kullanıcı kararı).{% endcomment %}{% load site_etiket %}{% for g in ks.son %}Son{% if g.degisim_neye %} ve değişim{% endif %}: {{ g.kaynak }}{% if g.zaman_metni %}, {{ g.zaman_metni }}{% endif %} ({{ g.kalemler|join:", " }}){% if g.degisim_neye %}; değişim {{ g.degisim_neye }}{% endif %}.{% if g.uyari %} {{ g.uyari }}{% endif %} {% endfor %}{% if ks.tcmb %}Alış ve satış: TCMB bülteni{% if ks.tcmb.no %} &middot; {{ ks.tcmb.no }}{% endif %}; TCMB kurları gösterge niteliğindedir.{% endif %}

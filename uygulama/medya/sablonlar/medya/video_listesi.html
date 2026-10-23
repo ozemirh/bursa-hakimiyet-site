@@ -1,0 +1,27 @@
+{% extends "taban.html" %}
+
+{% block baslik %}Videolar — Bursa Hakimiyet{% endblock %}
+{% block aciklama %}Bursa Hakimiyet video arşivi.{% endblock %}
+
+{% block icerik %}
+      <nav class="kirinti" aria-label="Neredesiniz">
+        <a href="/">Anasayfa</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Videolar</span>
+      </nav>
+
+      <section class="kutu">
+        <div class="kutu-bas vurgu">
+          <h1>VİDEOLAR</h1>
+          <span class="tumu">{{ sayfa.paginator.count }} video</span>
+        </div>
+        <div class="kutu-ic">
+          <h2 class="gorsel-gizli">Videolar</h2>
+          <div class="video-izgara">
+            {% for v in sayfa %}{% include "medya/parca/video_kart.html" with v=v %}
+            {% empty %}<p class="bos">Video arşivi henüz göç etmedi.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      {% include "parca/sayfalama.html" %}
+{% endblock %}
